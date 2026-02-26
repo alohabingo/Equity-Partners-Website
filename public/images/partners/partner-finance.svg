@@ -1,0 +1,7 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 120'>
+  <rect width='360' height='120' fill='#ffffff'/>
+  <circle cx='48' cy='60' r='27' fill='#2f7b6d'/>
+  <text x='38' y='68' font-family='Montserrat, Arial, sans-serif' font-size='24' font-weight='700' fill='#ffffff'>F</text>
+  <text x='88' y='66' font-family='Montserrat, Arial, sans-serif' font-size='25' font-weight='700' fill='#2f7b6d'>PRINCIPALITY</text>
+  <text x='88' y='91' font-family='Montserrat, Arial, sans-serif' font-size='14' letter-spacing='2' fill='#607f78'>FINANCE</text>
+</svg>

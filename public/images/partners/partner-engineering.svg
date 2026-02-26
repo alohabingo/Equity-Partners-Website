@@ -1,0 +1,7 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 120'>
+  <rect width='360' height='120' fill='#ffffff'/>
+  <rect x='18' y='26' width='52' height='52' rx='7' fill='#4c6ea8'/>
+  <path d='M30 62h28M30 48h28' stroke='#ffffff' stroke-width='4' stroke-linecap='round'/>
+  <text x='84' y='62' font-family='Montserrat, Arial, sans-serif' font-size='22' font-weight='700' fill='#3f4f66'>ANDORRA</text>
+  <text x='84' y='87' font-family='Montserrat, Arial, sans-serif' font-size='14' letter-spacing='2' fill='#6f7f95'>ENGINEERING GROUP</text>
+</svg>

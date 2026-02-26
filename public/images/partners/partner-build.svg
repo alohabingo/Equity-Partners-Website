@@ -1,0 +1,7 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 120'>
+  <rect width='360' height='120' fill='#ffffff'/>
+  <polygon points='22,74 58,34 94,74' fill='#af7a3a'/>
+  <rect x='38' y='73' width='40' height='22' fill='#d89b4f'/>
+  <text x='112' y='68' font-family='Montserrat, Arial, sans-serif' font-size='25' font-weight='700' fill='#8b5d27'>PYRENEES</text>
+  <text x='112' y='92' font-family='Montserrat, Arial, sans-serif' font-size='14' letter-spacing='2' fill='#7d6a58'>BUILD CO.</text>
+</svg>

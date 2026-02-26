@@ -1,0 +1,7 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 120'>
+  <rect width='360' height='120' fill='#ffffff'/>
+  <path d='M22 76l24-42 24 42z' fill='#9062c7'/>
+  <circle cx='46' cy='76' r='7' fill='#c8ade7'/>
+  <text x='84' y='62' font-family='Montserrat, Arial, sans-serif' font-size='23' font-weight='700' fill='#6d4f95'>VALIRA</text>
+  <text x='84' y='87' font-family='Montserrat, Arial, sans-serif' font-size='14' letter-spacing='2' fill='#7f6c99'>DESIGN STUDIO</text>
+</svg>
