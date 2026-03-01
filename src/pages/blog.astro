@@ -1,58 +1,61 @@
 ---
-const advantages = [
+const posts = [
   {
-    title: "Local Network",
-    description:
-      "Direct relationships with landowners, advisors, and Andorran operators unlock faster access to qualified opportunities.",
+    title: "Andorra 2026 Outlook: Where Investor Demand Is Concentrating",
+    category: "Market Update",
+    date: "Feb 2026",
+    excerpt:
+      "A practical read on where cross-border investor demand is accelerating and which submarkets are showing the strongest absorption.",
+    image:
+      "https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1400&q=80",
   },
   {
-    title: "Regulatory Expertise",
-    description:
-      "We navigate planning, approvals, and compliance in the Principality with disciplined local execution.",
+    title: "Structuring Residential Projects for Faster Delivery in the Principality",
+    category: "Execution",
+    date: "Jan 2026",
+    excerpt:
+      "Key operating decisions that reduce timeline risk from acquisition through permitting and contractor coordination.",
+    image:
+      "https://images.unsplash.com/photo-1482192505345-5655af888cc4?auto=format&fit=crop&w=1400&q=80",
   },
   {
-    title: "Lifecycle Management",
-    description:
-      "From sourcing through delivery, we manage project decisions end-to-end with investor clarity at every stage.",
+    title: "What International Investors Should Know About Andorran Compliance",
+    category: "Regulation",
+    date: "Dec 2025",
+    excerpt:
+      "A concise overview of the compliance touchpoints that matter most when entering and scaling in Andorra.",
+    image:
+      "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=1400&q=80",
+  },
+  {
+    title: "Designing Premium Units for Modern Buyer Preferences",
+    category: "Development",
+    date: "Nov 2025",
+    excerpt:
+      "How product design and amenity positioning can improve both sell-through velocity and long-term asset resilience.",
+    image:
+      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1400&q=80",
+  },
+  {
+    title: "Capital Planning for One Active Project and Two Pipeline Opportunities",
+    category: "Capital Strategy",
+    date: "Oct 2025",
+    excerpt:
+      "A framework for balancing deployment timing, construction milestones, and risk controls across a focused portfolio.",
+    image:
+      "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1400&q=80",
+  },
+  {
+    title: "Why Local Partner Networks Still Define Performance in Small Jurisdictions",
+    category: "Partnerships",
+    date: "Sep 2025",
+    excerpt:
+      "In markets like Andorra, execution quality is often determined by relationship depth more than scale.",
+    image:
+      "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1400&q=80",
   },
 ];
 
-const projects = [
-  {
-    name: "Escaldes Signature Residences",
-    status: "Under Construction",
-    value: "€34M",
-    sector: "Luxury Residential",
-    image:
-      "https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1200&q=80",
-  },
-  {
-    name: "La Massana Heights",
-    status: "Pipeline",
-    value: "€18M",
-    sector: "Residential Development",
-    image:
-      "https://images.unsplash.com/photo-1482192505345-5655af888cc4?auto=format&fit=crop&w=1200&q=80",
-  },
-  {
-    name: "Andorra Business Residence",
-    status: "Pipeline",
-    value: "€22M",
-    sector: "Mixed-Use",
-    image:
-      "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=1200&q=80",
-  },
-];
-
-const localPartners = [
-  { name: "DATA", logo: "/images/partners/DATA LOGO.png" },
-  { name: "Emindset Law", logo: "/images/partners/Emindset LAW LOGO.png" },
-  { name: "Govern d'Andorra", logo: "/images/partners/Govern d'Andorra logo.png" },
-  { name: "Creand", logo: "/images/partners/creand.webp" },
-  { name: "Engel & Volkers", logo: "/images/partners/engel volkers logo.png" },
-];
-
-const localPartnersLoop = [...localPartners, ...localPartners, ...localPartners, ...localPartners];
 const currentYear = new Date().getFullYear();
 ---
 
@@ -60,7 +63,7 @@ const currentYear = new Date().getFullYear();
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
-    <title>Equity Partners | Andorra Property Group</title>
+    <title>Blog | Equity Partners</title>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@700&display=swap");
 
@@ -88,6 +91,13 @@ const currentYear = new Date().getFullYear();
         line-height: 1.5;
       }
 
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
       .container {
         width: min(var(--max-width), 92vw);
         margin: 0 auto;
@@ -106,8 +116,8 @@ const currentYear = new Date().getFullYear();
       }
 
       .hero {
-        min-height: 84vh;
-        padding: 2rem 0 3.5rem;
+        min-height: 44vh;
+        padding: 2rem 0 3rem;
         background: linear-gradient(
             to bottom,
             rgba(6, 8, 12, 0.4) 0%,
@@ -115,8 +125,7 @@ const currentYear = new Date().getFullYear();
             rgba(6, 8, 12, 0.18) 34%,
             rgba(6, 8, 12, 0.3) 100%
           ),
-          url("/hero-andorra-R2PtlkD-.jpg")
-            center / cover no-repeat;
+          url("/AND%20IMG%20night%20snow%20lights.jpeg") center / cover no-repeat;
         color: var(--text-light);
         display: flex;
         flex-direction: column;
@@ -167,7 +176,6 @@ const currentYear = new Date().getFullYear();
         height: auto;
         position: relative;
         top: -5px;
-        filter: brightness(0) invert(1);
         filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))
           drop-shadow(0 0 10px rgba(8, 14, 23, 0.35));
       }
@@ -291,118 +299,35 @@ const currentYear = new Date().getFullYear();
 
       .hero-content {
         margin-top: auto;
-        max-width: 50rem;
-        padding-top: 8rem;
-        animation: rise 900ms 120ms ease both;
-      }
-
-      h1,
-      h2,
-      h3,
-      p {
-        margin: 0;
-      }
-
-      h1 {
-        margin: 0;
-        font-family: "Open Sans", "Avenir Next", "Segoe UI", Arial, sans-serif;
-        font-weight: 700;
-        font-size: clamp(2rem, 5vw, 4rem);
-        letter-spacing: 0.02em;
-        line-height: 1.08;
-      }
-
-      .subline {
-        margin-top: 0.9rem;
-        max-width: 42rem;
-        color: #cad4e4;
-        font-size: clamp(1rem, 1.8vw, 1.2rem);
+        max-width: 44rem;
+        padding-top: 5.5rem;
       }
 
       .hero-kicker {
-        margin-top: 0;
-        margin-bottom: 1.1rem;
+        margin-bottom: 1rem;
         font-size: 0.78rem;
         letter-spacing: 0.24em;
         text-transform: uppercase;
         color: #b2c0d4;
       }
 
+      h1 {
+        margin: 0;
+        font-family: "Open Sans", "Avenir Next", "Segoe UI", Arial, sans-serif;
+        font-weight: 700;
+        font-size: clamp(1.9rem, 4.3vw, 3.1rem);
+        letter-spacing: 0.02em;
+        line-height: 1.08;
+      }
+
+      .subline {
+        margin-top: 0.9rem;
+        color: #cad4e4;
+        font-size: clamp(0.98rem, 1.6vw, 1.15rem);
+      }
+
       .section {
         padding: 4rem 0;
-      }
-
-      .partners-wrap {
-        background: var(--bg-paper);
-        border-bottom: 1px solid var(--line);
-        padding: 2.2rem 0 2rem;
-        overflow: hidden;
-      }
-
-      .partners-title {
-        margin: 0 0 1.4rem;
-        text-align: left;
-        font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
-        font-size: 0.8rem;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-        color: var(--accent);
-        font-weight: 400;
-      }
-
-      .partners-divider {
-        width: 110px;
-        height: 1px;
-        margin: 0.85rem auto 1.3rem;
-        background: #d8dee9;
-      }
-
-      .partners-marquee {
-        position: relative;
-        overflow: hidden;
-        width: 100%;
-      }
-
-      .partners-track {
-        display: flex;
-        width: max-content;
-        gap: 3rem;
-        animation: partners-scroll 46s linear infinite;
-      }
-
-      .partner-logo-box {
-        flex: 0 0 auto;
-        width: 145px;
-        height: 64px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.2rem 0.45rem;
-      }
-
-      .partner-logo-box img {
-        max-width: 100%;
-        max-height: 48px;
-        width: auto;
-        height: auto;
-        filter: grayscale(100%) brightness(0.88);
-        opacity: 0.9;
-        transition: filter 200ms ease, opacity 200ms ease, transform 200ms ease;
-      }
-
-      .partner-logo-box:hover img {
-        filter: grayscale(0%) brightness(0.98);
-        opacity: 1;
-        transform: translateY(-1px);
-      }
-
-      @keyframes partners-scroll {
-        from {
-          transform: translateX(0);
-        }
-        to {
-          transform: translateX(-25%);
-        }
       }
 
       .section-header {
@@ -418,7 +343,7 @@ const currentYear = new Date().getFullYear();
       }
 
       h2 {
-        font-size: clamp(1.55rem, 3vw, 2.45rem);
+        font-size: clamp(1.55rem, 3vw, 2.3rem);
         line-height: 1.12;
       }
 
@@ -427,186 +352,86 @@ const currentYear = new Date().getFullYear();
         color: var(--text-muted);
       }
 
-      .adv-grid {
-        margin-top: 2rem;
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 1rem;
-      }
-
-      .adv-card {
-        background: var(--bg-white);
-        border: 1px solid var(--line);
-        border-radius: 1rem;
-        padding: 1.4rem;
-      }
-
-      .adv-number {
-        font-size: 0.8rem;
-        color: var(--accent);
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-      }
-
-      .adv-card h3 {
-        margin-top: 0.5rem;
-        font-size: 1.25rem;
-      }
-
-      .adv-card p {
-        margin-top: 0.7rem;
-        color: var(--text-muted);
-      }
-
-      .projects {
+      .insights {
         background: linear-gradient(180deg, #f4f6fa, #edf1f7);
         border-top: 1px solid var(--line);
         border-bottom: 1px solid var(--line);
       }
 
-      .project-grid {
+      .blog-grid {
         margin-top: 1.9rem;
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 1rem;
       }
 
-      .project-card {
+      .blog-card {
         position: relative;
         border-radius: 1rem;
         overflow: hidden;
-        min-height: 23rem;
+        min-height: 0;
         display: flex;
-        align-items: flex-end;
+        flex-direction: column;
+        align-items: stretch;
         border: 1px solid #d7deea;
+        background: #ffffff;
       }
 
-      .project-card img {
-        position: absolute;
-        inset: 0;
+      .blog-card img {
+        position: static;
         width: 100%;
-        height: 100%;
+        height: 14rem;
         object-fit: cover;
+        transition: transform 320ms ease;
       }
 
-      .project-card::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(180deg, rgba(10, 15, 24, 0.15), rgba(10, 15, 24, 0.86));
+      .blog-card:hover img {
+        transform: scale(1.04);
       }
 
-      .project-meta {
-        position: relative;
-        z-index: 1;
+      .blog-card::before {
+        content: none;
+      }
+
+      .blog-meta {
+        position: static;
+        z-index: auto;
         padding: 1.2rem;
-        color: #eff4fb;
+        color: var(--text-primary);
       }
 
-      .project-meta h3 {
-        font-size: 1.2rem;
+      .blog-meta h3 {
+        font-size: 1.15rem;
+        line-height: 1.24;
       }
 
       .metrics {
         margin-top: 0.7rem;
+        margin-bottom: 0.6rem;
         display: flex;
+        align-items: center;
         flex-wrap: wrap;
         gap: 0.45rem;
       }
 
       .pill {
-        font-size: 0.75rem;
-        padding: 0.28rem 0.56rem;
-        border: 1px solid rgba(231, 237, 245, 0.36);
-        border-radius: 999px;
-        background: rgba(11, 20, 34, 0.32);
-      }
-
-      .cta-link {
         display: inline-flex;
-        margin-top: 1.4rem;
-        font-size: 0.84rem;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--text-primary);
-        text-decoration: none;
-        border-bottom: 1px solid currentColor;
-        padding-bottom: 0.2rem;
-      }
-
-      .leaders {
-        display: grid;
-        grid-template-columns: 1.2fr 1fr;
-        gap: 1.2rem;
-        align-items: stretch;
-      }
-
-      .leaders-image {
-        border-radius: 1rem;
-        overflow: hidden;
-        min-height: 21rem;
-        border: 1px solid var(--line);
-      }
-
-      .leaders-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-
-      .leaders-copy {
-        background: var(--bg-white);
-        border: 1px solid var(--line);
-        border-radius: 1rem;
-        padding: 1.5rem;
-        display: flex;
-        flex-direction: column;
+        align-items: center;
         justify-content: center;
-      }
-
-      blockquote {
-        margin: 0;
-        font-size: 1.15rem;
-        line-height: 1.35;
-      }
-
-      .leaders-note {
-        margin-top: 0.9rem;
-        color: var(--text-muted);
-      }
-
-      .gateway {
-        background: #0f1a2a;
-        color: #e8edf6;
-        border-top: 1px solid rgba(220, 228, 240, 0.15);
-      }
-
-      .gateway .intro {
-        color: #c9d4e3;
-      }
-
-      .gateway-box {
-        margin-top: 1.6rem;
-        border: 1px solid rgba(219, 229, 241, 0.28);
-        border-radius: 1rem;
-        padding: 1.5rem;
-        background: rgba(8, 14, 23, 0.46);
-      }
-
-      .button {
-        margin-top: 1.2rem;
-        display: inline-block;
-        color: #132238;
-        background: #d8e3f2;
-        text-decoration: none;
-        font-weight: 600;
+        width: fit-content;
+        font-size: 0.75rem;
+        line-height: 1.2;
+        padding: 0.28rem 0.56rem;
+        border: 1px solid #ccd7e8;
         border-radius: 999px;
-        padding: 0.7rem 1.2rem;
+        background: #f4f7fc;
+        color: #33445c;
       }
 
-      .footer {
-        background: #0f1a2a;
-        color: #d9e3f2;
+      .excerpt {
+        color: var(--text-muted);
+        font-size: 0.87rem;
+        line-height: 1.45;
       }
 
       .newsletter {
@@ -681,6 +506,11 @@ const currentYear = new Date().getFullYear();
         margin-top: 0.5rem;
         color: #7a889e;
         font-size: 0.72rem;
+      }
+
+      .footer {
+        background: #0f1a2a;
+        color: #d9e3f2;
       }
 
       .footer-top {
@@ -841,22 +671,9 @@ const currentYear = new Date().getFullYear();
         font-weight: 700;
       }
 
-
-      @keyframes rise {
-        from {
-          opacity: 0;
-          transform: translateY(8px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
       @media (max-width: 980px) {
-        .adv-grid,
-        .project-grid,
-        .leaders,
+        .blog-grid,
+        .footer-grid,
         .newsletter-wrap {
           grid-template-columns: 1fr;
         }
@@ -904,11 +721,11 @@ const currentYear = new Date().getFullYear();
         }
 
         .menu-toggle-input:checked ~ .main-nav .menu-list {
-          max-height: 320px;
+          padding: 0.7rem 0.8rem;
+          max-height: 280px;
           opacity: 1;
           transform: translateY(0);
           pointer-events: auto;
-          padding: 0.7rem;
         }
 
         .menu-toggle-input:checked ~ .menu-toggle .menu-toggle-bars {
@@ -925,6 +742,12 @@ const currentYear = new Date().getFullYear();
           transform: rotate(-45deg);
         }
 
+        .logo {
+          width: 160px;
+          top: -12px;
+          margin-left: 0.4rem;
+        }
+
         .menu-link {
           font-size: 0.7rem;
         }
@@ -932,33 +755,6 @@ const currentYear = new Date().getFullYear();
         .menu-cta {
           display: inline-flex;
           top: -4px;
-        }
-
-        .logo {
-          width: min(38vw, 190px);
-          height: auto;
-          position: static;
-          top: auto;
-          transform: none;
-          margin-left: 0.9rem;
-          margin-top: -14px;
-        }
-
-        .hero {
-          min-height: 76vh;
-        }
-
-        .hero-content {
-          padding-top: 6rem;
-        }
-
-        .partners-wrap {
-          padding: 1.8rem 0 1.6rem;
-        }
-
-        .partners-track {
-          gap: 2rem;
-          animation-duration: 36s;
         }
 
         .newsletter-form {
@@ -973,15 +769,6 @@ const currentYear = new Date().getFullYear();
 
         .newsletter-button {
           width: 100%;
-        }
-
-        .partner-logo-box {
-          width: 115px;
-          height: 52px;
-        }
-
-        .partner-logo-box img {
-          max-height: 36px;
         }
 
         .footer-grid {
@@ -1010,7 +797,6 @@ const currentYear = new Date().getFullYear();
         .footer-social {
           justify-content: flex-start;
         }
-
       }
     </style>
   </head>
@@ -1018,8 +804,8 @@ const currentYear = new Date().getFullYear();
     <section class="hero">
       <div class="container">
         <header class="site-header" id="home">
-          <input class="menu-toggle-input" type="checkbox" id="mobile-menu-toggle" />
-          <label class="menu-toggle" for="mobile-menu-toggle" aria-label="Toggle navigation menu">
+          <input class="menu-toggle-input" type="checkbox" id="mobile-menu-toggle-blog" />
+          <label class="menu-toggle" for="mobile-menu-toggle-blog" aria-label="Toggle navigation menu">
             <span class="menu-toggle-bars"></span>
           </label>
           <a href="/" aria-label="Go to homepage">
@@ -1042,115 +828,40 @@ const currentYear = new Date().getFullYear();
           </nav>
         </header>
         <div class="hero-content">
-          <p class="hero-kicker">ANDORRA • INVESTMENT • EXCELLENCE</p>
-          <h1>Your strategic partner for Andorra real estate investments.</h1>
+          <p class="hero-kicker">Equity Partners Journal</p>
+          <h1>Insights on Andorra real estate investment and execution.</h1>
           <p class="subline">
-            Equity Partners connects investor capital to disciplined Andorran real estate execution.
+            Strategic analysis, project updates, and practical market intelligence for institutional and private investors.
           </p>
         </div>
       </div>
     </section>
 
-    <section class="partners-wrap" id="partners-local">
-      <div class="container">
-        <h2 class="partners-title">OUR LOCAL PARTNERS</h2>
-      </div>
-      <div class="partners-marquee" aria-label="Local partner logos">
-        <div class="partners-track">
-          {
-            localPartnersLoop.map((partner) => (
-              <div class="partner-logo-box">
-                <img src={partner.logo} alt={partner.name} loading="lazy" />
-              </div>
-            ))
-          }
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="about">
+    <section class="section insights">
       <div class="container">
         <div class="section-header">
-          <p class="eyebrow">Strategic Advantage</p>
-          <h2>We do not just source land. We navigate the Andorran ecosystem through delivery.</h2>
+          <p class="eyebrow">Latest Insights</p>
+          <h2>Decision-grade updates from the local market.</h2>
           <p class="intro">
-            Our edge is practical: local connectivity, regulatory confidence, and lifecycle control that keeps execution aligned with investor priorities.
+            Curated perspectives from the Equity Partners team on regulation, development, and capital strategy in the Principality.
           </p>
         </div>
-        <div class="adv-grid">
+        <div class="blog-grid">
           {
-            advantages.map((item, index) => (
-              <article class="adv-card">
-                <p class="adv-number">0{index + 1}</p>
-                <h3>{item.title}</h3>
-                <p>{item.description}</p>
-              </article>
-            ))
-          }
-        </div>
-      </div>
-    </section>
-
-    <section class="section projects" id="partners">
-      <div class="container">
-        <div class="section-header">
-          <p class="eyebrow">Featured Developments</p>
-          <h2>One active project and two pipeline opportunities.</h2>
-          <p class="intro">Balanced proof architecture: demonstrated execution plus visible momentum.</p>
-        </div>
-        <div class="project-grid">
-          {
-            projects.map((project) => (
-              <article class="project-card">
-                <img src={project.image} alt={project.name} />
-                <div class="project-meta">
-                  <h3>{project.name}</h3>
+            posts.map((post) => (
+              <article class="blog-card">
+                <img src={post.image} alt={post.title} loading="lazy" />
+                <div class="blog-meta">
                   <div class="metrics">
-                    <span class="pill">Value: {project.value}</span>
-                    <span class="pill">Status: {project.status}</span>
-                    <span class="pill">Sector: {project.sector}</span>
+                    <span class="pill">{post.date}</span>
+                    <span class="pill">{post.category}</span>
                   </div>
+                  <h3>{post.title}</h3>
+                  <p class="excerpt">{post.excerpt}</p>
                 </div>
               </article>
             ))
           }
-        </div>
-        <a class="cta-link" href="#">View All Projects</a>
-      </div>
-    </section>
-
-    <section class="section" id="team">
-      <div class="container">
-        <p class="eyebrow">Leadership Bench</p>
-        <div class="leaders">
-          <div class="leaders-image">
-            <img
-              src="https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=1400&q=80"
-              alt="Equity Partners leadership"
-            />
-          </div>
-          <div class="leaders-copy">
-            <blockquote>
-              "In Andorra, trust and execution move together. Our commitment is to deliver projects that strengthen the Principality while protecting investor confidence."
-            </blockquote>
-            <p class="leaders-note">Equity Partners core leadership team</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section gateway" id="contact">
-      <div class="container">
-        <p class="eyebrow">Investor Gateway</p>
-        <h2>Ready to invest in Andorra?</h2>
-        <p class="intro">
-          Schedule a confidential consultation with our team to explore aligned opportunities in the Principality.
-        </p>
-        <div class="gateway-box">
-          <p>
-            Additional opportunities and detailed project materials are shared directly during private investor conversations.
-          </p>
-          <a class="button" href="#">Schedule Confidential Consultation</a>
         </div>
       </div>
     </section>
@@ -1258,6 +969,5 @@ const currentYear = new Date().getFullYear();
       syncHeaderState();
       window.addEventListener("scroll", syncHeaderState, { passive: true });
     </script>
-
   </body>
 </html>
