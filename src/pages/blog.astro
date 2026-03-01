@@ -115,22 +115,6 @@ const currentYear = new Date().getFullYear();
         border: 0;
       }
 
-      .hero {
-        min-height: 44vh;
-        padding: 2rem 0 3rem;
-        background: linear-gradient(
-            to bottom,
-            rgba(6, 8, 12, 0.4) 0%,
-            rgba(6, 8, 12, 0.26) 18%,
-            rgba(6, 8, 12, 0.18) 34%,
-            rgba(6, 8, 12, 0.3) 100%
-          ),
-          url("/AND%20IMG%20night%20snow%20lights.jpeg") center / cover no-repeat;
-        color: var(--text-light);
-        display: flex;
-        flex-direction: column;
-      }
-
       .site-header {
         display: flex;
         align-items: center;
@@ -148,7 +132,7 @@ const currentYear = new Date().getFullYear();
         transform: none;
         width: 100%;
         z-index: 220;
-        background: transparent !important;
+        background: rgba(15, 26, 42, 0.92) !important;
         border-bottom: 1px solid transparent;
         border-radius: 0;
         transition: padding-top 320ms ease, padding-bottom 320ms ease, background-color 320ms ease,
@@ -175,7 +159,7 @@ const currentYear = new Date().getFullYear();
         width: 180px;
         height: auto;
         position: relative;
-        top: -5px;
+        top: -12px;
         filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))
           drop-shadow(0 0 10px rgba(8, 14, 23, 0.35));
       }
@@ -187,7 +171,7 @@ const currentYear = new Date().getFullYear();
         flex-wrap: nowrap;
         gap: 1.3rem;
         position: relative;
-        top: -4px;
+        top: -11px;
         z-index: 121;
       }
 
@@ -353,6 +337,7 @@ const currentYear = new Date().getFullYear();
       }
 
       .insights {
+        margin-top: 4.5rem;
         background: linear-gradient(180deg, #f4f6fa, #edf1f7);
         border-top: 1px solid var(--line);
         border-bottom: 1px solid var(--line);
@@ -683,6 +668,7 @@ const currentYear = new Date().getFullYear();
         .site-header {
           gap: 0.45rem;
           min-height: 44px;
+          padding-bottom: 0.45rem;
         }
 
         .main-nav {
@@ -693,7 +679,7 @@ const currentYear = new Date().getFullYear();
         .menu-toggle {
           display: inline-flex;
           position: relative;
-          top: -4px;
+          top: -7px;
           border: 0;
           box-shadow: none;
         }
@@ -746,6 +732,7 @@ const currentYear = new Date().getFullYear();
           width: 160px;
           top: -12px;
           margin-left: 0.4rem;
+          margin-top: -17px;
         }
 
         .menu-link {
@@ -754,7 +741,7 @@ const currentYear = new Date().getFullYear();
 
         .menu-cta {
           display: inline-flex;
-          top: -4px;
+          top: -7px;
         }
 
         .newsletter-form {
@@ -801,49 +788,38 @@ const currentYear = new Date().getFullYear();
     </style>
   </head>
   <body>
-    <section class="hero">
-      <div class="container">
-        <header class="site-header" id="home">
-          <input class="menu-toggle-input" type="checkbox" id="mobile-menu-toggle-blog" />
-          <label class="menu-toggle" for="mobile-menu-toggle-blog" aria-label="Toggle navigation menu">
-            <span class="menu-toggle-bars"></span>
-          </label>
-          <a href="/" aria-label="Go to homepage">
-            <img
-              class="logo"
-              src="/images/branding/equity-partners-logo-light%20small.png"
-              alt="Equity Partners logo"
-            />
-          </a>
-          <nav class="main-nav" aria-label="Primary">
-            <ul class="menu-list">
-              <li><a class="menu-link" href="/">Home</a></li>
-              <li><a class="menu-link" href="/#about">About</a></li>
-              <li><a class="menu-link" href="/#team">Team</a></li>
-              <li><a class="menu-link" href="/partners">Partners</a></li>
-              <li><a class="menu-link" href="/blog">Blog</a></li>
-              <li><a class="menu-link" href="/test">Test</a></li>
-            </ul>
-            <a class="menu-cta" href="/contact">Contact Us</a>
-          </nav>
-        </header>
-        <div class="hero-content">
-          <p class="hero-kicker">Equity Partners Journal</p>
-          <h1>Insights on Andorra real estate investment and execution.</h1>
-          <p class="subline">
-            Strategic analysis, project updates, and practical market intelligence for institutional and private investors.
-          </p>
-        </div>
-      </div>
-    </section>
+    <header class="site-header" id="home">
+      <input class="menu-toggle-input" type="checkbox" id="mobile-menu-toggle-blog" />
+      <label class="menu-toggle" for="mobile-menu-toggle-blog" aria-label="Toggle navigation menu">
+        <span class="menu-toggle-bars"></span>
+      </label>
+      <a href="/" aria-label="Go to homepage">
+        <img
+          class="logo"
+          src="/images/branding/equity-partners-logo-light%20small.png"
+          alt="Equity Partners logo"
+        />
+      </a>
+      <nav class="main-nav" aria-label="Primary">
+        <ul class="menu-list">
+          <li><a class="menu-link" href="/">Home</a></li>
+          <li><a class="menu-link" href="/#about">About</a></li>
+          <li><a class="menu-link" href="/#team">Team</a></li>
+          <li><a class="menu-link" href="/partners">Partners</a></li>
+          <li><a class="menu-link" href="/blog">Blog</a></li>
+          <li><a class="menu-link" href="/test">Test</a></li>
+        </ul>
+        <a class="menu-cta" href="/contact">Contact Us</a>
+      </nav>
+    </header>
 
     <section class="section insights">
       <div class="container">
         <div class="section-header">
           <p class="eyebrow">Latest Insights</p>
-          <h2>Decision-grade updates from the local market.</h2>
+          <h2>Insights on Andorra real estate investment and execution.</h2>
           <p class="intro">
-            Curated perspectives from the Equity Partners team on regulation, development, and capital strategy in the Principality.
+            Strategic analysis, project updates, and practical market intelligence for institutional and private investors.
           </p>
         </div>
         <div class="blog-grid">

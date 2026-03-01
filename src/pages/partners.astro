@@ -76,22 +76,6 @@ const currentYear = new Date().getFullYear();
         margin: 0 auto;
       }
 
-      .hero {
-        min-height: 44vh;
-        padding: 2rem 0 3rem;
-        background: linear-gradient(
-            to bottom,
-            rgba(6, 8, 12, 0.4) 0%,
-            rgba(6, 8, 12, 0.26) 18%,
-            rgba(6, 8, 12, 0.18) 34%,
-            rgba(6, 8, 12, 0.3) 100%
-          ),
-          url("/hero-andorra-R2PtlkD-.jpg") center / cover no-repeat;
-        color: var(--text-light);
-        display: flex;
-        flex-direction: column;
-      }
-
       .site-header {
         display: flex;
         align-items: center;
@@ -109,7 +93,7 @@ const currentYear = new Date().getFullYear();
         transform: none;
         width: 100%;
         z-index: 220;
-        background: transparent !important;
+        background: rgba(15, 26, 42, 0.92) !important;
         border-bottom: 1px solid transparent;
         border-radius: 0;
         transition: padding-top 320ms ease, padding-bottom 320ms ease, background-color 320ms ease,
@@ -136,7 +120,7 @@ const currentYear = new Date().getFullYear();
         width: 180px;
         height: auto;
         position: relative;
-        top: -5px;
+        top: -12px;
         filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))
           drop-shadow(0 0 10px rgba(8, 14, 23, 0.35));
       }
@@ -148,7 +132,7 @@ const currentYear = new Date().getFullYear();
         flex-wrap: nowrap;
         gap: 1.3rem;
         position: relative;
-        top: -4px;
+        top: -11px;
         z-index: 121;
       }
 
@@ -253,35 +237,11 @@ const currentYear = new Date().getFullYear();
         outline-offset: 2px;
       }
 
-      .hero-content {
-        margin-top: auto;
-        max-width: 44rem;
-        padding-top: 5rem;
-      }
-
-      .hero-kicker {
-        margin-bottom: 1rem;
-        font-size: 0.78rem;
-        letter-spacing: 0.24em;
-        text-transform: uppercase;
-        color: #b2c0d4;
-      }
-
-      h1 {
-        font-family: "Open Sans", "Avenir Next", "Segoe UI", Arial, sans-serif;
-        font-weight: 700;
-        font-size: clamp(1.9rem, 4.3vw, 3.1rem);
-        letter-spacing: 0.02em;
-        line-height: 1.08;
-      }
-
-      .subline {
-        margin-top: 0.9rem;
-        color: #cad4e4;
-        font-size: clamp(0.98rem, 1.6vw, 1.15rem);
-      }
-
       .section { padding: 4rem 0; }
+
+      .partner-network {
+        margin-top: 4.5rem;
+      }
 
       .eyebrow {
         font-size: 0.8rem;
@@ -524,13 +484,14 @@ const currentYear = new Date().getFullYear();
         .site-header {
           gap: 0.45rem;
           min-height: 44px;
+          padding-bottom: 0.45rem;
         }
 
         .main-nav { position: static; gap: 0.55rem; }
         .menu-toggle {
           display: inline-flex;
           position: relative;
-          top: -4px;
+          top: -7px;
           border: 0;
           box-shadow: none;
         }
@@ -583,14 +544,14 @@ const currentYear = new Date().getFullYear();
           top: auto;
           transform: none;
           margin-left: 0.9rem;
-          margin-top: -14px;
+          margin-top: -17px;
         }
 
         .menu-link { font-size: 0.7rem; }
 
         .menu-cta {
           display: inline-flex;
-          top: -4px;
+          top: -7px;
         }
 
         .footer-grid {
@@ -616,48 +577,37 @@ const currentYear = new Date().getFullYear();
     </style>
   </head>
   <body>
-    <section class="hero">
-      <div class="container">
-        <header class="site-header">
-          <input class="menu-toggle-input" type="checkbox" id="mobile-menu-toggle-partners" />
-          <label class="menu-toggle" for="mobile-menu-toggle-partners" aria-label="Toggle navigation menu">
-            <span class="menu-toggle-bars"></span>
-          </label>
-          <a href="/" aria-label="Go to homepage">
-            <img
-              class="logo"
-              src="/images/branding/equity-partners-logo-light%20small.png"
-              alt="Equity Partners logo"
-            />
-          </a>
-          <nav class="main-nav" aria-label="Primary">
-            <ul class="menu-list">
-              <li><a class="menu-link" href="/">Home</a></li>
-              <li><a class="menu-link" href="/#about">About</a></li>
-              <li><a class="menu-link" href="/#team">Team</a></li>
-              <li><a class="menu-link is-active" href="/partners">Partners</a></li>
-              <li><a class="menu-link" href="/blog">Blog</a></li>
-              <li><a class="menu-link" href="/test">Test</a></li>
-            </ul>
-            <a class="menu-cta" href="/contact">Contact Us</a>
-          </nav>
-        </header>
-        <div class="hero-content">
-          <p class="hero-kicker">Our Local Partners</p>
-          <h1>Trusted relationships across the Andorran ecosystem.</h1>
-          <p class="subline">
-            Our delivery model is built on deep local partnerships that strengthen project certainty from planning to execution.
-          </p>
-        </div>
-      </div>
-    </section>
+    <header class="site-header">
+      <input class="menu-toggle-input" type="checkbox" id="mobile-menu-toggle-partners" />
+      <label class="menu-toggle" for="mobile-menu-toggle-partners" aria-label="Toggle navigation menu">
+        <span class="menu-toggle-bars"></span>
+      </label>
+      <a href="/" aria-label="Go to homepage">
+        <img
+          class="logo"
+          src="/images/branding/equity-partners-logo-light%20small.png"
+          alt="Equity Partners logo"
+        />
+      </a>
+      <nav class="main-nav" aria-label="Primary">
+        <ul class="menu-list">
+          <li><a class="menu-link" href="/">Home</a></li>
+          <li><a class="menu-link" href="/#about">About</a></li>
+          <li><a class="menu-link" href="/#team">Team</a></li>
+          <li><a class="menu-link is-active" href="/partners">Partners</a></li>
+          <li><a class="menu-link" href="/blog">Blog</a></li>
+          <li><a class="menu-link" href="/test">Test</a></li>
+        </ul>
+        <a class="menu-cta" href="/contact">Contact Us</a>
+      </nav>
+    </header>
 
-    <section class="section">
+    <section class="section partner-network">
       <div class="container">
-        <p class="eyebrow">Partner Network</p>
-        <h2>Specialized capabilities aligned to project outcomes.</h2>
+        <p class="eyebrow">Our Local Partners</p>
+        <h2>Trusted relationships across the Andorran ecosystem.</h2>
         <p class="intro">
-          Each relationship contributes practical execution value across legal, financial, institutional, and commercial dimensions.
+          Our delivery model is built on deep local partnerships that strengthen project certainty from planning to execution.
         </p>
         <div class="partners-grid">
           {
