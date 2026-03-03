@@ -1,61 +1,7 @@
 ---
-const posts = [
-  {
-    title: "Andorra 2026 Outlook: Where Investor Demand Is Concentrating",
-    category: "Market Update",
-    date: "Feb 2026",
-    excerpt:
-      "A practical read on where cross-border investor demand is accelerating and which submarkets are showing the strongest absorption.",
-    image:
-      "https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1400&q=80",
-  },
-  {
-    title: "Structuring Residential Projects for Faster Delivery in the Principality",
-    category: "Execution",
-    date: "Jan 2026",
-    excerpt:
-      "Key operating decisions that reduce timeline risk from acquisition through permitting and contractor coordination.",
-    image:
-      "https://images.unsplash.com/photo-1482192505345-5655af888cc4?auto=format&fit=crop&w=1400&q=80",
-  },
-  {
-    title: "What International Investors Should Know About Andorran Compliance",
-    category: "Regulation",
-    date: "Dec 2025",
-    excerpt:
-      "A concise overview of the compliance touchpoints that matter most when entering and scaling in Andorra.",
-    image:
-      "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=1400&q=80",
-  },
-  {
-    title: "Designing Premium Units for Modern Buyer Preferences",
-    category: "Development",
-    date: "Nov 2025",
-    excerpt:
-      "How product design and amenity positioning can improve both sell-through velocity and long-term asset resilience.",
-    image:
-      "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1400&q=80",
-  },
-  {
-    title: "Capital Planning for One Active Project and Two Pipeline Opportunities",
-    category: "Capital Strategy",
-    date: "Oct 2025",
-    excerpt:
-      "A framework for balancing deployment timing, construction milestones, and risk controls across a focused portfolio.",
-    image:
-      "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1400&q=80",
-  },
-  {
-    title: "Why Local Partner Networks Still Define Performance in Small Jurisdictions",
-    category: "Partnerships",
-    date: "Sep 2025",
-    excerpt:
-      "In markets like Andorra, execution quality is often determined by relationship depth more than scale.",
-    image:
-      "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1400&q=80",
-  },
-];
+import { blogPosts } from "../data/blogPosts";
 
+const posts = blogPosts;
 const currentYear = new Date().getFullYear();
 ---
 
@@ -149,6 +95,14 @@ const currentYear = new Date().getFullYear();
         box-shadow: 0 8px 20px rgba(6, 10, 18, 0.18);
       }
 
+      body.is-scrolled .logo {
+        top: -5px;
+      }
+
+      body.is-scrolled .main-nav {
+        top: -4px;
+      }
+
       @supports not ((backdrop-filter: blur(1px))) {
         body.is-scrolled .site-header {
           background: rgba(15, 26, 42, 0.84) !important;
@@ -162,6 +116,7 @@ const currentYear = new Date().getFullYear();
         top: -12px;
         filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))
           drop-shadow(0 0 10px rgba(8, 14, 23, 0.35));
+        transition: top 320ms ease, margin-top 320ms ease;
       }
 
       .main-nav {
@@ -173,6 +128,7 @@ const currentYear = new Date().getFullYear();
         position: relative;
         top: -11px;
         z-index: 121;
+        transition: top 320ms ease;
       }
 
       .menu-toggle-input {
@@ -189,6 +145,7 @@ const currentYear = new Date().getFullYear();
         align-items: center;
         justify-content: center;
         cursor: pointer;
+        transition: top 320ms ease;
       }
 
       .menu-toggle-bars {
@@ -267,7 +224,7 @@ const currentYear = new Date().getFullYear();
         line-height: 1;
         border: 1px solid rgba(255, 255, 255, 0.15);
         white-space: nowrap;
-        transition: background-color 180ms ease, transform 180ms ease, color 180ms ease;
+        transition: background-color 180ms ease, transform 180ms ease, color 180ms ease, top 320ms ease;
       }
 
       .menu-cta:hover {
@@ -362,6 +319,14 @@ const currentYear = new Date().getFullYear();
         background: #ffffff;
       }
 
+      .blog-card-link {
+        color: inherit;
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
       .blog-card img {
         position: static;
         width: 100%;
@@ -370,7 +335,8 @@ const currentYear = new Date().getFullYear();
         transition: transform 320ms ease;
       }
 
-      .blog-card:hover img {
+      .blog-card:hover img,
+      .blog-card-link:hover img {
         transform: scale(1.04);
       }
 
@@ -707,11 +673,11 @@ const currentYear = new Date().getFullYear();
         }
 
         .menu-toggle-input:checked ~ .main-nav .menu-list {
-          padding: 0.7rem 0.8rem;
-          max-height: 280px;
+          max-height: 320px;
           opacity: 1;
           transform: translateY(0);
           pointer-events: auto;
+          padding: 0.7rem;
         }
 
         .menu-toggle-input:checked ~ .menu-toggle .menu-toggle-bars {
@@ -729,9 +695,12 @@ const currentYear = new Date().getFullYear();
         }
 
         .logo {
-          width: 160px;
-          top: -12px;
-          margin-left: 0.4rem;
+          width: min(38vw, 190px);
+          height: auto;
+          position: static;
+          top: auto;
+          transform: none;
+          margin-left: 0.9rem;
           margin-top: -17px;
         }
 
@@ -742,6 +711,22 @@ const currentYear = new Date().getFullYear();
         .menu-cta {
           display: inline-flex;
           top: -7px;
+        }
+
+        body.is-scrolled .site-header {
+          padding-bottom: 0;
+        }
+
+        body.is-scrolled .menu-toggle {
+          top: -4px;
+        }
+
+        body.is-scrolled .menu-cta {
+          top: -4px;
+        }
+
+        body.is-scrolled .logo {
+          margin-top: -14px;
         }
 
         .newsletter-form {
@@ -826,15 +811,17 @@ const currentYear = new Date().getFullYear();
           {
             posts.map((post) => (
               <article class="blog-card">
-                <img src={post.image} alt={post.title} loading="lazy" />
-                <div class="blog-meta">
-                  <div class="metrics">
-                    <span class="pill">{post.date}</span>
-                    <span class="pill">{post.category}</span>
+                <a class="blog-card-link" href={`/blog/${post.slug}`}>
+                  <img src={post.image} alt={post.title} loading="lazy" />
+                  <div class="blog-meta">
+                    <div class="metrics">
+                      <span class="pill">{post.date}</span>
+                      <span class="pill">{post.category}</span>
+                    </div>
+                    <h3>{post.title}</h3>
+                    <p class="excerpt">{post.excerpt}</p>
                   </div>
-                  <h3>{post.title}</h3>
-                  <p class="excerpt">{post.excerpt}</p>
-                </div>
+                </a>
               </article>
             ))
           }

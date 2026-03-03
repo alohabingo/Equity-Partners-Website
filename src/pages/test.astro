@@ -79,6 +79,14 @@ const currentYear = new Date().getFullYear();
         box-shadow: 0 8px 20px rgba(6, 10, 18, 0.18);
       }
 
+      body.is-scrolled .logo {
+        top: -5px;
+      }
+
+      body.is-scrolled .main-nav {
+        top: -4px;
+      }
+
       @supports not ((backdrop-filter: blur(1px))) {
         body.is-scrolled .site-header {
           background: rgba(15, 26, 42, 0.84) !important;
@@ -92,6 +100,7 @@ const currentYear = new Date().getFullYear();
         top: -12px;
         filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))
           drop-shadow(0 0 10px rgba(8, 14, 23, 0.35));
+        transition: top 320ms ease, margin-top 320ms ease;
       }
 
       .main-nav {
@@ -103,6 +112,7 @@ const currentYear = new Date().getFullYear();
         position: relative;
         top: -11px;
         z-index: 121;
+        transition: top 320ms ease;
       }
 
       .menu-toggle-input {
@@ -119,6 +129,7 @@ const currentYear = new Date().getFullYear();
         align-items: center;
         justify-content: center;
         cursor: pointer;
+        transition: top 320ms ease;
       }
 
       .menu-toggle-bars {
@@ -197,7 +208,7 @@ const currentYear = new Date().getFullYear();
         line-height: 1;
         border: 1px solid rgba(255, 255, 255, 0.15);
         white-space: nowrap;
-        transition: background-color 180ms ease, transform 180ms ease, color 180ms ease;
+        transition: background-color 180ms ease, transform 180ms ease, color 180ms ease, top 320ms ease;
       }
 
       .menu-cta:hover {
@@ -595,6 +606,22 @@ const currentYear = new Date().getFullYear();
           transform: none;
           margin-left: 0.9rem;
           margin-top: -17px;
+        }
+
+        body.is-scrolled .site-header {
+          padding-bottom: 0;
+        }
+
+        body.is-scrolled .menu-toggle {
+          top: -4px;
+        }
+
+        body.is-scrolled .menu-cta {
+          top: -4px;
+        }
+
+        body.is-scrolled .logo {
+          margin-top: -14px;
         }
 
         .menu-link {
