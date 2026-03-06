@@ -1,64 +1,78 @@
 ---
-import { blogPosts } from "../data/blogPosts";
-
-const posts = blogPosts;
 const currentYear = new Date().getFullYear();
+const teamMembers = [
+  {
+    name: "Alexandre Mendez",
+    role: "Managing Partner",
+    image: "/01_stone copy.jpg",
+    description:
+      "Leads originations and investor strategy with a focus on high-conviction Andorran residential opportunities.",
+  },
+  {
+    name: "Sofia Riba",
+    role: "Head of Development",
+    image: "/Ordino AND IMG day snow.webp",
+    description:
+      "Coordinates project execution from feasibility to delivery, ensuring timing, quality, and cost discipline.",
+  },
+  {
+    name: "Marc Ferrer",
+    role: "Regulatory & Permitting Lead",
+    image: "/AND IMG night snow lights.jpeg",
+    description:
+      "Navigates planning pathways and compliance processes across municipalities in the Principality.",
+  },
+  {
+    name: "Clara Duarte",
+    role: "Capital & Structuring",
+    image: "/ordino heights.jpg",
+    description:
+      "Builds investor-ready financial structures aligned with return objectives and long-term asset resilience.",
+  },
+  {
+    name: "Jordi Casals",
+    role: "Partnerships Director",
+    image: "/Andorra-la-Vella.webp",
+    description:
+      "Maintains local institutional and commercial relationships that accelerate sourcing and execution certainty.",
+  },
+];
 ---
 
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
-    <title>Blog | Equity Partners</title>
+    <title>About Us | Equity Partners</title>
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@700&display=swap");
+      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
 
       :root {
-        --bg-night: #06080c;
-        --bg-paper: #f3f5f9;
-        --bg-white: #ffffff;
-        --text-primary: #1f2835;
-        --text-muted: #5a667a;
-        --text-light: #e8edf5;
-        --accent: #8293ae;
-        --line: #dbe1ea;
+        --navy: #0f1a2a;
+        --navy-soft: #1f2f46;
+        --slate: #5f7087;
+        --slate-light: #8da0b9;
+        --paper: #f4f6fa;
+        --white: #ffffff;
+        --line: #dbe3ee;
         --max-width: 1120px;
       }
 
-      * {
-        box-sizing: border-box;
-      }
+      * { box-sizing: border-box; }
 
       body {
         margin: 0;
-        font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
-        color: var(--text-primary);
-        background: radial-gradient(circle at 10% -10%, #eef2f8 0, var(--bg-paper) 50%);
-        line-height: 1.5;
+        font-family: "Montserrat", "Avenir Next", "Segoe UI", Arial, sans-serif;
+        color: var(--navy-soft);
+        background: radial-gradient(circle at 10% -10%, #eef2f8 0, var(--paper) 50%);
+        line-height: 1.55;
       }
 
-      h1,
-      h2,
-      h3,
-      p {
-        margin: 0;
-      }
+      h1, h2, h3, p { margin: 0; }
 
       .container {
         width: min(var(--max-width), 92vw);
         margin: 0 auto;
-      }
-
-      .sr-only {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border: 0;
       }
 
       .site-header {
@@ -75,12 +89,10 @@ const currentYear = new Date().getFullYear();
         top: 0;
         left: 0;
         right: 0;
-        transform: none;
         width: 100%;
         z-index: 220;
         background: rgba(15, 26, 42, 0.92) !important;
         border-bottom: 1px solid transparent;
-        border-radius: 0;
         transition: padding-top 320ms ease, padding-bottom 320ms ease, background-color 320ms ease,
           backdrop-filter 320ms ease, -webkit-backdrop-filter 320ms ease, border-color 320ms ease,
           box-shadow 320ms ease;
@@ -95,29 +107,16 @@ const currentYear = new Date().getFullYear();
         box-shadow: 0 8px 20px rgba(6, 10, 18, 0.18);
       }
 
-      body.is-scrolled .logo {
-        top: -5px;
-      }
-
-      body.is-scrolled .main-nav {
-        top: -4px;
-      }
-
-      @supports not ((backdrop-filter: blur(1px))) {
-        body.is-scrolled .site-header {
-          background: rgba(15, 26, 42, 0.84) !important;
-        }
-      }
-
       .logo {
         width: 180px;
         height: auto;
         position: relative;
         top: -12px;
-        filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))
-          drop-shadow(0 0 10px rgba(8, 14, 23, 0.35));
+        filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
         transition: top 320ms ease, margin-top 320ms ease;
       }
+
+      body.is-scrolled .logo { top: -5px; }
 
       .main-nav {
         display: flex;
@@ -131,9 +130,9 @@ const currentYear = new Date().getFullYear();
         transition: top 320ms ease;
       }
 
-      .menu-toggle-input {
-        display: none;
-      }
+      body.is-scrolled .main-nav { top: -4px; }
+
+      .menu-toggle-input { display: none; }
 
       .menu-toggle {
         display: none;
@@ -145,14 +144,18 @@ const currentYear = new Date().getFullYear();
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: top 320ms ease;
+      }
+
+      .menu-toggle-bars,
+      .menu-toggle-bars::before,
+      .menu-toggle-bars::after {
+        width: 18px;
+        height: 2px;
+        background: #ffffff;
       }
 
       .menu-toggle-bars {
         display: block;
-        width: 18px;
-        height: 2px;
-        background: #ffffff;
         position: relative;
         transition: background 220ms ease;
       }
@@ -162,25 +165,16 @@ const currentYear = new Date().getFullYear();
         content: "";
         position: absolute;
         left: 0;
-        width: 18px;
-        height: 2px;
-        background: #ffffff;
         transition: transform 220ms ease, top 220ms ease;
       }
 
-      .menu-toggle-bars::before {
-        top: -6px;
-      }
-
-      .menu-toggle-bars::after {
-        top: 6px;
-      }
+      .menu-toggle-bars::before { top: -6px; }
+      .menu-toggle-bars::after { top: 6px; }
 
       .menu-list {
         list-style: none;
         display: flex;
         align-items: center;
-        flex-wrap: nowrap;
         white-space: nowrap;
         gap: 1.2rem;
         margin: 0;
@@ -197,12 +191,10 @@ const currentYear = new Date().getFullYear();
         text-transform: uppercase;
         font-weight: 600;
         line-height: 1;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
       }
 
-      .menu-link:hover {
-        color: #d7e3f5;
-      }
+      .menu-link:hover,
+      .menu-link.is-active { color: #d7e3f5; }
 
       .menu-cta {
         display: inline-flex;
@@ -210,7 +202,6 @@ const currentYear = new Date().getFullYear();
         justify-content: center;
         position: relative;
         top: 1px;
-        flex: 0 0 auto;
         min-width: 126px;
         color: #172235;
         background: rgba(204, 215, 232, 0.85);
@@ -221,243 +212,257 @@ const currentYear = new Date().getFullYear();
         border-radius: 0.45rem;
         padding: 0.65rem 0.95rem;
         font-weight: 600;
-        line-height: 1;
         border: 1px solid rgba(255, 255, 255, 0.15);
-        white-space: nowrap;
-        transition: background-color 180ms ease, transform 180ms ease, color 180ms ease, top 320ms ease;
       }
 
-      .menu-cta:hover {
-        background: rgba(224, 233, 246, 0.96);
-        color: #101b2c;
-        transform: translateY(-1px);
+      .menu-cta:hover { background: rgba(224, 233, 246, 0.96); }
+
+      .hero-manifesto {
+        margin-top: 4.5rem;
+        min-height: 62vh;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        background: #e9edf4;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
       }
 
-      .menu-cta:focus-visible {
-        outline: 2px solid rgba(234, 241, 252, 0.9);
-        outline-offset: 2px;
+      .hero-image {
+        min-height: 62vh;
+        background: url("/Ordino AND IMG day snow.webp") center / cover no-repeat;
+        filter: grayscale(100%);
       }
 
-      .hero-content {
-        margin-top: auto;
-        max-width: 44rem;
-        padding-top: 5.5rem;
+      .hero-copy {
+        display: flex;
+        align-items: center;
+        padding: clamp(2rem, 6vw, 4rem);
       }
 
-      .hero-kicker {
-        margin-bottom: 1rem;
-        font-size: 0.78rem;
-        letter-spacing: 0.24em;
-        text-transform: uppercase;
-        color: #b2c0d4;
+      .hero-copy h1 {
+        color: var(--navy);
+        font-size: clamp(2rem, 4.7vw, 3.4rem);
+        line-height: 1.05;
+        letter-spacing: -0.01em;
       }
 
-      h1 {
-        margin: 0;
-        font-family: "Open Sans", "Avenir Next", "Segoe UI", Arial, sans-serif;
-        font-weight: 700;
-        font-size: clamp(1.9rem, 4.3vw, 3.1rem);
-        letter-spacing: 0.02em;
-        line-height: 1.08;
-      }
-
-      .subline {
-        margin-top: 0.9rem;
-        color: #cad4e4;
-        font-size: clamp(0.98rem, 1.6vw, 1.15rem);
+      .hero-copy p {
+        margin-top: 1rem;
+        color: var(--slate);
+        max-width: 44ch;
+        font-size: 1.02rem;
       }
 
       .section {
-        padding: 4rem 0;
+        padding: 4.2rem 0;
       }
 
       .section-header {
         max-width: 48rem;
       }
 
-      .eyebrow {
-        font-size: 0.8rem;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-        color: var(--accent);
-        margin-bottom: 0.85rem;
-      }
-
-      h2 {
-        font-size: clamp(1.55rem, 3vw, 2.3rem);
-        line-height: 1.12;
-      }
-
       .intro {
         margin-top: 0.9rem;
-        color: var(--text-muted);
+        color: var(--slate);
       }
 
-      .insights {
-        margin-top: 4.5rem;
-        background: linear-gradient(180deg, #f4f6fa, #edf1f7);
+      .philosophy {
+        text-align: center;
+        background: #ffffff;
+      }
+
+      .eyebrow {
+        font-size: 0.74rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--slate-light);
+      }
+
+      .philosophy h2 {
+        margin-top: 0.6rem;
+        color: var(--navy);
+        font-size: clamp(1.7rem, 3vw, 2.55rem);
+        line-height: 1.15;
+      }
+
+      .philosophy-copy {
+        margin: 1rem auto 0;
+        max-width: 64ch;
+        color: var(--slate);
+      }
+
+      .philosophy-copy p + p {
+        margin-top: 0.95rem;
+      }
+
+      .advantage {
+        background: linear-gradient(180deg, #f4f6fa, #eef2f8);
         border-top: 1px solid var(--line);
         border-bottom: 1px solid var(--line);
       }
 
-      .blog-grid {
+      .advantage-grid {
+        margin-top: 1.8rem;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .advantage-card {
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        padding: 1.3rem;
+      }
+
+      .advantage-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        border: 1px solid #cfd8e8;
+        color: #4f6079;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+
+      .advantage-card h3 {
+        margin-top: 0.7rem;
+        color: var(--navy);
+        font-size: 1.15rem;
+      }
+
+      .advantage-card p {
+        margin-top: 0.6rem;
+        color: var(--slate);
+      }
+
+      .methodology {
+        background: #ffffff;
+      }
+
+      .timeline {
+        margin-top: 1.8rem;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.7rem;
+        align-items: start;
+      }
+
+      .timeline-step {
+        position: relative;
+        padding-top: 1.35rem;
+      }
+
+      .timeline-step::before {
+        content: "";
+        position: absolute;
+        top: 0.45rem;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: #d4ddea;
+      }
+
+      .timeline-step:first-child::before {
+        left: 22px;
+      }
+
+      .timeline-step:last-child::before {
+        right: 22px;
+      }
+
+      .timeline-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        background: var(--navy);
+        margin-bottom: 0.75rem;
+      }
+
+      .timeline-step h3 {
+        color: var(--navy);
+        font-size: 1.05rem;
+      }
+
+      .timeline-step p {
+        margin-top: 0.5rem;
+        color: var(--slate);
+        font-size: 0.92rem;
+      }
+
+      .about-cta {
+        background: var(--navy);
+        color: #edf3fc;
+        text-align: center;
+      }
+
+      .team-intro {
+        background: #ffffff;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .team-grid {
         margin-top: 1.9rem;
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 1rem;
       }
 
-      .blog-card {
-        position: relative;
+      .team-card {
+        background: #f8faff;
+        border: 1px solid #d8e1ee;
         border-radius: 1rem;
         overflow: hidden;
-        min-height: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        border: 1px solid #d7deea;
-        background: #ffffff;
       }
 
-      .blog-card-link {
-        color: inherit;
-        text-decoration: none;
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-      }
-
-      .blog-card img {
-        position: static;
+      .team-card img {
         width: 100%;
-        height: 14rem;
+        height: 11rem;
         object-fit: cover;
-        transition: transform 320ms ease;
+        display: block;
       }
 
-      .blog-card:hover img,
-      .blog-card-link:hover img {
-        transform: scale(1.04);
+      .team-card-body {
+        padding: 1rem;
       }
 
-      .blog-card::before {
-        content: none;
+      .team-role {
+        margin-top: 0.4rem;
+        color: #8293ae;
+        font-size: 0.76rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
       }
 
-      .blog-meta {
-        position: static;
-        z-index: auto;
-        padding: 1.2rem;
-        color: var(--text-primary);
+      .team-description {
+        margin-top: 0.6rem;
+        color: var(--slate);
+        font-size: 0.9rem;
+        line-height: 1.5;
       }
 
-      .blog-meta h3 {
-        font-size: 1.15rem;
-        line-height: 1.24;
+      .about-cta h2 {
+        font-size: clamp(1.45rem, 3vw, 2.2rem);
+        line-height: 1.16;
       }
 
-      .metrics {
-        margin-top: 0.7rem;
-        margin-bottom: 0.6rem;
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 0.45rem;
-      }
-
-      .pill {
+      .about-cta .cta-button {
+        margin-top: 1.1rem;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: fit-content;
-        font-size: 0.75rem;
-        line-height: 1.2;
-        padding: 0.28rem 0.56rem;
-        border: 1px solid #ccd7e8;
-        border-radius: 999px;
-        background: #f4f7fc;
-        color: #33445c;
-      }
-
-      .excerpt {
-        color: var(--text-muted);
-        font-size: 0.87rem;
-        line-height: 1.45;
-      }
-
-      .newsletter {
-        background: linear-gradient(180deg, #f4f6fa, #eef2f8);
-        border-top: 1px solid var(--line);
-        border-bottom: 1px solid var(--line);
-        padding: 2.5rem 0;
-      }
-
-
-      .newsletter-wrap {
-        display: grid;
-        grid-template-columns: 1.1fr 1fr;
-        gap: 1.4rem;
-        align-items: center;
         background: #ffffff;
-        border: 1px solid #d7deea;
-        border-radius: 1rem;
-        padding: 1.5rem;
-      }
-
-      .newsletter-copy p {
-        margin-top: 0.7rem;
-        color: var(--text-muted);
-        max-width: 34rem;
-      }
-
-      .newsletter-form {
-        display: flex;
-        align-items: center;
-        gap: 0.7rem;
-        justify-content: flex-end;
-      }
-
-      .newsletter-input {
-        width: min(360px, 100%);
-        height: 44px;
-        border-radius: 0.55rem;
-        border: 1px solid #cfd9e7;
-        background: #f9fbff;
-        padding: 0 0.85rem;
-        font-size: 0.92rem;
-        color: #1a2433;
-        outline: none;
-      }
-
-      .newsletter-input:focus {
-        border-color: #9eb0ca;
-        box-shadow: 0 0 0 2px rgba(130, 147, 174, 0.18);
-      }
-
-      .newsletter-button {
-        height: 44px;
-        border: 1px solid rgba(14, 24, 39, 0.18);
-        background: #1b2a3f;
-        color: #eaf1fb;
-        border-radius: 0.55rem;
-        padding: 0 1rem;
-        font-size: 0.72rem;
-        letter-spacing: 0.12em;
+        color: var(--navy);
+        text-decoration: none;
+        border-radius: 0.5rem;
+        padding: 0.8rem 1.1rem;
+        font-size: 0.74rem;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background-color 180ms ease, transform 180ms ease;
-      }
-
-      .newsletter-button:hover {
-        background: #253750;
-        transform: translateY(-1px);
-      }
-
-      .newsletter-note {
-        margin-top: 0.5rem;
-        color: #7a889e;
-        font-size: 0.72rem;
+        font-weight: 700;
       }
 
       .footer {
@@ -512,20 +517,6 @@ const currentYear = new Date().getFullYear();
         line-height: 1;
         border: 1px solid rgba(255, 255, 255, 0.15);
         white-space: nowrap;
-        transition: background-color 180ms ease, transform 180ms ease, color 180ms ease,
-          box-shadow 180ms ease;
-      }
-
-      .footer-cta:hover {
-        background: rgba(224, 233, 246, 1);
-        color: #101b2c;
-        transform: translateY(-1px);
-        box-shadow: 0 6px 18px rgba(6, 12, 20, 0.22);
-      }
-
-      .footer-cta:focus-visible {
-        outline: 2px solid rgba(234, 241, 252, 0.92);
-        outline-offset: 2px;
       }
 
       .footer-heading {
@@ -551,10 +542,6 @@ const currentYear = new Date().getFullYear();
         font-size: 0.75rem;
         letter-spacing: 0.09em;
         text-transform: uppercase;
-      }
-
-      .footer-link:hover {
-        color: #ffffff;
       }
 
       .footer-meta {
@@ -624,10 +611,16 @@ const currentYear = new Date().getFullYear();
       }
 
       @media (max-width: 980px) {
-        .blog-grid,
-        .footer-grid,
-        .newsletter-wrap {
+        .hero-manifesto,
+        .advantage-grid,
+        .team-grid,
+        .timeline,
+        .footer-grid {
           grid-template-columns: 1fr;
+        }
+
+        .hero-image {
+          min-height: 36vh;
         }
       }
 
@@ -649,6 +642,11 @@ const currentYear = new Date().getFullYear();
           top: -7px;
           border: 0;
           box-shadow: none;
+        }
+
+        .menu-cta {
+          display: inline-flex;
+          top: -7px;
         }
 
         .menu-list {
@@ -681,10 +679,7 @@ const currentYear = new Date().getFullYear();
           padding: 0.7rem;
         }
 
-        .menu-toggle-input:checked ~ .menu-toggle .menu-toggle-bars {
-          background: transparent;
-        }
-
+        .menu-toggle-input:checked ~ .menu-toggle .menu-toggle-bars { background: transparent; }
         .menu-toggle-input:checked ~ .menu-toggle .menu-toggle-bars::before {
           top: 0;
           transform: rotate(45deg);
@@ -705,15 +700,6 @@ const currentYear = new Date().getFullYear();
           margin-top: -17px;
         }
 
-        .menu-link {
-          font-size: 0.7rem;
-        }
-
-        .menu-cta {
-          display: inline-flex;
-          top: -7px;
-        }
-
         body.is-scrolled .site-header {
           padding-bottom: 0;
         }
@@ -728,20 +714,6 @@ const currentYear = new Date().getFullYear();
 
         body.is-scrolled .logo {
           margin-top: -14px;
-        }
-
-        .newsletter-form {
-          flex-direction: column;
-          align-items: stretch;
-          justify-content: flex-start;
-        }
-
-        .newsletter-input {
-          width: 100%;
-        }
-
-        .newsletter-button {
-          width: 100%;
         }
 
         .footer-grid {
@@ -763,20 +735,15 @@ const currentYear = new Date().getFullYear();
           text-align: left;
         }
 
-        .footer-legal {
-          justify-content: flex-start;
-        }
-
-        .footer-social {
-          justify-content: flex-start;
-        }
+        .footer-legal,
+        .footer-social { justify-content: flex-start; }
       }
     </style>
   </head>
   <body>
-    <header class="site-header" id="home">
-      <input class="menu-toggle-input" type="checkbox" id="mobile-menu-toggle-blog" />
-      <label class="menu-toggle" for="mobile-menu-toggle-blog" aria-label="Toggle navigation menu">
+    <header class="site-header">
+      <input class="menu-toggle-input" type="checkbox" id="mobile-menu-toggle-about" />
+      <label class="menu-toggle" for="mobile-menu-toggle-about" aria-label="Toggle navigation menu">
         <span class="menu-toggle-bars"></span>
       </label>
       <a href="/" aria-label="Go to homepage">
@@ -790,7 +757,7 @@ const currentYear = new Date().getFullYear();
         <ul class="menu-list">
           <li><a class="menu-link" href="/">Home</a></li>
           <li><a class="menu-link" href="/#team">Services</a></li>
-              <li><a class="menu-link" href="/about">About</a></li>
+          <li><a class="menu-link is-active" href="/about">About</a></li>
           <li><a class="menu-link" href="/partners">Partners</a></li>
           <li><a class="menu-link" href="/blog">Blog</a></li>
           <li><a class="menu-link" href="/test">Test</a></li>
@@ -799,30 +766,104 @@ const currentYear = new Date().getFullYear();
       </nav>
     </header>
 
-    <section class="section insights">
-      <div class="container">
-        <div class="section-header">
-          <p class="eyebrow">Latest Insights</p>
-          <h2>Insights on Andorra real estate investment and execution.</h2>
-          <p class="intro">
-            Strategic analysis, project updates, and practical market intelligence for institutional and private investors.
+    <section class="hero-manifesto">
+      <div class="hero-image" aria-label="Andorran mountains"></div>
+      <div class="hero-copy">
+        <div>
+          <h1>The Bridge to Andorran Opportunity.</h1>
+          <p>
+            By blending an international investment lens with deep local roots, we open the doors to the Principality’s most exclusive real estate assets for global capital.
           </p>
         </div>
-        <div class="blog-grid">
+      </div>
+    </section>
+
+    <section class="section philosophy">
+      <div class="container">
+        <p class="eyebrow">Our Philosophy</p>
+        <h2>Global Standards. Local Execution.</h2>
+        <div class="philosophy-copy">
+          <p>
+            We apply the same analytical rigor, governance discipline, and reporting transparency expected in major global financial centers.
+          </p>
+          <p>
+            Every mandate is adapted to the specific operating realities of Andorra, ensuring strategic clarity without losing local execution precision.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section advantage">
+      <div class="container">
+        <p class="eyebrow">Andorra Advantage</p>
+        <div class="advantage-grid">
+          <article class="advantage-card">
+            <span class="advantage-icon">S</span>
+            <h3>Stability</h3>
+            <p>Low public debt and a resilient economy that supports long-term investor confidence.</p>
+          </article>
+          <article class="advantage-card">
+            <span class="advantage-icon">L</span>
+            <h3>Strategic Location</h3>
+            <p>A secure European hub positioned between France and Spain with strong cross-border access.</p>
+          </article>
+          <article class="advantage-card">
+            <span class="advantage-icon">E</span>
+            <h3>Exclusivity</h3>
+            <p>A high-barrier market where local access creates significant off-market potential.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section methodology">
+      <div class="container">
+        <p class="eyebrow">Methodology</p>
+        <h2>Execution framework from origination to delivery.</h2>
+        <div class="timeline">
+          <article class="timeline-step">
+            <div class="timeline-dot"></div>
+            <h3>Sourcing</h3>
+            <p>Exclusive off-market deal flow.</p>
+          </article>
+          <article class="timeline-step">
+            <div class="timeline-dot"></div>
+            <h3>Validation</h3>
+            <p>Institutional-grade financial modeling.</p>
+          </article>
+          <article class="timeline-step">
+            <div class="timeline-dot"></div>
+            <h3>Permitting</h3>
+            <p>Expertly navigating local planning and compliance.</p>
+          </article>
+          <article class="timeline-step">
+            <div class="timeline-dot"></div>
+            <h3>Delivery</h3>
+            <p>Precision execution and asset management.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section team-intro" id="team">
+      <div class="container">
+        <div class="section-header">
+          <p class="eyebrow">Our Team</p>
+          <h2>The people behind Equity Partners.</h2>
+          <p class="intro">
+            A five-person team combining institutional investment standards with practical Andorran market execution.
+          </p>
+        </div>
+        <div class="team-grid">
           {
-            posts.map((post) => (
-              <article class="blog-card">
-                <a class="blog-card-link" href={`/blog/${post.slug}`}>
-                  <img src={post.image} alt={post.title} loading="lazy" />
-                  <div class="blog-meta">
-                    <div class="metrics">
-                      <span class="pill">{post.date}</span>
-                      <span class="pill">{post.category}</span>
-                    </div>
-                    <h3>{post.title}</h3>
-                    <p class="excerpt">{post.excerpt}</p>
-                  </div>
-                </a>
+            teamMembers.map((member) => (
+              <article class="team-card">
+                <img src={member.image} alt={member.name} loading="lazy" />
+                <div class="team-card-body">
+                  <h3>{member.name}</h3>
+                  <p class="team-role">{member.role}</p>
+                  <p class="team-description">{member.description}</p>
+                </div>
               </article>
             ))
           }
@@ -830,35 +871,10 @@ const currentYear = new Date().getFullYear();
       </div>
     </section>
 
-    <section class="section newsletter" id="newsletter">
+    <section class="section about-cta">
       <div class="container">
-        <p class="eyebrow">Newsletter</p>
-        <div class="newsletter-wrap">
-          <div class="newsletter-copy">
-            <h2>Stay informed on Andorra opportunities.</h2>
-            <p>Get concise updates on market shifts, pipeline milestones, and investor-relevant developments.</p>
-          </div>
-          <form
-            class="newsletter-form"
-            name="newsletter-signup"
-            data-netlify="true"
-            action="#"
-            method="post"
-          >
-            <input type="hidden" name="form-name" value="newsletter-signup" />
-            <label class="sr-only" for="newsletter-email">Email address</label>
-            <input
-              class="newsletter-input"
-              id="newsletter-email"
-              name="email"
-              type="email"
-              placeholder="Enter your email"
-              required
-            />
-            <button class="newsletter-button" type="submit">Subscribe</button>
-          </form>
-        </div>
-        <p class="newsletter-note">We send selective updates only. No spam.</p>
+        <h2>Explore our current portfolio or discuss a strategic mandate.</h2>
+        <a class="cta-button" href="/contact">Contact Our Team</a>
       </div>
     </section>
 
@@ -877,10 +893,10 @@ const currentYear = new Date().getFullYear();
           <div>
             <h3 class="footer-heading">Equity Partners</h3>
             <ul class="footer-list">
-              <li><a class="footer-link" href="#about">About</a></li>
-              <li><a class="footer-link" href="#team">Team</a></li>
+              <li><a class="footer-link" href="/#about">About</a></li>
+              <li><a class="footer-link" href="/#team">Team</a></li>
               <li><a class="footer-link" href="/partners">Partners</a></li>
-              <li><a class="footer-link" href="#partners">Projects</a></li>
+              <li><a class="footer-link" href="/#partners">Projects</a></li>
             </ul>
           </div>
 
@@ -924,6 +940,7 @@ const currentYear = new Date().getFullYear();
         </div>
       </div>
     </footer>
+
     <script type="module">
       const root = document.body;
       const syncHeaderState = () => {

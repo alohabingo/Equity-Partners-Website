@@ -19,28 +19,25 @@ const advantages = [
 
 const projects = [
   {
-    name: "Escaldes Signature Residences",
+    name: "Nanta Alta Luxury villas",
     status: "Under Construction",
-    value: "€34M",
+    value: "€50M",
     sector: "Luxury Residential",
-    image:
-      "https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1200&q=80",
+    image: "/04c%20copy.jpg",
   },
   {
-    name: "La Massana Heights",
+    name: "Ordino Heights",
     status: "Pipeline",
     value: "€18M",
     sector: "Residential Development",
-    image:
-      "https://images.unsplash.com/photo-1482192505345-5655af888cc4?auto=format&fit=crop&w=1200&q=80",
+    image: "/ordino%20heights.jpg",
   },
   {
-    name: "Andorra Business Residence",
+    name: "Funicamp ski Residencies",
     status: "Pipeline",
     value: "€22M",
     sector: "Mixed-Use",
-    image:
-      "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=1200&q=80",
+    image: "/funicamp%20ski.jpg",
   },
 ];
 
@@ -333,10 +330,21 @@ const currentYear = new Date().getFullYear();
       }
 
       .partners-wrap {
-        background: var(--bg-paper);
+        background: #ffffff;
         border-bottom: 1px solid var(--line);
         padding: 2.2rem 0 2rem;
         overflow: hidden;
+      }
+
+      .partners-link {
+        display: block;
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .partners-link:focus-visible {
+        outline: 2px solid rgba(130, 147, 174, 0.45);
+        outline-offset: 3px;
       }
 
       .partners-title {
@@ -348,6 +356,7 @@ const currentYear = new Date().getFullYear();
         text-transform: uppercase;
         color: var(--accent);
         font-weight: 400;
+        text-decoration: none;
       }
 
       .partners-divider {
@@ -403,6 +412,78 @@ const currentYear = new Date().getFullYear();
         to {
           transform: translateX(-25%);
         }
+      }
+
+      .focus-section {
+        padding: 2.4rem 0 3rem;
+        background: #f2f5fa;
+        border-top: 1px solid #dce3ee;
+        border-bottom: 1px solid #dce3ee;
+      }
+
+      .focus-layout {
+        display: grid;
+        grid-template-columns: minmax(260px, 0.9fr) minmax(0, 1.25fr);
+        gap: 2.6rem;
+        align-items: start;
+      }
+
+      .focus-label {
+        margin: 0;
+        font-size: 0.72rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: #8a99ae;
+      }
+
+      .focus-title {
+        margin-top: 0.55rem;
+        font-size: clamp(1.9rem, 3.3vw, 3rem);
+        line-height: 1.06;
+        color: #1f2b3c;
+      }
+
+      .focus-intro {
+        margin-top: 0.9rem;
+        max-width: 37ch;
+        color: #5e6c82;
+      }
+
+      .focus-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        border-top: 1px solid #dce3ee;
+      }
+
+      .focus-item {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        column-gap: 0.95rem;
+        row-gap: 0.35rem;
+        padding: 1.18rem 0 1.24rem;
+        border-bottom: 1px solid #dce3ee;
+      }
+
+      .focus-index {
+        font-size: 0.73rem;
+        letter-spacing: 0.09em;
+        color: #8f9db1;
+        margin-top: 0.2rem;
+      }
+
+      .focus-item-title {
+        font-size: 1.18rem;
+        line-height: 1.22;
+        color: #24344c;
+      }
+
+      .focus-item-copy {
+        grid-column: 2;
+        margin: 0;
+        color: #66758a;
+        font-size: 0.9rem;
+        line-height: 1.5;
       }
 
       .section-header {
@@ -540,7 +621,7 @@ const currentYear = new Date().getFullYear();
         height: 33vh;
         min-height: 220px;
         background:
-          linear-gradient(rgba(7, 13, 22, 0.24), rgba(7, 13, 22, 0.24)),
+          linear-gradient(rgba(7, 13, 22, 0.4), rgba(7, 13, 22, 0.4)),
           url("/AND IMG night snow lights.jpeg") center / cover no-repeat fixed;
         background-color: #0f1a2a;
         overflow: hidden;
@@ -892,6 +973,11 @@ const currentYear = new Date().getFullYear();
         .newsletter-wrap {
           grid-template-columns: 1fr;
         }
+
+        .focus-layout {
+          grid-template-columns: 1fr;
+          gap: 1.35rem;
+        }
       }
 
       @media (max-width: 680px) {
@@ -993,6 +1079,18 @@ const currentYear = new Date().getFullYear();
           animation-duration: 36s;
         }
 
+        .focus-item {
+          padding: 0.95rem 0 1rem;
+        }
+
+        .focus-item-title {
+          font-size: 1.02rem;
+        }
+
+        .focus-item-copy {
+          font-size: 0.84rem;
+        }
+
         .newsletter-form {
           flex-direction: column;
           align-items: stretch;
@@ -1064,8 +1162,8 @@ const currentYear = new Date().getFullYear();
           <nav class="main-nav" aria-label="Primary">
             <ul class="menu-list">
               <li><a class="menu-link" href="/">Home</a></li>
-              <li><a class="menu-link" href="/#about">About</a></li>
-              <li><a class="menu-link" href="/#team">Team</a></li>
+              <li><a class="menu-link" href="/#team">Services</a></li>
+              <li><a class="menu-link" href="/about">About</a></li>
               <li><a class="menu-link" href="/partners">Partners</a></li>
               <li><a class="menu-link" href="/blog">Blog</a></li>
               <li><a class="menu-link" href="/test">Test</a></li>
@@ -1084,42 +1182,66 @@ const currentYear = new Date().getFullYear();
     </section>
 
     <section class="partners-wrap" id="partners-local">
+      <a class="partners-link" href="/partners" aria-label="View all local partners">
+        <div class="container">
+          <h2 class="partners-title">OUR LOCAL PARTNERS</h2>
+        </div>
+        <div class="partners-marquee" aria-label="Local partner logos">
+          <div class="partners-track">
+            {
+              localPartnersLoop.map((partner) => (
+                <div class="partner-logo-box">
+                  <img src={partner.logo} alt={partner.name} loading="lazy" />
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      </a>
+    </section>
+
+    <section class="focus-section">
       <div class="container">
-        <h2 class="partners-title">OUR LOCAL PARTNERS</h2>
-      </div>
-      <div class="partners-marquee" aria-label="Local partner logos">
-        <div class="partners-track">
-          {
-            localPartnersLoop.map((partner) => (
-              <div class="partner-logo-box">
-                <img src={partner.logo} alt={partner.name} loading="lazy" />
-              </div>
-            ))
-          }
+        <div class="focus-layout">
+          <div>
+            <p class="focus-label">Our Focus</p>
+            <h2 class="focus-title">What we do</h2>
+            <p class="focus-intro">
+              We open the doors to Andorra’s exclusive investment landscape by pairing a an international outlook with the local expertise needed to bridge the gap for global capital.
+            </p>
+          </div>
+
+          <ol class="focus-list">
+            <li class="focus-item">
+              <span class="focus-index">01</span>
+              <h3 class="focus-item-title">Full-Cycle Project Development</h3>
+              <p class="focus-item-copy">From initial feasibility to final delivery, we provide end-to-end execution that transforms strategic land acquisitions into institutional-grade assets.</p>
+            </li>
+            <li class="focus-item">
+              <span class="focus-index">02</span>
+              <h3 class="focus-item-title">Local Network &amp; Exclusive Access</h3>
+              <p class="focus-item-copy">Direct relationships with landowners, advisors, and Andorran operators unlock secure high-value, off-market opportunities before they reach the public sector.</p>
+            </li>
+            <li class="focus-item">
+              <span class="focus-index">03</span>
+              <h3 class="focus-item-title">Regulatory Expertise</h3>
+              <p class="focus-item-copy">We navigate the Principality’s compliance landscape, translating local regulations into executable investment strategies through deep-rooted jurisdictional expertise.</p>
+            </li>
+            <li class="focus-item">
+              <span class="focus-index">04</span>
+              <h3 class="focus-item-title">Institutional Capital Bridging</h3>
+              <p class="focus-item-copy">We provide the structural bridge that allows international firms to deploy capital into Andorra without compromising on institutional standards.</p>
+            </li>
+          </ol>
         </div>
       </div>
     </section>
 
-    <section class="section" id="about">
-      <div class="container">
-        <div class="section-header">
-          <p class="eyebrow">Strategic Advantage</p>
-          <h2>We do not just source land. We navigate the Andorran ecosystem through delivery.</h2>
-          <p class="intro">
-            Our edge is practical: local connectivity, regulatory confidence, and lifecycle control that keeps execution aligned with investor priorities.
-          </p>
-        </div>
-        <div class="adv-grid">
-          {
-            advantages.map((item, index) => (
-              <article class="adv-card">
-                <p class="adv-number">0{index + 1}</p>
-                <h3>{item.title}</h3>
-                <p>{item.description}</p>
-              </article>
-            ))
-          }
-        </div>
+    <section class="test-image-break" aria-label="Andorra night landscape">
+      <div class="test-image-title-wrap">
+        <h2 class="test-image-title">
+          We open the door to Andorra’s high-barrier investment landscape, bridging the gap between global capital and Andorran opportunity.
+        </h2>
       </div>
     </section>
 
@@ -1127,7 +1249,7 @@ const currentYear = new Date().getFullYear();
       <div class="container">
         <div class="section-header">
           <p class="eyebrow">Featured Developments</p>
-          <h2>One active project and two pipeline opportunities.</h2>
+          <h2>View our current property developments</h2>
           <p class="intro">Balanced proof architecture: demonstrated execution plus visible momentum.</p>
         </div>
         <div class="project-grid">
@@ -1151,21 +1273,13 @@ const currentYear = new Date().getFullYear();
       </div>
     </section>
 
-    <section class="test-image-break" aria-label="Andorra night landscape">
-      <div class="test-image-title-wrap">
-        <h2 class="test-image-title">
-          Would you rather live in a tax paradise, or an actual paradise with tax advantages?
-        </h2>
-      </div>
-    </section>
-
     <section class="section" id="team">
       <div class="container">
         <p class="eyebrow">Leadership Bench</p>
         <div class="leaders">
           <div class="leaders-image">
             <img
-              src="https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=1400&q=80"
+              src="/01_stone%20copy.jpg"
               alt="Equity Partners leadership"
             />
           </div>
