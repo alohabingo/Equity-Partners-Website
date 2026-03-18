@@ -10,6 +10,7 @@ const currentYear = new Date().getFullYear();
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <title>Blog | Equity Partners</title>
+    <link rel="icon" type="image/png" href="/EP%20favicon.png" />
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@700&display=swap");
 
@@ -656,7 +657,7 @@ const currentYear = new Date().getFullYear();
           top: calc(100% + 0.5rem);
           left: 0;
           right: auto;
-          min-width: 190px;
+          min-width: min(190px, calc(100vw - 2rem));
           flex-direction: column;
           align-items: flex-start;
           gap: 0.55rem;
@@ -696,7 +697,7 @@ const currentYear = new Date().getFullYear();
         }
 
         .logo {
-          width: min(38vw, 190px);
+          width: min(34vw, 170px);
           height: auto;
           position: static;
           top: auto;
@@ -712,6 +713,9 @@ const currentYear = new Date().getFullYear();
         .menu-cta {
           display: inline-flex;
           top: -7px;
+          min-width: 102px;
+          padding: 0.58rem 0.8rem;
+          font-size: 0.68rem;
         }
 
         body.is-scrolled .site-header {
@@ -745,13 +749,14 @@ const currentYear = new Date().getFullYear();
         }
 
         .footer-grid {
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: 1fr;
           gap: 1.2rem;
         }
 
         .footer-grid > div:not(:first-child) {
           justify-self: start;
           text-align: left;
+          margin-left: 0;
         }
 
         .footer-grid > div:not(:first-child) .footer-list {

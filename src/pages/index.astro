@@ -47,6 +47,10 @@ const localPartners = [
   { name: "Govern d'Andorra", logo: "/images/partners/Govern d'Andorra logo.png" },
   { name: "Creand", logo: "/images/partners/creand.webp" },
   { name: "Engel & Volkers", logo: "/images/partners/engel volkers logo.png" },
+  { name: "Heracles", logo: "/images/partners/heracles%20logo.png" },
+  { name: "Pret a Porter Casas", logo: "/images/partners/pret%20a%20porter%20casas%20logo.svg" },
+  { name: "Hormipresa", logo: "/images/partners/hormipresa%20.webp" },
+  { name: "MoraBank", logo: "/images/partners/mora%20bank.png" },
 ];
 
 const localPartnersLoop = [...localPartners, ...localPartners, ...localPartners, ...localPartners];
@@ -58,6 +62,7 @@ const currentYear = new Date().getFullYear();
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <title>Equity Partners | Andorra Property Group</title>
+    <link rel="icon" type="image/png" href="/EP%20favicon.png" />
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@700&display=swap");
 
@@ -484,6 +489,79 @@ const currentYear = new Date().getFullYear();
         color: #66758a;
         font-size: 0.9rem;
         line-height: 1.5;
+      }
+
+      .focus-section-f {
+        padding: 2.4rem 0 3rem;
+        background: #f2f5fa;
+        border-top: 1px solid #dce3ee;
+        border-bottom: 1px solid #dce3ee;
+      }
+
+      .focus-f-header {
+        margin-bottom: 0.9rem;
+      }
+
+      .focus-f-header .focus-label {
+        color: #5a667a;
+      }
+
+      .focus-f-header .focus-title {
+        color: #0f1a2a;
+      }
+
+      .focus-f-header .focus-intro {
+        color: #5a667a;
+        max-width: none;
+        width: 100%;
+      }
+
+      .focus-f-body {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+        gap: 1rem;
+        align-items: stretch;
+      }
+
+      .focus-f-body .focus-c-panels {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+      }
+
+      .focus-c-kpi {
+        background: #ffffff;
+        border: 1px solid #c4cedd;
+        border-radius: 0.9rem;
+        padding: 1rem;
+      }
+
+      .focus-c-kpi-value {
+        color: #0f1a2a;
+        font-size: 0.75rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .focus-c-kpi h3 {
+        margin-top: 0.45rem;
+        color: #0f1a2a;
+        font-size: 1.06rem;
+      }
+
+      .focus-c-kpi p {
+        margin-top: 0.5rem;
+        color: #5a667a;
+        font-size: 0.88rem;
+      }
+
+      .focus-f-body .focus-c-media {
+        border-radius: 1rem;
+        min-height: 0;
+        height: 100%;
+        background:
+          linear-gradient(180deg, rgba(9, 15, 25, 0.12), rgba(9, 15, 25, 0.18)),
+          url("/Ordino%20AND%20IMG%20day%20snow.webp") center / cover no-repeat;
       }
 
       .section-header {
@@ -970,7 +1048,8 @@ const currentYear = new Date().getFullYear();
         .adv-grid,
         .project-grid,
         .leaders,
-        .newsletter-wrap {
+        .newsletter-wrap,
+        .focus-f-body {
           grid-template-columns: 1fr;
         }
 
@@ -1004,7 +1083,7 @@ const currentYear = new Date().getFullYear();
           top: calc(100% + 0.5rem);
           left: 0;
           right: auto;
-          min-width: 190px;
+          min-width: min(190px, calc(100vw - 2rem));
           flex-direction: column;
           align-items: flex-start;
           gap: 0.55rem;
@@ -1050,10 +1129,13 @@ const currentYear = new Date().getFullYear();
         .menu-cta {
           display: inline-flex;
           top: -4px;
+          min-width: 102px;
+          padding: 0.58rem 0.8rem;
+          font-size: 0.68rem;
         }
 
         .logo {
-          width: min(38vw, 190px);
+          width: min(34vw, 170px);
           height: auto;
           position: static;
           top: auto;
@@ -1063,11 +1145,30 @@ const currentYear = new Date().getFullYear();
         }
 
         .hero {
-          min-height: 76vh;
+          min-height: 72vh;
         }
 
         .hero-content {
-          padding-top: 6rem;
+          max-width: 100%;
+          padding-top: 5.4rem;
+        }
+
+        h1 {
+          font-size: clamp(1.75rem, 8.6vw, 2.45rem);
+          line-height: 1.06;
+        }
+
+        .hero-kicker {
+          margin-bottom: 0.8rem;
+          font-size: 0.7rem;
+          letter-spacing: 0.18em;
+        }
+
+        .subline {
+          margin-top: 0.75rem;
+          max-width: 28rem;
+          font-size: 0.96rem;
+          line-height: 1.45;
         }
 
         .partners-wrap {
@@ -1106,22 +1207,23 @@ const currentYear = new Date().getFullYear();
         }
 
         .partner-logo-box {
-          width: 115px;
-          height: 52px;
+          width: 104px;
+          height: 48px;
         }
 
         .partner-logo-box img {
-          max-height: 36px;
+          max-height: 32px;
         }
 
         .footer-grid {
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: 1fr;
           gap: 1.2rem;
         }
 
         .footer-grid > div:not(:first-child) {
           justify-self: start;
           text-align: left;
+          margin-left: 0;
         }
 
         .footer-grid > div:not(:first-child) .footer-list {
@@ -1233,6 +1335,41 @@ const currentYear = new Date().getFullYear();
               <p class="focus-item-copy">We provide the structural bridge that allows international firms to deploy capital into Andorra without compromising on institutional standards.</p>
             </li>
           </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="focus-section-f">
+      <div class="container">
+        <div class="focus-f-header">
+          <p class="focus-label">Our Focus Concept F</p>
+          <h2 class="focus-title">What we do</h2>
+          <p class="focus-intro">We open the doors to Andorra’s exclusive investment landscape by pairing a an international outlook with the local expertise needed to bridge the gap for global capital.</p>
+        </div>
+        <div class="focus-f-body">
+          <div class="focus-c-panels">
+            <article class="focus-c-kpi">
+              <p class="focus-c-kpi-value">01 | Development</p>
+              <h3>Full-Cycle Project Development</h3>
+              <p>From initial feasibility to final delivery, we provide end-to-end execution that transforms strategic land acquisitions into institutional-grade assets.</p>
+            </article>
+            <article class="focus-c-kpi">
+              <p class="focus-c-kpi-value">02 | Access</p>
+              <h3>Local Network &amp; Exclusive Access</h3>
+              <p>Direct relationships with landowners, advisors, and Andorran operators unlock secure high-value, off-market opportunities before they reach the public sector.</p>
+            </article>
+            <article class="focus-c-kpi">
+              <p class="focus-c-kpi-value">03 | Compliance</p>
+              <h3>Regulatory Expertise</h3>
+              <p>We navigate the Principality’s compliance landscape, translating local regulations into executable investment strategies through deep-rooted jurisdictional expertise.</p>
+            </article>
+            <article class="focus-c-kpi">
+              <p class="focus-c-kpi-value">04 | Capital</p>
+              <h3>Institutional Capital Bridging</h3>
+              <p>We provide the structural bridge that allows international firms to deploy capital into Andorra without compromising on institutional standards.</p>
+            </article>
+          </div>
+          <div class="focus-c-media" aria-hidden="true"></div>
         </div>
       </div>
     </section>
