@@ -656,7 +656,7 @@ const teamMembers = [
         .menu-list {
           position: absolute;
           top: calc(100% + 0.5rem);
-          left: 0;
+          left: 0.8rem;
           right: auto;
           min-width: min(190px, calc(100vw - 2rem));
           flex-direction: column;
@@ -668,8 +668,8 @@ const teamMembers = [
           overflow: hidden;
           transform: translateY(-8px);
           pointer-events: none;
-          background: rgba(10, 16, 26, 0.82);
-          border: 1px solid rgba(255, 255, 255, 0.18);
+          background: rgba(255, 255, 255, 0.96);
+          border: 1px solid #d3ddea;
           border-radius: 0.6rem;
           transition: max-height 240ms ease, opacity 240ms ease, transform 240ms ease, padding 240ms ease;
           z-index: 220;
@@ -681,6 +681,16 @@ const teamMembers = [
           transform: translateY(0);
           pointer-events: auto;
           padding: 0.7rem;
+        }
+
+        .menu-list .menu-link {
+          color: #172235;
+          text-shadow: none;
+        }
+
+        .menu-list .menu-link:hover,
+        .menu-list .menu-link.is-active {
+          color: #5e7393;
         }
 
         .menu-toggle-input:checked ~ .menu-toggle .menu-toggle-bars { background: transparent; }
@@ -718,6 +728,11 @@ const teamMembers = [
 
         body.is-scrolled .logo {
           margin-top: -14px;
+        }
+
+        body.is-scrolled .site-header {
+          min-height: 58px;
+          padding-bottom: 0.65rem;
         }
 
         .footer-grid {

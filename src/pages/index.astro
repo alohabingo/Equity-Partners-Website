@@ -109,7 +109,7 @@ const currentYear = new Date().getFullYear();
 
       .hero {
         min-height: 84vh;
-        padding: 2rem 0 3.5rem;
+        padding: 2rem 0 2.1rem;
         background: linear-gradient(
             to bottom,
             rgba(6, 8, 12, 0.4) 0%,
@@ -295,6 +295,8 @@ const currentYear = new Date().getFullYear();
         margin-top: auto;
         max-width: 50rem;
         padding-top: 10rem;
+        padding-bottom: 0;
+        transform: translateY(4.5rem);
         animation: rise 900ms 120ms ease both;
       }
 
@@ -1081,7 +1083,7 @@ const currentYear = new Date().getFullYear();
         .menu-list {
           position: absolute;
           top: calc(100% + 0.5rem);
-          left: 0;
+          left: 0.8rem;
           right: auto;
           min-width: min(190px, calc(100vw - 2rem));
           flex-direction: column;
@@ -1093,8 +1095,8 @@ const currentYear = new Date().getFullYear();
           overflow: hidden;
           transform: translateY(-8px);
           pointer-events: none;
-          background: rgba(10, 16, 26, 0.82);
-          border: 1px solid rgba(255, 255, 255, 0.18);
+          background: rgba(255, 255, 255, 0.96);
+          border: 1px solid #d3ddea;
           border-radius: 0.6rem;
           transition: max-height 240ms ease, opacity 240ms ease, transform 240ms ease, padding 240ms ease;
           z-index: 220;
@@ -1106,6 +1108,16 @@ const currentYear = new Date().getFullYear();
           transform: translateY(0);
           pointer-events: auto;
           padding: 0.7rem;
+        }
+
+        .menu-list .menu-link {
+          color: #172235;
+          text-shadow: none;
+        }
+
+        .menu-list .menu-link:hover,
+        .menu-list .menu-link.is-active {
+          color: #5e7393;
         }
 
         .menu-toggle-input:checked ~ .menu-toggle .menu-toggle-bars {
@@ -1146,11 +1158,19 @@ const currentYear = new Date().getFullYear();
 
         .hero {
           min-height: 72vh;
+          padding-bottom: 1.55rem;
+        }
+
+        body.is-scrolled .site-header {
+          min-height: 58px;
+          padding-bottom: 0.65rem;
         }
 
         .hero-content {
           max-width: 100%;
           padding-top: 5.4rem;
+          padding-bottom: 0;
+          transform: translateY(2.6rem);
         }
 
         h1 {
