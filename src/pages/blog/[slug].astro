@@ -10,6 +10,60 @@ export function getStaticPaths() {
 
 const { post } = Astro.props;
 const currentYear = new Date().getFullYear();
+
+const stopWords = new Set([
+  "and",
+  "the",
+  "for",
+  "with",
+  "what",
+  "into",
+  "from",
+  "that",
+  "this",
+  "still",
+  "your",
+  "will",
+  "have",
+  "more",
+  "than",
+  "when",
+  "where",
+  "best",
+  "today",
+  "guide",
+  "prices",
+]);
+
+const tokenize = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((word) => word.length > 2 && !stopWords.has(word));
+
+const postKeywords = new Set([...tokenize(post.title), ...tokenize(post.excerpt)]);
+
+const suggestedPosts = blogPosts
+  .filter((entry) => entry.slug !== post.slug)
+  .map((entry) => {
+    const entryKeywords = new Set([...tokenize(entry.title), ...tokenize(entry.excerpt)]);
+    let sharedKeywordScore = 0;
+
+    for (const keyword of entryKeywords) {
+      if (postKeywords.has(keyword)) sharedKeywordScore += 1;
+    }
+
+    const categoryScore = entry.category === post.category ? 4 : 0;
+
+    return {
+      entry,
+      score: categoryScore + sharedKeywordScore,
+    };
+  })
+  .sort((a, b) => b.score - a.score || a.entry.title.localeCompare(b.entry.title))
+  .slice(0, 3)
+  .map(({ entry }) => entry);
 ---
 
 <html lang="en">
@@ -80,6 +134,11 @@ const currentYear = new Date().getFullYear();
         -webkit-backdrop-filter: blur(10px);
         border-bottom-color: rgba(220, 231, 246, 0.2);
         box-shadow: 0 8px 20px rgba(6, 10, 18, 0.18);
+      }
+
+      body.is-scrolled .menu-cta {
+        background: rgba(255, 255, 255, 0.96);
+        border-color: rgba(255, 255, 255, 0.95);
       }
 
       .logo {
@@ -179,7 +238,7 @@ const currentYear = new Date().getFullYear();
         top: 1px;
         min-width: 126px;
         color: #172235;
-        background: rgba(204, 215, 232, 0.85);
+        background: rgba(255, 255, 255, 0.96);
         text-decoration: none;
         font-size: 0.72rem;
         letter-spacing: 0.13em;
@@ -187,7 +246,7 @@ const currentYear = new Date().getFullYear();
         border-radius: 0.45rem;
         padding: 0.65rem 0.95rem;
         font-weight: 600;
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.95);
       }
 
       .menu-cta:hover { background: rgba(224, 233, 246, 0.96); }
@@ -257,7 +316,7 @@ const currentYear = new Date().getFullYear();
         font-weight: 700;
         font-size: clamp(1.75rem, 4vw, 2.85rem);
         line-height: 1.1;
-        max-width: 16ch;
+        max-width: 66%;
       }
 
       .article-hero .subtitle {
@@ -269,12 +328,14 @@ const currentYear = new Date().getFullYear();
       .article-body {
         padding: 2.2rem;
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 240px;
+        grid-template-columns: minmax(0, 760px) 240px;
+        justify-content: space-between;
         gap: 2rem;
       }
 
       .article-content {
-        max-width: 720px;
+        width: 100%;
+        max-width: none;
       }
 
       .article-section + .article-section {
@@ -296,16 +357,219 @@ const currentYear = new Date().getFullYear();
         color: #3d4b61;
       }
 
+      .article-table-wrap {
+        margin-top: 1.25rem;
+        border: 1px solid #d8e0ec;
+        border-radius: 0.95rem;
+        overflow: hidden;
+        background: #ffffff;
+      }
+
+      .article-table-row {
+        display: grid;
+        grid-template-columns: minmax(220px, 0.9fr) minmax(230px, 1fr) minmax(230px, 1fr);
+        gap: 1rem;
+        padding: 0.9rem 1rem;
+        border-top: 1px solid #e1e7f0;
+        align-items: center;
+      }
+
+      .article-table-row:first-child {
+        border-top: 0;
+        background: #f5f8fd;
+      }
+
+      .article-table-head {
+        color: #6b7c93;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      .article-table-cell-primary {
+        font-size: 1.04rem;
+        color: #24344c;
+        font-weight: 600;
+      }
+
+      .article-table-cell {
+        color: #637389;
+        font-size: 0.88rem;
+        line-height: 1.45;
+      }
+
+      .article-table-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.3rem 0.58rem;
+        border: 1px solid #d2dceb;
+        border-radius: 999px;
+        color: #556780;
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        background: #f7f9fd;
+      }
+
+      .article-sources {
+        margin-top: 1.4rem;
+        padding-top: 1.2rem;
+        border-top: 1px solid #dde5f0;
+      }
+
+      .article-sources h2 {
+        font-size: 1rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #22324a;
+        margin-bottom: 0.7rem;
+      }
+
+      .sources-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 0.7rem;
+      }
+
+      .source-link {
+        color: #49617f;
+        text-decoration: none;
+        word-break: break-word;
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+
+      .source-link:hover {
+        color: #0f1a2a;
+      }
+
       .article-aside {
         border-left: 1px solid #dde5f0;
         padding-left: 1.2rem;
       }
 
-      .aside-label {
-        font-size: 0.74rem;
-        letter-spacing: 0.14em;
+      .suggested-reads {
+        margin-top: 2rem;
+      }
+
+      .suggested-reads .eyebrow {
+        font-size: 0.8rem;
+        letter-spacing: 0.16em;
         text-transform: uppercase;
         color: var(--accent);
+        margin-bottom: 0.85rem;
+      }
+
+      .suggested-reads h2 {
+        font-size: clamp(1.55rem, 3vw, 2.3rem);
+        line-height: 1.12;
+        color: #22324a;
+      }
+
+      .suggested-reads .blog-grid {
+        margin-top: 1.9rem;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .suggested-reads .blog-card {
+        position: relative;
+        border-radius: 1rem;
+        overflow: hidden;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        border: 1px solid #d7deea;
+        background: #ffffff;
+      }
+
+      .suggested-reads .blog-card-link {
+        color: inherit;
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .suggested-reads .blog-card img {
+        position: static;
+        width: 100%;
+        height: 14rem;
+        object-fit: cover;
+        transition: transform 320ms ease;
+      }
+
+      .suggested-reads .blog-card:hover img,
+      .suggested-reads .blog-card-link:hover img {
+        transform: scale(1.04);
+      }
+
+      .suggested-reads .blog-card::before {
+        content: none;
+      }
+
+      .suggested-reads .blog-meta {
+        position: static;
+        z-index: auto;
+        padding: 1.2rem;
+        color: var(--text-primary);
+      }
+
+      .suggested-reads .blog-meta h3 {
+        font-size: 1.15rem;
+        line-height: 1.24;
+      }
+
+      .suggested-reads .metrics {
+        margin-top: 0.7rem;
+        margin-bottom: 0.6rem;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+      }
+
+      .suggested-reads .pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: fit-content;
+        font-size: 0.75rem;
+        line-height: 1.2;
+        padding: 0.28rem 0.56rem;
+        border: 1px solid #ccd7e8;
+        border-radius: 999px;
+        background: #f4f7fc;
+        color: #33445c;
+      }
+
+      .suggested-reads .excerpt {
+        color: var(--text-muted);
+        font-size: 0.87rem;
+        line-height: 1.45;
+      }
+
+      .aside-label {
+        font-size: 1rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #22324a;
+        margin-bottom: 0.7rem;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+
+      .aside-kicker {
+        font-size: 0.62rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 0.55rem;
       }
 
       .aside-title {
@@ -318,6 +582,35 @@ const currentYear = new Date().getFullYear();
         margin-top: 0.55rem;
         color: #607088;
         font-size: 0.9rem;
+      }
+
+      .aside-cta {
+        margin-top: 1.15rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        color: #f1f6fd;
+        background: #1a2a40;
+        text-decoration: none;
+        font-size: 0.72rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        border-radius: 0.6rem;
+        padding: 0.82rem 1rem;
+        font-weight: 600;
+        line-height: 1;
+        border: 1px solid rgba(21, 34, 52, 0.14);
+        box-shadow: 0 10px 22px rgba(15, 26, 42, 0.1);
+        transition: background-color 180ms ease, transform 180ms ease, color 180ms ease,
+          box-shadow 180ms ease;
+      }
+
+      .aside-cta:hover {
+        background: #243752;
+        color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 14px 28px rgba(15, 26, 42, 0.16);
       }
 
       .footer {
@@ -486,7 +779,12 @@ const currentYear = new Date().getFullYear();
 
       @media (max-width: 980px) {
         .article-body,
+        .blog-grid,
         .footer-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .article-table-row {
           grid-template-columns: 1fr;
         }
 
@@ -703,21 +1001,84 @@ const currentYear = new Date().getFullYear();
                   <section class="article-section">
                     <h2>{section.heading}</h2>
                     {section.paragraphs.map((paragraph) => (<p>{paragraph}</p>))}
+                    {section.table && (
+                      <div class="article-table-wrap">
+                        <div class="article-table-row">
+                          {section.table.headers.map((header) => (
+                            <p class="article-table-head">{header}</p>
+                          ))}
+                        </div>
+                        {section.table.rows.map((row) => (
+                          <div class="article-table-row">
+                            {row.map((cell, index) => (
+                              index === 0 ? (
+                                <p class="article-table-cell-primary">{cell}</p>
+                              ) : index === row.length - 1 && row.length > 2 ? (
+                                <p class="article-table-cell"><span class="article-table-badge">{cell}</span></p>
+                              ) : (
+                                <p class="article-table-cell">{cell}</p>
+                              )
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </section>
                 ))
               }
             </div>
 
             <aside class="article-aside">
-              <p class="aside-label">Equity Partners View</p>
-              <h3 class="aside-title">Execution quality defines investment outcomes.</h3>
+              <p class="aside-kicker">What We Do</p>
+              <p class="aside-label">Equity Partners</p>
               <p class="aside-copy">
-                In Andorra, disciplined local coordination across legal, regulatory, and delivery partners is the main
-                driver of risk-adjusted performance.
+                Equity Partners helps investors access Andorra’s most compelling real estate opportunities through our
+                trusted local network, regulatory expertise, and full-cycle project development execution; if you are
+                exploring investment opportunities in Andorras high potential real estate markets, our team would be
+                pleased to speak with you.
               </p>
+              <a class="aside-cta" href="/contact">Contact Us</a>
+              {post.sources && post.sources.length > 0 && (
+                <section class="article-sources">
+                  <h2>Sources</h2>
+                  <ul class="sources-list">
+                    {post.sources.map((source) => (
+                      <li>
+                        <a class="source-link" href={source.href} target="_blank" rel="noreferrer">
+                          {source.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
             </aside>
           </div>
         </article>
+
+        {suggestedPosts.length > 0 && (
+          <section class="suggested-reads">
+            <p class="eyebrow">Suggested Reads</p>
+            <h2>Continue exploring the Andorran market.</h2>
+            <div class="blog-grid">
+              {suggestedPosts.map((entry) => (
+                <article class="blog-card">
+                  <a class="blog-card-link" href={`/blog/${entry.slug}`}>
+                    <img src={entry.image} alt={entry.title} loading="lazy" />
+                    <div class="blog-meta">
+                      <div class="metrics">
+                        <span class="pill">{entry.date}</span>
+                        <span class="pill">{entry.category}</span>
+                      </div>
+                      <h3>{entry.title}</h3>
+                      <p class="excerpt">{entry.excerpt}</p>
+                    </div>
+                  </a>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </main>
 

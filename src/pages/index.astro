@@ -42,6 +42,7 @@ const projects = [
 ];
 
 const localPartners = [
+  { name: "AR Team", logo: "/images/partners/AR%20logo%20EP%20site.png" },
   { name: "DATA", logo: "/images/partners/DATA LOGO.png" },
   { name: "Emindset Law", logo: "/images/partners/Emindset LAW LOGO.png" },
   { name: "Govern d'Andorra", logo: "/images/partners/Govern d'Andorra logo.png" },
@@ -158,6 +159,11 @@ const currentYear = new Date().getFullYear();
         box-shadow: 0 8px 20px rgba(6, 10, 18, 0.18);
       }
 
+      body.is-scrolled .menu-cta {
+        background: rgba(255, 255, 255, 0.96);
+        border-color: rgba(255, 255, 255, 0.95);
+      }
+
       @supports not ((backdrop-filter: blur(1px))) {
         body.is-scrolled .site-header {
           background: rgba(15, 26, 42, 0.84) !important;
@@ -266,7 +272,7 @@ const currentYear = new Date().getFullYear();
         flex: 0 0 auto;
         min-width: 126px;
         color: #172235;
-        background: rgba(204, 215, 232, 0.85);
+        background: rgba(255, 255, 255, 0.96);
         text-decoration: none;
         font-size: 0.72rem;
         letter-spacing: 0.13em;
@@ -275,7 +281,7 @@ const currentYear = new Date().getFullYear();
         padding: 0.65rem 0.95rem;
         font-weight: 600;
         line-height: 1;
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.95);
         white-space: nowrap;
         transition: background-color 180ms ease, transform 180ms ease, color 180ms ease;
       }
@@ -319,17 +325,26 @@ const currentYear = new Date().getFullYear();
       .subline {
         margin-top: 0.9rem;
         max-width: 42rem;
-        color: #cad4e4;
+        color: rgba(255, 255, 255, 0.96);
         font-size: clamp(1rem, 1.8vw, 1.2rem);
       }
 
       .hero-kicker {
         margin-top: 0;
         margin-bottom: 1.1rem;
+        display: inline-flex;
+        align-items: center;
+        padding: 0.55rem 0.9rem;
+        border-radius: 999px;
+        background: rgba(15, 26, 42, 0.42);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 10px 24px rgba(7, 12, 20, 0.18);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
         font-size: 0.78rem;
         letter-spacing: 0.24em;
         text-transform: uppercase;
-        color: #b2c0d4;
+        color: #eef4fb;
       }
 
       .section {
@@ -397,13 +412,19 @@ const currentYear = new Date().getFullYear();
       }
 
       .partner-logo-box img {
-        max-width: 100%;
-        max-height: 48px;
-        width: auto;
-        height: auto;
+        width: 100%;
+        height: 48px;
+        display: block;
+        object-fit: contain;
+        object-position: center;
         filter: grayscale(100%) brightness(0.88);
         opacity: 0.9;
         transition: filter 200ms ease, opacity 200ms ease, transform 200ms ease;
+      }
+
+      .partner-logo-box img.is-morabanc {
+        filter: grayscale(100%) brightness(0.34) contrast(1.18);
+        opacity: 1;
       }
 
       .partner-logo-box:hover img {
@@ -411,6 +432,11 @@ const currentYear = new Date().getFullYear();
         opacity: 1;
         transform: translateY(-1px);
       }
+
+      .partner-logo-box:hover img.is-morabanc {
+        filter: grayscale(100%) brightness(0.34) contrast(1.18);
+      }
+
 
       @keyframes partners-scroll {
         from {
@@ -1231,7 +1257,7 @@ const currentYear = new Date().getFullYear();
         }
 
         .partner-logo-box img {
-          max-height: 32px;
+          height: 32px;
         }
 
         .footer-grid {
@@ -1312,7 +1338,14 @@ const currentYear = new Date().getFullYear();
             {
               localPartnersLoop.map((partner) => (
                 <div class="partner-logo-box">
-                  <img src={partner.logo} alt={partner.name} loading="lazy" />
+                  <img
+                    src={partner.logo}
+                    alt={partner.name}
+                    loading="lazy"
+                    class:list={{
+                      "is-morabanc": partner.name === "MoraBank",
+                    }}
+                  />
                 </div>
               ))
             }
