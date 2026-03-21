@@ -17,6 +17,44 @@ const advantages = [
   },
 ];
 
+const teamMembers = [
+  {
+    name: "Bing Voorham",
+    role: "CEO & Co-founder",
+    image: "/images/Team/Bing Sr EP.png",
+    description:
+      "International investor with over 30 years of experience in sales and marketing real estate projects across Europe, providing strategic capital and access to high-net-worth networks",
+  },
+  {
+    name: "Oriol Giro",
+    role: "Lawyer & co-founder",
+    image: "/images/Team/Oriol Giro EP.jpg",
+    description:
+      "Expert in investment structuring and projects financing. Oriol leads the project legal and financing strategy, as well as overseeing transaction structuring, financial modeling and investor relations.",
+  },
+  {
+    name: "Carlos Ayete",
+    role: "Technical Architect",
+    image: "/images/Team/Calors EP.jpg",
+    description:
+      "With over 25 years of extensive expertise in real estate investment, land acquisition and strategic development. Carlos combines his deep knowledge of the Andorrean maket with a strong internatinoal outlook.",
+  },
+  {
+    name: "Bing Jr",
+    role: "Partnerships & Sales",
+    image: "/images/Team/Bing Jr EP.png",
+    description:
+      "With a Master degree in Digital Business from the University of Amsterdam and 4 years of experience at Salesforce, Bing's international past and results-oriented mindset brings deep knowledge of digital acquisition.",
+  },
+  {
+    name: "Tekke Voorham",
+    role: "Ditigal Marketing",
+    image: "/images/Team/Tekke EP.png",
+    description:
+      "Maintains local institutional and commercial relationships that accelerate sourcing and execution certainty.",
+  },
+];
+
 const currentYear = new Date().getFullYear();
 ---
 
@@ -701,6 +739,116 @@ const currentYear = new Date().getFullYear();
         height: 100%;
       }
 
+      .team-role {
+        margin-top: 0.4rem;
+        color: #8293ae;
+        font-size: 0.76rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .team-description {
+        margin-top: 0.6rem;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+
+      .team-variant-dark {
+        background: #0f1a2a;
+        color: #edf3fc;
+      }
+
+      .team-variant-dark .eyebrow {
+        color: #9fb0c8;
+      }
+
+      .team-variant-dark h2,
+      .team-variant-dark .intro {
+        color: #edf3fc;
+      }
+
+      .team-variant-circles {
+        background: #ffffff;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .team-circle-grid {
+        margin-top: 1.9rem;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .team-circle-card {
+        text-align: center;
+        padding: 1rem 0.6rem;
+      }
+
+      .team-circle-card img {
+        width: 148px;
+        height: 148px;
+        border-radius: 999px;
+        object-fit: cover;
+        display: block;
+        margin: 0 auto;
+        border: 2px solid #2a3a50;
+        box-shadow: 0 10px 24px rgba(15, 26, 42, 0.12);
+        filter: grayscale(100%);
+      }
+
+      .team-circle-card h3 {
+        margin-top: 1rem;
+        color: var(--text-primary);
+        font-size: 1.08rem;
+      }
+
+
+      .team-circle-card .team-role {
+        margin-top: 0.45rem;
+      }
+
+      .team-circle-card .team-description {
+        margin-top: 0.65rem;
+      }
+
+      .team-dark-grid {
+        margin-top: 1.9rem;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 0.9rem;
+      }
+
+      .team-dark-card {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(227, 235, 247, 0.12);
+        border-radius: 1rem;
+        overflow: hidden;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+      }
+
+      .team-dark-card img {
+        width: 100%;
+        height: 10rem;
+        object-fit: cover;
+        display: block;
+      }
+
+      .team-dark-card-body {
+        padding: 0.9rem;
+      }
+
+      .team-dark-card .team-role {
+        color: #9fb0c8;
+      }
+
+      .team-dark-card .team-description {
+        color: rgba(237, 243, 252, 0.88);
+      }
+
+
       .focus-variant-d {
         background:
           linear-gradient(180deg, rgba(12, 21, 35, 0.93), rgba(18, 30, 48, 0.94)),
@@ -1128,7 +1276,9 @@ const currentYear = new Date().getFullYear();
         .focus-c-layout,
         .focus-f-body,
         .focus-d-ribbon,
-        .focus-e-layout {
+        .focus-e-layout,
+        .team-circle-grid,
+        .team-dark-grid {
           grid-template-columns: 1fr;
         }
 
@@ -1699,6 +1849,56 @@ const currentYear = new Date().getFullYear();
         <h2 class="test-image-title">
           Would you rather live in a tax paradise, or an actual paradise with tax advantages?
         </h2>
+      </div>
+    </section>
+
+    <section class="section team-variant-circles">
+      <div class="container">
+        <div class="section-header">
+          <p class="eyebrow">Meet the team</p>
+          <h2>Core Equity Partners Team</h2>
+          <p class="intro">
+            A more human, approachable team presentation with circular portraits and centered bios.
+          </p>
+        </div>
+        <div class="team-circle-grid">
+          {
+            teamMembers.map((member) => (
+              <article class="team-circle-card">
+                <img src={member.image} alt={member.name} loading="lazy" />
+                <h3>{member.name}</h3>
+                <p class="team-role">{member.role}</p>
+                <p class="team-description">{member.description}</p>
+              </article>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="section team-variant-dark">
+      <div class="container">
+        <div class="section-header">
+          <p class="eyebrow">Team Variant 3</p>
+          <h2>Dark premium profile wall.</h2>
+          <p class="intro">
+            A more high-contrast, editorial treatment that makes the team feel more exclusive and brand-led.
+          </p>
+        </div>
+        <div class="team-dark-grid">
+          {
+            teamMembers.map((member) => (
+              <article class="team-dark-card">
+                <img src={member.image} alt={member.name} loading="lazy" />
+                <div class="team-dark-card-body">
+                  <h3>{member.name}</h3>
+                  <p class="team-role">{member.role}</p>
+                  <p class="team-description">{member.description}</p>
+                </div>
+              </article>
+            ))
+          }
+        </div>
       </div>
     </section>
 
