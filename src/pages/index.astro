@@ -1,4 +1,6 @@
 ---
+import { blogPosts } from "../data/blogPosts";
+
 const advantages = [
   {
     title: "Local Network",
@@ -55,6 +57,7 @@ const localPartners = [
 ];
 
 const localPartnersLoop = [...localPartners, ...localPartners, ...localPartners, ...localPartners];
+const homepageSuggestedPosts = blogPosts.slice(0, 3);
 const currentYear = new Date().getFullYear();
 ---
 
@@ -335,7 +338,7 @@ const currentYear = new Date().getFullYear();
         display: inline-flex;
         align-items: center;
         padding: 0.55rem 0.9rem;
-        border-radius: 999px;
+        border-radius: 0.45rem;
         background: rgba(15, 26, 42, 0.42);
         border: 1px solid rgba(255, 255, 255, 0.18);
         box-shadow: 0 10px 24px rgba(7, 12, 20, 0.18);
@@ -371,7 +374,7 @@ const currentYear = new Date().getFullYear();
 
       .partners-title {
         margin: 0 0 1.4rem;
-        text-align: left;
+        text-align: center;
         font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
         font-size: 0.8rem;
         letter-spacing: 0.16em;
@@ -438,6 +441,7 @@ const currentYear = new Date().getFullYear();
       }
 
       .advantage-home {
+        padding-bottom: 3rem;
         background: linear-gradient(180deg, #f4f6fa, #eef2f8);
         border-top: 1px solid var(--line);
         border-bottom: 1px solid var(--line);
@@ -492,11 +496,124 @@ const currentYear = new Date().getFullYear();
         color: var(--text-muted);
       }
 
+      .advantage-home-list {
+        list-style: none;
+        margin: 0.75rem 0 0;
+        padding: 0;
+        display: grid;
+        gap: 1rem;
+      }
+
+      .advantage-home-list li {
+        display: grid;
+        grid-template-columns: 1.5rem 1fr;
+        gap: 0.7rem;
+        align-items: start;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        line-height: 1.46;
+      }
+
+      .advantage-home-check {
+        width: 1.5rem;
+        height: 1.5rem;
+        color: #48a86f;
+        margin-top: 0.04rem;
+      }
+
+      .advantage-home-check svg {
+        width: 100%;
+        height: 100%;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2.15;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .advantage-home-grid.is-test .advantage-home-card-head {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.45rem;
+      }
+
+      .advantage-home-grid.is-test .advantage-home-icon {
+        width: 3.6rem;
+        height: 3.6rem;
+        border-radius: 1.1rem;
+        background: #eef3f9;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+
+      .advantage-home-grid.is-test .advantage-home-icon img {
+        width: 1.8rem;
+        height: 1.8rem;
+      }
+
+      .advantage-home:not(.is-dark-cards) .advantage-home-grid.is-test .advantage-home-icon {
+        background: #53b27f;
+      }
+
+      .advantage-home:not(.is-dark-cards) .advantage-home-grid.is-test .advantage-home-icon img {
+        filter: brightness(0) invert(1);
+      }
+
+      .advantage-home-grid.is-test .advantage-home-card h3 {
+        margin-top: 0;
+      }
+
+      .advantage-home-grid.is-test .advantage-home-card p {
+        margin-top: 0;
+      }
+
       .advantage-home .focus-intro {
         max-width: none;
         width: 100%;
       }
 
+      .advantage-home.is-dark-cards .advantage-home-card {
+        background: #eef2f8;
+        border: 1px solid rgba(18, 33, 56, 0.28);
+        box-shadow: 0 16px 30px rgba(10, 18, 31, 0.08);
+      }
+
+      .advantage-home.is-dark-cards {
+        background: #0f1a2a;
+        border-top: 1px solid rgba(220, 228, 240, 0.15);
+        border-bottom: 1px solid rgba(220, 228, 240, 0.15);
+      }
+
+      .advantage-home.is-dark-cards .focus-label,
+      .advantage-home.is-dark-cards .focus-title {
+        color: #f3f7fc;
+      }
+
+      .advantage-home.is-dark-cards .focus-intro {
+        color: rgba(230, 238, 247, 0.78);
+      }
+
+      .advantage-home.is-dark-cards .advantage-home-card h3 {
+        color: #172235;
+      }
+
+      .advantage-home.is-dark-cards .advantage-home-card p {
+        color: #5a667a;
+      }
+
+      .advantage-home.is-dark-cards .advantage-home-grid.is-test .advantage-home-icon {
+        background: #53b27f;
+      }
+
+      .advantage-home.is-dark-cards .advantage-home-grid.is-test .advantage-home-icon img {
+        filter: brightness(0) invert(1);
+      }
+
+      .advantage-home.is-dark-cards .cta-link {
+        color: #f3f7fc;
+      }
 
       @keyframes partners-scroll {
         from {
@@ -527,6 +644,14 @@ const currentYear = new Date().getFullYear();
         letter-spacing: 0.16em;
         text-transform: uppercase;
         color: #8a99ae;
+      }
+
+      .focus-label.is-partners-title {
+        font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
+        font-size: 0.8rem;
+        letter-spacing: 0.16em;
+        font-weight: 400;
+        color: var(--accent);
       }
 
       .focus-title {
@@ -652,6 +777,59 @@ const currentYear = new Date().getFullYear();
           url("/Ordino%20AND%20IMG%20day%20snow.webp") center / cover no-repeat;
       }
 
+      .focus-f-body .focus-c-media.is-canillo {
+        background:
+          linear-gradient(180deg, rgba(9, 15, 25, 0.12), rgba(9, 15, 25, 0.18)),
+          url("/Andorra%20Canillo.jpg") center / cover no-repeat;
+      }
+
+      .focus-section-f.is-concept-f {
+        background: #0f1a2a;
+        border-top: 1px solid rgba(214, 225, 244, 0.2);
+        border-bottom: 1px solid rgba(214, 225, 244, 0.2);
+      }
+
+      .focus-section-f.is-concept-f .focus-f-header .focus-label {
+        color: #9fb4d2;
+      }
+
+      .focus-section-f.is-concept-f .focus-f-header .focus-title {
+        color: #ffffff;
+      }
+
+      .focus-section-f.is-concept-f .focus-f-header .focus-intro {
+        color: #d6e0ef;
+      }
+
+      .focus-section-f.is-concept-f .focus-c-kpi {
+        background: rgba(246, 251, 255, 0.08);
+        border: 1px solid rgba(214, 225, 244, 0.2);
+      }
+
+      .focus-section-f.is-concept-f .focus-c-kpi-value {
+        color: #9fb4d2;
+      }
+
+      .focus-section-f.is-concept-f .focus-c-kpi h3 {
+        color: #f4f8ff;
+      }
+
+      .focus-section-f.is-concept-f .focus-c-kpi p {
+        color: #d6e0ef;
+      }
+
+      .focus-section-f.is-concept-f .focus-c-media {
+        background: url("/Ordino%20AND%20IMG%20day%20snow.webp") center / cover no-repeat;
+      }
+
+      .focus-section-f.is-concept-f .focus-c-media.is-canillo {
+        background: url("/Andorra%20Canillo.jpg") center / cover no-repeat;
+      }
+
+      .focus-section-f.is-concept-f .cta-link {
+        color: #f3f7fc;
+      }
+
       .section-header {
         max-width: 48rem;
       }
@@ -711,6 +889,11 @@ const currentYear = new Date().getFullYear();
         border-bottom: 1px solid var(--line);
       }
 
+      .projects h2 {
+        font-size: clamp(1.55rem, 3vw, 2.45rem);
+        white-space: nowrap;
+      }
+
       .project-grid {
         margin-top: 1.9rem;
         display: grid;
@@ -746,7 +929,7 @@ const currentYear = new Date().getFullYear();
       .project-meta {
         position: relative;
         z-index: 1;
-        padding: 1.2rem;
+        padding: 1.5rem;
         color: #eff4fb;
       }
 
@@ -804,7 +987,7 @@ const currentYear = new Date().getFullYear();
 
       .test-image-title {
         width: min(var(--max-width), 92vw);
-        text-align: left;
+        text-align: center;
         color: #ffffff;
         font-family: "Montserrat", "Avenir Next", "Segoe UI", Arial, sans-serif;
         font-weight: 700;
@@ -837,7 +1020,7 @@ const currentYear = new Date().getFullYear();
         background: var(--bg-white);
         border: 1px solid var(--line);
         border-radius: 1rem;
-        padding: 1.5rem;
+        padding: 1.2rem;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -860,8 +1043,44 @@ const currentYear = new Date().getFullYear();
         border-top: 1px solid rgba(220, 228, 240, 0.15);
       }
 
+      .gateway .section-header {
+        max-width: 48rem;
+      }
+
       .gateway .intro {
         color: #c9d4e3;
+      }
+
+      .gateway .leaders {
+        margin-top: 2.2rem;
+      }
+
+      .gateway .leaders-image {
+        border-color: rgba(219, 229, 241, 0.16);
+      }
+
+      .gateway .leaders-copy {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(219, 229, 241, 0.14);
+        color: #e8edf6;
+        align-items: flex-start;
+        padding: 2.15rem;
+      }
+
+      .gateway .leaders-note {
+        color: rgba(222, 232, 244, 0.74);
+      }
+
+      .leaders-investor-title {
+        margin: 1.6rem 0 0;
+        font-size: clamp(1.55rem, 3vw, 2.45rem);
+        line-height: 1.12;
+        color: #ffffff;
+      }
+
+      .leaders-investor-copy {
+        margin: 0.7rem 0 0;
+        color: rgba(222, 232, 244, 0.8);
       }
 
       .gateway-box {
@@ -874,13 +1093,20 @@ const currentYear = new Date().getFullYear();
 
       .button {
         margin-top: 1.2rem;
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         color: #132238;
         background: #d8e3f2;
         text-decoration: none;
+        font-size: 0.72rem;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
         font-weight: 600;
-        border-radius: 999px;
-        padding: 0.7rem 1.2rem;
+        line-height: 1;
+        border-radius: 0.45rem;
+        padding: 0.65rem 0.95rem;
+        white-space: nowrap;
       }
 
       .footer {
@@ -893,6 +1119,458 @@ const currentYear = new Date().getFullYear();
         border-top: 1px solid var(--line);
         border-bottom: 1px solid var(--line);
         padding: 2.5rem 0;
+      }
+
+      .timeline-variant {
+        border-top: 1px solid var(--line);
+      }
+
+      .timeline-variant.is-dark {
+        background: #0f1a2a;
+        color: #e8edf6;
+        border-top-color: rgba(220, 228, 240, 0.15);
+      }
+
+      .timeline-variant.is-dark .eyebrow,
+      .timeline-variant.is-dark h2 {
+        color: #f3f7fc;
+      }
+
+      .timeline-variant.is-dark .intro {
+        color: rgba(223, 232, 244, 0.76);
+      }
+
+      .timeline-horizontal {
+        margin-top: 2rem;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 0.9rem;
+      }
+
+      .timeline-step-card {
+        background: #ffffff;
+        border: 1px solid #d7deea;
+        border-radius: 1rem;
+        padding: 1.2rem;
+      }
+
+      .timeline-step-card.is-dark {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(219, 229, 241, 0.14);
+      }
+
+      .timeline-step-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 999px;
+        background: #e7eef8;
+        color: #172235;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+      }
+
+      .timeline-step-card.is-dark .timeline-step-number {
+        background: rgba(216, 227, 242, 0.14);
+        color: #f3f7fc;
+      }
+
+      .timeline-step-card h3 {
+        margin-top: 0.9rem;
+        font-size: 1.02rem;
+        line-height: 1.22;
+      }
+
+      .timeline-step-card p {
+        margin-top: 0.6rem;
+        color: #5a667a;
+      }
+
+      .timeline-step-card.is-dark p {
+        color: rgba(223, 232, 244, 0.74);
+      }
+
+      .timeline-vertical {
+        margin-top: 2rem;
+        position: relative;
+        display: grid;
+        gap: 1rem;
+      }
+
+      .timeline-vertical::before {
+        content: "";
+        position: absolute;
+        left: 1rem;
+        top: 0.6rem;
+        bottom: 0.6rem;
+        width: 1px;
+        background: #d7deea;
+      }
+
+      .timeline-vertical-row {
+        position: relative;
+        padding-left: 3.4rem;
+      }
+
+      .timeline-vertical-dot {
+        position: absolute;
+        left: 0.4rem;
+        top: 0.4rem;
+        width: 1.2rem;
+        height: 1.2rem;
+        border-radius: 999px;
+        background: #172235;
+        border: 4px solid #e7eef8;
+      }
+
+      .timeline-vertical-card {
+        background: #ffffff;
+        border: 1px solid #d7deea;
+        border-radius: 1rem;
+        padding: 1.1rem 1.2rem;
+      }
+
+      .timeline-vertical-card h3 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+
+      .timeline-vertical-card p {
+        margin: 0.55rem 0 0;
+        color: #5a667a;
+      }
+
+      .timeline-split {
+        margin-top: 2rem;
+        display: grid;
+        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.2fr);
+        gap: 1rem;
+        align-items: start;
+      }
+
+      .timeline-summary {
+        background: #ffffff;
+        border: 1px solid #d7deea;
+        border-radius: 1rem;
+        padding: 1.35rem;
+      }
+
+      .timeline-summary p {
+        margin-top: 0.75rem;
+        color: #5a667a;
+      }
+
+      .timeline-mini-list {
+        display: grid;
+        gap: 0.8rem;
+      }
+
+      .timeline-mini-item {
+        background: #ffffff;
+        border: 1px solid #d7deea;
+        border-radius: 1rem;
+        padding: 1rem 1.1rem;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 0.85rem;
+        align-items: start;
+      }
+
+      .timeline-mini-item h3 {
+        margin: 0;
+        font-size: 0.98rem;
+      }
+
+      .timeline-mini-item p {
+        margin: 0.45rem 0 0;
+        color: #5a667a;
+      }
+
+      .timeline-grid {
+        margin-top: 2rem;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .timeline-grid-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid #d7deea;
+        border-radius: 1rem;
+        padding: 1.15rem;
+      }
+
+      .timeline-grid-card h3 {
+        margin-top: 0.8rem;
+        color: #f3f7fc;
+        font-size: 1rem;
+      }
+
+      .timeline-grid-card p {
+        margin-top: 0.55rem;
+        color: rgba(223, 232, 244, 0.74);
+      }
+
+      .timeline-hybrid {
+        background: #ffffff;
+        color: #172235;
+        border-top: 1px solid var(--line);
+      }
+
+      .timeline-hybrid .section-header {
+        max-width: 48rem;
+      }
+
+      .timeline-hybrid .eyebrow {
+        color: var(--accent);
+      }
+
+      .timeline-hybrid h2 {
+        color: var(--text-primary);
+      }
+
+      .timeline-hybrid .intro {
+        color: #5a667a;
+      }
+
+      .timeline-hybrid-grid {
+        margin-top: 2.1rem;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .timeline-hybrid-card {
+        background: #eef2f8;
+        border: 1px solid #d7deea;
+        border-radius: 1rem;
+        padding: 1.2rem 1.05rem 1.1rem;
+        text-align: center;
+        box-shadow: 0 16px 32px rgba(15, 26, 42, 0.06);
+      }
+
+      .timeline-hybrid-icon {
+        width: 5.2rem;
+        height: 5.2rem;
+        margin: 0 auto;
+        border-radius: 1.3rem;
+        background: #ffffff;
+        border: 1px solid #d7deea;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 20px 40px rgba(15, 26, 42, 0.08), 0 4px 12px rgba(15, 26, 42, 0.04);
+      }
+
+      .timeline-hybrid-icon svg {
+        width: 2rem;
+        height: 2rem;
+        stroke: #53b27f;
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        transition: stroke 180ms ease;
+      }
+
+      .timeline-hybrid-card:hover .timeline-hybrid-icon {
+        background: #53b27f;
+        border-color: #53b27f;
+      }
+
+      .timeline-hybrid-card:hover .timeline-hybrid-icon svg {
+        stroke: #ffffff;
+      }
+
+      .timeline-hybrid-label {
+        margin-top: 1.1rem;
+        font-size: 0.8rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: #53b27f;
+        font-weight: 400;
+      }
+
+      .timeline-hybrid-card h3 {
+        margin-top: 0.7rem;
+        color: #172235;
+        font-size: 1.08rem;
+        line-height: 1.25;
+      }
+
+      .timeline-hybrid-card p {
+        margin: 0.65rem auto 0;
+        max-width: 19ch;
+        color: #5a667a;
+      }
+
+      .timeline-hybrid-cta {
+        margin-top: 1rem;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .timeline-hybrid-cta .button {
+        margin-top: 0;
+        justify-self: stretch;
+        width: 100%;
+        background: #274163;
+        color: #f7fbff;
+        transition: background-color 180ms ease, transform 180ms ease;
+      }
+
+      .timeline-hybrid-cta .button:hover {
+        background: #53b27f;
+        transform: translateY(-1px);
+      }
+
+      .timeline-hybrid-line {
+        margin-top: 1.9rem;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 0.95rem;
+        align-items: center;
+      }
+
+      .timeline-hybrid-line-step {
+        position: relative;
+        text-align: center;
+      }
+
+      .timeline-hybrid-line-step::before {
+        content: "";
+        position: absolute;
+        top: 0.6rem;
+        left: calc(-50% + 1.05rem);
+        right: calc(50% + 1.05rem);
+        height: 1px;
+        background: #d7deea;
+      }
+
+      .timeline-hybrid-line-step:first-child::before {
+        display: none;
+      }
+
+      .home-suggested-reads {
+        background: #0f1a2a;
+        border-top: 1px solid rgba(219, 227, 240, 0.12);
+        border-bottom: 1px solid rgba(219, 227, 240, 0.12);
+      }
+
+      .home-suggested-reads .eyebrow {
+        color: #c3d1e4;
+      }
+
+      .home-suggested-reads h2 {
+        color: #f2f6fc;
+        font-size: clamp(1.55rem, 3vw, 2.45rem);
+        white-space: nowrap;
+      }
+
+      .home-suggested-reads .intro {
+        color: #cbd7e8;
+        max-width: 42rem;
+      }
+
+      .home-suggested-reads .cta-link {
+        color: #d8e3f2;
+        border-bottom-color: currentColor;
+      }
+
+      .home-suggested-grid {
+        margin-top: 1.9rem;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .home-suggested-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 1rem;
+        border: 1px solid rgba(212, 224, 241, 0.14);
+        background: rgba(255, 255, 255, 0.05);
+        box-shadow: 0 18px 36px rgba(5, 12, 20, 0.18);
+      }
+
+      .home-suggested-link {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .home-suggested-card img {
+        width: 100%;
+        height: 14rem;
+        object-fit: cover;
+        transition: transform 320ms ease;
+      }
+
+      .home-suggested-card:hover img,
+      .home-suggested-link:hover img {
+        transform: scale(1.04);
+      }
+
+      .home-suggested-meta {
+        padding: 1.2rem;
+        color: #eef4fb;
+      }
+
+      .home-suggested-meta h3 {
+        font-size: 1.15rem;
+        line-height: 1.24;
+      }
+
+      .home-suggested-metrics {
+        margin-top: 0;
+        margin-bottom: 0.65rem;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+      }
+
+      .home-suggested-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: fit-content;
+        font-size: 0.75rem;
+        line-height: 1.2;
+        padding: 0.28rem 0.56rem;
+        border: 1px solid rgba(214, 225, 240, 0.18);
+        border-radius: 999px;
+        background: rgba(241, 247, 255, 0.08);
+        color: #dce7f5;
+      }
+
+      .home-suggested-excerpt {
+        color: #c6d3e4;
+        font-size: 0.87rem;
+        line-height: 1.45;
+      }
+
+      .timeline-hybrid-line-dot {
+        width: 1.2rem;
+        height: 1.2rem;
+        margin: 0 auto;
+        border-radius: 999px;
+        background: #172235;
+        border: 4px solid #e7eef8;
+      }
+
+      .timeline-hybrid-line-label {
+        margin-top: 0.55rem;
+        font-size: 0.74rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #8f9db1;
       }
 
       .newsletter-wrap {
@@ -940,7 +1618,7 @@ const currentYear = new Date().getFullYear();
         height: 44px;
         border: 1px solid rgba(14, 24, 39, 0.18);
         background: #1b2a3f;
-        color: #eaf1fb;
+        color: #ffffff;
         border-radius: 0.55rem;
         padding: 0 1rem;
         font-size: 0.72rem;
@@ -952,7 +1630,7 @@ const currentYear = new Date().getFullYear();
       }
 
       .newsletter-button:hover {
-        background: #253750;
+        background: #53b27f;
         transform: translateY(-1px);
       }
 
@@ -1421,74 +2099,172 @@ const currentYear = new Date().getFullYear();
 
     <section class="section advantage-home">
       <div class="container">
-        <p class="focus-label">Andorra Advantage</p>
+        <p class="focus-label is-partners-title">Equity Partners</p>
         <h2 class="focus-title">What we do</h2>
         <p class="focus-intro">
           We open the doors to Andorra’s exclusive investment landscape by providing a structural bridge that allows international firms to deploy capital into Andorra without compromising on institutional standards.
         </p>
-        <div class="advantage-home-grid">
+        <div class="advantage-home-grid is-test">
           <article class="advantage-home-card">
-            <span class="advantage-home-icon" aria-hidden="true"><img src="/images/Icons/project%20development.png" alt="" /></span>
-            <p class="advantage-home-kicker">01 | Development</p>
-            <h3>Full-Cycle Project Development</h3>
-            <p>From initial feasibility to final delivery, we provide end-to-end execution that transforms strategic land acquisitions into institutional-grade assets.</p>
-          </article>
-          <article class="advantage-home-card">
-            <span class="advantage-home-icon" aria-hidden="true"><img src="/images/Icons/local%20network.png" alt="" /></span>
-            <p class="advantage-home-kicker">02 | Access</p>
-            <h3>Local Network &amp; Exclusive Access</h3>
-            <p>Direct relationships with landowners, advisors, and Andorran operators unlock secure high-value, off-market opportunities before they reach the public sector.</p>
-          </article>
-          <article class="advantage-home-card">
-            <span class="advantage-home-icon" aria-hidden="true"><img src="/images/Icons/regulatory%20expertise.png" alt="" /></span>
-            <p class="advantage-home-kicker">03 | Compliance</p>
-            <h3>Regulatory Expertise</h3>
-            <p>We navigate the Principality’s compliance landscape, translating local regulations into executable investment strategies through deep-rooted jurisdictional expertise.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="focus-section-f">
-      <div class="container">
-        <div class="focus-f-header">
-          <p class="focus-label">Our Focus Concept F</p>
-          <h2 class="focus-title">What we do</h2>
-          <p class="focus-intro">We open the doors to Andorra’s exclusive investment landscape by providing a structural bridge that allows international firms to deploy capital into Andorra without compromising on institutional standards.</p>
-        </div>
-        <div class="focus-f-body">
-          <div class="focus-c-panels">
-            <article class="focus-c-kpi">
-              <p class="focus-c-kpi-value">01 | Development</p>
+            <div class="advantage-home-card-head">
+              <span class="advantage-home-icon" aria-hidden="true"><img src="/images/Icons/project%20development.png" alt="" /></span>
               <h3>Full-Cycle Project Development</h3>
-              <p>From initial feasibility to final delivery, we provide end-to-end execution that transforms strategic land acquisitions into institutional-grade assets.</p>
-            </article>
-            <article class="focus-c-kpi">
-              <p class="focus-c-kpi-value">02 | Access</p>
+            </div>
+            <ul class="advantage-home-list">
+              <li>
+                <span class="advantage-home-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
+                </span>
+                <span>From initial feasibility to final property delivery</span>
+              </li>
+              <li>
+                <span class="advantage-home-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
+                </span>
+                <span>Identifying and securing high-potential land assets</span>
+              </li>
+              <li>
+                <span class="advantage-home-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
+                </span>
+                <span>Transforming acquisitions into institutional-grade assets</span>
+              </li>
+            </ul>
+          </article>
+          <article class="advantage-home-card">
+            <div class="advantage-home-card-head">
+              <span class="advantage-home-icon" aria-hidden="true"><img src="/images/Icons/local%20network.png" alt="" /></span>
               <h3>Local Network &amp; Exclusive Access</h3>
-              <p>Direct relationships with landowners, advisors, and Andorran operators unlock secure high-value, off-market opportunities before they reach the public sector.</p>
-            </article>
-            <article class="focus-c-kpi">
-              <p class="focus-c-kpi-value">03 | Compliance</p>
-              <h3>Regulatory Expertise</h3>
-              <p>We navigate the Principality’s compliance landscape, translating local regulations into executable investment strategies through deep-rooted jurisdictional expertise.</p>
-            </article>
-            <article class="focus-c-kpi">
-              <p class="focus-c-kpi-value">04 | Capital</p>
-              <h3>Institutional Capital Bridging</h3>
-              <p>We provide the structural bridge that allows international firms to deploy capital into Andorra without compromising on institutional standards.</p>
-            </article>
-          </div>
-          <div class="focus-c-media" aria-hidden="true"></div>
+            </div>
+            <ul class="advantage-home-list">
+              <li>
+                <span class="advantage-home-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
+                </span>
+                <span>Access to high-value, off-market opportunities</span>
+              </li>
+              <li>
+                <span class="advantage-home-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
+                </span>
+                <span>Direct ties with local landowners and advisors</span>
+              </li>
+              <li>
+                <span class="advantage-home-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
+                </span>
+                <span>Deep-rooted expertise in the Andorran landscape</span>
+              </li>
+            </ul>
+          </article>
+          <article class="advantage-home-card">
+            <div class="advantage-home-card-head">
+              <span class="advantage-home-icon" aria-hidden="true"><img src="/images/Icons/regulatory%20expertise.png" alt="" /></span>
+              <h3>Regulatory &amp; Structural Expertise</h3>
+            </div>
+            <ul class="advantage-home-list">
+              <li>
+                <span class="advantage-home-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
+                </span>
+                <span>Expert navigation of the Principality’s compliance</span>
+              </li>
+              <li>
+                <span class="advantage-home-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
+                </span>
+                <span>Translating local rules into executable strategies</span>
+              </li>
+              <li>
+                <span class="advantage-home-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
+                </span>
+                <span>Professional alignment with institutional standards</span>
+              </li>
+            </ul>
+          </article>
         </div>
+        <a class="cta-link" href="/about">About Equity Partners</a>
       </div>
     </section>
 
     <section class="test-image-break" aria-label="Andorra night landscape">
       <div class="test-image-title-wrap">
         <h2 class="test-image-title">
-          We open the door to Andorra’s high-barrier investment landscape, bridging the gap between global capital and Andorran opportunity.
+          We open the door to Andorra’s high-barrier foreign investment landscape, bridging the gap between global capital and Andorran opportunity.
         </h2>
+      </div>
+    </section>
+
+    <section class="focus-section-f">
+      <div class="container">
+        <div class="focus-f-header">
+          <p class="focus-label is-partners-title">The Andorra Advantage</p>
+          <h2 class="focus-title">Why Andorra</h2>
+          <p class="focus-intro">We open the doors to Andorra’s exclusive investment landscape by providing a structural bridge that allows international firms to deploy capital into Andorra without compromising on institutional standards.</p>
+        </div>
+        <div class="focus-f-body">
+          <div class="focus-c-panels">
+            <article class="focus-c-kpi">
+              <p class="focus-c-kpi-value">01 | FISCAL ADVANTAGE</p>
+              <h3>Institutional-Grade Tax Efficiency</h3>
+              <p>Andorra offers a capped 10% corporate and personal tax regime, paired with 0% wealth and inheritance taxes. This creates a high-performance environment for capital reinvestment and long-term wealth preservation.</p>
+            </article>
+            <article class="focus-c-kpi">
+              <p class="focus-c-kpi-value">02 | STABILITY</p>
+              <h3>Sovereign Safe-Haven Status</h3>
+              <p>With a history of 700 years of political neutrality and a "Stable" outlook from major credit agencies, the Principality provides a secure jurisdiction for risk mitigation against global geopolitical and economic volatility.</p>
+            </article>
+            <article class="focus-c-kpi">
+              <p class="focus-c-kpi-value">03 | SCARCITY</p>
+              <h3>Natural Real Estate Appreciation</h3>
+              <p>Geography dictates the market; with only 4% of land being buildable, the natural supply-side constraint ensures long-term asset value growth. This scarcity, combined with rising global demand, creates a high-conviction investment play.</p>
+            </article>
+            <article class="focus-c-kpi">
+              <p class="focus-c-kpi-value">04 | CONNECTIVITY</p>
+              <h3>Strategic European Integration</h3>
+              <p>Andorra is advancing its Association Agreement with the EU, integrating the Principality into the Single Market. This evolution provides investors with a unique "best-of-both-worlds" scenario: full sovereign fiscal autonomy combined with the operational advantages of having access to major European markets.</p>
+            </article>
+          </div>
+          <div class="focus-c-media is-canillo" aria-hidden="true"></div>
+        </div>
+        <a class="cta-link" href="/blog">Explore More Advantages</a>
+      </div>
+    </section>
+
+    <section class="focus-section-f is-concept-f">
+      <div class="container">
+        <div class="focus-f-header">
+          <p class="focus-label is-partners-title">The Andorra Advantage 2</p>
+          <h2 class="focus-title">Why Andorra</h2>
+          <p class="focus-intro">We open the doors to Andorra’s exclusive investment landscape by providing a structural bridge that allows international firms to deploy capital into Andorra without compromising on institutional standards.</p>
+        </div>
+        <div class="focus-f-body">
+          <div class="focus-c-panels">
+            <article class="focus-c-kpi">
+              <p class="focus-c-kpi-value">01 | FISCAL ADVANTAGE</p>
+              <h3>Institutional-Grade Tax Efficiency</h3>
+              <p>Andorra offers a capped 10% corporate and personal tax regime, paired with 0% wealth and inheritance taxes. This creates a high-performance environment for capital reinvestment and long-term wealth preservation.</p>
+            </article>
+            <article class="focus-c-kpi">
+              <p class="focus-c-kpi-value">02 | STABILITY</p>
+              <h3>Sovereign Safe-Haven Status</h3>
+              <p>With a history of 700 years of political neutrality and a "Stable" outlook from major credit agencies, the Principality provides a secure jurisdiction for risk mitigation against global geopolitical and economic volatility.</p>
+            </article>
+            <article class="focus-c-kpi">
+              <p class="focus-c-kpi-value">03 | SCARCITY</p>
+              <h3>Natural Real Estate Appreciation</h3>
+              <p>Geography dictates the market; with only 4% of land being buildable, the natural supply-side constraint ensures long-term asset value growth. This scarcity, combined with rising global demand, creates a high-conviction investment play.</p>
+            </article>
+            <article class="focus-c-kpi">
+              <p class="focus-c-kpi-value">04 | CONNECTIVITY</p>
+              <h3>Strategic European Integration</h3>
+              <p>Andorra is advancing its Association Agreement with the EU, integrating the Principality into the Single Market. This evolution provides investors with a unique "best-of-both-worlds" scenario: full sovereign fiscal autonomy combined with the operational advantages of having access to major European markets.</p>
+            </article>
+          </div>
+          <div class="focus-c-media is-canillo" aria-hidden="true"></div>
+        </div>
+        <a class="cta-link" href="/blog">Explore More Advantages</a>
       </div>
     </section>
 
@@ -1520,41 +2296,118 @@ const currentYear = new Date().getFullYear();
       </div>
     </section>
 
-    <section class="section" id="team">
+    <section class="section gateway" id="contact">
       <div class="container">
-        <p class="eyebrow">Leadership Bench</p>
+        <div class="section-header">
+          <p class="eyebrow">Contact our Team</p>
+          <h2>Start your Andorra investment journey</h2>
+          <p class="intro">
+            Schedule a confidential consultation with our team to explore aligned opportunities in the Principality.
+          </p>
+        </div>
         <div class="leaders">
           <div class="leaders-image">
             <img
-              src="/01_stone%20copy.jpg"
+              src="/01_stone%20copy%202.jpg"
               alt="Equity Partners leadership"
             />
           </div>
           <div class="leaders-copy">
-            <blockquote>
-              "In Andorra, trust and execution move together. Our commitment is to deliver projects that strengthen the Principality while protecting investor confidence."
-            </blockquote>
-            <p class="leaders-note">Equity Partners core leadership team</p>
+            <h3 class="leaders-investor-title">Request additional investor information</h3>
+            <p class="leaders-investor-copy">
+              Let our team reach out to you to analyze your investment profile and investment objectives.
+            </p>
+            <a class="button" href="#">Contact our Team</a>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section gateway" id="contact">
+    <section class="section timeline-hybrid">
       <div class="container">
-        <p class="eyebrow">Investor Gateway</p>
-        <h2>Ready to invest in Andorra?</h2>
-        <p class="intro">
-          Schedule a confidential consultation with our team to explore aligned opportunities in the Principality.
-        </p>
-        <div class="gateway-box">
-          <p>
-            Additional opportunities and detailed project materials are shared directly during private investor conversations.
+        <div class="section-header">
+          <p class="eyebrow">Timeline</p>
+          <h2>The Investment Roadmap</h2>
+          <p class="intro">
+            A streamlined onboarding process designed to move you from initial inquiry to active capital deployment
           </p>
-          <a class="button" href="#">Schedule Confidential Consultation</a>
+        </div>
+        <div class="timeline-hybrid-grid">
+          <article class="timeline-hybrid-card">
+            <div class="timeline-hybrid-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 6.5h9a2.5 2.5 0 0 1 2.5 2.5v4A2.5 2.5 0 0 1 13 15.5H9l-3.5 2v-2H4A2.5 2.5 0 0 1 1.5 13V9A2.5 2.5 0 0 1 4 6.5Z"></path><path d="M15 9h5a2.5 2.5 0 0 1 2.5 2.5v3A2.5 2.5 0 0 1 20 17h-1.5v2L15 17h-1"></path></svg>
+            </div>
+            <p class="timeline-hybrid-label">Step 01</p>
+            <h3>Contact our Team</h3>
+            <p>We start with a short introductory conversation to understand your profile, objectives, and Andorra interest.</p>
+          </article>
+          <article class="timeline-hybrid-card">
+            <div class="timeline-hybrid-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="13" height="13" rx="2.5"></rect><path d="m16 10 5-3v10l-5-3"></path><circle cx="9.5" cy="10.5" r="2.25"></circle><path d="M6.5 15.5a3.25 3.25 0 0 1 6 0"></path></svg>
+            </div>
+            <p class="timeline-hybrid-label">Step 02</p>
+            <h3>Personal Consultation Call</h3>
+            <p>A deeper consultation helps us map timeline, return expectations, and the right strategic route forward.</p>
+          </article>
+          <article class="timeline-hybrid-card">
+            <div class="timeline-hybrid-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M4 12h16"></path></svg>
+            </div>
+            <p class="timeline-hybrid-label">Step 03</p>
+            <h3>Select Investment Opportunity</h3>
+            <p>We present relevant opportunities that align with mandate, structure, and current project availability.</p>
+          </article>
+          <article class="timeline-hybrid-card">
+            <div class="timeline-hybrid-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z"></path><path d="m9 12 2 2 4-4"></path></svg>
+            </div>
+            <p class="timeline-hybrid-label">Step 04</p>
+            <h3>KYC &amp; Compliance</h3>
+            <p>All onboarding, documentation, and compliance checks are completed before any capital commitment is made.</p>
+          </article>
+          <article class="timeline-hybrid-card">
+            <div class="timeline-hybrid-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 16.5 10 10.5l3.5 3.5L20 7.5"></path><path d="M14 7.5h6v6"></path><path d="M5 19.5h14"></path></svg>
+            </div>
+            <p class="timeline-hybrid-label">Step 05</p>
+            <h3>Capital Deployment</h3>
+            <p>Once cleared, capital is deployed into the selected opportunity and execution begins under the agreed structure.</p>
+          </article>
+        </div>
+        <div class="timeline-hybrid-cta">
+          <a class="button" href="#">Contact our Team</a>
         </div>
       </div>
-    </section>
+</section>
+
+    {homepageSuggestedPosts.length > 0 && (
+      <section class="section home-suggested-reads">
+        <div class="container">
+          <div class="section-header">
+            <p class="eyebrow">Suggested Reads</p>
+            <h2>Continue exploring the Andorran market.</h2>
+          </div>
+          <div class="home-suggested-grid">
+            {homepageSuggestedPosts.map((entry) => (
+              <article class="home-suggested-card">
+                <a class="home-suggested-link" href={`/blog/${entry.slug}`}>
+                  <img src={entry.image} alt={entry.title} loading="lazy" />
+                  <div class="home-suggested-meta">
+                    <div class="home-suggested-metrics">
+                      <span class="home-suggested-pill">{entry.date}</span>
+                      <span class="home-suggested-pill">{entry.category}</span>
+                    </div>
+                    <h3>{entry.title}</h3>
+                    <p class="home-suggested-excerpt">{entry.excerpt}</p>
+                  </div>
+                </a>
+              </article>
+            ))}
+          </div>
+          <a class="cta-link" href="/blog">See more insights</a>
+        </div>
+      </section>
+    )}
 
     <section class="section newsletter" id="newsletter">
       <div class="container">

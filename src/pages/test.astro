@@ -55,6 +55,36 @@ const teamMembers = [
   },
 ];
 
+const whyAndorraCards = [
+  {
+    title: "Fiscal Advantages",
+    icon: "calculator",
+    points: [
+      "Max 10% personal income tax (IRPF)",
+      "0% wealth and inheritance tax",
+      "Exceptionally low VAT (4.5% IGI)",
+    ],
+  },
+  {
+    title: "Safety & Quality",
+    icon: "shield",
+    points: [
+      "Safest country in Europe",
+      "High-quality healthcare and education",
+      "Easy access to Spain and France",
+    ],
+  },
+  {
+    title: "Mountain Lifestyle",
+    icon: "mountain",
+    points: [
+      "90% of territory is natural park",
+      "World-class skiing and mountain sports",
+      "Luxury chalets, spas, and relaxed lifestyle",
+    ],
+  },
+];
+
 const currentYear = new Date().getFullYear();
 ---
 
@@ -361,6 +391,292 @@ const currentYear = new Date().getFullYear();
       .test-card p {
         margin-top: 0.6rem;
         color: var(--text-muted);
+      }
+
+      .why-andorra {
+        background: #f2f5fa;
+        border-top: 1px solid #dce3ee;
+        border-bottom: 1px solid #dce3ee;
+      }
+
+      .why-andorra-head {
+        max-width: 46rem;
+        margin: 0 auto;
+        text-align: center;
+      }
+
+      .why-andorra-head h2 {
+        color: #1f2b3c;
+      }
+
+      .why-andorra-head p {
+        margin-top: 0.9rem;
+        color: var(--text-muted);
+      }
+
+      .why-andorra-head.is-left {
+        max-width: none;
+        margin: 0;
+        text-align: left;
+      }
+
+      .why-andorra-grid {
+        margin-top: 2rem;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .why-andorra-card {
+        background: var(--bg-white);
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        padding: 1.25rem;
+      }
+
+      .why-andorra-card-head {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        margin-bottom: 1.2rem;
+      }
+
+      .why-andorra-icon {
+        width: 3.1rem;
+        height: 3.1rem;
+        border-radius: 0.95rem;
+        background: #eef3f9;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #1f2b3c;
+        flex: 0 0 auto;
+      }
+
+      .why-andorra-icon svg {
+        width: 1.6rem;
+        height: 1.6rem;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2.1;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .why-andorra-card h3 {
+        font-size: 1.15rem;
+        line-height: 1.12;
+        color: #1f2b3c;
+      }
+
+      .why-andorra-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 1rem;
+      }
+
+      .why-andorra-list li {
+        display: grid;
+        grid-template-columns: 1.5rem 1fr;
+        gap: 0.7rem;
+        align-items: start;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        line-height: 1.46;
+      }
+
+      .why-andorra-check {
+        width: 1.5rem;
+        height: 1.5rem;
+        color: #48a86f;
+        margin-top: 0.04rem;
+      }
+
+      .why-andorra-check svg {
+        width: 100%;
+        height: 100%;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2.15;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .advantage-home {
+        background: linear-gradient(180deg, #f4f6fa, #eef2f8);
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .advantage-home-grid {
+        margin-top: 1.8rem;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.85rem;
+        width: 100%;
+        align-items: stretch;
+      }
+
+      .advantage-home-card {
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        padding: 1.3rem;
+        height: 100%;
+      }
+
+      .advantage-home-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+      }
+
+      .advantage-home-icon img {
+        width: 46px;
+        height: 46px;
+        object-fit: contain;
+        display: block;
+      }
+
+      .advantage-home-card h3 {
+        margin-top: 0.45rem;
+        color: #1f2b3c;
+        font-size: 1.15rem;
+      }
+
+      .advantage-home-card p {
+        margin-top: 0.6rem;
+        color: var(--text-muted);
+      }
+
+      .advantage-home .focus-intro {
+        max-width: none;
+        width: 100%;
+      }
+
+      .focus-label.is-partners-title {
+        font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
+        font-size: 0.8rem;
+        letter-spacing: 0.16em;
+        font-weight: 400;
+        color: var(--accent);
+      }
+
+      .advantage-home-list {
+        list-style: none;
+        margin: 0.75rem 0 0;
+        padding: 0;
+        display: grid;
+        gap: 1rem;
+      }
+
+      .advantage-home-list li {
+        display: grid;
+        grid-template-columns: 1.5rem 1fr;
+        gap: 0.7rem;
+        align-items: start;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        line-height: 1.46;
+      }
+
+      .advantage-home-check {
+        width: 1.5rem;
+        height: 1.5rem;
+        color: #48a86f;
+        margin-top: 0.04rem;
+      }
+
+      .advantage-home-check svg {
+        width: 100%;
+        height: 100%;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2.15;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .advantage-home-grid.is-test .advantage-home-card-head {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.45rem;
+      }
+
+      .advantage-home-grid.is-test .advantage-home-icon {
+        width: 3.6rem;
+        height: 3.6rem;
+        border-radius: 1.1rem;
+        background: #eef3f9;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+
+      .advantage-home-grid.is-test .advantage-home-icon img {
+        width: 1.8rem;
+        height: 1.8rem;
+      }
+
+      .advantage-home-grid.is-test .advantage-home-card h3,
+      .advantage-home-grid.is-test .advantage-home-card p {
+        margin-top: 0;
+      }
+
+      .advantage-home.is-dark-cards {
+        background: #0f1a2a;
+        border-top: 1px solid rgba(220, 228, 240, 0.15);
+        border-bottom: 1px solid rgba(220, 228, 240, 0.15);
+      }
+
+      .advantage-home.is-dark-cards .focus-label,
+      .advantage-home.is-dark-cards .focus-title {
+        color: #f3f7fc;
+      }
+
+      .advantage-home.is-dark-cards .focus-intro {
+        color: rgba(230, 238, 247, 0.78);
+      }
+
+      .advantage-home.is-dark-cards .advantage-home-card {
+        background: #eef2f8;
+        border: 1px solid rgba(18, 33, 56, 0.28);
+        box-shadow: 0 16px 30px rgba(10, 18, 31, 0.08);
+      }
+
+      .advantage-home.is-dark-cards .advantage-home-card h3 {
+        color: #172235;
+      }
+
+      .advantage-home.is-dark-cards .advantage-home-card p {
+        color: #5a667a;
+      }
+
+      .advantage-home.is-dark-cards .advantage-home-grid.is-test .advantage-home-icon {
+        background: #53b27f;
+      }
+
+      .advantage-home.is-dark-cards .advantage-home-grid.is-test .advantage-home-icon img {
+        filter: brightness(0) invert(1);
+      }
+
+      .cta-link {
+        display: inline-flex;
+        margin-top: 1.4rem;
+        font-size: 0.84rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-primary);
+        text-decoration: none;
+        border-bottom: 1px solid currentColor;
+        padding-bottom: 0.2rem;
+      }
+
+      .advantage-home.is-dark-cards .cta-link {
+        color: #ffffff;
       }
 
       .test-section-b {
@@ -741,7 +1057,7 @@ const currentYear = new Date().getFullYear();
 
       .team-role {
         margin-top: 0.4rem;
-        color: #8293ae;
+        color: #1f2b3c;
         font-size: 0.76rem;
         letter-spacing: 0.12em;
         text-transform: uppercase;
@@ -989,6 +1305,111 @@ const currentYear = new Date().getFullYear();
           url("/Ordino%20AND%20IMG%20day%20snow.webp") center / cover no-repeat;
       }
 
+      .timeline-orbit {
+        background: linear-gradient(180deg, #f4f6fa, #eef2f8);
+        color: #172235;
+        border-top: 1px solid var(--line);
+      }
+
+      .timeline-orbit .section-header {
+        max-width: 48rem;
+      }
+
+      .timeline-orbit .eyebrow,
+      .timeline-orbit h2 {
+        color: #172235;
+      }
+
+      .timeline-orbit .intro {
+        color: #5a667a;
+      }
+
+      .timeline-orbit-grid {
+        margin-top: 2.2rem;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 1.15rem;
+      }
+
+      .timeline-orbit-step {
+        text-align: center;
+      }
+
+      .timeline-orbit-icon {
+        width: 6.25rem;
+        height: 6.25rem;
+        margin: 0 auto;
+        border-radius: 1.5rem;
+        background: #53b27f;
+        border: 1px solid #53b27f;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      }
+
+      .timeline-orbit-icon svg {
+        width: 2.35rem;
+        height: 2.35rem;
+        stroke: #ffffff;
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .timeline-orbit-label {
+        margin-top: 1.45rem;
+        font-size: 0.8rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: #274163;
+        font-weight: 400;
+      }
+
+      .timeline-orbit-step h3 {
+        margin-top: 0.8rem;
+        color: #172235;
+        font-size: 1.15rem;
+        line-height: 1.28;
+      }
+
+      .timeline-orbit-step p {
+        margin: 0.8rem auto 0;
+        max-width: 18ch;
+        color: #5a667a;
+      }
+
+      .timeline-orbit-cta {
+        margin-top: 2.8rem;
+        display: flex;
+        justify-content: flex-start;
+      }
+
+      .timeline-orbit-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.7rem;
+        padding: 0.65rem 0.95rem;
+        border-radius: 0.45rem;
+        text-decoration: none;
+        color: #f7fbff;
+        background: #274163;
+        border: 1px solid #274163;
+        font-size: 0.72rem;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        font-weight: 600;
+        line-height: 1;
+        box-shadow: 0 18px 36px rgba(5, 12, 20, 0.22);
+      }
+
+      .timeline-orbit-button-arrow {
+        font-size: 1.15rem;
+        line-height: 1;
+      }
+
       .adv-grid {
         margin-top: 2rem;
         display: grid;
@@ -1053,6 +1474,101 @@ const currentYear = new Date().getFullYear();
         inset: 0;
         background: rgba(7, 13, 22, 0.24);
         pointer-events: none;
+      }
+
+      .timeline-variant {
+        background: linear-gradient(180deg, #eef2f8 0%, #f4f6fa 100%);
+        border-top: 1px solid var(--line);
+      }
+
+      .timeline-horizontal {
+        margin-top: 2rem;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 0.9rem;
+      }
+
+      .timeline-step-card {
+        background: #ffffff;
+        border: 1px solid #d7deea;
+        border-radius: 1rem;
+        padding: 1.2rem;
+      }
+
+      .timeline-step-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 999px;
+        background: #e7eef8;
+        color: #172235;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+      }
+
+      .timeline-step-card h3 {
+        margin-top: 0.9rem;
+        font-size: 1.02rem;
+        line-height: 1.22;
+        color: #172235;
+      }
+
+      .timeline-step-card p {
+        margin-top: 0.6rem;
+        color: #5a667a;
+      }
+
+      .timeline-vertical {
+        margin-top: 2rem;
+        position: relative;
+        display: grid;
+        gap: 1rem;
+      }
+
+      .timeline-vertical::before {
+        content: "";
+        position: absolute;
+        left: 1rem;
+        top: 0.6rem;
+        bottom: 0.6rem;
+        width: 1px;
+        background: #d7deea;
+      }
+
+      .timeline-vertical-row {
+        position: relative;
+        padding-left: 3.4rem;
+      }
+
+      .timeline-vertical-dot {
+        position: absolute;
+        left: 0.4rem;
+        top: 0.9rem;
+        width: 1.2rem;
+        height: 1.2rem;
+        border-radius: 999px;
+        background: #172235;
+        border: 4px solid #e7eef8;
+      }
+
+      .timeline-vertical-card {
+        background: #ffffff;
+        border: 1px solid #d7deea;
+        border-radius: 1rem;
+        padding: 1.1rem 1.2rem;
+      }
+
+      .timeline-vertical-card h3 {
+        margin: 0;
+        font-size: 1.06rem;
+      }
+
+      .timeline-vertical-card p {
+        margin: 0.55rem 0 0;
+        color: #5a667a;
       }
 
       .test-image-title-wrap {
@@ -1251,8 +1767,11 @@ const currentYear = new Date().getFullYear();
 
       @media (max-width: 980px) {
         .test-cards,
+        .why-andorra-grid,
+        .advantage-home-grid,
         .adv-grid,
-        .footer-grid {
+        .footer-grid,
+        .timeline-horizontal {
           grid-template-columns: 1fr;
         }
 
@@ -1284,6 +1803,31 @@ const currentYear = new Date().getFullYear();
 
         .focus-a-item p {
           padding-left: 1rem;
+        }
+
+        .why-andorra-grid {
+          margin-top: 2.35rem;
+          gap: 1rem;
+        }
+
+        .why-andorra-card {
+          border-radius: 1rem;
+          padding: 1.15rem;
+        }
+
+        .why-andorra-card-head {
+          gap: 0.85rem;
+          margin-bottom: 1rem;
+        }
+
+        .why-andorra-icon {
+          width: 2.9rem;
+          height: 2.9rem;
+          border-radius: 0.9rem;
+        }
+
+        .timeline-vertical-row {
+          padding-left: 3rem;
         }
       }
 
@@ -1403,6 +1947,23 @@ const currentYear = new Date().getFullYear();
           font-size: 0.7rem;
         }
 
+        .timeline-vertical::before {
+          left: 0.9rem;
+        }
+
+        .timeline-vertical-dot {
+          left: 0.32rem;
+          top: 0.32rem;
+        }
+
+        .timeline-vertical-row {
+          padding-left: 2.7rem;
+        }
+
+        .timeline-vertical-card {
+          padding: 1rem 1rem 1.05rem;
+        }
+
         .focus-item {
           padding: 0.95rem 0 1rem;
         }
@@ -1490,6 +2051,242 @@ const currentYear = new Date().getFullYear();
       </div>
     </section>
 
+    <section class="section advantage-home is-dark-cards">
+      <div class="container">
+        <p class="focus-label is-partners-title">Equity Partners 2</p>
+        <h2 class="focus-title">What we do</h2>
+        <p class="focus-intro">
+          We open the doors to Andorra’s exclusive investment landscape by providing a structural bridge that allows international firms to deploy capital into Andorra without compromising on institutional standards.
+        </p>
+        <div class="advantage-home-grid is-test">
+          <article class="advantage-home-card">
+            <div class="advantage-home-card-head">
+              <span class="advantage-home-icon" aria-hidden="true"><img src="/images/Icons/project%20development.png" alt="" /></span>
+              <h3>Full-Cycle Project Development</h3>
+            </div>
+            <ul class="advantage-home-list">
+              <li>
+                <span class="advantage-home-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
+                </span>
+                <span>From initial feasibility to final property delivery</span>
+              </li>
+              <li>
+                <span class="advantage-home-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
+                </span>
+                <span>Identifying and securing high-potential land assets</span>
+              </li>
+              <li>
+                <span class="advantage-home-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
+                </span>
+                <span>Transforming acquisitions into institutional-grade assets</span>
+              </li>
+            </ul>
+          </article>
+          <article class="advantage-home-card">
+            <div class="advantage-home-card-head">
+              <span class="advantage-home-icon" aria-hidden="true"><img src="/images/Icons/local%20network.png" alt="" /></span>
+              <h3>Local Network &amp; Exclusive Access</h3>
+            </div>
+            <ul class="advantage-home-list">
+              <li>
+                <span class="advantage-home-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
+                </span>
+                <span>Access to high-value, off-market opportunities</span>
+              </li>
+              <li>
+                <span class="advantage-home-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
+                </span>
+                <span>Direct ties with local landowners and advisors</span>
+              </li>
+              <li>
+                <span class="advantage-home-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
+                </span>
+                <span>Deep-rooted expertise in the Andorran landscape</span>
+              </li>
+            </ul>
+          </article>
+          <article class="advantage-home-card">
+            <div class="advantage-home-card-head">
+              <span class="advantage-home-icon" aria-hidden="true"><img src="/images/Icons/regulatory%20expertise.png" alt="" /></span>
+              <h3>Regulatory &amp; Structural Expertise</h3>
+            </div>
+            <ul class="advantage-home-list">
+              <li>
+                <span class="advantage-home-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
+                </span>
+                <span>Expert navigation of the Principality’s compliance</span>
+              </li>
+              <li>
+                <span class="advantage-home-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
+                </span>
+                <span>Translating local rules into executable strategies</span>
+              </li>
+              <li>
+                <span class="advantage-home-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
+                </span>
+                <span>Professional alignment with institutional standards</span>
+              </li>
+            </ul>
+          </article>
+        </div>
+        <a class="cta-link" href="/about">About Equity Partners</a>
+      </div>
+    </section>
+
+    <section class="section why-andorra">
+      <div class="container">
+        <div class="why-andorra-head">
+          <p class="eyebrow">Why Andorra</p>
+          <h2>Why Andorra?</h2>
+          <p>A unique blend of fiscal efficiency, safety, and mountain lifestyle.</p>
+        </div>
+        <div class="why-andorra-grid">
+          {
+            whyAndorraCards.map((card) => (
+              <article class="why-andorra-card">
+                <div class="why-andorra-card-head">
+                  <span class="why-andorra-icon" aria-hidden="true">
+                    {card.icon === "calculator" ? (
+                      <svg viewBox="0 0 24 24">
+                        <rect x="6" y="3.5" width="12" height="17" rx="2.5"></rect>
+                        <line x1="9" y1="8" x2="15" y2="8"></line>
+                        <line x1="9" y1="12" x2="9" y2="12"></line>
+                        <line x1="12" y1="12" x2="12" y2="12"></line>
+                        <line x1="15" y1="12" x2="15" y2="12"></line>
+                        <line x1="9" y1="15.5" x2="9" y2="15.5"></line>
+                        <line x1="12" y1="15.5" x2="12" y2="15.5"></line>
+                        <line x1="15" y1="15.5" x2="15" y2="15.5"></line>
+                      </svg>
+                    ) : card.icon === "shield" ? (
+                      <svg viewBox="0 0 24 24">
+                        <path d="M12 3l7 3v5c0 4.3-2.7 7.8-7 9-4.3-1.2-7-4.7-7-9V6l7-3z"></path>
+                        <path d="M9.5 12.2l1.8 1.8 3.4-3.8"></path>
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24">
+                        <path d="M3.5 18.5l4.8-12.2 4.2 7.3 3.1-5.2 4.9 10.1z"></path>
+                      </svg>
+                    )}
+                  </span>
+                  <h3>{card.title}</h3>
+                </div>
+                <ul class="why-andorra-list">
+                  {
+                    card.points.map((point) => (
+                      <li>
+                        <span class="why-andorra-check" aria-hidden="true">
+                          <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <path d="M8.6 12.3l2.1 2.2 4.7-5"></path>
+                          </svg>
+                        </span>
+                        <span>{point}</span>
+                      </li>
+                    ))
+                  }
+                </ul>
+              </article>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="section advantage-home">
+      <div class="container">
+        <p class="focus-label">Andorra Advantage</p>
+        <h2 class="focus-title">What we do</h2>
+        <p class="focus-intro">
+          We open the doors to Andorra’s exclusive investment landscape by providing a structural bridge that allows international firms to deploy capital into Andorra without compromising on institutional standards.
+        </p>
+        <div class="advantage-home-grid">
+          <article class="advantage-home-card">
+            <span class="advantage-home-icon" aria-hidden="true"><img src="/images/Icons/project%20development.png" alt="" /></span>
+            <h3>Full-Cycle Project Development</h3>
+            <p>From initial feasibility to final delivery, we provide end-to-end execution that transforms strategic land acquisitions into institutional-grade assets.</p>
+          </article>
+          <article class="advantage-home-card">
+            <span class="advantage-home-icon" aria-hidden="true"><img src="/images/Icons/local%20network.png" alt="" /></span>
+            <h3>Local Network with Exclusive Access</h3>
+            <p>Direct relationships with landowners, advisors, and Andorran operators unlock secure high-value, off-market opportunities before they reach the public sector.</p>
+          </article>
+          <article class="advantage-home-card">
+            <span class="advantage-home-icon" aria-hidden="true"><img src="/images/Icons/regulatory%20expertise.png" alt="" /></span>
+            <h3>Regulatory Expertise</h3>
+            <p>We navigate the Principality’s compliance landscape, translating local regulations into executable investment strategies through deep-rooted jurisdictional expertise.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section why-andorra">
+      <div class="container">
+        <div class="why-andorra-head is-left">
+          <p class="eyebrow">Why Andorra 2</p>
+          <h2>Why Andorra?</h2>
+          <p>A unique blend of fiscal efficiency, safety, and mountain lifestyle.</p>
+        </div>
+        <div class="why-andorra-grid">
+          {
+            whyAndorraCards.map((card) => (
+              <article class="why-andorra-card">
+                <div class="why-andorra-card-head">
+                  <span class="why-andorra-icon" aria-hidden="true">
+                    {card.icon === "calculator" ? (
+                      <svg viewBox="0 0 24 24">
+                        <rect x="6" y="3.5" width="12" height="17" rx="2.5"></rect>
+                        <line x1="9" y1="8" x2="15" y2="8"></line>
+                        <line x1="9" y1="12" x2="9" y2="12"></line>
+                        <line x1="12" y1="12" x2="12" y2="12"></line>
+                        <line x1="15" y1="12" x2="15" y2="12"></line>
+                        <line x1="9" y1="15.5" x2="9" y2="15.5"></line>
+                        <line x1="12" y1="15.5" x2="12" y2="15.5"></line>
+                        <line x1="15" y1="15.5" x2="15" y2="15.5"></line>
+                      </svg>
+                    ) : card.icon === "shield" ? (
+                      <svg viewBox="0 0 24 24">
+                        <path d="M12 3l7 3v5c0 4.3-2.7 7.8-7 9-4.3-1.2-7-4.7-7-9V6l7-3z"></path>
+                        <path d="M9.5 12.2l1.8 1.8 3.4-3.8"></path>
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24">
+                        <path d="M3.5 18.5l4.8-12.2 4.2 7.3 3.1-5.2 4.9 10.1z"></path>
+                      </svg>
+                    )}
+                  </span>
+                  <h3>{card.title}</h3>
+                </div>
+                <ul class="why-andorra-list">
+                  {
+                    card.points.map((point) => (
+                      <li>
+                        <span class="why-andorra-check" aria-hidden="true">
+                          <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <path d="M8.6 12.3l2.1 2.2 4.7-5"></path>
+                          </svg>
+                        </span>
+                        <span>{point}</span>
+                      </li>
+                    ))
+                  }
+                </ul>
+              </article>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
     <section class="workflow-section">
       <div class="container">
         <div class="workflow-head">
@@ -1538,7 +2335,7 @@ const currentYear = new Date().getFullYear();
           </li>
           <li class="focus-item">
             <span class="focus-index">02</span>
-            <h3 class="focus-item-title">Local Network &amp; Exclusive Access</h3>
+            <h3 class="focus-item-title">Local Network with Exclusive Access</h3>
             <p class="focus-item-copy">Direct relationships with landowners, advisors, and Andorran operators unlock secure high-value, off-market opportunities before they reach the public sector.</p>
           </li>
           <li class="focus-item">
@@ -1567,7 +2364,7 @@ const currentYear = new Date().getFullYear();
         <ol class="focus-list">
           <li class="focus-item">
             <span class="focus-index">01</span>
-            <h3 class="focus-item-title">Local Network &amp; Exclusive Access</h3>
+            <h3 class="focus-item-title">Local Network with Exclusive Access</h3>
             <p class="focus-item-copy">Direct relationships with landowners, advisors, and Andorran operators unlock secure high-value, off-market opportunities before they reach the public sector.</p>
           </li>
           <li class="focus-item">
@@ -1610,7 +2407,7 @@ const currentYear = new Date().getFullYear();
             <details class="focus-a-item">
               <summary>
                 <span class="focus-a-index">02</span>
-                <h3>Local Network &amp; Exclusive Access</h3>
+                <h3>Local Network with Exclusive Access</h3>
               </summary>
               <p>Direct relationships with landowners, advisors, and Andorran operators unlock secure high-value, off-market opportunities before they reach the public sector.</p>
             </details>
@@ -1654,7 +2451,7 @@ const currentYear = new Date().getFullYear();
             <p class="focus-b-text"><span class="focus-b-badge">Execution Certainty</span></p>
           </div>
           <div class="focus-b-row">
-            <p class="focus-b-capability">Local Network &amp; Exclusive Access</p>
+            <p class="focus-b-capability">Local Network with Exclusive Access</p>
             <p class="focus-b-text">Relationships with landowners and advisors unlock off-market flow.</p>
             <p class="focus-b-text"><span class="focus-b-badge">Priority Access</span></p>
           </div>
@@ -1690,7 +2487,7 @@ const currentYear = new Date().getFullYear();
             </article>
             <article class="focus-c-kpi">
               <p class="focus-c-kpi-value">02 | Access</p>
-              <h3>Local Network &amp; Exclusive Access</h3>
+              <h3>Local Network with Exclusive Access</h3>
               <p>On-the-ground trust networks produce earlier visibility and cleaner deal flow.</p>
             </article>
             <article class="focus-c-kpi">
@@ -1724,7 +2521,7 @@ const currentYear = new Date().getFullYear();
             </article>
             <article class="focus-c-kpi">
               <p class="focus-c-kpi-value">02 | Access</p>
-              <h3>Local Network &amp; Exclusive Access</h3>
+              <h3>Local Network with Exclusive Access</h3>
               <p>On-the-ground trust networks produce earlier visibility and cleaner deal flow.</p>
             </article>
             <article class="focus-c-kpi">
@@ -1761,7 +2558,7 @@ const currentYear = new Date().getFullYear();
             </article>
             <article class="focus-d-metric">
               <p class="focus-d-metric-label">02 | Access</p>
-              <h3>Local Network &amp; Exclusive Access</h3>
+              <h3>Local Network with Exclusive Access</h3>
               <p>High-quality opportunities surfaced before broad-market visibility.</p>
             </article>
             <article class="focus-d-metric">
@@ -1796,7 +2593,7 @@ const currentYear = new Date().getFullYear();
               </article>
               <article class="focus-e-card">
                 <p class="focus-e-index">02</p>
-                <h3>Local Network &amp; Exclusive Access</h3>
+                <h3>Local Network with Exclusive Access</h3>
                 <p>Landowner and advisor relationships unlock earlier, better-filtered pipeline flow.</p>
               </article>
             </div>
@@ -1848,6 +2645,165 @@ const currentYear = new Date().getFullYear();
         <h2 class="test-image-title">
           Would you rather live in a tax paradise, or an actual paradise with tax advantages?
         </h2>
+      </div>
+    </section>
+
+    <section class="section timeline-variant">
+      <div class="container">
+        <div class="section-header">
+          <p class="eyebrow">Timeline Concept 1</p>
+          <h2>Investor timeline in a horizontal card format.</h2>
+          <p class="intro">A clean five-step journey that reads quickly and works well for top-level onboarding.</p>
+        </div>
+        <div class="timeline-horizontal">
+          <article class="timeline-step-card">
+            <span class="timeline-step-number">01</span>
+            <h3>Initial Consultation</h3>
+            <p>We begin with a short introduction to understand mandate, target returns, and current Andorra interest.</p>
+          </article>
+          <article class="timeline-step-card">
+            <span class="timeline-step-number">02</span>
+            <h3>Personal Consultation Call</h3>
+            <p>A more focused call to discuss profile, timeline, investment criteria, and the right entry route into the market.</p>
+          </article>
+          <article class="timeline-step-card">
+            <span class="timeline-step-number">03</span>
+            <h3>Investment oportunity selection</h3>
+            <p>Relevant opportunities are curated and shared based on fit, availability, and strategic alignment.</p>
+          </article>
+          <article class="timeline-step-card">
+            <span class="timeline-step-number">04</span>
+            <h3>KYC &amp; Compliance</h3>
+            <p>We coordinate the required onboarding, compliance checks, and documentation before moving forward.</p>
+          </article>
+          <article class="timeline-step-card">
+            <span class="timeline-step-number">05</span>
+            <h3>Capital Deployment</h3>
+            <p>Once approved, capital is allocated into the selected opportunity and execution begins under the agreed structure.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section timeline-variant">
+      <div class="container">
+        <div class="section-header">
+          <p class="eyebrow">Timeline Concept 2</p>
+          <h2>Investor timeline in a vertical process flow.</h2>
+          <p class="intro">
+            A more narrative structure that works well when you want each step to feel sequential and guided.
+          </p>
+        </div>
+        <div class="timeline-vertical">
+          <div class="timeline-vertical-row">
+            <div class="timeline-vertical-dot"></div>
+            <article class="timeline-vertical-card">
+              <h3>Initial Consultation</h3>
+              <p>
+                We begin by understanding investor objectives, jurisdictional interest, and the broad profile of
+                capital being deployed.
+              </p>
+            </article>
+          </div>
+          <div class="timeline-vertical-row">
+            <div class="timeline-vertical-dot"></div>
+            <article class="timeline-vertical-card">
+              <h3>Personal Consultation Call</h3>
+              <p>
+                A dedicated conversation helps us map personal priorities, return expectations, and suitable
+                opportunity types.
+              </p>
+            </article>
+          </div>
+          <div class="timeline-vertical-row">
+            <div class="timeline-vertical-dot"></div>
+            <article class="timeline-vertical-card">
+              <h3>Investment oportunity selection</h3>
+              <p>
+                We present a shortlist of relevant opportunities and discuss where the strongest strategic fit
+                appears to sit.
+              </p>
+            </article>
+          </div>
+          <div class="timeline-vertical-row">
+            <div class="timeline-vertical-dot"></div>
+            <article class="timeline-vertical-card">
+              <h3>KYC &amp; Compliance</h3>
+              <p>
+                Documentation, source-of-funds checks, and internal approvals are handled before any capital moves.
+              </p>
+            </article>
+          </div>
+          <div class="timeline-vertical-row">
+            <div class="timeline-vertical-dot"></div>
+            <article class="timeline-vertical-card">
+              <h3>Capital Deployment</h3>
+              <p>
+                Once fully cleared, capital is deployed into the chosen structure and we move into active execution.
+              </p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section timeline-orbit">
+      <div class="container">
+        <div class="section-header">
+          <p class="eyebrow">Timeline 2</p>
+          <h2>Investor journey in a premium dark step layout.</h2>
+          <p class="intro">
+            Inspired by the reference you shared, this version presents the process in a more elevated and visually guided format.
+          </p>
+        </div>
+        <div class="timeline-orbit-grid">
+          <article class="timeline-orbit-step">
+            <div class="timeline-orbit-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M8 9h8"></path><path d="M8 13h5"></path><path d="M6 5h12a2 2 0 0 1 2 2v10l-4-3H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"></path></svg>
+            </div>
+            <p class="timeline-orbit-label">Step 01</p>
+            <h3>Initial Consultation</h3>
+            <p>We begin with a first conversation to understand your profile, objectives, and interest in the Andorra market.</p>
+          </article>
+          <article class="timeline-orbit-step">
+            <div class="timeline-orbit-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"></path><path d="M14 3v5h5"></path><path d="M9 13h6"></path><path d="M9 17h6"></path><path d="M9 9h2"></path></svg>
+            </div>
+            <p class="timeline-orbit-label">Step 02</p>
+            <h3>Personal Consultation Call</h3>
+            <p>We take a deeper look at your investment criteria, time horizon, and the most relevant paths forward.</p>
+          </article>
+          <article class="timeline-orbit-step">
+            <div class="timeline-orbit-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M4 12h16"></path></svg>
+            </div>
+            <p class="timeline-orbit-label">Step 03</p>
+            <h3>Investment oportunity selection</h3>
+            <p>Aligned opportunities are shortlisted and presented based on fit, structure, and deployment readiness.</p>
+          </article>
+          <article class="timeline-orbit-step">
+            <div class="timeline-orbit-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M22 2 11 13"></path><path d="m22 2-7 20-4-9-9-4Z"></path></svg>
+            </div>
+            <p class="timeline-orbit-label">Step 04</p>
+            <h3>KYC &amp; Compliance</h3>
+            <p>All required compliance checks, documentation, and onboarding steps are coordinated before execution.</p>
+          </article>
+          <article class="timeline-orbit-step">
+            <div class="timeline-orbit-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M20.4 4.6a5.5 5.5 0 0 0-7.8 0L12 5.2l-.6-.6a5.5 5.5 0 0 0-7.8 7.8l.6.6L12 20l7.8-7a5.5 5.5 0 0 0 .6-8.4Z"></path><path d="M8 12h2l1.2-2.5L13 15l1.3-3H16"></path></svg>
+            </div>
+            <p class="timeline-orbit-label">Step 05</p>
+            <h3>Capital Deployment</h3>
+            <p>Once approved, capital is committed into the selected structure and we move into active execution.</p>
+          </article>
+        </div>
+        <div class="timeline-orbit-cta">
+          <a class="timeline-orbit-button" href="#">
+            Explore opportunities
+            <span class="timeline-orbit-button-arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
       </div>
     </section>
 
