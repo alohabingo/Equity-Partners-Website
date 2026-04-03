@@ -1,0 +1,547 @@
+---
+import SiteFooter from "../components/SiteFooter.astro";
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Privacy Policy | Equity Partners</title>
+    <link rel="icon" type="image/png" href="/EP%20favicon.png" />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@700&display=swap");
+
+      :root {
+        --navy: #0f1a2a;
+        --navy-soft: #1f2f46;
+        --slate: #5f7087;
+        --slate-light: #8da0b9;
+        --bg-paper: #f3f5f9;
+        --bg-white: #ffffff;
+        --paper: #f4f6fa;
+        --line: #dbe3ee;
+        --accent: #8293ae;
+        --max-width: 1120px;
+        --header-offset: 6.1rem;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
+        color: var(--navy-soft);
+        background: radial-gradient(circle at 10% -10%, #eef2f8 0, var(--bg-paper) 50%);
+        line-height: 1.55;
+      }
+
+      h1, h2, h3, p, ul { margin: 0; }
+
+      .container {
+        width: min(var(--max-width), 92vw);
+        margin: 0 auto;
+      }
+
+      .site-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: nowrap;
+        gap: 1.8rem;
+        padding-top: 2.15rem;
+        padding-bottom: 0.15rem;
+        padding-left: calc((100vw - min(var(--max-width), 92vw)) / 2);
+        padding-right: calc((100vw - min(var(--max-width), 92vw)) / 2);
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        z-index: 220;
+        background: rgba(15, 26, 42, 0.92) !important;
+        border-bottom: 1px solid transparent;
+        transition: padding-top 320ms ease, padding-bottom 320ms ease, background-color 320ms ease,
+          backdrop-filter 320ms ease, -webkit-backdrop-filter 320ms ease, border-color 320ms ease,
+          box-shadow 320ms ease;
+      }
+
+      body.is-scrolled .site-header {
+        background: rgba(15, 26, 42, 0.6) !important;
+        padding-top: 1.25rem;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-bottom-color: rgba(220, 231, 246, 0.2);
+        box-shadow: 0 8px 20px rgba(6, 10, 18, 0.18);
+      }
+
+      .logo {
+        width: 180px;
+        height: auto;
+        position: relative;
+        top: -12px;
+        filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))
+          drop-shadow(0 0 10px rgba(8, 14, 23, 0.35));
+        transition: top 320ms ease;
+      }
+
+      body.is-scrolled .logo {
+        top: -5px;
+      }
+
+      .main-nav {
+        display: flex;
+        align-items: center;
+        margin-left: auto;
+        flex-wrap: nowrap;
+        gap: 1.3rem;
+        position: relative;
+        top: -11px;
+        z-index: 121;
+        transition: top 320ms ease;
+      }
+
+      body.is-scrolled .main-nav {
+        top: -4px;
+      }
+
+      .menu-toggle-input { display: none; }
+
+      .menu-toggle {
+        display: none;
+        width: 38px;
+        height: 34px;
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        border-radius: 0.45rem;
+        background: transparent;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .menu-toggle-bars,
+      .menu-toggle-bars::before,
+      .menu-toggle-bars::after {
+        width: 18px;
+        height: 2px;
+        background: #ffffff;
+      }
+
+      .menu-toggle-bars {
+        display: block;
+        position: relative;
+        transition: background 220ms ease;
+      }
+
+      .menu-toggle-bars::before,
+      .menu-toggle-bars::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        transition: transform 220ms ease, top 220ms ease;
+      }
+
+      .menu-toggle-bars::before { top: -6px; }
+      .menu-toggle-bars::after { top: 6px; }
+
+      .menu-list {
+        list-style: none;
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
+        gap: 1.2rem;
+        margin: 0;
+        padding: 0;
+      }
+
+      .menu-link {
+        display: inline-flex;
+        align-items: center;
+        color: #ffffff;
+        text-decoration: none;
+        font-size: 0.72rem;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        font-weight: 600;
+        line-height: 1;
+      }
+
+      .menu-link:hover,
+      .menu-link.is-active { color: #d7e3f5; }
+
+      .menu-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        top: 1px;
+        min-width: 126px;
+        color: #172235;
+        background: rgba(255, 255, 255, 0.96);
+        text-decoration: none;
+        font-size: 0.72rem;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        border-radius: 0.45rem;
+        padding: 0.65rem 0.95rem;
+        font-weight: 600;
+        line-height: 1;
+        border: 1px solid rgba(255, 255, 255, 0.95);
+        white-space: nowrap;
+      }
+
+      .policy-hero {
+        margin-top: var(--header-offset);
+        padding: 4rem 0 2rem;
+        background: linear-gradient(180deg, #f4f6fa, #edf1f7);
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .eyebrow {
+        font-size: 0.8rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 0.85rem;
+      }
+
+      h1 {
+        font-family: "Open Sans", "Avenir Next", "Segoe UI", Arial, sans-serif;
+        font-weight: 700;
+        font-size: clamp(2rem, 5vw, 4rem);
+        line-height: 1.08;
+        letter-spacing: 0.02em;
+        color: var(--navy);
+        max-width: 18ch;
+      }
+
+      .policy-hero p {
+        margin-top: 1rem;
+        max-width: 50rem;
+        color: var(--slate);
+        font-size: 1rem;
+        line-height: 1.65;
+      }
+
+      .policy-content {
+        padding: 4rem 0;
+      }
+
+      .policy-shell {
+        background: var(--bg-white);
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        padding: 2rem;
+      }
+
+      .policy-block + .policy-block {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--line);
+      }
+
+      .policy-block h2 {
+        font-size: clamp(1.55rem, 3vw, 2.45rem);
+        line-height: 1.12;
+        color: var(--navy);
+      }
+
+      .policy-block p,
+      .policy-block li {
+        margin-top: 0.85rem;
+        color: var(--slate);
+        font-size: 0.98rem;
+        line-height: 1.7;
+      }
+
+      .policy-block ul {
+        padding-left: 1.1rem;
+      }
+
+      .policy-meta {
+        color: var(--slate-light);
+        font-size: 0.86rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+
+      .policy-contact-button {
+        margin-top: 1.1rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #d8e3f2;
+        color: #132238;
+        text-decoration: none;
+        border-radius: 0.45rem;
+        padding: 0.65rem 0.95rem;
+        font-size: 0.72rem;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        font-weight: 600;
+        line-height: 1;
+        border: 1px solid rgba(216, 227, 242, 0.96);
+        transition: background-color 180ms ease, transform 180ms ease, color 180ms ease, border-color 180ms ease;
+      }
+
+      .policy-contact-button:hover {
+        background: #53b27f;
+        border-color: #53b27f;
+        color: #ffffff;
+        transform: translateY(-1px);
+      }
+
+      @media (max-width: 680px) {
+        .site-header {
+          gap: 0.45rem;
+          min-height: 44px;
+          padding-bottom: 0.45rem;
+        }
+
+        body.is-scrolled .site-header {
+          padding-top: 2.15rem;
+          padding-bottom: 0.75rem;
+        }
+
+        .main-nav {
+          position: static;
+          gap: 0.55rem;
+        }
+
+        .menu-toggle {
+          display: inline-flex;
+          position: relative;
+          top: -7px;
+          border: 0;
+          box-shadow: none;
+        }
+
+        .menu-cta {
+          display: inline-flex;
+          top: -7px;
+          min-width: 102px;
+          padding: 0.58rem 0.8rem;
+          font-size: 0.68rem;
+        }
+
+        .menu-list {
+          position: absolute;
+          top: calc(100% + 0.5rem);
+          left: 0.8rem;
+          min-width: min(190px, calc(100vw - 2rem));
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.55rem;
+          padding: 0;
+          max-height: 0;
+          opacity: 0;
+          overflow: hidden;
+          transform: translateY(-8px);
+          pointer-events: none;
+          background: rgba(255, 255, 255, 0.96);
+          border: 1px solid #d3ddea;
+          border-radius: 0.6rem;
+          transition: max-height 240ms ease, opacity 240ms ease, transform 240ms ease, padding 240ms ease;
+          z-index: 220;
+        }
+
+        .menu-list .menu-link {
+          width: 100%;
+          color: #172235;
+          text-shadow: none;
+          font-size: 0.76rem;
+          padding: 0.3rem 0;
+        }
+
+        .menu-toggle-input:checked ~ nav .menu-list {
+          max-height: 320px;
+          opacity: 1;
+          padding: 0.75rem 0.85rem;
+          transform: translateY(0);
+          pointer-events: auto;
+        }
+
+        .menu-toggle-input:checked + .menu-toggle .menu-toggle-bars {
+          background: transparent;
+        }
+
+        .menu-toggle-input:checked + .menu-toggle .menu-toggle-bars::before {
+          top: 0;
+          transform: rotate(45deg);
+        }
+
+        .menu-toggle-input:checked + .menu-toggle .menu-toggle-bars::after {
+          top: 0;
+          transform: rotate(-45deg);
+        }
+
+        .policy-shell {
+          padding: 1.35rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <input class="menu-toggle-input" type="checkbox" id="mobile-menu-toggle-privacy" />
+      <label class="menu-toggle" for="mobile-menu-toggle-privacy" aria-label="Toggle navigation menu">
+        <span class="menu-toggle-bars"></span>
+      </label>
+      <a href="/" aria-label="Go to homepage">
+        <img
+          class="logo"
+          src="/images/branding/equity-partners-logo-light%20small.png"
+          alt="Equity Partners logo"
+        />
+      </a>
+      <nav class="main-nav" aria-label="Primary">
+        <ul class="menu-list">
+          <li><a class="menu-link" href="/">Home</a></li>
+          <li><a class="menu-link" href="/#team">Services</a></li>
+          <li><a class="menu-link" href="/about">About</a></li>
+          <li><a class="menu-link" href="/partners">Partners</a></li>
+          <li><a class="menu-link" href="/blog">Blog</a></li>
+          <li><a class="menu-link" href="/test">Test</a></li>
+        </ul>
+        <a class="menu-cta" href="/contact">Contact Us</a>
+      </nav>
+    </header>
+
+    <section class="policy-hero">
+      <div class="container">
+        <p class="eyebrow">Privacy Policy</p>
+        <h1>Privacy Policy</h1>
+        <p>
+          Equity Partners is committed to the highest standards of data protection and transparency. This policy outlines our
+          practices regarding the collection, use, and safeguarding of personal data when you visit our website, contact us,
+          or request investor information.
+        </p>
+      </div>
+    </section>
+
+    <section class="policy-content">
+      <div class="container">
+        <div class="policy-shell">
+          <div class="policy-block">
+            <p class="policy-meta">Last updated: March 31, 2026</p>
+          </div>
+
+          <div class="policy-block">
+            <h2>Commitment to data protection</h2>
+            <p>
+              This privacy policy is designed to reflect the principles of transparency, proportionality, and lawful processing
+              expected under applicable data protection standards, including the Andorran data protection framework and, where
+              relevant, the EU General Data Protection Regulation.
+            </p>
+          </div>
+
+          <div class="policy-block">
+            <h2>Data controller</h2>
+            <p>The entity responsible for the processing of your personal data is Equity Partners.</p>
+            <p>
+              If you have any privacy-related questions or wish to exercise your rights, you can contact us at
+              <strong> info@equitypartnersandorra.com</strong>.
+            </p>
+          </div>
+
+          <div class="policy-block">
+            <h2>Categories of personal data</h2>
+            <p>We process the following categories of personal data depending on your interaction with our platform:</p>
+            <ul>
+              <li>Identity and contact data such as your name, email address, phone number, and company details.</li>
+              <li>Consultation and enquiry data you submit through contact forms, newsletter forms, or investor requests.</li>
+              <li>Professional and investor-related information you voluntarily share with us.</li>
+              <li>Technical data such as IP address, browser type, device information, and usage patterns collected via cookies.</li>
+            </ul>
+          </div>
+
+          <div class="policy-block">
+            <h2>How we use personal data</h2>
+            <p>We may use personal information to:</p>
+            <ul>
+              <li>Respond to enquiries and investor requests.</li>
+              <li>Share relevant updates, market insights, or project information.</li>
+              <li>Improve the website, its performance, and user experience.</li>
+              <li>Maintain internal records and satisfy legal, accounting, compliance, or reporting obligations.</li>
+            </ul>
+          </div>
+
+          <div class="policy-block">
+            <h2>Legal basis for processing</h2>
+            <p>
+              Where applicable, personal data may be processed on the basis of consent, legitimate interest, steps taken at
+              your request prior to a potential professional relationship, or compliance with legal obligations.
+            </p>
+          </div>
+
+          <div class="policy-block">
+            <h2>Retention</h2>
+            <p>
+              We retain your personal data only for as long as necessary to fulfil the purposes for which it was collected,
+              including for legal, accounting, or reporting requirements. Consultation data is typically retained for up to
+              5 years following the end of the professional relationship, unless a longer retention period is required by law.
+            </p>
+          </div>
+
+          <div class="policy-block">
+            <h2>Your rights</h2>
+            <p>
+              Under applicable privacy laws, including the Andorran LQPD and GDPR where relevant, you may have the right to:
+            </p>
+            <ul>
+              <li>Request access to the personal data we hold about you.</li>
+              <li>Request correction of inaccurate or incomplete data.</li>
+              <li>Request deletion of data where lawful grounds allow.</li>
+              <li>Request restriction of processing in certain circumstances.</li>
+              <li>Object to certain processing activities.</li>
+              <li>Withdraw consent where processing relies on consent.</li>
+            </ul>
+            <p>
+              To exercise any of these rights, please contact our data protection contact at
+              <strong> info@equitypartnersandorra.com</strong>.
+            </p>
+          </div>
+
+          <div class="policy-block">
+            <h2>Security measures</h2>
+            <p>
+              We have implemented robust security measures to prevent your personal data from being accidentally lost, used,
+              altered, disclosed, or accessed in an unauthorized way. Access to personal data is limited to those employees,
+              contractors, or advisers who have a business need to know.
+            </p>
+          </div>
+
+          <div class="policy-block">
+            <h2>Cookies and related technologies</h2>
+            <p>
+              We may use cookies and similar technologies to understand website usage, improve performance, and support user
+              experience. Technical information such as IP address, browser type, device information, and usage patterns may
+              be collected through these tools.
+            </p>
+          </div>
+
+          <div class="policy-block">
+            <h2>Contact us</h2>
+            <p>
+              If you have questions about this policy or how your data is handled, please contact
+              <strong> info@equitypartnersandorra.com</strong>.
+            </p>
+            <a class="policy-contact-button" href="/contact">Contact Us</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <SiteFooter />
+
+    <script type="module">
+      const root = document.body;
+      const syncHeaderState = () => {
+        root.classList.toggle("is-scrolled", window.scrollY > 10);
+      };
+
+      syncHeaderState();
+      window.addEventListener("scroll", syncHeaderState, { passive: true });
+    </script>
+  </body>
+</html>

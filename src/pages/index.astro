@@ -1,5 +1,6 @@
 ---
 import { blogPosts } from "../data/blogPosts";
+import SiteFooter from "../components/SiteFooter.astro";
 
 const advantages = [
   {
@@ -58,7 +59,6 @@ const localPartners = [
 
 const localPartnersLoop = [...localPartners, ...localPartners, ...localPartners, ...localPartners];
 const homepageSuggestedPosts = blogPosts.slice(0, 3);
-const currentYear = new Date().getFullYear();
 ---
 
 <html lang="en">
@@ -652,19 +652,21 @@ const currentYear = new Date().getFullYear();
         letter-spacing: 0.16em;
         font-weight: 400;
         color: var(--accent);
+        margin-bottom: 0.85rem;
       }
 
       .focus-title {
-        margin-top: 0.55rem;
-        font-size: clamp(1.9rem, 3.3vw, 3rem);
-        line-height: 1.06;
+        margin-top: 0;
+        font-size: clamp(1.9rem, 3.4vw, 3rem);
+        line-height: 1.08;
         color: #1f2b3c;
       }
 
       .focus-intro {
         margin-top: 0.9rem;
-        max-width: 37ch;
-        color: #5e6c82;
+        width: 100%;
+        max-width: none;
+        color: var(--text-muted);
       }
 
       .focus-list {
@@ -705,7 +707,7 @@ const currentYear = new Date().getFullYear();
       }
 
       .focus-section-f {
-        padding: 2.4rem 0 3rem;
+        padding: 4rem 0;
         background: #f2f5fa;
         border-top: 1px solid #dce3ee;
         border-bottom: 1px solid #dce3ee;
@@ -830,8 +832,96 @@ const currentYear = new Date().getFullYear();
         color: #f3f7fc;
       }
 
+      .why-equity-home {
+        background: linear-gradient(180deg, #f4f6fa, #eef2f8);
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        font-family: "Montserrat", "Avenir Next", "Segoe UI", Arial, sans-serif;
+      }
+
+      .why-equity-home-body {
+        margin-top: 1.8rem;
+        display: grid;
+        grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+        gap: 1.25rem;
+        align-items: stretch;
+      }
+
+      .why-equity-home-media {
+        min-height: 34rem;
+        border-radius: 1.25rem;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        background: #dde6f2;
+      }
+
+      .why-equity-home-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .why-equity-home-points {
+        display: grid;
+        gap: 0.9rem;
+      }
+
+      .why-equity-home-point {
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        padding: 1.4rem 1.5rem;
+        display: grid;
+        grid-template-columns: 3.75rem minmax(0, 1fr);
+        gap: 1rem;
+        align-items: start;
+      }
+
+      .why-equity-home-point-icon {
+        width: 3.75rem;
+        height: 3.75rem;
+        border-radius: 1.1rem;
+        background: #53b27f;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .why-equity-home-point-icon img {
+        width: 1.85rem;
+        height: 1.85rem;
+        object-fit: contain;
+        display: block;
+        filter: brightness(0) invert(1);
+      }
+
+      .why-equity-home-point-copy h3 {
+        margin: 0;
+        color: #0f1a2a;
+        font-size: 1.15rem;
+      }
+
+      .why-equity-home-point-copy p {
+        margin-top: 0.55rem;
+        color: #5f7087;
+        font-size: 0.96rem;
+        line-height: 1.46;
+      }
+
+      .why-equity-home .eyebrow {
+        font-size: 0.74rem;
+      }
+
+      .why-equity-home .section-header h2 {
+        margin-top: 0;
+        font-size: clamp(1.9rem, 3.3vw, 3rem);
+        line-height: 1.06;
+      }
+
       .section-header {
-        max-width: 48rem;
+        max-width: none;
+        width: 100%;
       }
 
       .eyebrow {
@@ -843,12 +933,14 @@ const currentYear = new Date().getFullYear();
       }
 
       h2 {
-        font-size: clamp(1.55rem, 3vw, 2.45rem);
-        line-height: 1.12;
+        font-size: clamp(1.9rem, 3.4vw, 3rem);
+        line-height: 1.08;
       }
 
       .intro {
         margin-top: 0.9rem;
+        width: 100%;
+        max-width: none;
         color: var(--text-muted);
       }
 
@@ -890,7 +982,7 @@ const currentYear = new Date().getFullYear();
       }
 
       .projects h2 {
-        font-size: clamp(1.55rem, 3vw, 2.45rem);
+        font-size: clamp(1.9rem, 3.4vw, 3rem);
         white-space: nowrap;
       }
 
@@ -964,13 +1056,21 @@ const currentYear = new Date().getFullYear();
         padding-bottom: 0.2rem;
       }
 
+      .advantage-home .cta-link,
+      .why-equity-home .cta-link,
+      .focus-section-f .cta-link,
+      .projects .cta-link,
+      .home-suggested-reads .cta-link {
+        margin-top: 1.6rem;
+      }
+
       .test-image-break {
         position: relative;
         width: 100%;
         height: 33vh;
         min-height: 220px;
         background:
-          linear-gradient(rgba(7, 13, 22, 0.4), rgba(7, 13, 22, 0.4)),
+          linear-gradient(rgba(7, 13, 22, 0.7), rgba(7, 13, 22, 0.7)),
           url("/AND IMG night snow lights.jpeg") center / cover no-repeat fixed;
         background-color: #0f1a2a;
         overflow: hidden;
@@ -991,8 +1091,8 @@ const currentYear = new Date().getFullYear();
         color: #ffffff;
         font-family: "Montserrat", "Avenir Next", "Segoe UI", Arial, sans-serif;
         font-weight: 700;
-        font-size: clamp(1.55rem, 3vw, 2.3rem);
-        line-height: 1.12;
+        font-size: clamp(1.45rem, 3vw, 2.2rem);
+        line-height: 1.16;
         text-shadow: 0 2px 10px rgba(2, 6, 12, 0.5);
       }
 
@@ -1044,7 +1144,8 @@ const currentYear = new Date().getFullYear();
       }
 
       .gateway .section-header {
-        max-width: 48rem;
+        max-width: none;
+        width: 100%;
       }
 
       .gateway .intro {
@@ -1067,14 +1168,26 @@ const currentYear = new Date().getFullYear();
         padding: 2.15rem;
       }
 
+      .gateway .button {
+        background: #53b27f;
+        color: #ffffff;
+        transition: background-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+      }
+
+      .gateway .button:hover {
+        background: #3f9568;
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(12, 24, 18, 0.22);
+      }
+
       .gateway .leaders-note {
         color: rgba(222, 232, 244, 0.74);
       }
 
       .leaders-investor-title {
         margin: 1.6rem 0 0;
-        font-size: clamp(1.55rem, 3vw, 2.45rem);
-        line-height: 1.12;
+        font-size: clamp(1.45rem, 3vw, 2.2rem);
+        line-height: 1.16;
         color: #ffffff;
       }
 
@@ -1321,7 +1434,8 @@ const currentYear = new Date().getFullYear();
       }
 
       .timeline-hybrid .section-header {
-        max-width: 48rem;
+        max-width: none;
+        width: 100%;
       }
 
       .timeline-hybrid .eyebrow {
@@ -1467,13 +1581,14 @@ const currentYear = new Date().getFullYear();
 
       .home-suggested-reads h2 {
         color: #f2f6fc;
-        font-size: clamp(1.55rem, 3vw, 2.45rem);
+        font-size: clamp(1.9rem, 3.4vw, 3rem);
         white-space: nowrap;
       }
 
       .home-suggested-reads .intro {
         color: #cbd7e8;
-        max-width: 42rem;
+        max-width: none;
+        width: 100%;
       }
 
       .home-suggested-reads .cta-link {
@@ -1590,6 +1705,11 @@ const currentYear = new Date().getFullYear();
         max-width: 34rem;
       }
 
+      .newsletter-copy h2 {
+        font-size: clamp(1.55rem, 3vw, 2.45rem);
+        line-height: 1.12;
+      }
+
       .newsletter-form {
         display: flex;
         align-items: center;
@@ -1618,7 +1738,7 @@ const currentYear = new Date().getFullYear();
         height: 44px;
         border: 1px solid rgba(14, 24, 39, 0.18);
         background: #1b2a3f;
-        color: #ffffff;
+        color: #eaf1fb;
         border-radius: 0.55rem;
         padding: 0 1rem;
         font-size: 0.72rem;
@@ -1630,7 +1750,7 @@ const currentYear = new Date().getFullYear();
       }
 
       .newsletter-button:hover {
-        background: #53b27f;
+        background: #253750;
         transform: translateY(-1px);
       }
 
@@ -1816,7 +1936,8 @@ const currentYear = new Date().getFullYear();
         .leaders,
         .newsletter-wrap,
         .advantage-home-grid,
-        .focus-f-body {
+        .focus-f-body,
+        .why-equity-home-body {
           grid-template-columns: 1fr;
         }
 
@@ -2196,46 +2317,51 @@ const currentYear = new Date().getFullYear();
       </div>
     </section>
 
-    <section class="focus-section-f">
+    <section class="section why-equity-home">
       <div class="container">
-        <div class="focus-f-header">
-          <p class="focus-label is-partners-title">The Andorra Advantage</p>
-          <h2 class="focus-title">Why Andorra</h2>
-          <p class="focus-intro">We open the doors to Andorra’s exclusive investment landscape by providing a structural bridge that allows international firms to deploy capital into Andorra without compromising on institutional standards.</p>
+        <div class="section-header">
+          <p class="eyebrow">Work with the best</p>
+          <h2>Why Equity Partners</h2>
+          <p class="intro">
+            We combine local market access with disciplined execution standards, helping investors approach Andorra through a more structured, informed, and institutionally aligned lens.
+          </p>
         </div>
-        <div class="focus-f-body">
-          <div class="focus-c-panels">
-            <article class="focus-c-kpi">
-              <p class="focus-c-kpi-value">01 | FISCAL ADVANTAGE</p>
-              <h3>Institutional-Grade Tax Efficiency</h3>
-              <p>Andorra offers a capped 10% corporate and personal tax regime, paired with 0% wealth and inheritance taxes. This creates a high-performance environment for capital reinvestment and long-term wealth preservation.</p>
+        <div class="why-equity-home-body">
+          <div class="why-equity-home-media">
+            <img src="/04c copy.jpg" alt="Equity Partners development and Andorra property view" loading="lazy" />
+          </div>
+          <div class="why-equity-home-points">
+            <article class="why-equity-home-point">
+              <span class="why-equity-home-point-icon" aria-hidden="true"><img src="/images/Icons/project%20development.png" alt="" /></span>
+              <div class="why-equity-home-point-copy">
+                <h3>Execution with real accountability</h3>
+                <p>We stay close to each mandate from initial analysis through to execution and delivery, helping investors move from opportunity review to real deployment with greater control and clarity.</p>
+              </div>
             </article>
-            <article class="focus-c-kpi">
-              <p class="focus-c-kpi-value">02 | STABILITY</p>
-              <h3>Sovereign Safe-Haven Status</h3>
-              <p>With a history of 700 years of political neutrality and a "Stable" outlook from major credit agencies, the Principality provides a secure jurisdiction for risk mitigation against global geopolitical and economic volatility.</p>
+            <article class="why-equity-home-point">
+              <span class="why-equity-home-point-icon" aria-hidden="true"><img src="/images/Icons/local%20network.png" alt="" /></span>
+              <div class="why-equity-home-point-copy">
+                <h3>Our network is your advantage</h3>
+                <p>Direct relationships with owners, advisors, and local operators improve sourcing quality and help investors distinguish visible listings from genuinely strategic opportunities.</p>
+              </div>
             </article>
-            <article class="focus-c-kpi">
-              <p class="focus-c-kpi-value">03 | SCARCITY</p>
-              <h3>Natural Real Estate Appreciation</h3>
-              <p>Geography dictates the market; with only 4% of land being buildable, the natural supply-side constraint ensures long-term asset value growth. This scarcity, combined with rising global demand, creates a high-conviction investment play.</p>
-            </article>
-            <article class="focus-c-kpi">
-              <p class="focus-c-kpi-value">04 | CONNECTIVITY</p>
-              <h3>Strategic European Integration</h3>
-              <p>Andorra is advancing its Association Agreement with the EU, integrating the Principality into the Single Market. This evolution provides investors with a unique "best-of-both-worlds" scenario: full sovereign fiscal autonomy combined with the operational advantages of having access to major European markets.</p>
+            <article class="why-equity-home-point">
+              <span class="why-equity-home-point-icon" aria-hidden="true"><img src="/images/Icons/regulatory%20expertise.png" alt="" /></span>
+              <div class="why-equity-home-point-copy">
+                <h3>Structure that protects investor confidence</h3>
+                <p>We translate Andorra’s regulatory environment into a practical path for international capital, approaching each mandate with compliance rigor, documentation discipline, and institutional alignment.</p>
+              </div>
             </article>
           </div>
-          <div class="focus-c-media is-canillo" aria-hidden="true"></div>
         </div>
-        <a class="cta-link" href="/blog">Explore More Advantages</a>
+        <a class="cta-link" href="/about">About Equity Partners</a>
       </div>
     </section>
 
     <section class="focus-section-f is-concept-f">
       <div class="container">
         <div class="focus-f-header">
-          <p class="focus-label is-partners-title">The Andorra Advantage 2</p>
+          <p class="focus-label is-partners-title">The Andorra Advantage</p>
           <h2 class="focus-title">Why Andorra</h2>
           <p class="focus-intro">We open the doors to Andorra’s exclusive investment landscape by providing a structural bridge that allows international firms to deploy capital into Andorra without compromising on institutional standards.</p>
         </div>
@@ -2272,7 +2398,7 @@ const currentYear = new Date().getFullYear();
       <div class="container">
         <div class="section-header">
           <p class="eyebrow">Featured Developments</p>
-          <h2>View our current property developments</h2>
+          <h2>View our properties under development</h2>
           <p class="intro">Balanced proof architecture: demonstrated execution plus visible momentum.</p>
         </div>
         <div class="project-grid">
@@ -2441,68 +2567,7 @@ const currentYear = new Date().getFullYear();
       </div>
     </section>
 
-    <footer class="footer">
-      <div class="footer-top">
-        <div class="container footer-grid">
-          <div>
-            <img
-              class="footer-logo"
-              src="/images/branding/equity-partners-logo-light%20small.png"
-              alt="Equity Partners Andorra Property Group"
-            />
-            <a class="footer-cta" href="/contact">Explore Opportunities</a>
-          </div>
-
-          <div>
-            <h3 class="footer-heading">Equity Partners</h3>
-            <ul class="footer-list">
-              <li><a class="footer-link" href="/#about">About</a></li>
-              <li><a class="footer-link" href="/#team">Team</a></li>
-              <li><a class="footer-link" href="/partners">Partners</a></li>
-              <li><a class="footer-link" href="/#partners">Projects</a></li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 class="footer-heading">Resources</h3>
-            <ul class="footer-list">
-              <li><a class="footer-link" href="/blog">Blog</a></li>
-              <li><a class="footer-link" href="#">Market Reports</a></li>
-              <li><a class="footer-link" href="#">Investment Guides</a></li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 class="footer-heading">Contact</h3>
-            <p class="footer-meta">
-              Av. Meritxell 95, AD500 Andorra la Vella<br />
-              +376 000 000<br />
-              info@equitypartnersandorra.com<br />
-              SL Reg. No. L-12345-6
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div class="footer-divider"></div>
-
-      <div class="footer-bottom">
-        <div class="container footer-bottom-row">
-          <p class="footer-copy">© {currentYear} EQUITY PARTNERS. All rights reserved.</p>
-          <div class="footer-legal">
-            <a href="#">Privacy Policy</a>
-            <a href="#">Terms of Use</a>
-            <a href="#">Disclaimer</a>
-          </div>
-          <div class="footer-social">
-            <a class="social-pill" href="#" aria-label="LinkedIn">in</a>
-            <a class="social-pill" href="#" aria-label="X">X</a>
-            <a class="social-pill" href="#" aria-label="YouTube">▶</a>
-            <a class="social-pill" href="#" aria-label="Instagram">IG</a>
-          </div>
-        </div>
-      </div>
-    </footer>
+    <SiteFooter />
     <script type="module">
       const root = document.body;
       const syncHeaderState = () => {
