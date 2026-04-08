@@ -1,7 +1,8 @@
 ---
+import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 const aboutLogoStrip = [
-  { name: "Andorra Resident", logo: "/images/partners/AR%20logo%20EP.png" },
+  { name: "Andorra Resident", logo: "/images/partners/AR%20Logo%20EP.png" },
   { name: "Emindset Law", logo: "/images/partners/Emindset LAW LOGO.png" },
   { name: "DATA", logo: "/images/partners/DATA LOGO.png" },
   { name: "Creand", logo: "/images/partners/creand.webp" },
@@ -79,14 +80,13 @@ const teamMembers = [
         --white: #ffffff;
         --line: #dbe3ee;
         --max-width: 1120px;
-        --header-offset: 6.1rem;
       }
 
       * { box-sizing: border-box; }
 
       body {
         margin: 0;
-        font-family: "Montserrat", "Avenir Next", "Segoe UI", Arial, sans-serif;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
         color: var(--navy-soft);
         background: radial-gradient(circle at 10% -10%, #eef2f8 0, var(--paper) 50%);
         line-height: 1.55;
@@ -134,8 +134,8 @@ const teamMembers = [
       }
 
       body.is-scrolled .menu-cta {
-        background: rgba(255, 255, 255, 0.96);
-        border-color: rgba(255, 255, 255, 0.95);
+        background: #53b27f;
+        border-color: #53b27f;
       }
 
       body.is-scrolled .logo {
@@ -247,8 +247,8 @@ const teamMembers = [
         top: 1px;
         flex: 0 0 auto;
         min-width: 126px;
-        color: #172235;
-        background: rgba(255, 255, 255, 0.96);
+        color: #ffffff;
+        background: #53b27f;
         text-decoration: none;
         font-size: 0.72rem;
         letter-spacing: 0.13em;
@@ -257,15 +257,16 @@ const teamMembers = [
         padding: 0.65rem 0.95rem;
         font-weight: 600;
         line-height: 1;
-        border: 1px solid rgba(255, 255, 255, 0.95);
+        border: 1px solid #53b27f;
         white-space: nowrap;
-        transition: background-color 180ms ease, transform 180ms ease, color 180ms ease, top 320ms ease;
+        transition: background-color 180ms ease, transform 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, top 320ms ease;
       }
 
       .menu-cta:hover {
-        background: rgba(224, 233, 246, 0.96);
-        color: #101b2c;
+        background: #3f9568;
+        color: #ffffff;
         transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(12, 24, 18, 0.22);
       }
 
       .menu-cta:focus-visible {
@@ -274,11 +275,7 @@ const teamMembers = [
       }
 
       .journey-hero {
-        margin-top: var(--header-offset);
         padding: 3.1rem 0 2.35rem;
-        background: #eef2f8;
-        border-top: 1px solid var(--line);
-        border-bottom: 1px solid var(--line);
       }
 
       .journey-hero-head {
@@ -383,7 +380,7 @@ const teamMembers = [
         font-size: 0.74rem;
         letter-spacing: 0.16em;
         text-transform: uppercase;
-        color: #b7c7de;
+        color: #9fb4d2;
       }
 
       .journey-proof-copy h2 {
@@ -714,7 +711,7 @@ const teamMembers = [
       }
 
       .team-variant-circles-dark .eyebrow {
-        color: #9eb2cc;
+        color: #9fb4d2;
       }
 
       .team-variant-circles-dark h2,
@@ -834,87 +831,12 @@ const teamMembers = [
         transform: translateY(-1px);
       }
 
-      .newsletter {
-        background: linear-gradient(180deg, #f4f6fa, #eef2f8);
-        border-top: 1px solid var(--line);
-        border-bottom: 1px solid var(--line);
-        padding: 2.5rem 0;
-      }
-
-      .newsletter-wrap {
-        display: grid;
-        grid-template-columns: 1.1fr 1fr;
-        gap: 1.4rem;
-        align-items: center;
-        background: #ffffff;
-        border: 1px solid #d7deea;
-        border-radius: 1rem;
-        padding: 1.5rem;
-      }
-
-      .newsletter-copy p {
-        margin-top: 0.7rem;
-        color: var(--text-muted);
-        max-width: 34rem;
-      }
-
-      .newsletter-form {
-        display: flex;
-        align-items: center;
-        gap: 0.7rem;
-        justify-content: flex-end;
-      }
-
-      .newsletter-input {
-        width: min(360px, 100%);
-        height: 44px;
-        border-radius: 0.55rem;
-        border: 1px solid #cfd9e7;
-        background: #f9fbff;
-        padding: 0 0.85rem;
-        font-size: 0.92rem;
-        color: #1a2433;
-        outline: none;
-      }
-
-      .newsletter-input:focus {
-        border-color: #9eb0ca;
-        box-shadow: 0 0 0 2px rgba(130, 147, 174, 0.18);
-      }
-
-      .newsletter-button {
-        height: 44px;
-        border: 1px solid rgba(14, 24, 39, 0.18);
-        background: #1b2a3f;
-        color: #eaf1fb;
-        border-radius: 0.55rem;
-        padding: 0 1rem;
-        font-size: 0.72rem;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background-color 180ms ease, transform 180ms ease;
-      }
-
-      .newsletter-button:hover {
-        background: #253750;
-        transform: translateY(-1px);
-      }
-
-      .newsletter-note {
-        margin-top: 0.5rem;
-        color: #7a889e;
-        font-size: 0.72rem;
-      }
-
       @media (max-width: 980px) {
         .journey-hero-grid,
         .journey-proof-logos,
         .journey-proof-body,
         .journey-proof-metrics,
         .why-equity-body,
-        .newsletter-wrap,
         .advantage-grid,
         .team-circle-grid,
         .timeline,
@@ -1088,30 +1010,7 @@ const teamMembers = [
     </style>
   </head>
   <body>
-    <header class="site-header">
-      <input class="menu-toggle-input" type="checkbox" id="mobile-menu-toggle-about" />
-      <label class="menu-toggle" for="mobile-menu-toggle-about" aria-label="Toggle navigation menu">
-        <span class="menu-toggle-bars"></span>
-      </label>
-      <a href="/" aria-label="Go to homepage">
-        <img
-          class="logo"
-          src="/images/branding/equity-partners-logo-light%20small.png"
-          alt="Equity Partners logo"
-        />
-      </a>
-      <nav class="main-nav" aria-label="Primary">
-        <ul class="menu-list">
-          <li><a class="menu-link" href="/">Home</a></li>
-          <li><a class="menu-link" href="/#team">Services</a></li>
-          <li><a class="menu-link is-active" href="/about">About</a></li>
-          <li><a class="menu-link" href="/partners">Partners</a></li>
-          <li><a class="menu-link" href="/blog">Blog</a></li>
-          <li><a class="menu-link" href="/test">Test</a></li>
-        </ul>
-        <a class="menu-cta" href="/contact">Contact Us</a>
-      </nav>
-    </header>
+    <InnerSiteHeader active="about" menuToggleId="mobile-menu-toggle-about" />
 
     <section class="journey-hero">
       <div class="container">
@@ -1207,7 +1106,7 @@ const teamMembers = [
       </div>
     </section>
 
-    <section class="section team-variant-circles team-variant-circles-dark team-variant-cards">
+    <section class="section team-variant-circles team-variant-circles-dark team-variant-cards" id="team">
       <div class="container">
         <div class="section-header">
           <p class="eyebrow">Meet the team</p>
@@ -1235,38 +1134,6 @@ const teamMembers = [
       <div class="container">
         <h2>Explore our current portfolio or discuss a strategic mandate.</h2>
         <a class="cta-button" href="/contact">Contact Our Team</a>
-      </div>
-    </section>
-
-    <section class="section newsletter" id="newsletter">
-      <div class="container">
-        <p class="eyebrow">Newsletter</p>
-        <div class="newsletter-wrap">
-          <div class="newsletter-copy">
-            <h2>Stay informed on Andorra opportunities.</h2>
-            <p>Get concise updates on market shifts, pipeline milestones, and investor-relevant developments.</p>
-          </div>
-          <form
-            class="newsletter-form"
-            name="newsletter-signup"
-            data-netlify="true"
-            action="#"
-            method="post"
-          >
-            <input type="hidden" name="form-name" value="newsletter-signup" />
-            <label class="sr-only" for="newsletter-email-about">Email address</label>
-            <input
-              class="newsletter-input"
-              id="newsletter-email-about"
-              name="email"
-              type="email"
-              placeholder="Enter your email"
-              required
-            />
-            <button class="newsletter-button" type="submit">Subscribe</button>
-          </form>
-        </div>
-        <p class="newsletter-note">We send selective updates only. No spam.</p>
       </div>
     </section>
 

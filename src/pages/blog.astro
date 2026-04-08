@@ -1,5 +1,6 @@
 ---
 import { blogPosts } from "../data/blogPosts";
+import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 
 const posts = blogPosts;
@@ -12,7 +13,7 @@ const posts = blogPosts;
     <title>Blog | Equity Partners</title>
     <link rel="icon" type="image/png" href="/EP%20favicon.png" />
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@700&display=swap");
+      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
 
       :root {
         --bg-night: #06080c;
@@ -32,7 +33,7 @@ const posts = blogPosts;
 
       body {
         margin: 0;
-        font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
         color: var(--text-primary);
         background: radial-gradient(circle at 10% -10%, #eef2f8 0, var(--bg-paper) 50%);
         line-height: 1.5;
@@ -97,8 +98,8 @@ const posts = blogPosts;
       }
 
       body.is-scrolled .menu-cta {
-        background: rgba(255, 255, 255, 0.96);
-        border-color: rgba(255, 255, 255, 0.95);
+        background: #53b27f;
+        border-color: #53b27f;
       }
 
       body.is-scrolled .logo {
@@ -218,8 +219,8 @@ const posts = blogPosts;
         top: 1px;
         flex: 0 0 auto;
         min-width: 126px;
-        color: #172235;
-        background: rgba(255, 255, 255, 0.96);
+        color: #ffffff;
+        background: #53b27f;
         text-decoration: none;
         font-size: 0.72rem;
         letter-spacing: 0.13em;
@@ -228,15 +229,16 @@ const posts = blogPosts;
         padding: 0.65rem 0.95rem;
         font-weight: 600;
         line-height: 1;
-        border: 1px solid rgba(255, 255, 255, 0.95);
+        border: 1px solid #53b27f;
         white-space: nowrap;
-        transition: background-color 180ms ease, transform 180ms ease, color 180ms ease, top 320ms ease;
+        transition: background-color 180ms ease, transform 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, top 320ms ease;
       }
 
       .menu-cta:hover {
-        background: rgba(224, 233, 246, 0.96);
-        color: #101b2c;
+        background: #3f9568;
+        color: #ffffff;
         transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(12, 24, 18, 0.22);
       }
 
       .menu-cta:focus-visible {
@@ -260,7 +262,7 @@ const posts = blogPosts;
 
       h1 {
         margin: 0;
-        font-family: "Open Sans", "Avenir Next", "Segoe UI", Arial, sans-serif;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
         font-weight: 700;
         font-size: clamp(1.9rem, 4.3vw, 3.1rem);
         letter-spacing: 0.02em;
@@ -303,10 +305,6 @@ const posts = blogPosts;
       }
 
       .insights {
-        margin-top: 4.5rem;
-        background: linear-gradient(180deg, #f4f6fa, #edf1f7);
-        border-top: 1px solid var(--line);
-        border-bottom: 1px solid var(--line);
       }
 
       .blog-grid {
@@ -366,8 +364,8 @@ const posts = blogPosts;
       }
 
       .metrics {
-        margin-top: 0.7rem;
-        margin-bottom: 0.6rem;
+        margin-top: 0;
+        margin-bottom: 0.65rem;
         display: flex;
         align-items: center;
         flex-wrap: wrap;
@@ -389,6 +387,7 @@ const posts = blogPosts;
       }
 
       .excerpt {
+        margin-top: 0.45rem;
         color: var(--text-muted);
         font-size: 0.87rem;
         line-height: 1.45;
@@ -445,9 +444,9 @@ const posts = blogPosts;
 
       .newsletter-button {
         height: 44px;
-        border: 1px solid rgba(14, 24, 39, 0.18);
-        background: #1b2a3f;
-        color: #eaf1fb;
+        border: 1px solid #53b27f;
+        background: #53b27f;
+        color: #ffffff;
         border-radius: 0.55rem;
         padding: 0 1rem;
         font-size: 0.72rem;
@@ -459,7 +458,8 @@ const posts = blogPosts;
       }
 
       .newsletter-button:hover {
-        background: #253750;
+        background: #3f9568;
+        border-color: #3f9568;
         transform: translateY(-1px);
       }
 
@@ -595,30 +595,7 @@ const posts = blogPosts;
     </style>
   </head>
   <body>
-    <header class="site-header" id="home">
-      <input class="menu-toggle-input" type="checkbox" id="mobile-menu-toggle-blog" />
-      <label class="menu-toggle" for="mobile-menu-toggle-blog" aria-label="Toggle navigation menu">
-        <span class="menu-toggle-bars"></span>
-      </label>
-      <a href="/" aria-label="Go to homepage">
-        <img
-          class="logo"
-          src="/images/branding/equity-partners-logo-light%20small.png"
-          alt="Equity Partners logo"
-        />
-      </a>
-      <nav class="main-nav" aria-label="Primary">
-        <ul class="menu-list">
-          <li><a class="menu-link" href="/">Home</a></li>
-          <li><a class="menu-link" href="/#team">Services</a></li>
-              <li><a class="menu-link" href="/about">About</a></li>
-          <li><a class="menu-link" href="/partners">Partners</a></li>
-          <li><a class="menu-link" href="/blog">Blog</a></li>
-          <li><a class="menu-link" href="/test">Test</a></li>
-        </ul>
-        <a class="menu-cta" href="/contact">Contact Us</a>
-      </nav>
-    </header>
+    <InnerSiteHeader active="blog" menuToggleId="mobile-menu-toggle-blog" />
 
     <section class="section insights">
       <div class="container">
