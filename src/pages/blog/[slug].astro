@@ -1,4 +1,5 @@
 ---
+import SiteFooter from "../../components/SiteFooter.astro";
 import { blogPosts } from "../../data/blogPosts";
 
 export function getStaticPaths() {
@@ -9,8 +10,6 @@ export function getStaticPaths() {
 }
 
 const { post } = Astro.props;
-const currentYear = new Date().getFullYear();
-
 const stopWords = new Set([
   "and",
   "the",
@@ -73,7 +72,7 @@ const suggestedPosts = blogPosts
     <title>{post.title} | Equity Partners</title>
     <link rel="icon" type="image/png" href="/EP%20favicon.png" />
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@700&display=swap");
+      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
 
       :root {
         --bg-paper: #f3f5f9;
@@ -91,7 +90,7 @@ const suggestedPosts = blogPosts
 
       body {
         margin: 0;
-        font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
         color: var(--text-primary);
         background: radial-gradient(circle at 10% -10%, #eef2f8 0, var(--bg-paper) 50%);
         line-height: 1.6;
@@ -312,7 +311,7 @@ const suggestedPosts = blogPosts
       }
 
       .article-hero h1 {
-        font-family: "Open Sans", "Avenir Next", "Segoe UI", Arial, sans-serif;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
         font-weight: 700;
         font-size: clamp(1.75rem, 4vw, 2.85rem);
         line-height: 1.1;
@@ -1082,68 +1081,7 @@ const suggestedPosts = blogPosts
       </div>
     </main>
 
-    <footer class="footer">
-      <div class="footer-top">
-        <div class="container footer-grid">
-          <div>
-            <img
-              class="footer-logo"
-              src="/images/branding/equity-partners-logo-light%20small.png"
-              alt="Equity Partners Andorra Property Group"
-            />
-            <a class="footer-cta" href="/contact">Explore Opportunities</a>
-          </div>
-
-          <div>
-            <h3 class="footer-heading">Equity Partners</h3>
-            <ul class="footer-list">
-              <li><a class="footer-link" href="/#about">About</a></li>
-              <li><a class="footer-link" href="/#team">Team</a></li>
-              <li><a class="footer-link" href="/partners">Partners</a></li>
-              <li><a class="footer-link" href="/#partners">Projects</a></li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 class="footer-heading">Resources</h3>
-            <ul class="footer-list">
-              <li><a class="footer-link" href="/blog">Blog</a></li>
-              <li><a class="footer-link" href="#">Market Reports</a></li>
-              <li><a class="footer-link" href="#">Investment Guides</a></li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 class="footer-heading">Contact</h3>
-            <p class="footer-meta">
-              Av. Meritxell 95, AD500 Andorra la Vella<br />
-              +376 000 000<br />
-              info@equitypartnersandorra.com<br />
-              SL Reg. No. L-12345-6
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div class="footer-divider"></div>
-
-      <div class="footer-bottom">
-        <div class="container footer-bottom-row">
-          <p class="footer-copy">© {currentYear} EQUITY PARTNERS. All rights reserved.</p>
-          <div class="footer-legal">
-            <a href="#">Privacy Policy</a>
-            <a href="#">Terms of Use</a>
-            <a href="#">Disclaimer</a>
-          </div>
-          <div class="footer-social">
-            <a class="social-pill" href="#" aria-label="LinkedIn">in</a>
-            <a class="social-pill" href="#" aria-label="X">X</a>
-            <a class="social-pill" href="#" aria-label="YouTube">▶</a>
-            <a class="social-pill" href="#" aria-label="Instagram">IG</a>
-          </div>
-        </div>
-      </div>
-    </footer>
+    <SiteFooter />
 
     <script type="module">
       const root = document.body;

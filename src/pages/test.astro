@@ -96,7 +96,7 @@ const whyAndorraCards = [
     <title>Test Sections | Equity Partners</title>
     <link rel="icon" type="image/png" href="/EP%20favicon.png" />
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@700&display=swap");
+      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
 
       :root {
         --bg-paper: #f3f5f9;
@@ -115,7 +115,7 @@ const whyAndorraCards = [
 
       body {
         margin: 0;
-        font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
         color: var(--text-primary);
         background: radial-gradient(circle at 10% -10%, #eef2f8 0, var(--bg-paper) 50%);
         line-height: 1.5;
@@ -168,8 +168,8 @@ const whyAndorraCards = [
       }
 
       body.is-scrolled .menu-cta {
-        background: rgba(255, 255, 255, 0.96);
-        border-color: rgba(255, 255, 255, 0.95);
+        background: #53b27f;
+        border-color: #53b27f;
       }
 
       body.is-scrolled .logo {
@@ -289,8 +289,8 @@ const whyAndorraCards = [
         top: 1px;
         flex: 0 0 auto;
         min-width: 126px;
-        color: #172235;
-        background: rgba(255, 255, 255, 0.96);
+        color: #ffffff;
+        background: #53b27f;
         text-decoration: none;
         font-size: 0.72rem;
         letter-spacing: 0.13em;
@@ -299,15 +299,16 @@ const whyAndorraCards = [
         padding: 0.65rem 0.95rem;
         font-weight: 600;
         line-height: 1;
-        border: 1px solid rgba(255, 255, 255, 0.95);
+        border: 1px solid #53b27f;
         white-space: nowrap;
-        transition: background-color 180ms ease, transform 180ms ease, color 180ms ease, top 320ms ease;
+        transition: background-color 180ms ease, transform 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, top 320ms ease;
       }
 
       .menu-cta:hover {
-        background: rgba(224, 233, 246, 0.96);
-        color: #101b2c;
+        background: #3f9568;
+        color: #ffffff;
         transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(12, 24, 18, 0.22);
       }
 
       .menu-cta:focus-visible {
@@ -330,7 +331,7 @@ const whyAndorraCards = [
       }
 
       h1 {
-        font-family: "Open Sans", "Avenir Next", "Segoe UI", Arial, sans-serif;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
         font-weight: 700;
         font-size: clamp(1.9rem, 4.3vw, 3rem);
         line-height: 1.08;
@@ -561,7 +562,7 @@ const whyAndorraCards = [
       }
 
       .focus-label.is-partners-title {
-        font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
         font-size: 0.8rem;
         letter-spacing: 0.16em;
         font-weight: 400;
@@ -642,6 +643,10 @@ const whyAndorraCards = [
         color: #f3f7fc;
       }
 
+      .advantage-home.is-dark-cards .focus-label {
+        color: #9fb4d2;
+      }
+
       .advantage-home.is-dark-cards .focus-intro {
         color: rgba(230, 238, 247, 0.78);
       }
@@ -670,6 +675,7 @@ const whyAndorraCards = [
 
       .cta-link {
         display: inline-flex;
+        align-items: center;
         margin-top: 1.4rem;
         font-size: 0.84rem;
         letter-spacing: 0.1em;
@@ -678,6 +684,13 @@ const whyAndorraCards = [
         text-decoration: none;
         border-bottom: 1px solid currentColor;
         padding-bottom: 0.2rem;
+        transition: color 180ms ease, transform 180ms ease, border-color 180ms ease;
+      }
+
+      .cta-link:hover {
+        color: #53b27f;
+        border-bottom-color: #53b27f;
+        transform: translateY(-1px);
       }
 
       .advantage-home.is-dark-cards .cta-link {
@@ -1148,7 +1161,7 @@ const whyAndorraCards = [
       }
 
       .team-variant-dark .eyebrow {
-        color: #9fb0c8;
+        color: #9fb4d2;
       }
 
       .team-variant-dark h2,
@@ -1257,7 +1270,7 @@ const whyAndorraCards = [
       }
 
       .focus-d-header .focus-label {
-        color: #c2d0e6;
+        color: #9fb4d2;
       }
 
       .focus-d-header .focus-title {
@@ -1325,7 +1338,7 @@ const whyAndorraCards = [
       }
 
       .focus-e-column .focus-label {
-        color: #bccce3;
+        color: #9fb4d2;
       }
 
       .focus-e-column .focus-title {
@@ -1774,7 +1787,7 @@ const whyAndorraCards = [
         width: min(var(--max-width), 92vw);
         text-align: left;
         color: #ffffff;
-        font-family: "Montserrat", "Avenir Next", "Segoe UI", Arial, sans-serif;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
         font-weight: 700;
         font-size: clamp(1.55rem, 3vw, 2.3rem);
         line-height: 1.12;
@@ -1882,16 +1895,15 @@ const whyAndorraCards = [
         }
       }
 
-      @media (max-width: 680px) {
+      @media (max-width: 980px) {
         .site-header {
-          gap: 0.45rem;
+          gap: 0.65rem;
           min-height: 44px;
-          padding-bottom: 0.45rem;
         }
 
         body.is-scrolled .site-header {
           padding-top: 2.15rem;
-          padding-bottom: 0.75rem;
+          padding-bottom: 0.65rem;
         }
 
         .main-nav {
@@ -1918,9 +1930,9 @@ const whyAndorraCards = [
         .menu-list {
           position: absolute;
           top: calc(100% + 0.5rem);
-          left: 0.8rem;
+          left: max(0.8rem, calc((100vw - min(var(--max-width), 92vw)) / 2));
           right: auto;
-          min-width: min(190px, calc(100vw - 2rem));
+          min-width: min(220px, calc(100vw - 2rem));
           flex-direction: column;
           align-items: flex-start;
           gap: 0.55rem;

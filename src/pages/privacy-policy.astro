@@ -9,7 +9,7 @@ import SiteFooter from "../components/SiteFooter.astro";
     <title>Privacy Policy | Equity Partners</title>
     <link rel="icon" type="image/png" href="/EP%20favicon.png" />
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@700&display=swap");
+      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
 
       :root {
         --navy: #0f1a2a;
@@ -29,7 +29,7 @@ import SiteFooter from "../components/SiteFooter.astro";
 
       body {
         margin: 0;
-        font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
         color: var(--navy-soft);
         background: radial-gradient(circle at 10% -10%, #eef2f8 0, var(--bg-paper) 50%);
         line-height: 1.55;
@@ -175,8 +175,8 @@ import SiteFooter from "../components/SiteFooter.astro";
         position: relative;
         top: 1px;
         min-width: 126px;
-        color: #172235;
-        background: rgba(255, 255, 255, 0.96);
+        color: #ffffff;
+        background: #53b27f;
         text-decoration: none;
         font-size: 0.72rem;
         letter-spacing: 0.13em;
@@ -185,7 +185,7 @@ import SiteFooter from "../components/SiteFooter.astro";
         padding: 0.65rem 0.95rem;
         font-weight: 600;
         line-height: 1;
-        border: 1px solid rgba(255, 255, 255, 0.95);
+        border: 1px solid #53b27f;
         white-space: nowrap;
       }
 
@@ -206,7 +206,7 @@ import SiteFooter from "../components/SiteFooter.astro";
       }
 
       h1 {
-        font-family: "Open Sans", "Avenir Next", "Segoe UI", Arial, sans-serif;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
         font-weight: 700;
         font-size: clamp(2rem, 5vw, 4rem);
         line-height: 1.08;
@@ -291,16 +291,15 @@ import SiteFooter from "../components/SiteFooter.astro";
         transform: translateY(-1px);
       }
 
-      @media (max-width: 680px) {
+      @media (max-width: 980px) {
         .site-header {
-          gap: 0.45rem;
+          gap: 0.65rem;
           min-height: 44px;
-          padding-bottom: 0.45rem;
         }
 
         body.is-scrolled .site-header {
           padding-top: 2.15rem;
-          padding-bottom: 0.75rem;
+          padding-bottom: 0.65rem;
         }
 
         .main-nav {
@@ -327,8 +326,8 @@ import SiteFooter from "../components/SiteFooter.astro";
         .menu-list {
           position: absolute;
           top: calc(100% + 0.5rem);
-          left: 0.8rem;
-          min-width: min(190px, calc(100vw - 2rem));
+          left: max(0.8rem, calc((100vw - min(var(--max-width), 92vw)) / 2));
+          min-width: min(220px, calc(100vw - 2rem));
           flex-direction: column;
           align-items: flex-start;
           gap: 0.55rem;

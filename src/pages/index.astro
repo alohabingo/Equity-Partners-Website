@@ -45,7 +45,7 @@ const projects = [
 ];
 
 const localPartners = [
-  { name: "AR Team", logo: "/images/partners/AR%20logo%20EP.png" },
+  { name: "AR Team", logo: "/images/partners/AR%20Logo%20EP.png" },
   { name: "DATA", logo: "/images/partners/DATA LOGO.png" },
   { name: "Emindset Law", logo: "/images/partners/Emindset LAW LOGO.png" },
   { name: "Govern d'Andorra", logo: "/images/partners/Govern d'Andorra logo.png" },
@@ -68,7 +68,7 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
     <title>Equity Partners | Andorra Property Group</title>
     <link rel="icon" type="image/png" href="/EP%20favicon.png" />
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@700&display=swap");
+      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
 
       :root {
         --bg-night: #06080c;
@@ -88,10 +88,11 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
 
       body {
         margin: 0;
-        font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
         color: var(--text-primary);
         background: radial-gradient(circle at 10% -10%, #eef2f8 0, var(--bg-paper) 50%);
         line-height: 1.5;
+        overflow-x: hidden;
       }
 
       .container {
@@ -163,8 +164,8 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
       }
 
       body.is-scrolled .menu-cta {
-        background: rgba(255, 255, 255, 0.96);
-        border-color: rgba(255, 255, 255, 0.95);
+        background: #53b27f;
+        border-color: #53b27f;
       }
 
       @supports not ((backdrop-filter: blur(1px))) {
@@ -274,8 +275,8 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         top: 1px;
         flex: 0 0 auto;
         min-width: 126px;
-        color: #172235;
-        background: rgba(255, 255, 255, 0.96);
+        color: #ffffff;
+        background: #53b27f;
         text-decoration: none;
         font-size: 0.72rem;
         letter-spacing: 0.13em;
@@ -284,15 +285,16 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         padding: 0.65rem 0.95rem;
         font-weight: 600;
         line-height: 1;
-        border: 1px solid rgba(255, 255, 255, 0.95);
+        border: 1px solid #53b27f;
         white-space: nowrap;
-        transition: background-color 180ms ease, transform 180ms ease, color 180ms ease;
+        transition: background-color 180ms ease, transform 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
       }
 
       .menu-cta:hover {
-        background: rgba(224, 233, 246, 0.96);
-        color: #101b2c;
+        background: #3f9568;
+        color: #ffffff;
         transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(12, 24, 18, 0.22);
       }
 
       .menu-cta:focus-visible {
@@ -318,7 +320,7 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
 
       h1 {
         margin: 0;
-        font-family: "Open Sans", "Avenir Next", "Segoe UI", Arial, sans-serif;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
         font-weight: 700;
         font-size: clamp(2rem, 5vw, 4rem);
         letter-spacing: 0.02em;
@@ -375,7 +377,7 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
       .partners-title {
         margin: 0 0 1.4rem;
         text-align: center;
-        font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
         font-size: 0.8rem;
         letter-spacing: 0.16em;
         text-transform: uppercase;
@@ -451,7 +453,7 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         margin-top: 1.8rem;
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 0.85rem;
+        gap: 2.8rem;
         width: 100%;
         align-items: stretch;
       }
@@ -460,8 +462,16 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         background: #ffffff;
         border: 1px solid var(--line);
         border-radius: 1rem;
-        padding: 1.3rem;
+        padding: 1.4rem 1.5rem;
         height: 100%;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+      }
+
+      .advantage-home-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 20px 40px rgba(15, 26, 42, 0.1);
+        border-color: #cfdae7;
       }
 
       .advantage-home-icon {
@@ -498,7 +508,7 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
 
       .advantage-home-list {
         list-style: none;
-        margin: 0.75rem 0 0;
+        margin: 1.7rem 0 0;
         padding: 0;
         display: grid;
         gap: 1rem;
@@ -534,13 +544,13 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
       .advantage-home-grid.is-test .advantage-home-card-head {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 1.45rem;
+        gap: 1rem;
+        margin-bottom: 1.8rem;
       }
 
       .advantage-home-grid.is-test .advantage-home-icon {
-        width: 3.6rem;
-        height: 3.6rem;
+        width: 3.75rem;
+        height: 3.75rem;
         border-radius: 1.1rem;
         background: #eef3f9;
         align-items: center;
@@ -549,16 +559,16 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
       }
 
       .advantage-home-grid.is-test .advantage-home-icon img {
-        width: 1.8rem;
-        height: 1.8rem;
+        width: 1.85rem;
+        height: 1.85rem;
       }
 
       .advantage-home:not(.is-dark-cards) .advantage-home-grid.is-test .advantage-home-icon {
-        background: #53b27f;
+        background: #e6f7f0;
       }
 
       .advantage-home:not(.is-dark-cards) .advantage-home-grid.is-test .advantage-home-icon img {
-        filter: brightness(0) invert(1);
+        filter: invert(52%) sepia(24%) saturate(1180%) hue-rotate(97deg) brightness(92%) contrast(110%);
       }
 
       .advantage-home-grid.is-test .advantage-home-card h3 {
@@ -572,6 +582,7 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
       .advantage-home .focus-intro {
         max-width: none;
         width: 100%;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
       }
 
       .advantage-home.is-dark-cards .advantage-home-card {
@@ -586,9 +597,13 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         border-bottom: 1px solid rgba(220, 228, 240, 0.15);
       }
 
-      .advantage-home.is-dark-cards .focus-label,
+      .advantage-home.is-dark-cards .eyebrow,
       .advantage-home.is-dark-cards .focus-title {
         color: #f3f7fc;
+      }
+
+      .advantage-home.is-dark-cards .eyebrow {
+        color: #9fb4d2;
       }
 
       .advantage-home.is-dark-cards .focus-intro {
@@ -647,7 +662,7 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
       }
 
       .focus-label.is-partners-title {
-        font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
         font-size: 0.8rem;
         letter-spacing: 0.16em;
         font-weight: 400;
@@ -657,6 +672,7 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
 
       .focus-title {
         margin-top: 0;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
         font-size: clamp(1.9rem, 3.4vw, 3rem);
         line-height: 1.08;
         color: #1f2b3c;
@@ -666,6 +682,9 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         margin-top: 0.9rem;
         width: 100%;
         max-width: none;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        font-size: 1rem;
+        line-height: 1.5;
         color: var(--text-muted);
       }
 
@@ -717,7 +736,7 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         margin-bottom: 0.9rem;
       }
 
-      .focus-f-header .focus-label {
+      .focus-f-header .eyebrow {
         color: #5a667a;
       }
 
@@ -791,7 +810,7 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         border-bottom: 1px solid rgba(214, 225, 244, 0.2);
       }
 
-      .focus-section-f.is-concept-f .focus-f-header .focus-label {
+      .focus-section-f.is-concept-f .focus-f-header .eyebrow {
         color: #9fb4d2;
       }
 
@@ -832,11 +851,17 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         color: #f3f7fc;
       }
 
+      .focus-section-f.is-concept-f .cta-link:hover {
+        color: #53b27f;
+        border-bottom-color: #53b27f;
+        transform: translateY(-1px);
+      }
+
       .why-equity-home {
         background: linear-gradient(180deg, #f4f6fa, #eef2f8);
         border-top: 1px solid var(--line);
         border-bottom: 1px solid var(--line);
-        font-family: "Montserrat", "Avenir Next", "Segoe UI", Arial, sans-serif;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
       }
 
       .why-equity-home-body {
@@ -909,30 +934,23 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         line-height: 1.46;
       }
 
-      .why-equity-home .eyebrow {
-        font-size: 0.74rem;
-      }
-
-      .why-equity-home .section-header h2 {
-        margin-top: 0;
-        font-size: clamp(1.9rem, 3.3vw, 3rem);
-        line-height: 1.06;
-      }
-
       .section-header {
         max-width: none;
         width: 100%;
       }
 
       .eyebrow {
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
         font-size: 0.8rem;
         letter-spacing: 0.16em;
         text-transform: uppercase;
         color: var(--accent);
         margin-bottom: 0.85rem;
+        font-weight: 400;
       }
 
       h2 {
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
         font-size: clamp(1.9rem, 3.4vw, 3rem);
         line-height: 1.08;
       }
@@ -941,6 +959,9 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         margin-top: 0.9rem;
         width: 100%;
         max-width: none;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        font-size: 1rem;
+        line-height: 1.5;
         color: var(--text-muted);
       }
 
@@ -1009,6 +1030,11 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         width: 100%;
         height: 100%;
         object-fit: cover;
+        transition: transform 320ms ease;
+      }
+
+      .project-card:hover img {
+        transform: scale(1.04);
       }
 
       .project-card::before {
@@ -1039,13 +1065,14 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
       .pill {
         font-size: 0.75rem;
         padding: 0.28rem 0.56rem;
-        border: 1px solid rgba(231, 237, 245, 0.36);
+        border: 1px solid rgba(231, 237, 245, 0.42);
         border-radius: 999px;
-        background: rgba(11, 20, 34, 0.32);
+        background: rgba(11, 20, 34, 0.58);
       }
 
       .cta-link {
         display: inline-flex;
+        align-items: center;
         margin-top: 1.4rem;
         font-size: 0.84rem;
         letter-spacing: 0.1em;
@@ -1054,6 +1081,13 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         text-decoration: none;
         border-bottom: 1px solid currentColor;
         padding-bottom: 0.2rem;
+        transition: color 180ms ease, transform 180ms ease, border-color 180ms ease;
+      }
+
+      .cta-link:hover {
+        color: #53b27f;
+        border-bottom-color: #53b27f;
+        transform: translateY(-1px);
       }
 
       .advantage-home .cta-link,
@@ -1089,7 +1123,7 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         width: min(var(--max-width), 92vw);
         text-align: center;
         color: #ffffff;
-        font-family: "Montserrat", "Avenir Next", "Segoe UI", Arial, sans-serif;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
         font-weight: 700;
         font-size: clamp(1.45rem, 3vw, 2.2rem);
         line-height: 1.16;
@@ -1146,6 +1180,10 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
       .gateway .section-header {
         max-width: none;
         width: 100%;
+      }
+
+      .gateway .eyebrow {
+        color: #9fb4d2;
       }
 
       .gateway .intro {
@@ -1428,7 +1466,7 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
       }
 
       .timeline-hybrid {
-        background: #ffffff;
+        background: #eef3f9;
         color: #172235;
         border-top: 1px solid var(--line);
       }
@@ -1458,7 +1496,7 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
       }
 
       .timeline-hybrid-card {
-        background: #eef2f8;
+        background: #ffffff;
         border: 1px solid #d7deea;
         border-radius: 1rem;
         padding: 1.2rem 1.05rem 1.1rem;
@@ -1471,8 +1509,8 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         height: 5.2rem;
         margin: 0 auto;
         border-radius: 1.3rem;
-        background: #ffffff;
-        border: 1px solid #d7deea;
+        background: #e6f7f0;
+        border: 1px solid #cfe9db;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1482,7 +1520,7 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
       .timeline-hybrid-icon svg {
         width: 2rem;
         height: 2rem;
-        stroke: #53b27f;
+        stroke: #3f9568;
         fill: none;
         stroke-width: 1.8;
         stroke-linecap: round;
@@ -1519,6 +1557,8 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         margin: 0.65rem auto 0;
         max-width: 19ch;
         color: #5a667a;
+        font-size: 0.9rem;
+        line-height: 1.4;
       }
 
       .timeline-hybrid-cta {
@@ -1532,14 +1572,15 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         margin-top: 0;
         justify-self: stretch;
         width: 100%;
-        background: #274163;
-        color: #f7fbff;
-        transition: background-color 180ms ease, transform 180ms ease;
+        background: #53b27f;
+        color: #ffffff;
+        transition: background-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
       }
 
       .timeline-hybrid-cta .button:hover {
-        background: #53b27f;
+        background: #3f9568;
         transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(12, 24, 18, 0.22);
       }
 
       .timeline-hybrid-line {
@@ -1576,7 +1617,7 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
       }
 
       .home-suggested-reads .eyebrow {
-        color: #c3d1e4;
+        color: #9fb4d2;
       }
 
       .home-suggested-reads h2 {
@@ -1592,8 +1633,14 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
       }
 
       .home-suggested-reads .cta-link {
-        color: #d8e3f2;
+        color: #f3f7fc;
         border-bottom-color: currentColor;
+      }
+
+      .home-suggested-reads .cta-link:hover {
+        color: #53b27f;
+        border-bottom-color: #53b27f;
+        transform: translateY(-1px);
       }
 
       .home-suggested-grid {
@@ -1666,6 +1713,7 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
       }
 
       .home-suggested-excerpt {
+        margin-top: 0.45rem;
         color: #c6d3e4;
         font-size: 0.87rem;
         line-height: 1.45;
@@ -1736,9 +1784,9 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
 
       .newsletter-button {
         height: 44px;
-        border: 1px solid rgba(14, 24, 39, 0.18);
-        background: #1b2a3f;
-        color: #eaf1fb;
+        border: 1px solid #53b27f;
+        background: #53b27f;
+        color: #ffffff;
         border-radius: 0.55rem;
         padding: 0 1rem;
         font-size: 0.72rem;
@@ -1750,7 +1798,8 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
       }
 
       .newsletter-button:hover {
-        background: #253750;
+        background: #3f9568;
+        border-color: #3f9568;
         transform: translateY(-1px);
       }
 
@@ -1949,11 +1998,9 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         .advantage-home .focus-intro {
           max-width: 100%;
         }
-      }
 
-      @media (max-width: 680px) {
         .site-header {
-          gap: 0.45rem;
+          gap: 0.65rem;
           min-height: 44px;
         }
 
@@ -1978,9 +2025,9 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         .menu-list {
           position: absolute;
           top: calc(100% + 0.5rem);
-          left: 0.8rem;
+          left: max(0.8rem, calc((100vw - min(var(--max-width), 92vw)) / 2));
           right: auto;
-          min-width: min(190px, calc(100vw - 2rem));
+          min-width: min(220px, calc(100vw - 2rem));
           flex-direction: column;
           align-items: flex-start;
           gap: 0.55rem;
@@ -2039,6 +2086,13 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
           min-width: 102px;
           padding: 0.58rem 0.8rem;
           font-size: 0.68rem;
+        }
+      }
+
+      @media (max-width: 680px) {
+        .site-header {
+          gap: 0.45rem;
+          min-height: 44px;
         }
 
         .logo {
@@ -2220,7 +2274,7 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
 
     <section class="section advantage-home">
       <div class="container">
-        <p class="focus-label is-partners-title">Equity Partners</p>
+        <p class="eyebrow">Equity Partners</p>
         <h2 class="focus-title">What we do</h2>
         <p class="focus-intro">
           We open the doors to Andorra’s exclusive investment landscape by providing a structural bridge that allows international firms to deploy capital into Andorra without compromising on institutional standards.
@@ -2361,7 +2415,7 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
     <section class="focus-section-f is-concept-f">
       <div class="container">
         <div class="focus-f-header">
-          <p class="focus-label is-partners-title">The Andorra Advantage</p>
+          <p class="eyebrow">The Andorra Advantage</p>
           <h2 class="focus-title">Why Andorra</h2>
           <p class="focus-intro">We open the doors to Andorra’s exclusive investment landscape by providing a structural bridge that allows international firms to deploy capital into Andorra without compromising on institutional standards.</p>
         </div>

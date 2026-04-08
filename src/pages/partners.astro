@@ -1,4 +1,5 @@
 ---
+import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 
 const partners = [
@@ -7,7 +8,7 @@ const partners = [
     role: "Expert Residency Service",
     summary:
       "Andorra Resident provides specialized legal and fiscal advisory services designed to help international entrepreneurs and investors navigate the residency process and optimize their tax position in the Principality. Their expert team offers a seamless, end-to-end relocation experience, managing everything from immigration documentation to company formation and local fiscal compliance.",
-    logo: "/images/partners/AR%20logo%20EP.png",
+    logo: "/images/partners/AR%20Logo%20EP.png",
   },
   {
     name: "Emindset Law",
@@ -83,7 +84,7 @@ const partners = [
     <title>Partners | Equity Partners</title>
     <link rel="icon" type="image/png" href="/EP%20favicon.png" />
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans:wght@700&display=swap");
+      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
 
       :root {
         --bg-paper: #f3f5f9;
@@ -100,7 +101,7 @@ const partners = [
 
       body {
         margin: 0;
-        font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
         color: var(--text-primary);
         background: radial-gradient(circle at 10% -10%, #eef2f8 0, var(--bg-paper) 50%);
         line-height: 1.5;
@@ -148,8 +149,8 @@ const partners = [
       }
 
       body.is-scrolled .menu-cta {
-        background: rgba(255, 255, 255, 0.96);
-        border-color: rgba(255, 255, 255, 0.95);
+        background: #53b27f;
+        border-color: #53b27f;
       }
 
       body.is-scrolled .logo {
@@ -264,8 +265,8 @@ const partners = [
         top: 1px;
         flex: 0 0 auto;
         min-width: 126px;
-        color: #172235;
-        background: rgba(255, 255, 255, 0.96);
+        color: #ffffff;
+        background: #53b27f;
         text-decoration: none;
         font-size: 0.72rem;
         letter-spacing: 0.13em;
@@ -274,15 +275,16 @@ const partners = [
         padding: 0.65rem 0.95rem;
         font-weight: 600;
         line-height: 1;
-        border: 1px solid rgba(255, 255, 255, 0.95);
+        border: 1px solid #53b27f;
         white-space: nowrap;
-        transition: background-color 180ms ease, transform 180ms ease, color 180ms ease, top 320ms ease;
+        transition: background-color 180ms ease, transform 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, top 320ms ease;
       }
 
       .menu-cta:hover {
-        background: rgba(224, 233, 246, 0.96);
-        color: #101b2c;
+        background: #3f9568;
+        color: #ffffff;
         transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(12, 24, 18, 0.22);
       }
 
       .menu-cta:focus-visible {
@@ -291,10 +293,6 @@ const partners = [
       }
 
       .section { padding: 4rem 0; }
-
-      .partner-network {
-        margin-top: 4.5rem;
-      }
 
       .eyebrow {
         font-size: 0.8rem;
@@ -534,30 +532,7 @@ const partners = [
     </style>
   </head>
   <body>
-    <header class="site-header">
-      <input class="menu-toggle-input" type="checkbox" id="mobile-menu-toggle-partners" />
-      <label class="menu-toggle" for="mobile-menu-toggle-partners" aria-label="Toggle navigation menu">
-        <span class="menu-toggle-bars"></span>
-      </label>
-      <a href="/" aria-label="Go to homepage">
-        <img
-          class="logo"
-          src="/images/branding/equity-partners-logo-light%20small.png"
-          alt="Equity Partners logo"
-        />
-      </a>
-      <nav class="main-nav" aria-label="Primary">
-        <ul class="menu-list">
-          <li><a class="menu-link" href="/">Home</a></li>
-          <li><a class="menu-link" href="/#team">Services</a></li>
-              <li><a class="menu-link" href="/about">About</a></li>
-          <li><a class="menu-link is-active" href="/partners">Partners</a></li>
-          <li><a class="menu-link" href="/blog">Blog</a></li>
-          <li><a class="menu-link" href="/test">Test</a></li>
-        </ul>
-        <a class="menu-cta" href="/contact">Contact Us</a>
-      </nav>
-    </header>
+    <InnerSiteHeader active="partners" menuToggleId="mobile-menu-toggle-partners" />
 
     <section class="section partner-network">
       <div class="container">
