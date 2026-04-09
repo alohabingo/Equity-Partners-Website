@@ -1814,7 +1814,13 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         .newsletter-wrap,
         .advantage-home-grid,
         .focus-f-body,
-        .why-equity-home-body {
+        .why-equity-home-body,
+        .home-suggested-grid,
+        .timeline-horizontal,
+        .timeline-split,
+        .timeline-hybrid-grid,
+        .timeline-hybrid-cta,
+        .timeline-hybrid-line {
           grid-template-columns: 1fr;
         }
 
@@ -1823,13 +1829,37 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
           gap: 1.35rem;
         }
 
+        .timeline-hybrid-line-step::before {
+          display: none;
+        }
+
         .advantage-home .focus-intro {
           max-width: 100%;
         }
       }
 
       @media (max-width: 680px) {
+        .container {
+          width: 100%;
+          max-width: none;
+          padding-left: 1rem;
+          padding-right: 1rem;
+        }
+
+        .hero,
+        .partners-wrap,
+        .section,
+        .test-image-break {
+          width: 100%;
+          max-width: 100%;
+        }
+
         .projects h2 {
+          white-space: normal;
+        }
+
+        .home-suggested-reads h2,
+        .footer-cta {
           white-space: normal;
         }
 
@@ -1931,6 +1961,19 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
           height: 32px;
         }
 
+        .timeline-hybrid-icon {
+          width: 4.4rem;
+          height: 4.4rem;
+        }
+
+        .timeline-hybrid-card p {
+          max-width: none;
+        }
+
+        .home-suggested-card img {
+          height: 12rem;
+        }
+
         .footer-grid {
           grid-template-columns: 1fr;
           gap: 1.2rem;
@@ -1963,9 +2006,9 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
     </style>
   </head>
   <body>
+    <InnerSiteHeader active="home" menuToggleId="mobile-menu-toggle" offsetFirstSection={false} />
     <section class="hero">
       <div class="container">
-        <InnerSiteHeader active="home" menuToggleId="mobile-menu-toggle" offsetFirstSection={false} />
         <div class="hero-content">
           <p class="hero-kicker">ANDORRA • INVESTMENT • EXCELLENCE</p>
           <h1>Your strategic partner for Andorra real estate investments.</h1>
