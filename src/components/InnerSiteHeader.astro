@@ -1,13 +1,14 @@
 ---
 interface Props {
-  active?: "about" | "partners" | "blog";
+  active?: "home" | "about" | "partners" | "blog" | "test";
   menuToggleId: string;
+  offsetFirstSection?: boolean;
 }
 
-const { active, menuToggleId } = Astro.props;
+const { active, menuToggleId, offsetFirstSection = true } = Astro.props;
 ---
 
-<header class="site-header">
+<header class:list={["site-header", offsetFirstSection && "offset-next-section"]}>
   <input class="menu-toggle-input" type="checkbox" id={menuToggleId} />
   <label class="menu-toggle" for={menuToggleId} aria-label="Toggle navigation menu">
     <span class="menu-toggle-bars"></span>
@@ -21,12 +22,12 @@ const { active, menuToggleId } = Astro.props;
   </a>
   <nav class="main-nav" aria-label="Primary">
     <ul class="menu-list">
-      <li><a class="menu-link" href="/">Home</a></li>
+      <li><a class:list={["menu-link", active === "home" && "is-active"]} href="/">Home</a></li>
       <li><a class="menu-link" href="/#team">Services</a></li>
       <li><a class:list={["menu-link", active === "about" && "is-active"]} href="/about">About</a></li>
       <li><a class:list={["menu-link", active === "partners" && "is-active"]} href="/partners">Partners</a></li>
       <li><a class:list={["menu-link", active === "blog" && "is-active"]} href="/blog">Blog</a></li>
-      <li><a class="menu-link" href="/test">Test</a></li>
+      <li><a class:list={["menu-link", active === "test" && "is-active"]} href="/test">Test</a></li>
     </ul>
     <a class="menu-cta" href="/contact">Contact Us</a>
   </nav>
@@ -74,7 +75,7 @@ const { active, menuToggleId } = Astro.props;
       box-shadow 320ms ease;
   }
 
-  .site-header + :global(section) {
+  .site-header.offset-next-section + :global(section) {
     margin-top: var(--inner-page-offset);
   }
 
@@ -87,17 +88,16 @@ const { active, menuToggleId } = Astro.props;
     box-shadow: 0 8px 20px rgba(6, 10, 18, 0.18);
   }
 
-  :global(body.is-scrolled) .menu-cta {
-    background: #53b27f;
-    border-color: #53b27f;
-  }
-
   :global(body.is-scrolled) .logo {
     top: -5px;
   }
 
   :global(body.is-scrolled) .main-nav {
-    top: -4px;
+    top: -7px;
+  }
+
+  :global(body.is-scrolled) .menu-cta {
+    top: 0;
   }
 
   .logo {
@@ -188,7 +188,6 @@ const { active, menuToggleId } = Astro.props;
     text-transform: uppercase;
     font-weight: 600;
     line-height: 1;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
   }
 
   .menu-link:hover,
@@ -251,7 +250,15 @@ const { active, menuToggleId } = Astro.props;
 
     :global(body.is-scrolled) .site-header {
       padding-top: 2.15rem;
-      padding-bottom: 0.65rem;
+      padding-bottom: 0.15rem;
+    }
+
+    :global(body.is-scrolled) .logo {
+      top: -12px;
+    }
+
+    :global(body.is-scrolled) .main-nav {
+      top: -11px;
     }
 
     .main-nav {
@@ -262,7 +269,7 @@ const { active, menuToggleId } = Astro.props;
     .menu-toggle {
       display: inline-flex;
       position: relative;
-      top: -4px;
+      top: -10px;
       border: 0;
       box-shadow: none;
     }
@@ -271,7 +278,6 @@ const { active, menuToggleId } = Astro.props;
       position: absolute;
       top: calc(100% + 0.5rem);
       left: max(0.8rem, calc((100vw - min(1120px, 92vw)) / 2));
-      right: auto;
       min-width: min(220px, calc(100vw - 2rem));
       flex-direction: column;
       align-items: flex-start;
@@ -289,17 +295,20 @@ const { active, menuToggleId } = Astro.props;
       z-index: 220;
     }
 
-    .menu-toggle-input:checked ~ .main-nav .menu-list {
-      max-height: 320px;
-      opacity: 1;
-      transform: translateY(0);
-      pointer-events: auto;
-      padding: 0.7rem;
-    }
-
     .menu-list .menu-link {
+      width: 100%;
       color: #172235;
       text-shadow: none;
+      font-size: 0.76rem;
+      padding: 0.3rem 0;
+    }
+
+    .menu-toggle-input:checked ~ nav .menu-list {
+      max-height: 320px;
+      opacity: 1;
+      padding: 0.75rem 0.85rem;
+      transform: translateY(0);
+      pointer-events: auto;
     }
 
     .menu-list .menu-link:hover,
@@ -307,46 +316,30 @@ const { active, menuToggleId } = Astro.props;
       color: #5e7393;
     }
 
-    .menu-toggle-input:checked ~ .menu-toggle .menu-toggle-bars {
+    .menu-toggle-input:checked + .menu-toggle .menu-toggle-bars {
       background: transparent;
     }
 
-    .menu-toggle-input:checked ~ .menu-toggle .menu-toggle-bars::before {
+    .menu-toggle-input:checked + .menu-toggle .menu-toggle-bars::before {
       top: 0;
       transform: rotate(45deg);
     }
 
-    .menu-toggle-input:checked ~ .menu-toggle .menu-toggle-bars::after {
+    .menu-toggle-input:checked + .menu-toggle .menu-toggle-bars::after {
       top: 0;
       transform: rotate(-45deg);
     }
 
-    .menu-link {
-      font-size: 0.7rem;
-    }
-
     .menu-cta {
       display: inline-flex;
-      top: -4px;
+      top: -10px;
       min-width: 102px;
       padding: 0.58rem 0.8rem;
       font-size: 0.68rem;
     }
-  }
 
-  @media (max-width: 680px) {
-    .site-header {
-      gap: 0.45rem;
-    }
-
-    .logo {
-      width: min(34vw, 170px);
-      height: auto;
-      position: static;
-      top: auto;
-      transform: none;
-      margin-left: 0.9rem;
-      margin-top: -14px;
+    :global(body.is-scrolled) .menu-cta {
+      top: -10px;
     }
   }
 </style>
