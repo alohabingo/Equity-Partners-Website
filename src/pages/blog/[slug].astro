@@ -1,5 +1,6 @@
 ---
 import InnerSiteHeader from "../../components/InnerSiteHeader.astro";
+import NewsletterSignup from "../../components/NewsletterSignup.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
 import { blogPosts } from "../../data/blogPosts";
 
@@ -306,88 +307,84 @@ const suggestedPosts = blogPosts
 
       .suggested-reads {
         margin-top: 2rem;
+        background: #0f1a2a;
+        border-top: 1px solid rgba(219, 227, 240, 0.12);
+        border-bottom: 1px solid rgba(219, 227, 240, 0.12);
+        border-radius: 1.1rem;
+        padding: 2rem;
       }
 
       .suggested-reads .eyebrow {
+        margin-bottom: 0.85rem;
         font-size: 0.8rem;
         letter-spacing: 0.16em;
         text-transform: uppercase;
-        color: var(--accent);
-        margin-bottom: 0.85rem;
+        color: #9fb4d2;
       }
 
       .suggested-reads h2 {
-        font-size: clamp(1.55rem, 3vw, 2.3rem);
-        line-height: 1.12;
-        color: #22324a;
+        color: #f2f6fc;
+        font-size: clamp(1.9rem, 3.4vw, 3rem);
+        white-space: nowrap;
+        line-height: 1.08;
       }
 
-      .suggested-reads .blog-grid {
+      .suggested-reads .home-suggested-grid {
         margin-top: 1.9rem;
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 1rem;
       }
 
-      .suggested-reads .blog-card {
+      .suggested-reads .home-suggested-card {
         position: relative;
-        border-radius: 1rem;
         overflow: hidden;
-        min-height: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        border: 1px solid #d7deea;
-        background: #ffffff;
+        border-radius: 1rem;
+        border: 1px solid rgba(212, 224, 241, 0.14);
+        background: rgba(255, 255, 255, 0.05);
+        box-shadow: 0 18px 36px rgba(5, 12, 20, 0.18);
       }
 
-      .suggested-reads .blog-card-link {
-        color: inherit;
-        text-decoration: none;
+      .suggested-reads .home-suggested-link {
         display: flex;
         flex-direction: column;
         height: 100%;
+        color: inherit;
+        text-decoration: none;
       }
 
-      .suggested-reads .blog-card img {
-        position: static;
+      .suggested-reads .home-suggested-card img {
         width: 100%;
         height: 14rem;
         object-fit: cover;
         transition: transform 320ms ease;
       }
 
-      .suggested-reads .blog-card:hover img,
-      .suggested-reads .blog-card-link:hover img {
+      .suggested-reads .home-suggested-card:hover img,
+      .suggested-reads .home-suggested-link:hover img {
         transform: scale(1.04);
       }
 
-      .suggested-reads .blog-card::before {
-        content: none;
-      }
-
-      .suggested-reads .blog-meta {
-        position: static;
-        z-index: auto;
+      .suggested-reads .home-suggested-meta {
         padding: 1.2rem;
-        color: var(--text-primary);
+        color: #eef4fb;
       }
 
-      .suggested-reads .blog-meta h3 {
+      .suggested-reads .home-suggested-meta h3 {
         font-size: 1.15rem;
         line-height: 1.24;
       }
 
-      .suggested-reads .metrics {
-        margin-top: 0.7rem;
-        margin-bottom: 0.6rem;
+      .suggested-reads .home-suggested-metrics {
+        margin-top: 0;
+        margin-bottom: 0.65rem;
         display: flex;
         align-items: center;
         flex-wrap: wrap;
         gap: 0.45rem;
       }
 
-      .suggested-reads .pill {
+      .suggested-reads .home-suggested-pill {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -395,14 +392,15 @@ const suggestedPosts = blogPosts
         font-size: 0.75rem;
         line-height: 1.2;
         padding: 0.28rem 0.56rem;
-        border: 1px solid #ccd7e8;
+        border: 1px solid rgba(214, 225, 240, 0.18);
         border-radius: 999px;
-        background: #f4f7fc;
-        color: #33445c;
+        background: rgba(241, 247, 255, 0.08);
+        color: #dce7f5;
       }
 
-      .suggested-reads .excerpt {
-        color: var(--text-muted);
+      .suggested-reads .home-suggested-excerpt {
+        margin-top: 0.45rem;
+        color: #c6d3e4;
         font-size: 0.87rem;
         line-height: 1.45;
       }
@@ -632,7 +630,7 @@ const suggestedPosts = blogPosts
 
       @media (max-width: 980px) {
         .article-body,
-        .blog-grid,
+        .home-suggested-grid,
         .footer-grid {
           grid-template-columns: 1fr;
         }
@@ -674,6 +672,15 @@ const suggestedPosts = blogPosts
           margin-top: 0.7rem;
           font-size: 0.95rem;
           line-height: 1.5;
+        }
+
+        .suggested-reads {
+          padding: 1.4rem 1.25rem;
+        }
+
+        .suggested-reads h2 {
+          white-space: normal;
+          font-size: clamp(1.45rem, 7vw, 2rem);
         }
 
         .footer-grid {
@@ -792,18 +799,18 @@ const suggestedPosts = blogPosts
           <section class="suggested-reads">
             <p class="eyebrow">Suggested Reads</p>
             <h2>Continue exploring the Andorran market.</h2>
-            <div class="blog-grid">
+            <div class="home-suggested-grid">
               {suggestedPosts.map((entry) => (
-                <article class="blog-card">
-                  <a class="blog-card-link" href={`/blog/${entry.slug}`}>
+                <article class="home-suggested-card">
+                  <a class="home-suggested-link" href={`/blog/${entry.slug}`}>
                     <img src={entry.image} alt={entry.title} loading="lazy" />
-                    <div class="blog-meta">
-                      <div class="metrics">
-                        <span class="pill">{entry.date}</span>
-                        <span class="pill">{entry.category}</span>
+                    <div class="home-suggested-meta">
+                      <div class="home-suggested-metrics">
+                        <span class="home-suggested-pill">{entry.date}</span>
+                        <span class="home-suggested-pill">{entry.category}</span>
                       </div>
                       <h3>{entry.title}</h3>
-                      <p class="excerpt">{entry.excerpt}</p>
+                      <p class="home-suggested-excerpt">{entry.excerpt}</p>
                     </div>
                   </a>
                 </article>
@@ -813,6 +820,8 @@ const suggestedPosts = blogPosts
         )}
       </div>
     </main>
+
+    <NewsletterSignup emailInputId="newsletter-email-article" />
 
     <SiteFooter />
 

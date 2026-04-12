@@ -1,6 +1,7 @@
 ---
 import { blogPosts } from "../data/blogPosts";
 import InnerSiteHeader from "../components/InnerSiteHeader.astro";
+import NewsletterSignup from "../components/NewsletterSignup.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 
 const posts = blogPosts;
@@ -582,6 +583,10 @@ const posts = blogPosts;
         }
 
         .newsletter-input {
+          font-size: 16px;
+        }
+
+        .newsletter-input {
           width: 100%;
         }
 
@@ -628,37 +633,7 @@ const posts = blogPosts;
       </div>
     </section>
 
-    <section class="section newsletter" id="newsletter">
-      <div class="container">
-        <p class="eyebrow">Newsletter</p>
-        <div class="newsletter-wrap">
-          <div class="newsletter-copy">
-            <h2>Stay informed on Andorra opportunities.</h2>
-            <p>Get concise updates on market shifts, pipeline milestones, and investor-relevant developments.</p>
-          </div>
-          <form
-            class="newsletter-form"
-            name="newsletter-signup"
-            data-netlify="true"
-            action="#"
-            method="post"
-          >
-            <input type="hidden" name="form-name" value="newsletter-signup" />
-            <label class="sr-only" for="newsletter-email">Email address</label>
-            <input
-              class="newsletter-input"
-              id="newsletter-email"
-              name="email"
-              type="email"
-              placeholder="Enter your email"
-              required
-            />
-            <button class="newsletter-button" type="submit">Subscribe</button>
-          </form>
-        </div>
-        <p class="newsletter-note">We send selective updates only. No spam.</p>
-      </div>
-    </section>
+    <NewsletterSignup emailInputId="newsletter-email-blog" />
 
     <SiteFooter />
     <script type="module">

@@ -1,6 +1,7 @@
 ---
 import { blogPosts } from "../data/blogPosts";
 import InnerSiteHeader from "../components/InnerSiteHeader.astro";
+import NewsletterSignup from "../components/NewsletterSignup.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 
 const advantages = [
@@ -160,6 +161,35 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         max-width: 42rem;
         color: rgba(255, 255, 255, 0.96);
         font-size: clamp(1rem, 1.8vw, 1.2rem);
+      }
+
+      .hero-button {
+        margin-top: 1.6rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: fit-content;
+        color: #ffffff;
+        background: #53b27f;
+        text-decoration: none;
+        font-size: 0.72rem;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        font-weight: 600;
+        line-height: 1;
+        border-radius: 0.45rem;
+        padding: 0.65rem 0.95rem;
+        border: 1px solid #53b27f;
+        white-space: nowrap;
+        transition: background-color 180ms ease, transform 180ms ease, color 180ms ease,
+          border-color 180ms ease, box-shadow 180ms ease;
+      }
+
+      .hero-button:hover {
+        background: #3f9568;
+        border-color: #3f9568;
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(12, 24, 18, 0.22);
       }
 
       .hero-kicker {
@@ -692,6 +722,55 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
       }
 
+      .home-proof-strip {
+        background: #172235;
+        border-top: 1px solid rgba(220, 228, 240, 0.12);
+        border-bottom: 1px solid rgba(220, 228, 240, 0.12);
+        padding-top: 2.2rem;
+        padding-bottom: 2.8rem;
+      }
+
+      .home-proof-grid {
+        margin-top: 1.4rem;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.9rem;
+      }
+
+      .home-proof-strip .eyebrow {
+        color: #ffffff;
+        margin-bottom: 0;
+        transform: translateY(-0.35rem);
+      }
+
+      .home-proof-metric {
+        background: #22324a;
+        border: 1px solid rgba(216, 227, 242, 0.1);
+        border-radius: 1.1rem;
+        padding: 1.4rem 1.2rem;
+        min-height: 10.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .home-proof-metric-value {
+        color: #ffffff;
+        font-size: clamp(2rem, 3.2vw, 2.6rem);
+        line-height: 1;
+        width: 100%;
+      }
+
+      .home-proof-metric-label {
+        margin-top: 0.9rem;
+        color: #b7c7de;
+        font-size: 0.73rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        line-height: 1.45;
+        width: 100%;
+      }
+
       .why-equity-home-body {
         margin-top: 1.8rem;
         display: grid;
@@ -840,6 +919,12 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 1rem;
+      }
+
+      .project-carousel-dots {
+        display: none;
+        visibility: hidden;
+        pointer-events: none;
       }
 
       .project-card {
@@ -1836,6 +1921,10 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         .advantage-home .focus-intro {
           max-width: 100%;
         }
+
+        .home-proof-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
       }
 
       @media (max-width: 680px) {
@@ -1864,11 +1953,31 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         }
 
         .project-grid {
+          display: flex;
+          grid-template-columns: none;
           gap: 0.85rem;
+          width: 100%;
+          margin-left: 0;
+          overflow-x: auto;
+          overscroll-behavior-x: contain;
+          scroll-snap-type: x mandatory;
+          scroll-padding-left: 0;
+          scroll-padding-right: 0;
+          -webkit-overflow-scrolling: touch;
+          padding-left: 0;
+          padding-right: 0;
+          padding-bottom: 0.35rem;
+          scrollbar-width: none;
+        }
+
+        .project-grid::-webkit-scrollbar {
+          display: none;
         }
 
         .project-card {
           min-height: 19rem;
+          flex: 0 0 100%;
+          scroll-snap-align: start;
         }
 
         .project-meta {
@@ -1877,6 +1986,30 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
 
         .project-meta h3 {
           font-size: 1.05rem;
+        }
+
+        .project-carousel-dots {
+          margin-top: 0.9rem;
+          display: flex;
+          visibility: visible;
+          pointer-events: auto;
+          justify-content: center;
+          gap: 0.45rem;
+        }
+
+        .project-carousel-dot {
+          width: 0.5rem;
+          height: 0.5rem;
+          border-radius: 999px;
+          background: #c7d2e2;
+          border: 0;
+          padding: 0;
+          transition: transform 180ms ease, background-color 180ms ease;
+        }
+
+        .project-carousel-dot.is-active {
+          background: #172235;
+          transform: scale(1.15);
         }
 
         .metrics {
@@ -1894,9 +2027,9 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
         }
         .hero-content {
           max-width: 100%;
-          padding-top: 5.4rem;
+          padding-top: 7rem;
           padding-bottom: 0;
-          transform: translateY(2.6rem);
+          transform: translateY(3.2rem);
         }
 
         h1 {
@@ -1942,6 +2075,10 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
           flex-direction: column;
           align-items: stretch;
           justify-content: flex-start;
+        }
+
+        .newsletter-input {
+          font-size: 16px;
         }
 
         .newsletter-input {
@@ -2015,6 +2152,7 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
           <p class="subline">
             Equity Partners connects investor capital to disciplined Andorran real estate execution.
           </p>
+          <a class="hero-button" href="/contact">Explore Opportunities</a>
         </div>
       </div>
     </section>
@@ -2136,11 +2274,27 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
       </div>
     </section>
 
-    <section class="test-image-break" aria-label="Andorra night landscape">
-      <div class="test-image-title-wrap">
-        <h2 class="test-image-title">
-          We open the door to Andorra’s high-barrier foreign investment landscape, bridging the gap between global capital and Andorran opportunity.
-        </h2>
+    <section class="section home-proof-strip" aria-label="Equity Partners metrics">
+      <div class="container">
+        <p class="eyebrow">Equity Partners in numbers</p>
+        <div class="home-proof-grid">
+          <article class="home-proof-metric">
+            <p class="home-proof-metric-value">20+</p>
+            <p class="home-proof-metric-label">Years of Andorran expertise</p>
+          </article>
+          <article class="home-proof-metric">
+            <p class="home-proof-metric-value">€1B+</p>
+            <p class="home-proof-metric-label">Identified project pipeline value</p>
+          </article>
+          <article class="home-proof-metric">
+            <p class="home-proof-metric-value">100k+</p>
+            <p class="home-proof-metric-label">Square meters under development</p>
+          </article>
+          <article class="home-proof-metric">
+            <p class="home-proof-metric-value">10+</p>
+            <p class="home-proof-metric-label">Strategic local partnerships</p>
+          </article>
+        </div>
       </div>
     </section>
 
@@ -2182,6 +2336,14 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
           </div>
         </div>
         <a class="cta-link" href="/about">About Equity Partners</a>
+      </div>
+    </section>
+
+    <section class="test-image-break" aria-label="Andorra night landscape">
+      <div class="test-image-title-wrap">
+        <h2 class="test-image-title">
+          We open the door to Andorra’s high-barrier foreign investment landscape, bridging the gap between global capital and Andorran opportunity.
+        </h2>
       </div>
     </section>
 
@@ -2244,6 +2406,16 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
               </article>
             ))
           }
+        </div>
+        <div class="project-carousel-dots" aria-label="Project carousel navigation">
+          {projects.map((project, index) => (
+            <button
+              class:list={["project-carousel-dot", index === 0 && "is-active"]}
+              type="button"
+              aria-label={`Go to project ${index + 1}: ${project.name}`}
+              data-project-dot={index}
+            ></button>
+          ))}
         </div>
         <a class="cta-link" href="#">View All Projects</a>
       </div>
@@ -2362,37 +2534,7 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
       </section>
     )}
 
-    <section class="section newsletter" id="newsletter">
-      <div class="container">
-        <p class="eyebrow">Newsletter</p>
-        <div class="newsletter-wrap">
-          <div class="newsletter-copy">
-            <h2>Stay informed on Andorra opportunities.</h2>
-            <p>Get concise updates on market shifts, pipeline milestones, and investor-relevant developments.</p>
-          </div>
-          <form
-            class="newsletter-form"
-            name="newsletter-signup"
-            data-netlify="true"
-            action="#"
-            method="post"
-          >
-            <input type="hidden" name="form-name" value="newsletter-signup" />
-            <label class="sr-only" for="newsletter-email">Email address</label>
-            <input
-              class="newsletter-input"
-              id="newsletter-email"
-              name="email"
-              type="email"
-              placeholder="Enter your email"
-              required
-            />
-            <button class="newsletter-button" type="submit">Subscribe</button>
-          </form>
-        </div>
-        <p class="newsletter-note">We send selective updates only. No spam.</p>
-      </div>
-    </section>
+    <NewsletterSignup emailInputId="newsletter-email-home" />
 
     <SiteFooter />
     <script type="module">
@@ -2400,6 +2542,37 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
       const syncHeaderState = () => {
         root.classList.toggle("is-scrolled", window.scrollY > 10);
       };
+
+      const projectGrid = document.querySelector(".project-grid");
+      const projectDots = Array.from(document.querySelectorAll("[data-project-dot]"));
+
+      if (projectGrid && projectDots.length > 0) {
+        const syncProjectDots = () => {
+          const card = projectGrid.querySelector(".project-card");
+          if (!card) return;
+
+          const cardWidth = card.getBoundingClientRect().width;
+          const gap = parseFloat(getComputedStyle(projectGrid).columnGap || getComputedStyle(projectGrid).gap || "0");
+          const step = cardWidth + gap;
+          const activeIndex = Math.max(0, Math.min(projectDots.length - 1, Math.round(projectGrid.scrollLeft / step)));
+
+          projectDots.forEach((dot, index) => {
+            dot.classList.toggle("is-active", index === activeIndex);
+          });
+        };
+
+        projectDots.forEach((dot, index) => {
+          dot.addEventListener("click", () => {
+            const card = projectGrid.querySelectorAll(".project-card")[index];
+            if (!card) return;
+            projectGrid.scrollTo({ left: card.offsetLeft - projectGrid.offsetLeft, behavior: "smooth" });
+          });
+        });
+
+        projectGrid.addEventListener("scroll", syncProjectDots, { passive: true });
+        window.addEventListener("resize", syncProjectDots);
+        syncProjectDots();
+      }
 
       syncHeaderState();
       window.addEventListener("scroll", syncHeaderState, { passive: true });

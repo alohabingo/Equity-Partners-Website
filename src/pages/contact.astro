@@ -1,6 +1,10 @@
 ---
 import InnerSiteHeader from "../components/InnerSiteHeader.astro";
+import NewsletterSignup from "../components/NewsletterSignup.astro";
 import SiteFooter from "../components/SiteFooter.astro";
+
+const mapEmbedUrl =
+  "https://maps.google.com/maps?q=42.506278,1.522801&t=&z=18&ie=UTF8&iwloc=&output=embed";
 ---
 
 <html lang="en">
@@ -45,6 +49,18 @@ import SiteFooter from "../components/SiteFooter.astro";
       .container {
         width: min(var(--max-width), 92vw);
         margin: 0 auto;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
       }
 
       .site-header {
@@ -354,6 +370,30 @@ import SiteFooter from "../components/SiteFooter.astro";
 
       .contact-list li {
         color: var(--text-muted);
+        display: grid;
+        grid-template-columns: 16px 1fr;
+        align-items: start;
+        gap: 0.6rem;
+      }
+
+      .contact-list-icon {
+        width: 16px;
+        min-width: 16px;
+        height: 16px;
+        min-height: 16px;
+        color: #53b27f;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 0.08rem;
+        flex: 0 0 16px;
+      }
+
+      .contact-list-icon svg {
+        width: 16px;
+        height: 16px;
+        display: block;
+        flex: 0 0 16px;
       }
 
       .newsletter {
@@ -437,9 +477,66 @@ import SiteFooter from "../components/SiteFooter.astro";
         font-size: 0.72rem;
       }
 
+      .map-comparison {
+        background: transparent;
+        border-top: 1px solid var(--line);
+      }
+
+      .map-options {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .map-option {
+        background: var(--bg-white);
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        padding: 1.1rem;
+        display: grid;
+        align-content: start;
+        gap: 0.9rem;
+      }
+
+      .map-option-label {
+        color: var(--accent);
+        font-size: 0.72rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .map-option h3 {
+        font-size: 1.15rem;
+        line-height: 1.2;
+        color: var(--text-primary);
+      }
+
+      .map-option-copy {
+        color: var(--text-muted);
+        font-size: 0.92rem;
+        line-height: 1.55;
+      }
+
+      .map-shell {
+        overflow: hidden;
+        border-radius: 0.9rem;
+        border: 1px solid #d8e2ef;
+        background: #edf2f9;
+        min-height: 28rem;
+      }
+
+      .map-shell iframe {
+        width: 100%;
+        height: 100%;
+        min-height: 28rem;
+        border: 0;
+        display: block;
+      }
+
       @media (max-width: 980px) {
         .contact-grid,
-        .newsletter-wrap {
+        .newsletter-wrap,
+        .map-options {
           grid-template-columns: 1fr;
         }
 
@@ -553,12 +650,27 @@ import SiteFooter from "../components/SiteFooter.astro";
           align-items: stretch;
         }
 
+        .input,
+        .textarea,
+        .newsletter-input {
+          font-size: 16px;
+        }
+
         .newsletter-input {
           width: 100%;
         }
 
         .newsletter-button {
           width: 100%;
+        }
+
+        .map-option {
+          padding: 1rem;
+        }
+
+        .map-shell iframe,
+        .map-shell {
+          min-height: 19rem;
         }
       }
     </style>
@@ -568,7 +680,7 @@ import SiteFooter from "../components/SiteFooter.astro";
 
     <section class="section">
       <div class="container">
-        <p class="eyebrow">Investor Enquiry</p>
+        <p class="eyebrow">Investor Inquiry</p>
         <h2>Discuss your Andorra investment options</h2>
         <p class="intro">
           Reach out to our team to answer any Andorra investment options you may have, or for any additional information you may require.
@@ -591,50 +703,64 @@ import SiteFooter from "../components/SiteFooter.astro";
           </article>
 
           <article class="contact-card">
-            <p class="eyebrow">Equity Partners</p>
-            <h3>Andorra Property Group</h3>
+            <p class="eyebrow">Contact Us</p>
+            <h3>Equity Partners</h3>
             <ul class="contact-list">
-              <li>Av. Meritxell 95, AD500 Andorra la Vella</li>
-              <li>+376 000 000</li>
-              <li>info@equitypartnersandorra.com</li>
-              <li>SL Reg. No. L-12345-6</li>
+              <li>
+                <span class="contact-list-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"></path>
+                    <path d="m22 6-10 7L2 6"></path>
+                  </svg>
+                </span>
+                <span>info@equitypartnersandorra.com</span>
+              </li>
+              <li>
+                <span class="contact-list-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.86 19.86 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.79.61 2.64a2 2 0 0 1-.45 2.11L8 9.99a16 16 0 0 0 6 6l1.52-1.27a2 2 0 0 1 2.11-.45c.85.28 1.74.49 2.64.61A2 2 0 0 1 22 16.92z"></path>
+                  </svg>
+                </span>
+                <span>+376 000 000</span>
+              </li>
+              <li>
+                <span class="contact-list-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10.5c0 6-9 12-9 12s-9-6-9-12a9 9 0 1 1 18 0Z"></path>
+                    <circle cx="12" cy="10.5" r="3"></circle>
+                  </svg>
+                </span>
+                <span>
+                  Carrer Prat de la Creu 59-65,<br />
+                  Edificio Prat de la Creu, Bloc A, 4 1ª,<br />
+                  AD500 Andorra la Vella
+                </span>
+              </li>
             </ul>
           </article>
         </div>
       </div>
     </section>
 
-    <section class="section newsletter" id="newsletter">
+    <section class="section map-comparison">
       <div class="container">
-        <p class="eyebrow">Newsletter</p>
-        <div class="newsletter-wrap">
-          <div class="newsletter-copy">
-            <h2>Stay informed on Andorra opportunities.</h2>
-            <p>Get concise updates on market shifts, pipeline milestones, and investor-relevant developments.</p>
-          </div>
-          <form
-            class="newsletter-form"
-            name="newsletter-signup"
-            data-netlify="true"
-            action="#"
-            method="post"
-          >
-            <input type="hidden" name="form-name" value="newsletter-signup" />
-            <label class="sr-only" for="newsletter-email-contact">Email address</label>
-            <input
-              class="newsletter-input"
-              id="newsletter-email-contact"
-              name="email"
-              type="email"
-              placeholder="Enter your email"
-              required
-            />
-            <button class="newsletter-button" type="submit">Subscribe</button>
-          </form>
+        <div class="map-options">
+          <article class="map-option">
+            <p class="map-option-label">Come By Our Office</p>
+            <div class="map-shell">
+              <iframe
+                title="Equity Partners office map option 1"
+                src={mapEmbedUrl}
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+              ></iframe>
+            </div>
+          </article>
         </div>
-        <p class="newsletter-note">We send selective updates only. No spam.</p>
       </div>
     </section>
+
+    <NewsletterSignup emailInputId="newsletter-email-contact" />
 
     <SiteFooter />
     <script type="module">
