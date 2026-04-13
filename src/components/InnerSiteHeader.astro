@@ -1,12 +1,23 @@
 ---
+import { buildLocalizedPath, type Locale } from "../lib/i18n";
+import { getUiTranslations } from "../i18n/ui";
+
 interface Props {
   active?: "home" | "about" | "partners" | "blog" | "test";
   menuToggleId: string;
   offsetFirstSection?: boolean;
+  locale: Locale;
+  currentPath: string;
 }
 
-const { active, menuToggleId, offsetFirstSection = true } = Astro.props;
+const { active, menuToggleId, offsetFirstSection = true, locale, currentPath } = Astro.props;
 const menuPanelId = `${menuToggleId}-panel`;
+const t = getUiTranslations(locale);
+const languages = [
+  { code: "en", label: "EN", name: "English", flagClass: "flag-en" },
+  { code: "es", label: "ES", name: "Español", flagClass: "flag-es" },
+  { code: "ca", label: "CA", name: "Català", flagClass: "flag-ca" },
+];
 ---
 
 <header class:list={["site-header", offsetFirstSection && "offset-next-section"]}>
@@ -19,7 +30,7 @@ const menuPanelId = `${menuToggleId}-panel`;
   >
     <span class="menu-toggle-bars"></span>
   </button>
-  <a href="/" aria-label="Go to homepage">
+  <a href={buildLocalizedPath("/", locale)} aria-label="Go to homepage">
     <img
       class="logo"
       src="/images/branding/equity-partners-logo-light%20small.png"
@@ -28,14 +39,50 @@ const menuPanelId = `${menuToggleId}-panel`;
   </a>
   <nav class="main-nav" aria-label="Primary">
     <ul class="menu-list">
-      <li><a class:list={["menu-link", active === "home" && "is-active"]} href="/">Home</a></li>
-      <li><a class="menu-link" href="/#team">Services</a></li>
-      <li><a class:list={["menu-link", active === "about" && "is-active"]} href="/about">About</a></li>
-      <li><a class:list={["menu-link", active === "partners" && "is-active"]} href="/partners">Partners</a></li>
-      <li><a class:list={["menu-link", active === "blog" && "is-active"]} href="/blog">Blog</a></li>
-      <li><a class:list={["menu-link", active === "test" && "is-active"]} href="/test">Test</a></li>
+      <li><a class:list={["menu-link", active === "home" && "is-active"]} href={buildLocalizedPath("/", locale)}>{t.nav.home}</a></li>
+      <li><a class:list={["menu-link", active === "about" && "is-active"]} href={buildLocalizedPath("/about", locale)}>{t.nav.about}</a></li>
+      <li><a class:list={["menu-link", active === "partners" && "is-active"]} href={buildLocalizedPath("/partners", locale)}>{t.nav.partners}</a></li>
+      <li><a class:list={["menu-link", active === "blog" && "is-active"]} href={buildLocalizedPath("/blog", locale)}>{t.nav.blog}</a></li>
+      <li><a class:list={["menu-link", active === "test" && "is-active"]} href={buildLocalizedPath("/test", locale)}>{t.nav.test}</a></li>
     </ul>
-    <a class="menu-cta" href="/contact">Contact Us</a>
+    <a class="menu-cta" href={buildLocalizedPath("/contact", locale)}>{t.nav.contactUs}</a>
+    <div class="language-selector" data-language-dropdown>
+      <button
+        type="button"
+        class="language-trigger"
+        aria-haspopup="true"
+        aria-expanded="false"
+        aria-label={t.nav.selectLanguage}
+        data-language-trigger
+      >
+        <span class="language-trigger-main">
+          <span class="language-flag flag-en" data-current-language-flag aria-hidden="true"></span>
+          <span class="language-trigger-label" data-current-language-label>EN</span>
+        </span>
+        <span class="language-trigger-arrow" aria-hidden="true"></span>
+      </button>
+      <div class="language-menu" role="menu" aria-label={t.nav.selectLanguage} data-language-menu>
+        {
+          languages.map((language) => (
+            <a
+              class:list={["language-menu-item", language.code === locale && "is-active"]}
+              href={buildLocalizedPath(currentPath, language.code as Locale)}
+              data-language-option
+              data-language-code={language.code}
+              data-language-label={language.label}
+              data-language-flag={language.flagClass}
+              data-language-href={buildLocalizedPath(currentPath, language.code as Locale)}
+              aria-checked={language.code === locale ? "true" : "false"}
+              role="menuitemradio"
+              title={language.name}
+            >
+              <span class:list={["language-flag", language.flagClass]} aria-hidden="true"></span>
+              <span class="language-menu-name">{language.name}</span>
+            </a>
+          ))
+        }
+      </div>
+    </div>
   </nav>
   <div class="menu-backdrop" aria-hidden="true"></div>
   <div class="mobile-drawer" id={menuPanelId} aria-label="Mobile navigation">
@@ -43,33 +90,114 @@ const menuPanelId = `${menuToggleId}-panel`;
       <button class="menu-close" type="button" aria-label="Close navigation menu">
         <span aria-hidden="true">×</span>
       </button>
-      <a href="/" class="mobile-drawer-brand" aria-label="Go to homepage">
+      <a href={buildLocalizedPath("/", locale)} class="mobile-drawer-brand" aria-label="Go to homepage">
         <img
           class="mobile-drawer-logo"
-          src="/images/branding/1%20copy.png"
+          src="/images/branding/equity-partners-logo-light%20small.png"
           alt="Equity Partners logo"
         />
       </a>
     </div>
-    <div class="mobile-drawer-divider" aria-hidden="true"></div>
     <ul class="mobile-drawer-list">
-      <li><a class:list={["mobile-drawer-link", active === "home" && "is-active"]} href="/">Home</a></li>
-      <li><a class="mobile-drawer-link" href="/#team">Services</a></li>
-      <li><a class:list={["mobile-drawer-link", active === "about" && "is-active"]} href="/about">About</a></li>
-      <li><a class:list={["mobile-drawer-link", active === "partners" && "is-active"]} href="/partners">Partners</a></li>
-      <li><a class:list={["mobile-drawer-link", active === "blog" && "is-active"]} href="/blog">Blog</a></li>
-      <li><a class:list={["mobile-drawer-link", active === "test" && "is-active"]} href="/test">Test</a></li>
+      <li><a class:list={["mobile-drawer-link", active === "home" && "is-active"]} href={buildLocalizedPath("/", locale)}>{t.nav.home}</a></li>
+      <li><a class:list={["mobile-drawer-link", active === "about" && "is-active"]} href={buildLocalizedPath("/about", locale)}>{t.nav.about}</a></li>
+      <li><a class:list={["mobile-drawer-link", active === "partners" && "is-active"]} href={buildLocalizedPath("/partners", locale)}>{t.nav.partners}</a></li>
+      <li><a class:list={["mobile-drawer-link", active === "blog" && "is-active"]} href={buildLocalizedPath("/blog", locale)}>{t.nav.blog}</a></li>
+      <li><a class:list={["mobile-drawer-link", active === "test" && "is-active"]} href={buildLocalizedPath("/test", locale)}>{t.nav.test}</a></li>
     </ul>
-    <a class="mobile-drawer-cta" href="/contact">Contact Us</a>
+    <a class="mobile-drawer-cta" href={buildLocalizedPath("/contact", locale)}>{t.nav.contactUs}</a>
+    <div class="mobile-drawer-divider" aria-hidden="true"></div>
+    <div class="mobile-language-selector" data-language-dropdown>
+      <button
+        type="button"
+        class="mobile-language-trigger"
+        aria-haspopup="true"
+        aria-expanded="false"
+        aria-label={t.nav.selectLanguage}
+        data-language-trigger
+      >
+        <span class="language-trigger-main">
+          <span class="language-flag flag-en" data-current-language-flag aria-hidden="true"></span>
+          <span class="language-trigger-label" data-current-language-label>EN</span>
+        </span>
+        <span class="language-trigger-arrow" aria-hidden="true"></span>
+      </button>
+      <div class="mobile-language-menu" role="menu" aria-label={t.nav.selectLanguage} data-language-menu>
+        {
+          languages.map((language) => (
+            <a
+              class:list={["mobile-language-option", language.code === locale && "is-active"]}
+              href={buildLocalizedPath(currentPath, language.code as Locale)}
+              data-language-option
+              data-language-code={language.code}
+              data-language-label={language.label}
+              data-language-flag={language.flagClass}
+              data-language-href={buildLocalizedPath(currentPath, language.code as Locale)}
+              aria-checked={language.code === locale ? "true" : "false"}
+              role="menuitemradio"
+              title={language.name}
+            >
+              <span class:list={["language-flag", language.flagClass]} aria-hidden="true"></span>
+              <span class="language-menu-name">{language.name}</span>
+            </a>
+          ))
+        }
+      </div>
+    </div>
   </div>
 </header>
 
-<script define:vars={{ menuPanelId }}>
+<script define:vars={{ menuPanelId, locale }}>
   const panel = document.getElementById(menuPanelId);
   const header = panel?.closest(".site-header");
   const toggle = header?.querySelector(".menu-toggle");
   const closeButton = header?.querySelector(".menu-close");
   const backdrop = header?.querySelector(".menu-backdrop");
+  const languageDropdowns = header?.querySelectorAll("[data-language-dropdown]");
+  const defaultLanguage = locale;
+
+  const applyLanguageSelection = (languageCode) => {
+    document.documentElement.lang = languageCode;
+    try {
+      window.localStorage.setItem("equity-partners-language", languageCode);
+    } catch {}
+
+    languageDropdowns?.forEach((dropdown) => {
+      if (!(dropdown instanceof HTMLElement)) return;
+
+      const currentLabel = dropdown.querySelector("[data-current-language-label]");
+      const currentFlag = dropdown.querySelector("[data-current-language-flag]");
+
+      dropdown.querySelectorAll("[data-language-option]").forEach((option) => {
+        if (!(option instanceof HTMLElement)) return;
+        const isActive = option.dataset.languageCode === languageCode;
+        option.classList.toggle("is-active", isActive);
+        option.setAttribute("aria-checked", isActive ? "true" : "false");
+
+        if (isActive) {
+          if (currentLabel instanceof HTMLElement) {
+            currentLabel.textContent = option.dataset.languageLabel || languageCode.toUpperCase();
+          }
+
+          if (currentFlag instanceof HTMLElement) {
+            currentFlag.className = `language-flag ${option.dataset.languageFlag || ""}`.trim();
+          }
+        }
+      });
+    });
+  };
+
+  const closeLanguageDropdowns = () => {
+    languageDropdowns?.forEach((dropdown) => {
+      if (!(dropdown instanceof HTMLElement)) return;
+      dropdown.classList.remove("is-open");
+
+      const trigger = dropdown.querySelector("[data-language-trigger]");
+      if (trigger instanceof HTMLButtonElement) {
+        trigger.setAttribute("aria-expanded", "false");
+      }
+    });
+  };
 
   if (
     panel instanceof HTMLElement &&
@@ -112,6 +240,9 @@ const menuPanelId = `${menuToggleId}-panel`;
         closeMenu();
         toggle.focus();
       }
+      if (event.key === "Escape") {
+        closeLanguageDropdowns();
+      }
     });
 
     window.addEventListener("resize", () => {
@@ -120,11 +251,48 @@ const menuPanelId = `${menuToggleId}-panel`;
       }
     });
   }
+
+  if (header instanceof HTMLElement && languageDropdowns?.length) {
+    applyLanguageSelection(defaultLanguage);
+
+    languageDropdowns.forEach((dropdown) => {
+      if (!(dropdown instanceof HTMLElement)) return;
+
+      const trigger = dropdown.querySelector("[data-language-trigger]");
+      const options = dropdown.querySelectorAll("[data-language-option]");
+
+      if (trigger instanceof HTMLButtonElement) {
+        trigger.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const willOpen = !dropdown.classList.contains("is-open");
+          closeLanguageDropdowns();
+          dropdown.classList.toggle("is-open", willOpen);
+          trigger.setAttribute("aria-expanded", willOpen ? "true" : "false");
+        });
+      }
+
+      options.forEach((option) => {
+        if (!(option instanceof HTMLAnchorElement)) return;
+        option.addEventListener("click", () => {
+          const nextLanguage = option.dataset.languageCode || defaultLanguage;
+          applyLanguageSelection(nextLanguage);
+          closeLanguageDropdowns();
+        });
+      });
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!(event.target instanceof Node)) return;
+      if (!header.contains(event.target)) {
+        closeLanguageDropdowns();
+      }
+    });
+  }
 </script>
 
 <style>
   :global(:root) {
-    --inner-page-offset: clamp(5.5rem, 7vw, 6.5rem);
+    --inner-page-offset: clamp(7.75rem, 11vw, 9.25rem);
   }
 
   :global(body.mobile-nav-open) {
@@ -168,7 +336,8 @@ const menuPanelId = `${menuToggleId}-panel`;
       box-shadow 320ms ease;
   }
 
-  .site-header.offset-next-section + :global(section) {
+  .site-header.offset-next-section + :global(section),
+  .site-header.offset-next-section + :global(main) {
     margin-top: var(--inner-page-offset);
   }
 
@@ -284,6 +453,181 @@ const menuPanelId = `${menuToggleId}-panel`;
     color: #d7e3f5;
   }
 
+  .language-selector,
+  .mobile-language-selector {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+  }
+
+  .language-trigger,
+  .mobile-language-trigger,
+  .language-menu-item,
+  .mobile-language-option {
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+    transition:
+      background-color 180ms ease,
+      color 180ms ease,
+      border-color 180ms ease,
+      box-shadow 180ms ease,
+      transform 180ms ease;
+  }
+
+  .language-trigger,
+  .mobile-language-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.48rem;
+    min-width: 0;
+    min-height: 1rem;
+    padding: 0.2rem 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #ffffff;
+  }
+
+  .language-trigger:hover,
+  .mobile-language-trigger:hover {
+    background: transparent;
+  }
+
+  .language-trigger-main {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.48rem;
+    min-width: 0;
+    line-height: 1;
+    position: relative;
+    top: 2px;
+  }
+
+  .language-trigger-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .language-trigger-arrow {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg);
+    flex: 0 0 auto;
+    margin-top: -0.08rem;
+    transition: transform 180ms ease;
+  }
+
+  .language-selector.is-open .language-trigger-arrow,
+  .mobile-language-selector.is-open .language-trigger-arrow {
+    transform: rotate(225deg);
+  }
+
+  .language-menu,
+  .mobile-language-menu {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    min-width: 13rem;
+    padding: 0.38rem;
+    border-radius: 0.95rem;
+    background: #ffffff;
+    border: 1px solid #d9e2ee;
+    box-shadow: 0 18px 40px rgba(8, 14, 23, 0.18);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-8px);
+    transition: opacity 180ms ease, transform 180ms ease, visibility 180ms ease;
+    z-index: 260;
+  }
+
+  .language-selector.is-open .language-menu,
+  .mobile-language-selector.is-open .mobile-language-menu {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  .language-menu-item,
+  .mobile-language-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    width: 100%;
+    padding: 0.7rem 0.78rem;
+    border-radius: 0.7rem;
+    background: transparent;
+    color: #172235;
+    text-align: left;
+    text-decoration: none;
+  }
+
+  .language-menu-item:hover,
+  .language-menu-item.is-active,
+  .mobile-language-option:hover,
+  .mobile-language-option.is-active {
+    background: #f1f5fb;
+    box-shadow: inset 0 0 0 1px #d8e1ee;
+  }
+
+  .language-menu-name {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.72rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: #172235;
+    line-height: 1;
+    position: relative;
+    top: 0.02rem;
+  }
+
+  .language-flag {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 999px;
+    display: inline-flex;
+    border: 1px solid rgba(23, 34, 53, 0.12);
+    flex: 0 0 auto;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+
+  .flag-en {
+    background-image: url("/images/branding/uk-flag.png");
+  }
+
+  .flag-es {
+    background: linear-gradient(180deg, #c62828 0 28%, #f4c430 28% 72%, #c62828 72% 100%);
+  }
+
+  .flag-ca {
+    background:
+      linear-gradient(
+        180deg,
+        transparent 0 10%,
+        #f4c430 10% 22%,
+        #b3261e 22% 34%,
+        #f4c430 34% 46%,
+        #b3261e 46% 58%,
+        #f4c430 58% 70%,
+        #b3261e 70% 82%,
+        #f4c430 82% 94%,
+        transparent 94% 100%
+      ),
+      #f7d046;
+  }
+
   .menu-cta {
     display: inline-flex;
     align-items: center;
@@ -340,6 +684,10 @@ const menuPanelId = `${menuToggleId}-panel`;
     .site-header {
       gap: 0.65rem;
       min-height: 44px;
+    }
+
+    .language-selector {
+      display: none;
     }
 
     :global(body.is-scrolled) .site-header {
@@ -419,7 +767,7 @@ const menuPanelId = `${menuToggleId}-panel`;
       display: block;
       position: fixed;
       inset: 0;
-      background: rgba(8, 14, 23, 0.36);
+      background: rgba(8, 14, 23, 0.7);
       opacity: 0;
       pointer-events: none;
       transition: opacity 240ms ease;
@@ -451,15 +799,90 @@ const menuPanelId = `${menuToggleId}-panel`;
       align-items: center;
       gap: 0.8rem;
       margin: -1.2rem -1.15rem 0;
-      min-height: 6rem;
-      padding: 1.75rem 1.15rem 1.25rem;
+      min-height: 5.8rem;
+      padding: 1.6rem 1.15rem 1.2rem;
       background: #172235;
+      color: #ffffff;
       border-top-right-radius: 1rem;
     }
 
     .mobile-drawer-brand {
       display: inline-flex;
       align-items: center;
+    }
+
+    .mobile-language-selector {
+      width: 100%;
+      margin-top: 0.2rem;
+      display: block;
+    }
+
+    .mobile-language-trigger {
+      width: 100%;
+      min-width: 0;
+      justify-content: space-between;
+      gap: 0.85rem;
+      padding: 0.8rem 0.95rem;
+      border: 1px solid #dbe2ec;
+      border-radius: 0.45rem;
+      background: #ffffff;
+      box-shadow: 0 8px 18px rgba(15, 26, 42, 0.06);
+      color: #172235;
+      font-size: 0.8rem;
+    }
+
+    .mobile-language-trigger .language-trigger-main {
+      top: 0;
+    }
+
+    .mobile-language-trigger .language-trigger-label {
+      font-size: 0.8rem;
+      letter-spacing: 0.14em;
+    }
+
+    .mobile-language-menu {
+      position: static;
+      min-width: 0;
+      margin-top: 0.55rem;
+      padding: 0.35rem;
+      border: 1px solid #dbe2ec;
+      border-radius: 0.8rem;
+      background: #f7f9fc;
+      box-shadow: 0 12px 24px rgba(15, 26, 42, 0.08);
+      display: grid;
+      gap: 0.45rem;
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateY(-6px);
+      transition:
+        max-height 220ms ease,
+        opacity 180ms ease,
+        transform 220ms ease,
+        visibility 220ms ease,
+        margin-top 220ms ease,
+        padding 220ms ease;
+    }
+
+    .mobile-language-selector.is-open .mobile-language-menu {
+      max-height: 16rem;
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    .mobile-language-option {
+      padding: 0.8rem 0.82rem;
+      border-radius: 0.65rem;
+      background: transparent;
+    }
+
+    .mobile-language-option.is-active {
+      background: #ffffff;
+      box-shadow: inset 0 0 0 1px #d8e1ee;
     }
 
     .mobile-drawer-logo {
@@ -524,7 +947,7 @@ const menuPanelId = `${menuToggleId}-panel`;
       align-items: center;
       justify-content: center;
       width: 100%;
-      margin-top: auto;
+      margin-top: 0.45rem;
       color: #ffffff;
       background: #53b27f;
       text-decoration: none;

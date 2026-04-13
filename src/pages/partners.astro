@@ -1,87 +1,87 @@
 ---
 import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
+import { getLocaleFromUrl } from "../lib/i18n";
+import { getContentTranslations } from "../i18n/content";
+import { getPageTitle } from "../i18n/ui";
 
 const partners = [
   {
     name: "Andorra Resident",
-    role: "Expert Residency Service",
-    summary:
-      "Andorra Resident provides specialized legal and fiscal advisory services designed to help international entrepreneurs and investors navigate the residency process and optimize their tax position in the Principality. Their expert team offers a seamless, end-to-end relocation experience, managing everything from immigration documentation to company formation and local fiscal compliance.",
+    role: "",
+    summary: "",
     logo: "/images/partners/AR%20Logo%20EP.png",
   },
   {
     name: "Emindset Law",
-    role: "Legal & Compliance",
-    summary:
-      "Emindset Law is a pioneering legal firm specializing in real estate, corporate law, and asset structuring within Andorra and the international market. Their multidisciplinary team provides comprehensive legal and fiscal due diligence, ensuring that every project is executed with maximum regulatory compliance and strategic efficiency.",
+    role: "",
+    summary: "",
     logo: "/images/partners/Emindset LAW LOGO.png",
   },
   {
     name: "Govern d'Andorra",
-    role: "Regulatory Ecosystem",
-    summary:
-      "The Govern d’Andorra establishes the strategic legislative framework and sustainability standards that ensure orderly real estate development and economic growth across the Principality. They ensure every development meets the highest standards of institutional compliance and delivery readiness.",
+    role: "",
+    summary: "",
     logo: "/images/partners/Govern d'Andorra logo.png",
   },
   {
     name: "DATA Architects",
-    role: "Architecture & Urbanism",
-    summary:
-      "DATA Arquitectura is a prime Andorran studio specializing in cutting-edge architectural design, strategic urban planning, and bespoke interior solutions. Renowned for their work on iconic landmarks they combine technical precision with exceptional creativity to deliver high-quality, sustainable spaces across the Principality.",
+    role: "",
+    summary: "",
     logo: "/images/partners/DATA LOGO.png",
   },
   {
     name: "Engel & Völkers",
-    role: "Luxury Real Estate",
-    summary:
-      "As a leading international brokerage specializing in the premium segment, Engel & Völkers provides a team of local experts offers deep market insights and professional consultancy, ensuring every transaction is handled with the discretion and prestige that define the Andorran luxury market.",
+    role: "",
+    summary: "",
     logo: "/images/partners/engel volkers logo.png",
   },
   {
     name: "Creand",
-    role: "Financial Services",
-    summary:
-      "Creand is a leading Andorran financial group that provides specialized financing solutions and strategic banking services for large-scale real estate developments and investment projects. They offer us deep expertise in project funding and local market dynamics.",
+    role: "",
+    summary: "",
     logo: "/images/partners/creand.webp",
   },
   {
     name: "MoraBank",
-    role: "Financial Services",
-    summary:
-      "MoraBanc provides a comprehensive suite of corporate financing solutions, including specialized business mortgages and strategic credit facilities tailored for large-scale real estate and commercial developments.",
+    role: "",
+    summary: "",
     logo: "/images/partners/mora%20bank.png",
   },
   {
     name: "Pret a Porter Casas",
-    role: "High-End Modular Construction",
-    summary:
-      "A pioneer in high-end industrialized construction, Prêt-à-porter delivers bespoke, energy-efficient homes in Andorra with unprecedented speed and fixed-cost certainty. They combine high-quality modern architectual design with sustainable practises.",
+    role: "",
+    summary: "",
     logo: "/images/partners/pret%20a%20porter%20casas%20logo.svg",
   },
   {
     name: "Heracles",
-    role: "Infrastructure & Construction",
-    summary:
-      "As the undisputed leader in Andorra’s construction and infrastructure sector, Grup Heracles provides comprehensive solutions for complex civil engineering and large-scale building projects.",
+    role: "",
+    summary: "",
     logo: "/images/partners/heracles%20logo.png",
   },
   {
     name: "Hormipresa",
-    role: "Industrialized Sustainable Construction",
-    summary:
-      "Hormipresa specializes in high-performance industrialized construction using architectural precast concrete. Their innovative system allows for the rapid delivery of high-quality residential and commercial projects.",
+    role: "",
+    summary: "",
     logo: "/images/partners/hormipresa%20.webp",
   },
 ];
+const locale = getLocaleFromUrl(Astro.url);
+const content = getContentTranslations(locale).partners;
+const localizedPartners = partners.map((partner, index) => ({
+  ...partner,
+  role: content.entries[index]?.role ?? partner.role,
+  summary: content.entries[index]?.summary ?? partner.summary,
+}));
 
 ---
 
-<html lang="en">
+<html lang={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
-    <title>Partners | Equity Partners</title>
+    <title>{getPageTitle(locale, "partners")}</title>
     <link rel="icon" type="image/png" href="/EP%20favicon.png" />
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
@@ -293,6 +293,10 @@ const partners = [
       }
 
       .section { padding: 4rem 0; }
+
+      .partner-network {
+        padding-top: clamp(7.75rem, 11vw, 9.25rem);
+      }
 
       .eyebrow {
         font-size: 0.8rem;
@@ -532,18 +536,16 @@ const partners = [
     </style>
   </head>
   <body>
-    <InnerSiteHeader active="partners" menuToggleId="mobile-menu-toggle-partners" />
+    <InnerSiteHeader active="partners" menuToggleId="mobile-menu-toggle-partners" offsetFirstSection={false} locale={locale} currentPath={Astro.url.pathname} />
 
     <section class="section partner-network">
       <div class="container">
-        <p class="eyebrow">Our Local Partners</p>
-        <h2>Trusted relationships across the Andorran ecosystem.</h2>
-        <p class="intro">
-          Our delivery model is built on deep local partnerships that strengthen project certainty from planning to execution.
-        </p>
+        <p class="eyebrow">{content.eyebrow}</p>
+        <h2>{content.title}</h2>
+        <p class="intro">{content.intro}</p>
         <div class="partners-grid">
           {
-            partners.map((partner) => (
+            localizedPartners.map((partner) => (
               <article class="partner-card">
                 <div class="partner-logo">
                   {partner.name === "Andorra Resident" ? (
@@ -672,7 +674,7 @@ const partners = [
       </div>
     </section>
 
-    <SiteFooter />
+    <SiteFooter locale={locale} />
     <script type="module">
       const root = document.body;
       const syncHeaderState = () => {

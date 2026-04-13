@@ -1,13 +1,18 @@
 ---
 import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
+import { buildLocalizedPath, getLocaleFromUrl } from "../lib/i18n";
+import { getContentTranslations } from "../i18n/content";
+import { getPageTitle } from "../i18n/ui";
+const locale = getLocaleFromUrl(Astro.url);
+const content = getContentTranslations(locale).cookies;
 ---
 
-<html lang="en">
+<html lang={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
-    <title>Cookie Policy | Equity Partners</title>
+    <title>{getPageTitle(locale, "cookiePolicy")}</title>
     <link rel="icon" type="image/png" href="/EP%20favicon.png" />
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
@@ -133,16 +138,13 @@ import SiteFooter from "../components/SiteFooter.astro";
     </style>
   </head>
   <body>
-    <InnerSiteHeader menuToggleId="mobile-menu-toggle-cookies" offsetFirstSection={false} />
+    <InnerSiteHeader menuToggleId="mobile-menu-toggle-cookies" locale={locale} currentPath={Astro.url.pathname} />
 
     <section class="legal-hero">
       <div class="container">
-        <p class="eyebrow">Cookies</p>
-        <h1>How Equity Partners uses cookies and similar technologies.</h1>
-        <p>
-          This Cookie Policy explains how Equity Partners uses cookies and similar technologies when you visit our website,
-          why we use them, and what choices you have regarding their use.
-        </p>
+        <p class="eyebrow">{content.eyebrow}</p>
+        <h1>{content.title}</h1>
+        <p>{content.intro}</p>
       </div>
     </section>
 
@@ -150,67 +152,29 @@ import SiteFooter from "../components/SiteFooter.astro";
       <div class="container">
         <div class="legal-shell">
           <div class="legal-block">
-            <p class="legal-meta">Last updated: March 31, 2026</p>
+            <p class="legal-meta">{content.updated}</p>
           </div>
-
-          <div class="legal-block">
-            <h2>What are cookies?</h2>
-            <p>
-              Cookies are small data files placed on your computer or mobile device when you visit a website. Cookies are
-              widely used to make websites work, improve performance, and provide reporting information.
-            </p>
-          </div>
-
-          <div class="legal-block">
-            <h2>Why we use cookies</h2>
-            <p>
-              We use first-party and third-party cookies for several reasons. Some cookies are required for technical
-              reasons so the website can function properly, while others help us understand usage, improve performance, and
-              enhance user experience.
-            </p>
-          </div>
-
-          <div class="legal-block">
-            <h2>Types of cookies we may use</h2>
-            <ul>
-              <li>Strictly necessary cookies needed for the core operation of the site.</li>
-              <li>Performance and analytics cookies that help us understand how the site is used.</li>
-              <li>Functionality cookies that remember your preferences and improve your experience.</li>
-            </ul>
-          </div>
-
-          <div class="legal-block">
-            <h2>Your choices</h2>
-            <p>
-              You have the right to decide whether to accept or reject cookies. You can do this through any cookie banner
-              or preference tool we may provide, or by adjusting your browser settings directly.
-            </p>
-            <p>
-              Most browsers allow you to block or delete cookies. The exact method varies by browser and version.
-            </p>
-          </div>
-
-          <div class="legal-block">
-            <h2>Changes to this policy</h2>
-            <p>
-              We may update this Cookie Policy from time to time to reflect changes in our practices, technologies, or legal
-              requirements. Please review this page periodically to stay informed.
-            </p>
-          </div>
-
-          <div class="legal-block">
-            <h2>Contact us</h2>
-            <p>
-              If you have questions about our use of cookies or similar technologies, please contact
-              <strong> info@equitypartnersandorra.com</strong>.
-            </p>
-            <a class="legal-contact-button" href="/contact">Contact Us</a>
-          </div>
+          {
+            content.sections.map((section, index) => (
+              <div class="legal-block">
+                <h2>{section.title}</h2>
+                {section.body?.map((paragraph) => <p>{paragraph}</p>)}
+                {section.bullets && (
+                  <ul>
+                    {section.bullets.map((bullet) => <li>{bullet}</li>)}
+                  </ul>
+                )}
+                {index === content.sections.length - 1 ? (
+                  <a class="legal-contact-button" href={buildLocalizedPath("/contact", locale)}>{content.contactCta}</a>
+                ) : null}
+              </div>
+            ))
+          }
         </div>
       </div>
     </section>
 
-    <SiteFooter />
+    <SiteFooter locale={locale} />
 
     <script type="module">
       const root = document.body;

@@ -3,6 +3,9 @@ import { blogPosts } from "../data/blogPosts";
 import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import NewsletterSignup from "../components/NewsletterSignup.astro";
 import SiteFooter from "../components/SiteFooter.astro";
+import { buildLocalizedPath, getLocaleFromUrl } from "../lib/i18n";
+import { getContentTranslations } from "../i18n/content";
+import { getPageTitle } from "../i18n/ui";
 
 const advantages = [
   {
@@ -61,13 +64,15 @@ const localPartners = [
 
 const localPartnersLoop = [...localPartners, ...localPartners, ...localPartners, ...localPartners];
 const homepageSuggestedPosts = blogPosts.slice(0, 3);
+const locale = getLocaleFromUrl(Astro.url);
+const content = getContentTranslations(locale).home;
 ---
 
-<html lang="en">
+<html lang={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
-    <title>Equity Partners | Andorra Property Group</title>
+    <title>{getPageTitle(locale, "home")}</title>
     <link rel="icon" type="image/png" href="/EP%20favicon.png" />
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
@@ -2054,6 +2059,19 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
           padding: 1.8rem 0 1.6rem;
         }
 
+        .advantage-home {
+          padding-top: 2.3rem;
+        }
+
+        .why-equity-home,
+        .focus-section-f,
+        .projects,
+        .gateway,
+        .timeline-hybrid,
+        .home-suggested-reads {
+          padding-top: 2.3rem;
+        }
+
         .partners-track {
           gap: 2rem;
           animation-duration: 36s;
@@ -2143,24 +2161,22 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
     </style>
   </head>
   <body>
-    <InnerSiteHeader active="home" menuToggleId="mobile-menu-toggle" offsetFirstSection={false} />
+    <InnerSiteHeader active="home" menuToggleId="mobile-menu-toggle" offsetFirstSection={false} locale={locale} currentPath={Astro.url.pathname} />
     <section class="hero">
       <div class="container">
         <div class="hero-content">
-          <p class="hero-kicker">ANDORRA • INVESTMENT • EXCELLENCE</p>
-          <h1>Your strategic partner for Andorra real estate investments.</h1>
-          <p class="subline">
-            Equity Partners connects investor capital to disciplined Andorran real estate execution.
-          </p>
-          <a class="hero-button" href="/contact">Explore Opportunities</a>
+          <p class="hero-kicker">{content.hero.kicker}</p>
+          <h1>{content.hero.title}</h1>
+          <p class="subline">{content.hero.subline}</p>
+          <a class="hero-button" href={buildLocalizedPath("/contact", locale)}>{content.hero.cta}</a>
         </div>
       </div>
     </section>
 
     <section class="partners-wrap" id="partners-local">
-      <a class="partners-link" href="/partners" aria-label="View all local partners">
+      <a class="partners-link" href={buildLocalizedPath("/partners", locale)} aria-label="View all local partners">
         <div class="container">
-          <h2 class="partners-title">OUR LOCAL PARTNERS</h2>
+          <h2 class="partners-title">{content.localPartnersTitle}</h2>
         </div>
         <div class="partners-marquee" aria-label="Local partner logos">
           <div class="partners-track">
@@ -2185,114 +2201,112 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
 
     <section class="section advantage-home">
       <div class="container">
-        <p class="eyebrow">Equity Partners</p>
-        <h2 class="focus-title">What we do</h2>
-        <p class="focus-intro">
-          We open the doors to Andorra’s exclusive investment landscape by providing a structural bridge that allows international firms to deploy capital into Andorra without compromising on institutional standards.
-        </p>
+        <p class="eyebrow">{content.services.eyebrow}</p>
+        <h2 class="focus-title">{content.services.title}</h2>
+        <p class="focus-intro">{content.services.intro}</p>
         <div class="advantage-home-grid is-test">
           <article class="advantage-home-card">
             <div class="advantage-home-card-head">
               <span class="advantage-home-icon" aria-hidden="true"><img src="/images/Icons/project%20development.png" alt="" /></span>
-              <h3>Full-Cycle Project Development</h3>
+              <h3>{content.services.cards[0].title}</h3>
             </div>
             <ul class="advantage-home-list">
               <li>
                 <span class="advantage-home-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
                 </span>
-                <span>From initial feasibility to final property delivery</span>
+                <span>{content.services.cards[0].bullets[0]}</span>
               </li>
               <li>
                 <span class="advantage-home-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
                 </span>
-                <span>Identifying and securing high-potential land assets</span>
+                <span>{content.services.cards[0].bullets[1]}</span>
               </li>
               <li>
                 <span class="advantage-home-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
                 </span>
-                <span>Transforming acquisitions into institutional-grade assets</span>
+                <span>{content.services.cards[0].bullets[2]}</span>
               </li>
             </ul>
           </article>
           <article class="advantage-home-card">
             <div class="advantage-home-card-head">
               <span class="advantage-home-icon" aria-hidden="true"><img src="/images/Icons/local%20network.png" alt="" /></span>
-              <h3>Local Network &amp; Exclusive Access</h3>
+              <h3>{content.services.cards[1].title}</h3>
             </div>
             <ul class="advantage-home-list">
               <li>
                 <span class="advantage-home-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
                 </span>
-                <span>Access to high-value, off-market opportunities</span>
+                <span>{content.services.cards[1].bullets[0]}</span>
               </li>
               <li>
                 <span class="advantage-home-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
                 </span>
-                <span>Direct ties with local landowners and advisors</span>
+                <span>{content.services.cards[1].bullets[1]}</span>
               </li>
               <li>
                 <span class="advantage-home-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
                 </span>
-                <span>Deep-rooted expertise in the Andorran landscape</span>
+                <span>{content.services.cards[1].bullets[2]}</span>
               </li>
             </ul>
           </article>
           <article class="advantage-home-card">
             <div class="advantage-home-card-head">
               <span class="advantage-home-icon" aria-hidden="true"><img src="/images/Icons/regulatory%20expertise.png" alt="" /></span>
-              <h3>Regulatory &amp; Structural Expertise</h3>
+              <h3>{content.services.cards[2].title}</h3>
             </div>
             <ul class="advantage-home-list">
               <li>
                 <span class="advantage-home-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
                 </span>
-                <span>Expert navigation of the Principality’s compliance</span>
+                <span>{content.services.cards[2].bullets[0]}</span>
               </li>
               <li>
                 <span class="advantage-home-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
                 </span>
-                <span>Translating local rules into executable strategies</span>
+                <span>{content.services.cards[2].bullets[1]}</span>
               </li>
               <li>
                 <span class="advantage-home-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m8.7 12.2 2.1 2.2 4.5-5"></path></svg>
                 </span>
-                <span>Professional alignment with institutional standards</span>
+                <span>{content.services.cards[2].bullets[2]}</span>
               </li>
             </ul>
           </article>
         </div>
-        <a class="cta-link" href="/about">About Equity Partners</a>
+        <a class="cta-link" href={buildLocalizedPath("/about", locale)}>{content.services.cta}</a>
       </div>
     </section>
 
     <section class="section home-proof-strip" aria-label="Equity Partners metrics">
       <div class="container">
-        <p class="eyebrow">Equity Partners in numbers</p>
+        <p class="eyebrow">{content.metrics.eyebrow}</p>
         <div class="home-proof-grid">
           <article class="home-proof-metric">
             <p class="home-proof-metric-value">20+</p>
-            <p class="home-proof-metric-label">Years of Andorran expertise</p>
+            <p class="home-proof-metric-label">{content.metrics.items[0].label}</p>
           </article>
           <article class="home-proof-metric">
             <p class="home-proof-metric-value">€1B+</p>
-            <p class="home-proof-metric-label">Identified project pipeline value</p>
+            <p class="home-proof-metric-label">{content.metrics.items[1].label}</p>
           </article>
           <article class="home-proof-metric">
             <p class="home-proof-metric-value">100k+</p>
-            <p class="home-proof-metric-label">Square meters under development</p>
+            <p class="home-proof-metric-label">{content.metrics.items[2].label}</p>
           </article>
           <article class="home-proof-metric">
             <p class="home-proof-metric-value">10+</p>
-            <p class="home-proof-metric-label">Strategic local partnerships</p>
+            <p class="home-proof-metric-label">{content.metrics.items[3].label}</p>
           </article>
         </div>
       </div>
@@ -2301,11 +2315,9 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
     <section class="section why-equity-home">
       <div class="container">
         <div class="section-header">
-          <p class="eyebrow">Work with the best</p>
-          <h2>Why Equity Partners</h2>
-          <p class="intro">
-            We combine local market access with disciplined execution standards, helping investors approach Andorra through a more structured, informed, and institutionally aligned lens.
-          </p>
+          <p class="eyebrow">{content.whyEquity.eyebrow}</p>
+          <h2>{content.whyEquity.title}</h2>
+          <p class="intro">{content.whyEquity.intro}</p>
         </div>
         <div class="why-equity-home-body">
           <div class="why-equity-home-media">
@@ -2315,27 +2327,27 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
             <article class="why-equity-home-point">
               <span class="why-equity-home-point-icon" aria-hidden="true"><img src="/images/Icons/project%20development.png" alt="" /></span>
               <div class="why-equity-home-point-copy">
-                <h3>Execution with real accountability</h3>
-                <p>We stay close to each mandate from initial analysis through to execution and delivery, helping investors move from opportunity review to real deployment with greater control and clarity.</p>
+                <h3>{content.whyEquity.points[0].title}</h3>
+                <p>{content.whyEquity.points[0].body}</p>
               </div>
             </article>
             <article class="why-equity-home-point">
               <span class="why-equity-home-point-icon" aria-hidden="true"><img src="/images/Icons/local%20network.png" alt="" /></span>
               <div class="why-equity-home-point-copy">
-                <h3>Our network is your advantage</h3>
-                <p>Direct relationships with owners, advisors, and local operators improve sourcing quality and help investors distinguish visible listings from genuinely strategic opportunities.</p>
+                <h3>{content.whyEquity.points[1].title}</h3>
+                <p>{content.whyEquity.points[1].body}</p>
               </div>
             </article>
             <article class="why-equity-home-point">
               <span class="why-equity-home-point-icon" aria-hidden="true"><img src="/images/Icons/regulatory%20expertise.png" alt="" /></span>
               <div class="why-equity-home-point-copy">
-                <h3>Structure that protects investor confidence</h3>
-                <p>We translate Andorra’s regulatory environment into a practical path for international capital, approaching each mandate with compliance rigor, documentation discipline, and institutional alignment.</p>
+                <h3>{content.whyEquity.points[2].title}</h3>
+                <p>{content.whyEquity.points[2].body}</p>
               </div>
             </article>
           </div>
         </div>
-        <a class="cta-link" href="/about">About Equity Partners</a>
+        <a class="cta-link" href={buildLocalizedPath("/about", locale)}>{content.whyEquity.cta}</a>
       </div>
     </section>
 
@@ -2534,9 +2546,9 @@ const homepageSuggestedPosts = blogPosts.slice(0, 3);
       </section>
     )}
 
-    <NewsletterSignup emailInputId="newsletter-email-home" />
+    <NewsletterSignup emailInputId="newsletter-email-home" locale={locale} />
 
-    <SiteFooter />
+    <SiteFooter locale={locale} />
     <script type="module">
       const root = document.body;
       const syncHeaderState = () => {

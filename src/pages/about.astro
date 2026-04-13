@@ -2,6 +2,9 @@
 import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import NewsletterSignup from "../components/NewsletterSignup.astro";
 import SiteFooter from "../components/SiteFooter.astro";
+import { buildLocalizedPath, getLocaleFromUrl } from "../lib/i18n";
+import { getContentTranslations } from "../i18n/content";
+import { getPageTitle } from "../i18n/ui";
 const aboutLogoStrip = [
   { name: "Andorra Resident", logo: "/images/partners/AR%20Logo%20EP.png" },
   { name: "Emindset Law", logo: "/images/partners/Emindset LAW LOGO.png" },
@@ -12,62 +15,62 @@ const aboutLogoStrip = [
 const teamMembers = [
   {
     name: "Bing Voorham",
-    role: "CEO & Co-founder",
+    role: "",
     image: "/images/Team/Bing Sr EP.png",
-    description:
-      "International investor with over 30 years of experience in sales and marketing real estate projects across Europe, providing strategic capital and access to high-net-worth networks",
+    description: "",
   },
   {
     name: "Oriol Giro",
-    role: "Lawyer & co-founder",
+    role: "",
     image: "/images/Team/Oriol Giro EP.jpg",
-    description:
-      "Expert in investment structuring and projects financing. Oriol leads the project legal and financing strategy, as well as overseeing transaction structuring, financial modeling and investor relations.",
+    description: "",
   },
   {
     name: "Carlos Ayete",
-    role: "Technical Architect",
+    role: "",
     image: "/images/Team/Calors EP.jpg",
-    description:
-      "With over 25 years of extensive expertise in real estate investment, land acquisition and strategic development. Carlos combines his deep knowledge of the Andorrean maket with a strong internatinoal outlook.",
+    description: "",
   },
   {
     name: "Bing Jr",
-    role: "Partnerships & Sales",
+    role: "",
     image: "/images/Team/Bing Jr EP.png",
-    description:
-      "With a Master degree in Digital Business from the University of Amsterdam and 4 years of experience at Salesforce, Bing's international past and results-oriented mindset brings deep knowledge of digital acquisition.",
+    description: "",
   },
   {
     name: "Tekke Voorham",
-    role: "Ditigal Marketing",
+    role: "",
     image: "/images/Team/Tekke EP.png",
-    description:
-      "Directing our creative strategy, Tekke translates our institutional values into a world-class visual identity and seamless digital experience for our investors.",
+    description: "",
   },
   {
     name: "Laia Bertran",
-    role: "Legal Analyst",
+    role: "",
     image: "/images/Team/Laia EP.jpg?v=20260330",
-    description:
-      "Laia oversees the intersection of legal framework and investor onboarding, ensuring every transaction adheres to the highest standards of Andorran compliance.",
+    description: "",
   },
   {
     name: "Future Team Member",
-    role: "Strategic Role",
+    role: "",
     image: "",
-    description:
-      "Placeholder profile text for a future team member card. This can be updated with real biography details later.",
+    description: "",
     placeholder: true,
   },
 ];
+const locale = getLocaleFromUrl(Astro.url);
+const content = getContentTranslations(locale).about;
+const localizedTeamMembers = teamMembers.map((member, index) => ({
+  ...member,
+  role: content.team.members[index]?.role ?? member.role,
+  description: content.team.members[index]?.description ?? member.description,
+}));
 ---
 
-<html lang="en">
+<html lang={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
-    <title>About Us | Equity Partners</title>
+    <title>{getPageTitle(locale, "about")}</title>
     <link rel="icon" type="image/png" href="/EP%20favicon.png" />
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
@@ -288,7 +291,7 @@ const teamMembers = [
       }
 
       .journey-hero {
-        padding: 3.1rem 0 2.35rem;
+        padding: clamp(7.25rem, 10.5vw, 8.75rem) 0 2.35rem;
       }
 
       .journey-hero-head {
@@ -533,6 +536,10 @@ const teamMembers = [
         margin-top: 0;
         font-size: clamp(1.9rem, 3.3vw, 3rem);
         line-height: 1.06;
+      }
+
+      .why-equity .section-header .eyebrow {
+        margin-bottom: 0.85rem;
       }
 
       .team-variant-circles .section-header .eyebrow {
@@ -927,10 +934,8 @@ const teamMembers = [
       }
 
       @media (max-width: 980px) {
-        .journey-hero-grid,
         .journey-proof-logos,
         .journey-proof-body,
-        .journey-proof-metrics,
         .why-equity-body,
         .advantage-grid,
         .team-circle-grid,
@@ -939,8 +944,20 @@ const teamMembers = [
           grid-template-columns: 1fr;
         }
 
+        .journey-hero-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .journey-hero-grid .journey-hero-card:nth-child(3) {
+          display: none;
+        }
+
         .journey-hero-head {
           max-width: 36rem;
+        }
+
+        .journey-proof-metrics {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         .team-variant-cards .team-circle-grid {
@@ -1061,8 +1078,22 @@ const teamMembers = [
           width: 100%;
         }
 
+        .journey-hero-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .journey-hero-grid .journey-hero-card:nth-child(2) {
+          display: none;
+        }
+
         .journey-hero {
-          padding: 2.2rem 0 1.7rem;
+          padding: 8rem 0 1.7rem;
+        }
+
+        .journey-proof,
+        .why-equity,
+        .team-variant-circles {
+          padding-top: 2.3rem;
         }
 
         .journey-hero-title {
@@ -1080,7 +1111,7 @@ const teamMembers = [
         }
 
         .journey-proof-shell {
-          padding: 1.1rem;
+          padding: 0.4rem 1.1rem 1.1rem;
           border-radius: 1.15rem;
         }
 
@@ -1112,15 +1143,13 @@ const teamMembers = [
     </style>
   </head>
   <body>
-    <InnerSiteHeader active="about" menuToggleId="mobile-menu-toggle-about" />
+    <InnerSiteHeader active="about" menuToggleId="mobile-menu-toggle-about" locale={locale} currentPath={Astro.url.pathname} />
 
     <section class="journey-hero">
       <div class="container">
         <div class="journey-hero-head">
-          <h1 class="journey-hero-title">Your strategic partner for Andorran investment success</h1>
-          <p class="journey-hero-copy">
-            With local market depth and an international investment lens, our team helps investors access Andorra through disciplined execution, trusted relationships, and long-term strategic alignment.
-          </p>
+          <h1 class="journey-hero-title">{content.hero.title}</h1>
+          <p class="journey-hero-copy">{content.hero.copy}</p>
         </div>
         <div class="journey-hero-grid" aria-label="Equity Partners team">
           <article class="journey-hero-card">
@@ -1141,26 +1170,26 @@ const teamMembers = [
         <div class="journey-proof-shell">
           <div class="journey-proof-body">
             <div class="journey-proof-copy">
-              <p class="journey-proof-label">What we do</p>
-              <h2>High-barrier access. Disciplined execution.</h2>
-              <p>We are the strategic gateway to Andorra’s evolving real estate landscape.</p>
+              <p class="journey-proof-label">{content.proof.label}</p>
+              <h2>{content.proof.title}</h2>
+              <p>{content.proof.subtitle}</p>
             </div>
             <div class="journey-proof-metrics">
               <article class="journey-proof-metric">
                 <p class="journey-proof-metric-value">20+</p>
-                <p class="journey-proof-metric-label">Years of Andorran expertise</p>
+                <p class="journey-proof-metric-label">{content.proof.metrics[0].label}</p>
               </article>
               <article class="journey-proof-metric">
                 <p class="journey-proof-metric-value">€1B+</p>
-                <p class="journey-proof-metric-label">Identified project pipeline value</p>
+                <p class="journey-proof-metric-label">{content.proof.metrics[1].label}</p>
               </article>
               <article class="journey-proof-metric">
                 <p class="journey-proof-metric-value">100k+</p>
-                <p class="journey-proof-metric-label">Square meters under development</p>
+                <p class="journey-proof-metric-label">{content.proof.metrics[2].label}</p>
               </article>
               <article class="journey-proof-metric">
                 <p class="journey-proof-metric-value">10+</p>
-                <p class="journey-proof-metric-label">Strategic local partnerships</p>
+                <p class="journey-proof-metric-label">{content.proof.metrics[3].label}</p>
               </article>
             </div>
           </div>
@@ -1171,11 +1200,9 @@ const teamMembers = [
     <section class="section why-equity">
       <div class="container">
         <div class="section-header">
-          <p class="eyebrow">Work with the best</p>
-          <h2>Why Equity Partners</h2>
-          <p class="intro">
-            We combine local market access with disciplined execution standards, helping investors approach Andorra through a more structured, informed, and institutionally aligned lens.
-          </p>
+          <p class="eyebrow">{content.whyEquity.eyebrow}</p>
+          <h2>{content.whyEquity.title}</h2>
+          <p class="intro">{content.whyEquity.intro}</p>
         </div>
         <div class="why-equity-body">
           <div class="why-equity-media">
@@ -1185,22 +1212,22 @@ const teamMembers = [
             <article class="why-equity-point">
               <span class="why-equity-point-icon" aria-hidden="true"><img src="/images/Icons/project%20development.png" alt="" /></span>
               <div class="why-equity-point-copy">
-                <h3>Execution with real accountability</h3>
-                <p>We stay close to each mandate from initial analysis through to execution and delivery, helping investors move from opportunity review to real deployment with greater control and clarity.</p>
+                <h3>{content.whyEquity.points[0].title}</h3>
+                <p>{content.whyEquity.points[0].body}</p>
               </div>
             </article>
             <article class="why-equity-point">
               <span class="why-equity-point-icon" aria-hidden="true"><img src="/images/Icons/local%20network.png" alt="" /></span>
               <div class="why-equity-point-copy">
-                <h3>Our network is your advantage</h3>
-                <p>Direct relationships with owners, advisors, and local operators improve sourcing quality and help investors distinguish visible listings from genuinely strategic opportunities.</p>
+                <h3>{content.whyEquity.points[1].title}</h3>
+                <p>{content.whyEquity.points[1].body}</p>
               </div>
             </article>
             <article class="why-equity-point">
               <span class="why-equity-point-icon" aria-hidden="true"><img src="/images/Icons/regulatory%20expertise.png" alt="" /></span>
               <div class="why-equity-point-copy">
-                <h3>Structure that protects investor confidence</h3>
-                <p>We translate Andorra’s regulatory environment into a practical path for international capital, approaching each mandate with compliance rigor, documentation discipline, and institutional alignment.</p>
+                <h3>{content.whyEquity.points[2].title}</h3>
+                <p>{content.whyEquity.points[2].body}</p>
               </div>
             </article>
           </div>
@@ -1211,15 +1238,13 @@ const teamMembers = [
     <section class="section team-variant-circles team-variant-circles-dark team-variant-cards" id="team">
       <div class="container">
         <div class="section-header">
-          <p class="eyebrow">Meet the team</p>
-          <h2>Core Equity Partners Team</h2>
-          <p class="intro">
-            A darker variation of the same circular team layout to compare contrast and overall feel.
-          </p>
+          <p class="eyebrow">{content.team.eyebrow}</p>
+          <h2>{content.team.title}</h2>
+          <p class="intro">{content.team.intro}</p>
         </div>
         <div class="team-circle-grid">
           {
-            teamMembers.map((member) => (
+            localizedTeamMembers.map((member) => (
               <article class="team-circle-card">
                 <img src={member.image} alt={member.name} loading="lazy" />
                 <h3>{member.name}</h3>
@@ -1234,14 +1259,14 @@ const teamMembers = [
 
     <section class="section about-cta">
       <div class="container">
-        <h2>Explore our current portfolio or discuss a strategic mandate.</h2>
-        <a class="cta-button" href="/contact">Contact Our Team</a>
+        <h2>{content.cta.title}</h2>
+        <a class="cta-button" href={buildLocalizedPath("/contact", locale)}>{content.cta.button}</a>
       </div>
     </section>
 
-    <NewsletterSignup emailInputId="newsletter-email-about" />
+    <NewsletterSignup emailInputId="newsletter-email-about" locale={locale} />
 
-    <SiteFooter />
+    <SiteFooter locale={locale} />
 
     <script type="module">
       const root = document.body;

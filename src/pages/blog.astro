@@ -3,15 +3,20 @@ import { blogPosts } from "../data/blogPosts";
 import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import NewsletterSignup from "../components/NewsletterSignup.astro";
 import SiteFooter from "../components/SiteFooter.astro";
+import { buildLocalizedPath, getLocaleFromUrl } from "../lib/i18n";
+import { getContentTranslations } from "../i18n/content";
+import { getPageTitle } from "../i18n/ui";
 
 const posts = blogPosts;
+const locale = getLocaleFromUrl(Astro.url);
+const content = getContentTranslations(locale).blog;
 ---
 
-<html lang="en">
+<html lang={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
-    <title>Blog | Equity Partners</title>
+    <title>{getPageTitle(locale, "blog")}</title>
     <link rel="icon" type="image/png" href="/EP%20favicon.png" />
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
@@ -306,6 +311,7 @@ const posts = blogPosts;
       }
 
       .insights {
+        padding-top: clamp(7.75rem, 11vw, 9.25rem);
       }
 
       .blog-grid {
@@ -600,22 +606,20 @@ const posts = blogPosts;
     </style>
   </head>
   <body>
-    <InnerSiteHeader active="blog" menuToggleId="mobile-menu-toggle-blog" />
+    <InnerSiteHeader active="blog" menuToggleId="mobile-menu-toggle-blog" locale={locale} currentPath={Astro.url.pathname} />
 
     <section class="section insights">
       <div class="container">
         <div class="section-header">
-          <p class="eyebrow">Latest Insights</p>
-          <h2>Insights on Andorra real estate investment and execution.</h2>
-          <p class="intro">
-            Strategic analysis, project updates, and practical market intelligence for institutional and private investors.
-          </p>
+          <p class="eyebrow">{content.listing.eyebrow}</p>
+          <h2>{content.listing.title}</h2>
+          <p class="intro">{content.listing.intro}</p>
         </div>
         <div class="blog-grid">
           {
             posts.map((post) => (
               <article class="blog-card">
-                <a class="blog-card-link" href={`/blog/${post.slug}`}>
+                <a class="blog-card-link" href={buildLocalizedPath(`/blog/${post.slug}`, locale)}>
                   <img src={post.image} alt={post.title} loading="lazy" />
                   <div class="blog-meta">
                     <div class="metrics">
@@ -633,9 +637,9 @@ const posts = blogPosts;
       </div>
     </section>
 
-    <NewsletterSignup emailInputId="newsletter-email-blog" />
+    <NewsletterSignup emailInputId="newsletter-email-blog" locale={locale} />
 
-    <SiteFooter />
+    <SiteFooter locale={locale} />
     <script type="module">
       const root = document.body;
       const syncHeaderState = () => {

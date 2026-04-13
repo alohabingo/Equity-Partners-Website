@@ -2,16 +2,21 @@
 import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import NewsletterSignup from "../components/NewsletterSignup.astro";
 import SiteFooter from "../components/SiteFooter.astro";
+import { getLocaleFromUrl } from "../lib/i18n";
+import { getContentTranslations } from "../i18n/content";
+import { getPageTitle } from "../i18n/ui";
 
 const mapEmbedUrl =
   "https://maps.google.com/maps?q=42.506278,1.522801&t=&z=18&ie=UTF8&iwloc=&output=embed";
+const locale = getLocaleFromUrl(Astro.url);
+const content = getContentTranslations(locale).contact;
 ---
 
-<html lang="en">
+<html lang={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
-    <title>Contact | Equity Partners</title>
+    <title>{getPageTitle(locale, "contact")}</title>
     <link rel="icon" type="image/png" href="/EP%20favicon.png" />
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
@@ -278,6 +283,10 @@ const mapEmbedUrl =
         padding: 4rem 0;
       }
 
+      .contact-intro-section {
+        padding-top: clamp(7.75rem, 11vw, 9.25rem);
+      }
+
       .eyebrow {
         font-size: 0.8rem;
         letter-spacing: 0.16em;
@@ -346,18 +355,43 @@ const mapEmbedUrl =
       }
 
       .submit {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         width: fit-content;
-        height: 42px;
-        border: 1px solid rgba(14, 24, 39, 0.18);
-        background: #1b2a3f;
-        color: #eaf1fb;
-        border-radius: 0.55rem;
-        padding: 0 1rem;
+        min-width: 126px;
+        height: auto;
+        border: 1px solid #53b27f;
+        background: #53b27f;
+        color: #ffffff;
+        border-radius: 0.45rem;
+        padding: 0.65rem 0.95rem;
         font-size: 0.72rem;
-        letter-spacing: 0.12em;
+        letter-spacing: 0.13em;
         text-transform: uppercase;
         font-weight: 600;
+        line-height: 1;
+        white-space: nowrap;
         cursor: pointer;
+        transition:
+          background-color 180ms ease,
+          transform 180ms ease,
+          color 180ms ease,
+          border-color 180ms ease,
+          box-shadow 180ms ease;
+      }
+
+      .submit:hover {
+        background: #3f9568;
+        border-color: #3f9568;
+        color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(12, 24, 18, 0.22);
+      }
+
+      .submit:focus-visible {
+        outline: 2px solid rgba(234, 241, 252, 0.9);
+        outline-offset: 2px;
       }
 
       .contact-list {
@@ -676,34 +710,50 @@ const mapEmbedUrl =
     </style>
   </head>
   <body>
-    <InnerSiteHeader menuToggleId="mobile-menu-toggle-contact" />
+    <InnerSiteHeader menuToggleId="mobile-menu-toggle-contact" locale={locale} currentPath={Astro.url.pathname} />
 
-    <section class="section">
+    <section class="section contact-intro-section">
       <div class="container">
-        <p class="eyebrow">Investor Inquiry</p>
-        <h2>Discuss your Andorra investment options</h2>
-        <p class="intro">
-          Reach out to our team to answer any Andorra investment options you may have, or for any additional information you may require.
-        </p>
+        <p class="eyebrow">{content.eyebrow}</p>
+        <h2>{content.title}</h2>
+        <p class="intro">{content.intro}</p>
         <div class="contact-grid">
           <article class="contact-card">
             <form class="contact-form" name="contact-inquiry" data-netlify="true" method="post" action="#">
               <input type="hidden" name="form-name" value="contact-inquiry" />
               <div class="field-row">
-                <input class="input" type="text" name="first_name" placeholder="First name" required />
-                <input class="input" type="text" name="last_name" placeholder="Last name" required />
+                <input class="input" type="text" name="first_name" placeholder={content.form.firstName} required />
+                <input class="input" type="text" name="last_name" placeholder={content.form.lastName} required />
               </div>
               <div class="field-row">
-                <input class="input" type="email" name="email" placeholder="Email address" required />
-                <input class="input" type="text" name="company" placeholder="Company" />
+                <input class="input" type="email" name="email" placeholder={content.form.email} required />
+                <input class="input" type="text" name="company" placeholder={content.form.company} />
               </div>
-              <textarea class="textarea" name="message" placeholder="Share your investment focus and timeline" required></textarea>
-              <button class="submit" type="submit">Send Enquiry</button>
+              <select class="input" name="investor_type" required>
+                <option value="" disabled selected>{content.form.investorType}</option>
+                {content.form.investorTypeOptions.map((option) => (
+                  <option value={option}>{option}</option>
+                ))}
+              </select>
+              <select class="input" name="investment_timeline" required>
+                <option value="" disabled selected>{content.form.investmentTimeline}</option>
+                {content.form.investmentTimelineOptions.map((option) => (
+                  <option value={option}>{option}</option>
+                ))}
+              </select>
+              <select class="input" name="investment_range" required>
+                <option value="" disabled selected>{content.form.investmentRange}</option>
+                {content.form.investmentRangeOptions.map((option) => (
+                  <option value={option}>{option}</option>
+                ))}
+              </select>
+              <textarea class="textarea" name="message" placeholder={content.form.message} required></textarea>
+              <button class="submit" type="submit">{content.form.submit}</button>
             </form>
           </article>
 
           <article class="contact-card">
-            <p class="eyebrow">Contact Us</p>
+            <p class="eyebrow">{content.cardEyebrow}</p>
             <h3>Equity Partners</h3>
             <ul class="contact-list">
               <li>
@@ -746,7 +796,7 @@ const mapEmbedUrl =
       <div class="container">
         <div class="map-options">
           <article class="map-option">
-            <p class="map-option-label">Come By Our Office</p>
+            <p class="map-option-label">{content.officeLabel}</p>
             <div class="map-shell">
               <iframe
                 title="Equity Partners office map option 1"
@@ -760,9 +810,9 @@ const mapEmbedUrl =
       </div>
     </section>
 
-    <NewsletterSignup emailInputId="newsletter-email-contact" />
+    <NewsletterSignup emailInputId="newsletter-email-contact" locale={locale} />
 
-    <SiteFooter />
+    <SiteFooter locale={locale} />
     <script type="module">
       const root = document.body;
       const syncHeaderState = () => {

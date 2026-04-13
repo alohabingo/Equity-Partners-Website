@@ -3,6 +3,8 @@ import InnerSiteHeader from "../../components/InnerSiteHeader.astro";
 import NewsletterSignup from "../../components/NewsletterSignup.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
 import { blogPosts } from "../../data/blogPosts";
+import { buildLocalizedPath, getLocaleFromUrl } from "../../lib/i18n";
+import { getContentTranslations } from "../../i18n/content";
 
 export function getStaticPaths() {
   return blogPosts.map((post) => ({
@@ -12,6 +14,8 @@ export function getStaticPaths() {
 }
 
 const { post } = Astro.props;
+const locale = getLocaleFromUrl(Astro.url);
+const content = getContentTranslations(locale).blog;
 const stopWords = new Set([
   "and",
   "the",
@@ -67,7 +71,7 @@ const suggestedPosts = blogPosts
   .map(({ entry }) => entry);
 ---
 
-<html lang="en">
+<html lang={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
@@ -714,11 +718,11 @@ const suggestedPosts = blogPosts
     </style>
   </head>
   <body style={`--hero-image: url('${post.image}')`}>
-    <InnerSiteHeader active="blog" menuToggleId="mobile-menu-toggle-blog-article" offsetFirstSection={false} />
+    <InnerSiteHeader active="blog" menuToggleId="mobile-menu-toggle-blog-article" locale={locale} currentPath={Astro.url.pathname} />
 
     <main class="article-wrap">
       <div class="container">
-        <a class="breadcrumbs" href="/blog">Blog / Back to Insights</a>
+        <a class="breadcrumbs" href={buildLocalizedPath("/blog", locale)}>{content.article.breadcrumb}</a>
 
         <article class="article-shell">
           <header class="article-hero">
@@ -768,18 +772,13 @@ const suggestedPosts = blogPosts
             </div>
 
             <aside class="article-aside">
-              <p class="aside-kicker">What We Do</p>
-              <p class="aside-label">Equity Partners</p>
-              <p class="aside-copy">
-                Equity Partners helps investors access Andorra’s most compelling real estate opportunities through our
-                trusted local network, regulatory expertise, and full-cycle project development execution; if you are
-                exploring investment opportunities in Andorras high potential real estate markets, our team would be
-                pleased to speak with you.
-              </p>
-              <a class="aside-cta" href="/contact">Contact Us</a>
+              <p class="aside-kicker">{content.article.asideKicker}</p>
+              <p class="aside-label">{content.article.asideLabel}</p>
+              <p class="aside-copy">{content.article.asideCopy}</p>
+              <a class="aside-cta" href={buildLocalizedPath("/contact", locale)}>{content.article.asideCta}</a>
               {post.sources && post.sources.length > 0 && (
                 <section class="article-sources">
-                  <h2>Sources</h2>
+                  <h2>{content.article.sourcesTitle}</h2>
                   <ul class="sources-list">
                     {post.sources.map((source) => (
                       <li>
@@ -797,12 +796,12 @@ const suggestedPosts = blogPosts
 
         {suggestedPosts.length > 0 && (
           <section class="suggested-reads">
-            <p class="eyebrow">Suggested Reads</p>
-            <h2>Continue exploring the Andorran market.</h2>
+            <p class="eyebrow">{content.article.suggestedEyebrow}</p>
+            <h2>{content.article.suggestedTitle}</h2>
             <div class="home-suggested-grid">
               {suggestedPosts.map((entry) => (
                 <article class="home-suggested-card">
-                  <a class="home-suggested-link" href={`/blog/${entry.slug}`}>
+                  <a class="home-suggested-link" href={buildLocalizedPath(`/blog/${entry.slug}`, locale)}>
                     <img src={entry.image} alt={entry.title} loading="lazy" />
                     <div class="home-suggested-meta">
                       <div class="home-suggested-metrics">
@@ -821,9 +820,9 @@ const suggestedPosts = blogPosts
       </div>
     </main>
 
-    <NewsletterSignup emailInputId="newsletter-email-article" />
+    <NewsletterSignup emailInputId="newsletter-email-article" locale={locale} />
 
-    <SiteFooter />
+    <SiteFooter locale={locale} />
 
     <script type="module">
       const root = document.body;

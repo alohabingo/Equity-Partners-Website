@@ -1,21 +1,26 @@
 ---
+import type { Locale } from "../lib/i18n";
+import { getContentTranslations } from "../i18n/content";
+
 interface Props {
   emailInputId?: string;
+  locale?: Locale;
 }
 
-const { emailInputId = "newsletter-email" } = Astro.props;
+const { emailInputId = "newsletter-email", locale = "en" } = Astro.props;
 const hubspotPortalId = "147782273";
 const hubspotFormId = "a116bad8-2680-4003-9b71-2361e9997673";
 const newsletterFormId = `${emailInputId}-form`;
 const newsletterMessageId = `${emailInputId}-message`;
+const content = getContentTranslations(locale).newsletter;
 ---
 
 <section class="newsletter" id="newsletter">
   <div class="container">
-    <p class="eyebrow">Newsletter</p>
+    <p class="eyebrow">{content.eyebrow}</p>
     <div class="newsletter-wrap">
       <div class="newsletter-copy">
-        <h2>Stay informed on Andorra opportunities.</h2>
+        <h2>{content.title}</h2>
       </div>
       <div class="newsletter-form-group">
         <form
@@ -26,25 +31,25 @@ const newsletterMessageId = `${emailInputId}-message`;
           method="post"
           novalidate
         >
-          <label class="sr-only" for={emailInputId}>Email address</label>
+          <label class="sr-only" for={emailInputId}>{content.emailLabel}</label>
           <input
             class="newsletter-input"
             id={emailInputId}
             name="email"
             type="email"
-            placeholder="Enter your email"
+            placeholder={content.emailPlaceholder}
             required
           />
-          <button class="newsletter-button" type="submit">Subscribe</button>
+          <button class="newsletter-button" type="submit">{content.submit}</button>
         </form>
         <p class="newsletter-status" id={newsletterMessageId} aria-live="polite"></p>
       </div>
     </div>
-    <p class="newsletter-note">We send selective updates only. No spam.</p>
+    <p class="newsletter-note">{content.note}</p>
   </div>
 </section>
 
-<script define:vars={{ newsletterFormId, newsletterMessageId, hubspotPortalId, hubspotFormId }}>
+<script define:vars={{ newsletterFormId, newsletterMessageId, hubspotPortalId, hubspotFormId, content }}>
   const form = document.getElementById(newsletterFormId);
   const message = document.getElementById(newsletterMessageId);
 
@@ -61,13 +66,13 @@ const newsletterMessageId = `${emailInputId}-message`;
       const emailInput = form.querySelector('input[name="email"]');
 
       if (!(emailInput instanceof HTMLInputElement) || !emailInput.value.trim()) {
-        message.textContent = "Please enter a valid email address.";
+        message.textContent = content.validationError;
         message.dataset.state = "error";
         return;
       }
 
       submitButton?.setAttribute("disabled", "true");
-      message.textContent = "Submitting...";
+      message.textContent = content.submitting;
       message.dataset.state = "pending";
 
       const payload = {
@@ -102,10 +107,10 @@ const newsletterMessageId = `${emailInputId}-message`;
         }
 
         form.reset();
-        message.textContent = "Thanks for subscribing.";
+        message.textContent = content.success;
         message.dataset.state = "success";
       } catch (error) {
-        message.textContent = "Something went wrong. Please try again.";
+        message.textContent = content.error;
         message.dataset.state = "error";
       } finally {
         submitButton?.removeAttribute("disabled");
@@ -278,6 +283,10 @@ const newsletterMessageId = `${emailInputId}-message`;
   }
 
   @media (max-width: 680px) {
+    .newsletter {
+      padding-top: 2.3rem;
+    }
+
     .container {
       width: 100%;
       max-width: none;

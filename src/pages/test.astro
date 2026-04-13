@@ -1,6 +1,8 @@
 ---
 import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
+import { getLocaleFromUrl } from "../lib/i18n";
+import { getPageTitle } from "../i18n/ui";
 
 const advantages = [
   {
@@ -19,6 +21,7 @@ const advantages = [
       "From sourcing through delivery, we manage project decisions end-to-end with investor clarity at every stage.",
   },
 ];
+const locale = getLocaleFromUrl(Astro.url);
 
 const teamMembers = [
   {
@@ -90,11 +93,11 @@ const whyAndorraCards = [
 
 ---
 
-<html lang="en">
+<html lang={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
-    <title>Test Sections | Equity Partners</title>
+    <title>{getPageTitle(locale, "test")}</title>
     <link rel="icon" type="image/png" href="/EP%20favicon.png" />
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
@@ -1765,7 +1768,7 @@ const whyAndorraCards = [
     </style>
   </head>
   <body>
-    <InnerSiteHeader active="test" menuToggleId="mobile-menu-toggle-test" />
+    <InnerSiteHeader active="test" menuToggleId="mobile-menu-toggle-test" locale={locale} currentPath={Astro.url.pathname} />
 
     <section class="section test-section-a">
       <div class="container">
@@ -2716,7 +2719,7 @@ const whyAndorraCards = [
       </div>
     </section>
 
-    <SiteFooter />
+    <SiteFooter locale={locale} />
     <script type="module">
       const root = document.body;
       const syncHeaderState = () => {
