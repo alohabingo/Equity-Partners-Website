@@ -26,14 +26,20 @@ const newsletterFormName = "newsletter-signup";
           class="newsletter-form"
           id={newsletterFormId}
           novalidate
+          data-msg-id={newsletterMessageId}
+          data-validation-error={content.validationError}
+          data-submitting={content.submitting}
+          data-success={content.success}
+          data-error={content.error}
         >
-<label class="sr-only" for={emailInputId}>{content.emailLabel}</label>
+          <label class="sr-only" for={emailInputId}>{content.emailLabel}</label>
           <input
             class="newsletter-input"
             id={emailInputId}
             name="email"
             type="email"
             placeholder={content.emailPlaceholder}
+            autocomplete="email"
             required
           />
           <button class="newsletter-button" type="submit">{content.submit}</button>
@@ -45,66 +51,50 @@ const newsletterFormName = "newsletter-signup";
   </div>
 </section>
 
-<script define:vars={{ newsletterFormId, newsletterMessageId, newsletterFormName, content }}>
-  const form = document.getElementById(newsletterFormId);
-  const message = document.getElementById(newsletterMessageId);
-
-  const HUBSPOT_PORTAL_ID = "147782273";
-  const HUBSPOT_FORM_ID = "72429b95-5573-4fe9-a844-22f7ade6f85c";
-  const HUBSPOT_ENDPOINT = `https://api.hsforms.com/submissions/v3/integration/submit/${HUBSPOT_PORTAL_ID}/${HUBSPOT_FORM_ID}`;
-
-  if (form instanceof HTMLFormElement && message instanceof HTMLElement) {
-    form.addEventListener("submit", async (event) => {
+<script is:inline>
+  document.querySelectorAll(".newsletter-form").forEach(function (form) {
+    form.addEventListener("submit", async function (event) {
       event.preventDefault();
 
-      const submitButton = form.querySelector('button[type="submit"]');
-      const emailInput = form.querySelector('input[name="email"]');
-      const emailValue = emailInput instanceof HTMLInputElement ? emailInput.value.trim() : "";
+      var msgId = form.dataset.msgId;
+      var message = document.getElementById(msgId);
+      var submitButton = form.querySelector('button[type="submit"]');
+      var emailInput = form.querySelector('input[name="email"]');
+      var emailValue = emailInput ? emailInput.value.trim() : "";
 
-      if (!(emailInput instanceof HTMLInputElement) || !emailValue || !emailInput.checkValidity()) {
-        message.textContent = content.validationError;
-        message.dataset.state = "error";
+      if (!emailInput || !emailValue || !emailInput.checkValidity()) {
+        if (message) { message.textContent = form.dataset.validationError; message.dataset.state = "error"; }
         return;
       }
 
-      submitButton?.setAttribute("disabled", "true");
-      message.textContent = content.submitting;
-      message.dataset.state = "pending";
+      if (submitButton) submitButton.setAttribute("disabled", "true");
+      if (message) { message.textContent = form.dataset.submitting; message.dataset.state = "pending"; }
 
       try {
-        const payload = {
-          fields: [
-            { name: "email", value: emailValue }
-          ],
-          context: {
-            pageUri: window.location.href,
-            pageName: document.title,
-          },
-        };
+        var response = await fetch(
+          "https://api.hsforms.com/submissions/v3/integration/submit/147782273/72429b95-5573-4fe9-a844-22f7ade6f85c",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              fields: [{ name: "email", value: emailValue }],
+              context: { pageUri: window.location.href, pageName: document.title },
+            }),
+          }
+        );
 
-        const response = await fetch(HUBSPOT_ENDPOINT, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-          throw new Error(`HubSpot submission failed with status ${response.status}`);
-        }
+        if (!response.ok) throw new Error("status " + response.status);
 
         form.reset();
-        message.textContent = content.success;
-        message.dataset.state = "success";
-      } catch (error) {
-        message.textContent = content.error;
-        message.dataset.state = "error";
+        if (message) { message.textContent = form.dataset.success; message.dataset.state = "success"; }
+      } catch (err) {
+        console.error("HubSpot submission error:", err);
+        if (message) { message.textContent = form.dataset.error; message.dataset.state = "error"; }
       } finally {
-        submitButton?.removeAttribute("disabled");
+        if (submitButton) submitButton.removeAttribute("disabled");
       }
     });
-  }
+  });
 </script>
 
 <style>
