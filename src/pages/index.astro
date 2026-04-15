@@ -426,12 +426,33 @@ const content = getContentTranslations(locale).home;
         height: 1.85rem;
       }
 
-      .advantage-home:not(.is-dark-cards) .advantage-home-grid.is-test .advantage-home-icon {
+      .advantage-home-grid.is-test .advantage-home-icon {
+        background: #53b27f;
+        transition: background 220ms ease;
+      }
+
+      .advantage-home-grid.is-test .advantage-home-icon svg {
+        width: 1.85rem;
+        height: 1.85rem;
+        display: block;
+        stroke: #ffffff;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        transition: stroke 220ms ease;
+      }
+
+      .advantage-home-grid.is-test .advantage-home-card:hover .advantage-home-icon {
         background: #e6f7f0;
       }
 
-      .advantage-home:not(.is-dark-cards) .advantage-home-grid.is-test .advantage-home-icon img {
-        filter: invert(52%) sepia(24%) saturate(1180%) hue-rotate(97deg) brightness(92%) contrast(110%);
+      .advantage-home-grid.is-test .advantage-home-card:hover .advantage-home-icon svg {
+        stroke: #2e8a59;
+      }
+
+      .advantage-home-grid.is-test .advantage-home-icon img {
+        filter: brightness(0) invert(1);
       }
 
       .advantage-home-grid.is-test .advantage-home-card h3 {
@@ -731,8 +752,8 @@ const content = getContentTranslations(locale).home;
         background: #172235;
         border-top: 1px solid rgba(220, 228, 240, 0.12);
         border-bottom: 1px solid rgba(220, 228, 240, 0.12);
-        padding-top: 2.2rem;
-        padding-bottom: 2.8rem;
+        padding-top: 4rem;
+        padding-bottom: 4rem;
       }
 
       .home-proof-grid {
@@ -752,7 +773,7 @@ const content = getContentTranslations(locale).home;
         background: #22324a;
         border: 1px solid rgba(216, 227, 242, 0.1);
         border-radius: 1.1rem;
-        padding: 1.4rem 1.2rem;
+        padding: 1.8rem 1.6rem;
         min-height: 10.5rem;
         display: flex;
         flex-direction: column;
@@ -761,7 +782,7 @@ const content = getContentTranslations(locale).home;
 
       .home-proof-metric-value {
         color: #ffffff;
-        font-size: clamp(2rem, 3.2vw, 2.6rem);
+        font-size: clamp(2.4rem, 3.8vw, 3.2rem);
         line-height: 1;
         width: 100%;
       }
@@ -769,7 +790,7 @@ const content = getContentTranslations(locale).home;
       .home-proof-metric-label {
         margin-top: 0.9rem;
         color: #b7c7de;
-        font-size: 0.73rem;
+        font-size: 0.85rem;
         letter-spacing: 0.14em;
         text-transform: uppercase;
         line-height: 1.45;
@@ -811,8 +832,15 @@ const content = getContentTranslations(locale).home;
         padding: 1.4rem 1.5rem;
         display: grid;
         grid-template-columns: 3.75rem minmax(0, 1fr);
-        gap: 1rem;
-        align-items: start;
+        grid-template-rows: auto auto;
+        column-gap: 1rem;
+        transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+      }
+
+      .why-equity-home-point:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 20px 40px rgba(15, 26, 42, 0.1);
+        border-color: #cfdae7;
       }
 
       .why-equity-home-point-icon {
@@ -823,6 +851,14 @@ const content = getContentTranslations(locale).home;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        grid-column: 1;
+        grid-row: 1;
+        align-self: center;
+        transition: background 220ms ease;
+      }
+
+      .why-equity-home-point:hover .why-equity-home-point-icon {
+        background: #e6f7f0;
       }
 
       .why-equity-home-point-icon img {
@@ -833,14 +869,40 @@ const content = getContentTranslations(locale).home;
         filter: brightness(0) invert(1);
       }
 
+      .why-equity-home-point-icon svg {
+        width: 1.85rem;
+        height: 1.85rem;
+        display: block;
+        stroke: #ffffff;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        transition: stroke 220ms ease;
+      }
+
+      .why-equity-home-point:hover .why-equity-home-point-icon svg {
+        stroke: #2e8a59;
+      }
+
+      .why-equity-home-point-copy {
+        display: contents;
+      }
+
       .why-equity-home-point-copy h3 {
         margin: 0;
         color: #0f1a2a;
         font-size: 1.15rem;
+        grid-column: 2;
+        grid-row: 1;
+        align-self: center;
       }
 
       .why-equity-home-point-copy p {
-        margin-top: 0.55rem;
+        grid-column: 1 / 3;
+        grid-row: 2;
+        margin-top: 0.75rem;
+        margin-bottom: -0.3rem;
         color: #5f7087;
         font-size: 0.96rem;
         line-height: 1.46;
@@ -1427,32 +1489,33 @@ const content = getContentTranslations(locale).home;
         height: 5.2rem;
         margin: 0 auto;
         border-radius: 1.3rem;
-        background: #e6f7f0;
-        border: 1px solid #cfe9db;
+        background: #53b27f;
+        border: 1px solid #53b27f;
         display: flex;
         align-items: center;
         justify-content: center;
         box-shadow: 0 20px 40px rgba(15, 26, 42, 0.08), 0 4px 12px rgba(15, 26, 42, 0.04);
+        transition: background 220ms ease, border-color 220ms ease;
       }
 
       .timeline-hybrid-icon svg {
         width: 2rem;
         height: 2rem;
-        stroke: #3f9568;
+        stroke: #ffffff;
         fill: none;
         stroke-width: 1.8;
         stroke-linecap: round;
         stroke-linejoin: round;
-        transition: stroke 180ms ease;
+        transition: stroke 220ms ease;
       }
 
       .timeline-hybrid-card:hover .timeline-hybrid-icon {
-        background: #53b27f;
-        border-color: #53b27f;
+        background: #e6f7f0;
+        border-color: #cfe9db;
       }
 
       .timeline-hybrid-card:hover .timeline-hybrid-icon svg {
-        stroke: #ffffff;
+        stroke: #2e8a59;
       }
 
       .timeline-hybrid-label {
@@ -1914,6 +1977,10 @@ const content = getContentTranslations(locale).home;
           grid-template-columns: 1fr;
         }
 
+        .timeline-hybrid-grid {
+          gap: 0;
+        }
+
         .focus-layout {
           grid-template-columns: 1fr;
           gap: 1.35rem;
@@ -2116,13 +2183,99 @@ const content = getContentTranslations(locale).home;
           height: 32px;
         }
 
+        .why-equity-home-media {
+          min-height: 16rem;
+        }
+
+        .why-equity-home-point {
+          grid-template-columns: 3.75rem 1fr;
+          grid-template-rows: auto auto;
+          align-items: center;
+        }
+
+        .why-equity-home-point-icon {
+          grid-column: 1;
+          grid-row: 1;
+          width: 3.75rem;
+          height: 3.75rem;
+          border-radius: 1.1rem;
+        }
+
+        .why-equity-home-point-icon img {
+          width: 1.85rem;
+          height: 1.85rem;
+        }
+
+        .why-equity-home-point-icon svg {
+          width: 1.85rem;
+          height: 1.85rem;
+        }
+
+        .why-equity-home-point-copy {
+          display: contents;
+        }
+
+        .why-equity-home-point-copy h3 {
+          grid-column: 2;
+          grid-row: 1;
+          align-self: center;
+          font-size: 1rem;
+        }
+
+        .why-equity-home-point-copy p {
+          grid-column: 1 / 3;
+          grid-row: 2;
+          margin-top: 0.5rem;
+          margin-bottom: -0.3rem;
+        }
+
+        .timeline-hybrid-card {
+          display: grid;
+          grid-template-columns: 4.4rem 1fr;
+          grid-template-rows: auto auto auto;
+          column-gap: 1.2rem;
+          text-align: left;
+          background: transparent;
+          border: none;
+          border-bottom: 1px solid #e4eaf3;
+          border-radius: 0;
+          box-shadow: none;
+          padding: 1.5rem 0;
+        }
+
+        .timeline-hybrid-card:last-child {
+          border-bottom: none;
+        }
+
         .timeline-hybrid-icon {
           width: 4.4rem;
           height: 4.4rem;
+          grid-column: 1;
+          grid-row: 1 / 4;
+          margin: 0;
+          align-self: center;
         }
 
-        .timeline-hybrid-card p {
+        .timeline-hybrid-label {
+          grid-column: 2;
+          grid-row: 1;
+          margin: 0 !important;
+          text-align: left !important;
+        }
+
+        .timeline-hybrid-card h3 {
+          grid-column: 2;
+          grid-row: 2;
+          margin-top: 0.3rem;
+          text-align: left;
+        }
+
+        .timeline-hybrid-card p:not(.timeline-hybrid-label) {
+          grid-column: 2;
+          grid-row: 3;
           max-width: none;
+          margin: 0.4rem 0 0 !important;
+          text-align: left;
         }
 
         .home-suggested-card img {
@@ -2158,6 +2311,562 @@ const content = getContentTranslations(locale).home;
         }
 
       }
+
+      /* ── Timeline V2 ── */
+      .timeline-v2 {
+        background: #eef3f9;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        padding: 5rem 0 4.5rem;
+      }
+
+      .timeline-v2 .section-header {
+        max-width: none;
+        width: 100%;
+        margin-bottom: 2.5rem;
+      }
+
+      .timeline-v2 .eyebrow {
+        color: var(--accent);
+      }
+
+      .timeline-v2 h2 {
+        color: var(--text-primary);
+      }
+
+      .timeline-v2 .intro {
+        color: #5a667a;
+      }
+
+      .timeline-v2-card {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        border: 1px solid #d7deea;
+        border-radius: 1.2rem;
+        overflow: hidden;
+        background: #ffffff;
+        box-shadow: 0 8px 32px rgba(15, 26, 42, 0.06);
+      }
+
+      .timeline-v2-col {
+        padding: 2.2rem 1.6rem;
+        border-right: 1px solid #e4eaf3;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 0;
+        transition: background 200ms ease;
+      }
+
+      .timeline-v2-col:last-child {
+        border-right: none;
+      }
+
+      .timeline-v2-col:hover {
+        background: #f6f9fd;
+      }
+
+      .timeline-v2-col:hover .timeline-v2-step-icon {
+        background: #e6f7f0;
+        border-color: #2e8a59;
+      }
+
+      .timeline-v2-col:hover .timeline-v2-step-icon svg {
+        stroke: #2e8a59;
+      }
+
+      .timeline-v2-step-num {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #53b27f;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        margin-bottom: 0.9rem;
+      }
+
+      .timeline-v2-step-icon {
+        width: 5.2rem;
+        height: 5.2rem;
+        border-radius: 1.3rem;
+        background: #53b27f;
+        border: 1px solid transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: background 220ms ease, border-color 220ms ease;
+        margin-bottom: 1.1rem;
+        box-shadow: 0 20px 40px rgba(15, 26, 42, 0.08), 0 4px 12px rgba(15, 26, 42, 0.04);
+      }
+
+      .timeline-v2-step-icon svg {
+        width: 2rem;
+        height: 2rem;
+        stroke: #ffffff;
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        transition: stroke 220ms ease;
+      }
+
+      .timeline-v2-col h3 {
+        margin: 0.7rem 0 0;
+        color: #172235;
+        font-size: 1.08rem;
+        font-weight: 600;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        line-height: 1.25;
+      }
+
+      .timeline-v2-col p {
+        margin: 0.65rem auto 0;
+        max-width: 19ch;
+        color: #5a667a;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+      }
+
+      @media (max-width: 980px) {
+        .timeline-v2-card {
+          grid-template-columns: 1fr;
+          border-radius: 0;
+          border-left: none;
+          border-right: none;
+          box-shadow: none;
+          background: transparent;
+        }
+
+        .timeline-v2-col {
+          display: grid;
+          grid-template-columns: 4.4rem 1fr;
+          grid-template-rows: auto auto auto;
+          column-gap: 1.2rem;
+          align-items: start;
+          text-align: left;
+          align-items: center;
+          background: transparent;
+          border: none;
+          border-right: none;
+          border-bottom: 1px solid #e4eaf3;
+          border-radius: 0;
+          box-shadow: none;
+          padding: 1.5rem 0;
+        }
+
+        .timeline-v2-col:last-child {
+          border-bottom: none;
+        }
+
+        .timeline-v2-step-icon {
+          width: 4.4rem;
+          height: 4.4rem;
+          grid-column: 1;
+          grid-row: 1 / 4;
+          margin: 0;
+          align-self: center;
+          box-shadow: none;
+        }
+
+        .timeline-v2-step-num {
+          grid-column: 2;
+          grid-row: 1;
+          margin: 0;
+          text-align: left;
+        }
+
+        .timeline-v2-col h3 {
+          grid-column: 2;
+          grid-row: 2;
+          margin-top: 0.3rem;
+          text-align: left;
+        }
+
+        .timeline-v2-col p {
+          grid-column: 2;
+          grid-row: 3;
+          max-width: none;
+          margin: 0.4rem 0 0;
+          text-align: left;
+        }
+      }
+
+      .timeline-v2-cta {
+        margin-top: 1rem;
+        padding: 0 1px;
+      }
+
+      .timeline-v2-cta .button {
+        margin-top: 0;
+        display: flex;
+        width: calc(100% / 5 - 0.4px);
+        background: #53b27f;
+        color: #ffffff;
+        transition: background-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+      }
+
+      .timeline-v2-cta .button:hover {
+        background: #3f9568;
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(12, 24, 18, 0.22);
+      }
+
+      @media (max-width: 980px) {
+        .timeline-v2-cta {
+          display: flex;
+          justify-content: flex-start;
+        }
+
+        .timeline-v2-cta .button {
+          width: auto;
+          justify-self: unset;
+        }
+      }
+
+      /* ── What We Offer ── */
+      .what-we-offer {
+        background: #0f1a2a;
+        border-top: 1px solid rgba(214, 225, 244, 0.15);
+        border-bottom: 1px solid rgba(214, 225, 244, 0.15);
+        padding: 5rem 0;
+      }
+
+      .what-we-offer-header {
+        margin-bottom: 3rem;
+      }
+
+      .what-we-offer-header .eyebrow {
+        color: #9fb4d2;
+      }
+
+      .what-we-offer-header .focus-title {
+        color: #ffffff;
+        margin-bottom: 0.6rem;
+      }
+
+      .what-we-offer-header .focus-intro {
+        color: #d6e0ef;
+        max-width: none;
+      }
+
+      .what-we-offer-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.5rem;
+      }
+
+      .wwo-card {
+        border-radius: 1.2rem;
+        padding: 2.4rem 2.4rem 2.2rem;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid rgba(214, 225, 244, 0.14);
+        transition: border-color 220ms ease, transform 180ms ease, box-shadow 180ms ease;
+      }
+
+      .wwo-card:hover {
+        border-color: rgba(83, 178, 127, 0.45);
+        transform: translateY(-3px);
+        box-shadow: 0 24px 48px rgba(8, 14, 23, 0.35);
+      }
+
+      .wwo-card.is-fund {
+        background: rgba(246, 251, 255, 0.05);
+      }
+
+      .wwo-card.is-direct {
+        background: rgba(83, 178, 127, 0.07);
+        border-color: rgba(83, 178, 127, 0.25);
+      }
+
+      .wwo-card.is-direct:hover {
+        border-color: rgba(83, 178, 127, 0.6);
+      }
+
+      .wwo-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        padding: 0.3rem 0.75rem;
+        border-radius: 999px;
+        margin-bottom: 1.6rem;
+        width: fit-content;
+      }
+
+      .wwo-card.is-fund .wwo-badge {
+        background: rgba(214, 225, 244, 0.1);
+        color: #9fb4d2;
+      }
+
+      .wwo-card.is-direct .wwo-badge {
+        background: rgba(83, 178, 127, 0.18);
+        color: #53b27f;
+      }
+
+      .wwo-title {
+        color: #f4f8ff;
+        font-size: 1.4rem;
+        font-weight: 700;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        margin: 0 0 0.5rem;
+        line-height: 1.25;
+      }
+
+      .wwo-desc {
+        color: #9fb4d2;
+        font-size: 0.93rem;
+        line-height: 1.6;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        margin: 0 0 2rem;
+      }
+
+      .wwo-returns {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+      }
+
+      .wwo-return-item {
+        flex: 1;
+        min-width: 8rem;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(214, 225, 244, 0.12);
+        border-radius: 0.85rem;
+        padding: 1.1rem 1.2rem;
+      }
+
+      .wwo-card.is-direct .wwo-return-item {
+        background: rgba(83, 178, 127, 0.08);
+        border-color: rgba(83, 178, 127, 0.2);
+      }
+
+      .wwo-return-value {
+        font-size: clamp(1.7rem, 2.8vw, 2.2rem);
+        font-weight: 700;
+        color: #ffffff;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        line-height: 1;
+        margin-bottom: 0.3rem;
+      }
+
+      .wwo-card.is-direct .wwo-return-value {
+        color: #53b27f;
+      }
+
+      .wwo-return-label {
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #9fb4d2;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+      }
+
+      .wwo-features {
+        list-style: none;
+        margin: 0 0 2.2rem;
+        padding: 0;
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      .wwo-features li {
+        display: grid;
+        grid-template-columns: 1.1rem 1fr;
+        gap: 0.65rem;
+        align-items: start;
+        color: #d6e0ef;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+      }
+
+      .wwo-check {
+        width: 1.1rem;
+        height: 1.1rem;
+        margin-top: 0.15rem;
+        color: #53b27f;
+        flex-shrink: 0;
+      }
+
+      .wwo-check svg {
+        width: 100%;
+        height: 100%;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .wwo-cta {
+        margin-top: auto;
+      }
+
+      .wwo-cta a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.7rem 1.5rem;
+        border-radius: 0.45rem;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        text-decoration: none;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        transition: background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+      }
+
+      .wwo-card.is-fund .wwo-cta a {
+        background: rgba(214, 225, 244, 0.12);
+        color: #f4f8ff;
+      }
+
+      .wwo-card.is-fund .wwo-cta a:hover {
+        background: rgba(214, 225, 244, 0.2);
+        transform: translateY(-1px);
+      }
+
+      .wwo-card.is-direct .wwo-cta a {
+        background: #53b27f;
+        color: #ffffff;
+      }
+
+      .wwo-card.is-direct .wwo-cta a:hover {
+        background: #3f9568;
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(12, 24, 18, 0.3);
+      }
+
+      @media (max-width: 760px) {
+        .what-we-offer-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ── Andorra Advantage V2 ── */
+      .andorra-adv-v2 {
+        background: #f2f5fa;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        padding: 5rem 0 4.5rem;
+      }
+
+      .andorra-adv-v2-header {
+        margin-bottom: 3rem;
+      }
+
+      .andorra-adv-v2-header .eyebrow {
+        color: var(--accent);
+      }
+
+      .andorra-adv-v2-header .focus-title {
+        color: #0f1a2a;
+        margin-bottom: 0.6rem;
+      }
+
+      .andorra-adv-v2-header .focus-intro {
+        color: #5a667a;
+        max-width: none;
+      }
+
+      .andorra-adv-v2-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0;
+        border: 1px solid #d7deea;
+        border-radius: 1.2rem;
+        overflow: hidden;
+        background: #ffffff;
+      }
+
+      .andorra-adv-v2-item {
+        padding: 2.4rem 2.2rem;
+        border-right: 1px solid #e4eaf3;
+        border-bottom: 1px solid #e4eaf3;
+        transition: background 200ms ease;
+      }
+
+      .andorra-adv-v2-item:nth-child(even) {
+        border-right: none;
+      }
+
+      .andorra-adv-v2-item:nth-child(3),
+      .andorra-adv-v2-item:nth-child(4) {
+        border-bottom: none;
+      }
+
+      .andorra-adv-v2-item:hover {
+        background: #f6f9fd;
+      }
+
+      .andorra-adv-v2-num {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #53b27f;
+        margin-bottom: 0.85rem;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+      }
+
+      .andorra-adv-v2-flag {
+        width: 1.2rem;
+        height: 1.2rem;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+        display: block;
+      }
+
+      .andorra-adv-v2-item h3 {
+        color: #0f1a2a;
+        font-size: 1.1rem;
+        margin: 0 0 0.6rem;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        font-weight: 600;
+      }
+
+      .andorra-adv-v2-item p {
+        color: #5a667a;
+        font-size: 0.93rem;
+        line-height: 1.6;
+        margin: 0;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+      }
+
+      @media (max-width: 640px) {
+        .andorra-adv-v2-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .andorra-adv-v2-item {
+          border-right: none;
+          border-bottom: 1px solid #e4eaf3;
+        }
+
+        .andorra-adv-v2-item:last-child {
+          border-bottom: none;
+        }
+
+        .andorra-adv-v2-item:nth-child(3) {
+          border-bottom: 1px solid #e4eaf3;
+        }
+      }
+
     </style>
   </head>
   <body>
@@ -2207,7 +2916,9 @@ const content = getContentTranslations(locale).home;
         <div class="advantage-home-grid is-test">
           <article class="advantage-home-card">
             <div class="advantage-home-card-head">
-              <span class="advantage-home-icon" aria-hidden="true"><img src="/images/Icons/project%20development.png" alt="" /></span>
+              <span class="advantage-home-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              </span>
               <h3>{content.services.cards[0].title}</h3>
             </div>
             <ul class="advantage-home-list">
@@ -2233,7 +2944,9 @@ const content = getContentTranslations(locale).home;
           </article>
           <article class="advantage-home-card">
             <div class="advantage-home-card-head">
-              <span class="advantage-home-icon" aria-hidden="true"><img src="/images/Icons/local%20network.png" alt="" /></span>
+              <span class="advantage-home-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+              </span>
               <h3>{content.services.cards[1].title}</h3>
             </div>
             <ul class="advantage-home-list">
@@ -2259,7 +2972,9 @@ const content = getContentTranslations(locale).home;
           </article>
           <article class="advantage-home-card">
             <div class="advantage-home-card-head">
-              <span class="advantage-home-icon" aria-hidden="true"><img src="/images/Icons/regulatory%20expertise.png" alt="" /></span>
+              <span class="advantage-home-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="21"/><path d="M6 21h12"/><path d="M3 9l3-6 3 6c0 1.66-1.34 3-3 3s-3-1.34-3-3z"/><path d="M15 9l3-6 3 6c0 1.66-1.34 3-3 3s-3-1.34-3-3z"/></svg>
+              </span>
               <h3>{content.services.cards[2].title}</h3>
             </div>
             <ul class="advantage-home-list">
@@ -2325,21 +3040,27 @@ const content = getContentTranslations(locale).home;
           </div>
           <div class="why-equity-home-points">
             <article class="why-equity-home-point">
-              <span class="why-equity-home-point-icon" aria-hidden="true"><img src="/images/Icons/project%20development.png" alt="" /></span>
+              <span class="why-equity-home-point-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              </span>
               <div class="why-equity-home-point-copy">
                 <h3>{content.whyEquity.points[0].title}</h3>
                 <p>{content.whyEquity.points[0].body}</p>
               </div>
             </article>
             <article class="why-equity-home-point">
-              <span class="why-equity-home-point-icon" aria-hidden="true"><img src="/images/Icons/local%20network.png" alt="" /></span>
+              <span class="why-equity-home-point-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+              </span>
               <div class="why-equity-home-point-copy">
                 <h3>{content.whyEquity.points[1].title}</h3>
                 <p>{content.whyEquity.points[1].body}</p>
               </div>
             </article>
             <article class="why-equity-home-point">
-              <span class="why-equity-home-point-icon" aria-hidden="true"><img src="/images/Icons/regulatory%20expertise.png" alt="" /></span>
+              <span class="why-equity-home-point-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+              </span>
               <div class="why-equity-home-point-copy">
                 <h3>{content.whyEquity.points[2].title}</h3>
                 <p>{content.whyEquity.points[2].body}</p>
@@ -2359,39 +3080,207 @@ const content = getContentTranslations(locale).home;
       </div>
     </section>
 
-    <section class="focus-section-f is-concept-f">
+    <section class="andorra-adv-v2">
       <div class="container">
-        <div class="focus-f-header">
+        <div class="andorra-adv-v2-header">
           <p class="eyebrow">The Andorra Advantage</p>
           <h2 class="focus-title">Why Andorra</h2>
-          <p class="focus-intro">We open the doors to Andorra’s exclusive investment landscape by providing a structural bridge that allows international firms to deploy capital into Andorra without compromising on institutional standards.</p>
+          <p class="focus-intro">We open the doors to Andorra's exclusive investment landscape by providing a structural bridge that allows international firms to deploy capital into Andorra without compromising on institutional standards.</p>
         </div>
-        <div class="focus-f-body">
-          <div class="focus-c-panels">
-            <article class="focus-c-kpi">
-              <p class="focus-c-kpi-value">01 | FISCAL ADVANTAGE</p>
-              <h3>Institutional-Grade Tax Efficiency</h3>
-              <p>Andorra offers a capped 10% corporate and personal tax regime, paired with 0% wealth and inheritance taxes. This creates a high-performance environment for capital reinvestment and long-term wealth preservation.</p>
-            </article>
-            <article class="focus-c-kpi">
-              <p class="focus-c-kpi-value">02 | STABILITY</p>
-              <h3>Sovereign Safe-Haven Status</h3>
-              <p>With a history of 700 years of political neutrality and a "Stable" outlook from major credit agencies, the Principality provides a secure jurisdiction for risk mitigation against global geopolitical and economic volatility.</p>
-            </article>
-            <article class="focus-c-kpi">
-              <p class="focus-c-kpi-value">03 | SCARCITY</p>
-              <h3>Natural Real Estate Appreciation</h3>
-              <p>Geography dictates the market; with only 4% of land being buildable, the natural supply-side constraint ensures long-term asset value growth. This scarcity, combined with rising global demand, creates a high-conviction investment play.</p>
-            </article>
-            <article class="focus-c-kpi">
-              <p class="focus-c-kpi-value">04 | CONNECTIVITY</p>
-              <h3>Strategic European Integration</h3>
-              <p>Andorra is advancing its Association Agreement with the EU, integrating the Principality into the Single Market. This evolution provides investors with a unique "best-of-both-worlds" scenario: full sovereign fiscal autonomy combined with the operational advantages of having access to major European markets.</p>
-            </article>
+        <div class="andorra-adv-v2-grid">
+          <div class="andorra-adv-v2-item">
+            <p class="andorra-adv-v2-num"><img class="andorra-adv-v2-flag" src="/images/Icons/flag-round-250.png" alt="Andorra" />01 &nbsp;Fiscal Advantage</p>
+            <h3>Institutional-Grade Tax Efficiency</h3>
+            <p>Andorra offers a capped 10% corporate and personal tax regime, paired with 0% wealth and inheritance taxes — creating a high-performance environment for capital reinvestment and long-term wealth preservation.</p>
           </div>
-          <div class="focus-c-media is-canillo" aria-hidden="true"></div>
+          <div class="andorra-adv-v2-item">
+            <p class="andorra-adv-v2-num"><img class="andorra-adv-v2-flag" src="/images/Icons/flag-round-250.png" alt="Andorra" />02 &nbsp;Stability</p>
+            <h3>Sovereign Safe-Haven Status</h3>
+            <p>With 700 years of political neutrality and a "Stable" outlook from major credit agencies, the Principality provides a secure jurisdiction for risk mitigation against global geopolitical and economic volatility.</p>
+          </div>
+          <div class="andorra-adv-v2-item">
+            <p class="andorra-adv-v2-num"><img class="andorra-adv-v2-flag" src="/images/Icons/flag-round-250.png" alt="Andorra" />03 &nbsp;Scarcity</p>
+            <h3>Natural Real Estate Appreciation</h3>
+            <p>With only 4% of land being buildable, the natural supply-side constraint ensures long-term asset value growth. This scarcity, combined with rising global demand, creates a high-conviction investment play.</p>
+          </div>
+          <div class="andorra-adv-v2-item">
+            <p class="andorra-adv-v2-num"><img class="andorra-adv-v2-flag" src="/images/Icons/flag-round-250.png" alt="Andorra" />04 &nbsp;Connectivity</p>
+            <h3>Strategic European Integration</h3>
+            <p>Andorra is advancing its Association Agreement with the EU, giving investors a unique best-of-both-worlds scenario: full sovereign fiscal autonomy with operational access to major European markets.</p>
+          </div>
         </div>
         <a class="cta-link" href="/blog">Explore More Advantages</a>
+      </div>
+    </section>
+
+    <section class="what-we-offer">
+      <div class="container">
+        <div class="what-we-offer-header">
+          <p class="eyebrow">What We Offer</p>
+          <h2 class="focus-title">Two Ways to Invest in Andorra</h2>
+          <p class="focus-intro">Whether you prefer a fully managed fund or hands-on project financing, we provide a structured entry into Andorra's high-barrier real estate market.</p>
+        </div>
+        <div class="what-we-offer-grid">
+
+          <!-- Option 1: Fund -->
+          <div class="wwo-card is-fund">
+            <span class="wwo-badge">Passive Investment</span>
+            <h3 class="wwo-title">Andorra Real Estate Fund</h3>
+            <p class="wwo-desc">A fully managed fund giving you exposure to Andorra's real estate market without requiring any active involvement. We handle sourcing, execution, and management end-to-end.</p>
+            <div class="wwo-returns">
+              <div class="wwo-return-item">
+                <p class="wwo-return-value">8%</p>
+                <p class="wwo-return-label">Fixed annual return</p>
+              </div>
+              <div class="wwo-return-item">
+                <p class="wwo-return-value">0</p>
+                <p class="wwo-return-label">Active participation required</p>
+              </div>
+            </div>
+            <ul class="wwo-features">
+              <li>
+                <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span>Fixed 8% annual return on capital invested</span>
+              </li>
+              <li>
+                <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span>Fully passive — no decisions or involvement required</span>
+              </li>
+              <li>
+                <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span>Diversified exposure across the Andorran real estate portfolio</span>
+              </li>
+              <li>
+                <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span>Professional asset management with full transparency</span>
+              </li>
+            </ul>
+            <div class="wwo-cta">
+              <a href="#">Learn More</a>
+            </div>
+          </div>
+
+          <!-- Option 2: Direct Project -->
+          <div class="wwo-card is-direct">
+            <span class="wwo-badge">Active Investment</span>
+            <h3 class="wwo-title">Direct Project Financing</h3>
+            <p class="wwo-desc">Finance a single Andorra development project of your choosing. A higher-conviction approach with greater return potential for investors who want direct exposure to a specific opportunity.</p>
+            <div class="wwo-returns">
+              <div class="wwo-return-item">
+                <p class="wwo-return-value">12%</p>
+                <p class="wwo-return-label">Fixed annual return</p>
+              </div>
+              <div class="wwo-return-item">
+                <p class="wwo-return-value">20%</p>
+                <p class="wwo-return-label">Project profit share</p>
+              </div>
+            </div>
+            <ul class="wwo-features">
+              <li>
+                <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span>Fixed 12% annual return on capital deployed into the project</span>
+              </li>
+              <li>
+                <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span>20% share of total project profit on completion</span>
+              </li>
+              <li>
+                <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span>Choose the specific project you want to finance</span>
+              </li>
+              <li>
+                <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span>Investment amount tied to the project financing requirement</span>
+              </li>
+            </ul>
+            <div class="wwo-cta">
+              <a href="#">Explore Projects</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="timeline-v2">
+      <div class="container">
+        <div class="section-header">
+          <p class="eyebrow">Timeline</p>
+          <h2>The Investment Roadmap</h2>
+          <p class="intro">A streamlined onboarding process designed to move you from initial inquiry to active capital deployment.</p>
+        </div>
+        <div class="timeline-v2-card">
+          <div class="timeline-v2-col">
+            <span class="timeline-v2-step-num">Step 01</span>
+            <div class="timeline-v2-step-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 6.5h9a2.5 2.5 0 0 1 2.5 2.5v4A2.5 2.5 0 0 1 13 15.5H9l-3.5 2v-2H4A2.5 2.5 0 0 1 1.5 13V9A2.5 2.5 0 0 1 4 6.5Z"/><path d="M15 9h5a2.5 2.5 0 0 1 2.5 2.5v3A2.5 2.5 0 0 1 20 17h-1.5v2L15 17h-1"/></svg>
+            </div>
+            <h3>Contact our Team</h3>
+            <p>We start with a short introductory conversation to understand your profile, objectives, and Andorra interest.</p>
+          </div>
+          <div class="timeline-v2-col">
+            <span class="timeline-v2-step-num">Step 02</span>
+            <div class="timeline-v2-step-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="13" height="13" rx="2.5"/><path d="m16 10 5-3v10l-5-3"/><circle cx="9.5" cy="10.5" r="2.25"/><path d="M6.5 15.5a3.25 3.25 0 0 1 6 0"/></svg>
+            </div>
+            <h3>Personal Consultation Call</h3>
+            <p>A deeper consultation helps us map timeline, return expectations, and the right strategic route forward.</p>
+          </div>
+          <div class="timeline-v2-col">
+            <span class="timeline-v2-step-num">Step 03</span>
+            <div class="timeline-v2-step-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M4 12h16"/></svg>
+            </div>
+            <h3>Select Investment Opportunity</h3>
+            <p>We present relevant opportunities that align with mandate, structure, and current project availability.</p>
+          </div>
+          <div class="timeline-v2-col">
+            <span class="timeline-v2-step-num">Step 04</span>
+            <div class="timeline-v2-step-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+            </div>
+            <h3>KYC &amp; Compliance</h3>
+            <p>All onboarding, documentation, and compliance checks are completed before any capital commitment is made.</p>
+          </div>
+          <div class="timeline-v2-col">
+            <span class="timeline-v2-step-num">Step 05</span>
+            <div class="timeline-v2-step-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 16.5 10 10.5l3.5 3.5L20 7.5"/><path d="M14 7.5h6v6"/><path d="M5 19.5h14"/></svg>
+            </div>
+            <h3>Capital Deployment</h3>
+            <p>Once cleared, capital is deployed into the selected opportunity and project execution begins.</p>
+          </div>
+        </div>
+        <div class="timeline-v2-cta">
+          <a class="button" href="#">Contact our Team</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section gateway" id="contact">
+      <div class="container">
+        <div class="section-header">
+          <p class="eyebrow">Contact our Team</p>
+          <h2>Start your Andorra investment journey</h2>
+          <p class="intro">
+            Schedule a confidential consultation with our team to explore aligned opportunities in the Principality.
+          </p>
+        </div>
+        <div class="leaders">
+          <div class="leaders-image">
+            <img
+              src="/01_stone%20copy%202.jpg"
+              alt="Equity Partners leadership"
+            />
+          </div>
+          <div class="leaders-copy">
+            <h3 class="leaders-investor-title">Request additional investor information</h3>
+            <p class="leaders-investor-copy">
+              Let our team reach out to you to analyze your investment profile and investment objectives.
+            </p>
+            <a class="button" href="#">Contact our Team</a>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -2432,90 +3321,6 @@ const content = getContentTranslations(locale).home;
         <a class="cta-link" href="#">View All Projects</a>
       </div>
     </section>
-
-    <section class="section gateway" id="contact">
-      <div class="container">
-        <div class="section-header">
-          <p class="eyebrow">Contact our Team</p>
-          <h2>Start your Andorra investment journey</h2>
-          <p class="intro">
-            Schedule a confidential consultation with our team to explore aligned opportunities in the Principality.
-          </p>
-        </div>
-        <div class="leaders">
-          <div class="leaders-image">
-            <img
-              src="/01_stone%20copy%202.jpg"
-              alt="Equity Partners leadership"
-            />
-          </div>
-          <div class="leaders-copy">
-            <h3 class="leaders-investor-title">Request additional investor information</h3>
-            <p class="leaders-investor-copy">
-              Let our team reach out to you to analyze your investment profile and investment objectives.
-            </p>
-            <a class="button" href="#">Contact our Team</a>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section timeline-hybrid">
-      <div class="container">
-        <div class="section-header">
-          <p class="eyebrow">Timeline</p>
-          <h2>The Investment Roadmap</h2>
-          <p class="intro">
-            A streamlined onboarding process designed to move you from initial inquiry to active capital deployment
-          </p>
-        </div>
-        <div class="timeline-hybrid-grid">
-          <article class="timeline-hybrid-card">
-            <div class="timeline-hybrid-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M4 6.5h9a2.5 2.5 0 0 1 2.5 2.5v4A2.5 2.5 0 0 1 13 15.5H9l-3.5 2v-2H4A2.5 2.5 0 0 1 1.5 13V9A2.5 2.5 0 0 1 4 6.5Z"></path><path d="M15 9h5a2.5 2.5 0 0 1 2.5 2.5v3A2.5 2.5 0 0 1 20 17h-1.5v2L15 17h-1"></path></svg>
-            </div>
-            <p class="timeline-hybrid-label">Step 01</p>
-            <h3>Contact our Team</h3>
-            <p>We start with a short introductory conversation to understand your profile, objectives, and Andorra interest.</p>
-          </article>
-          <article class="timeline-hybrid-card">
-            <div class="timeline-hybrid-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="13" height="13" rx="2.5"></rect><path d="m16 10 5-3v10l-5-3"></path><circle cx="9.5" cy="10.5" r="2.25"></circle><path d="M6.5 15.5a3.25 3.25 0 0 1 6 0"></path></svg>
-            </div>
-            <p class="timeline-hybrid-label">Step 02</p>
-            <h3>Personal Consultation Call</h3>
-            <p>A deeper consultation helps us map timeline, return expectations, and the right strategic route forward.</p>
-          </article>
-          <article class="timeline-hybrid-card">
-            <div class="timeline-hybrid-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M4 12h16"></path></svg>
-            </div>
-            <p class="timeline-hybrid-label">Step 03</p>
-            <h3>Select Investment Opportunity</h3>
-            <p>We present relevant opportunities that align with mandate, structure, and current project availability.</p>
-          </article>
-          <article class="timeline-hybrid-card">
-            <div class="timeline-hybrid-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z"></path><path d="m9 12 2 2 4-4"></path></svg>
-            </div>
-            <p class="timeline-hybrid-label">Step 04</p>
-            <h3>KYC &amp; Compliance</h3>
-            <p>All onboarding, documentation, and compliance checks are completed before any capital commitment is made.</p>
-          </article>
-          <article class="timeline-hybrid-card">
-            <div class="timeline-hybrid-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M4 16.5 10 10.5l3.5 3.5L20 7.5"></path><path d="M14 7.5h6v6"></path><path d="M5 19.5h14"></path></svg>
-            </div>
-            <p class="timeline-hybrid-label">Step 05</p>
-            <h3>Capital Deployment</h3>
-            <p>Once cleared, capital is deployed into the selected opportunity and execution begins under the agreed structure.</p>
-          </article>
-        </div>
-        <div class="timeline-hybrid-cta">
-          <a class="button" href="#">Contact our Team</a>
-        </div>
-      </div>
-</section>
 
     {homepageSuggestedPosts.length > 0 && (
       <section class="section home-suggested-reads">

@@ -221,19 +221,19 @@ export const contentTranslations: Record<
         cta: "About Equity Partners",
         points: [
           {
-            title: "Execution with real accountability",
+            title: "We move faster than the market",
             body:
-              "We stay close to each mandate from initial analysis through to execution and delivery, helping investors move from opportunity review to real deployment with greater control and clarity.",
+              "Our sourcing happens before assets reach public listings. By the time most investors are aware of an opportunity, we have already evaluated it.",
           },
           {
-            title: "Our network is your advantage",
+            title: "Andorra can be complex, we remove that complexity",
             body:
-              "Direct relationships with owners, advisors, and local operators improve sourcing quality and help investors distinguish visible listings from genuinely strategic opportunities.",
+              "Between foreign investment limits, tax structuring, and planning approvals, the margin for error is high. We de-risk the process end to end.",
           },
           {
-            title: "Structure that protects investor confidence",
+            title: "We only provide opportunities we can deliver",
             body:
-              "We translate Andorra's regulatory environment into a practical path for international capital, approaching each mandate with compliance rigor, documentation discipline, and institutional alignment.",
+              "We don't chase volume. Every investor relationship is selective, allowing us to commit fully to each opportunity we represent.",
           },
         ],
       },
@@ -403,19 +403,19 @@ export const contentTranslations: Record<
         cta: "About Equity Partners",
         points: [
           {
-            title: "Execution with real accountability",
+            title: "We move faster than the market",
             body:
-              "We stay close to each mandate from initial analysis through to execution and delivery, helping investors move from opportunity review to real deployment with greater control and clarity.",
+              "Our sourcing happens before assets reach public listings. By the time most investors are aware of an opportunity, we have already evaluated it.",
           },
           {
-            title: "Our network is your advantage",
+            title: "Andorra can be complex, we remove that complexity",
             body:
-              "Direct relationships with owners, advisors, and local operators improve sourcing quality and help investors distinguish visible listings from genuinely strategic opportunities.",
+              "Between foreign investment limits, tax structuring, and planning approvals, the margin for error is high. We de-risk the process end to end.",
           },
           {
-            title: "Structure that protects investor confidence",
+            title: "We only provide opportunities we can deliver",
             body:
-              "We translate Andorra's regulatory environment into a practical path for international capital, approaching each mandate with compliance rigor, documentation discipline, and institutional alignment.",
+              "We don't chase volume. Every investor relationship is selective, allowing us to commit fully to each opportunity we represent.",
           },
         ],
       },
@@ -640,19 +640,19 @@ export const contentTranslations: Record<
         cta: "Sobre Equity Partners",
         points: [
           {
-            title: "Ejecución con responsabilidad real",
+            title: "Usted se mueve más rápido que el mercado",
             body:
-              "Acompañamos cada mandato desde el análisis inicial hasta la ejecución y entrega, ayudando a los inversores a pasar de revisar una oportunidad a desplegar capital real con mayor control y claridad.",
+              "Nuestro sourcing ocurre antes de que los activos lleguen a los listados públicos. Para cuando la mayoría de inversores conoce una oportunidad, nosotros ya la hemos evaluado.",
           },
           {
-            title: "Nuestra red es su ventaja",
+            title: "Andorra es compleja — nosotros eliminamos esa complejidad",
             body:
-              "Las relaciones directas con propietarios, asesores y operadores locales mejoran la calidad del sourcing y ayudan a distinguir entre ofertas visibles y oportunidades realmente estratégicas.",
+              "Entre los límites de inversión extranjera, la estructuración fiscal y los permisos urbanísticos, el margen de error es alto. Gestionamos el proceso de principio a fin para eliminarlo.",
           },
           {
-            title: "Estructura que protege la confianza del inversor",
+            title: "Solo aceptamos mandatos que podemos ejecutar",
             body:
-              "Traducimos el entorno regulatorio de Andorra en un camino práctico para el capital internacional, abordando cada mandato con rigor normativo, disciplina documental y alineación institucional.",
+              "No perseguimos volumen. Cada relación con inversores es selectiva, lo que nos permite comprometernos plenamente con cada oportunidad que representamos.",
           },
         ],
       },
@@ -741,19 +741,19 @@ export const contentTranslations: Record<
         cta: "Sobre Equity Partners",
         points: [
           {
-            title: "Ejecución con responsabilidad real",
+            title: "Usted se mueve más rápido que el mercado",
             body:
-              "Acompañamos cada mandato desde el análisis inicial hasta la ejecución y entrega, ayudando a los inversores a pasar de revisar una oportunidad a desplegar capital real con mayor control y claridad.",
+              "Nuestro sourcing ocurre antes de que los activos lleguen a los listados públicos. Para cuando la mayoría de inversores conoce una oportunidad, nosotros ya la hemos evaluado.",
           },
           {
-            title: "Nuestra red es su ventaja",
+            title: "Andorra es compleja — nosotros eliminamos esa complejidad",
             body:
-              "Las relaciones directas con propietarios, asesores y operadores locales mejoran la calidad del sourcing y ayudan a distinguir entre ofertas visibles y oportunidades realmente estratégicas.",
+              "Entre los límites de inversión extranjera, la estructuración fiscal y los permisos urbanísticos, el margen de error es alto. Gestionamos el proceso de principio a fin para eliminarlo.",
           },
           {
-            title: "Estructura que protege la confianza del inversor",
+            title: "Solo aceptamos mandatos que podemos ejecutar",
             body:
-              "Traducimos el entorno regulatorio de Andorra en un camino práctico para el capital internacional, abordando cada mandato con rigor normativo, disciplina documental y alineación institucional.",
+              "No perseguimos volumen. Cada relación con inversores es selectiva, lo que nos permite comprometernos plenamente con cada oportunidad que representamos.",
           },
         ],
       },
@@ -959,19 +959,19 @@ export const contentTranslations: Record<
         cta: "Sobre Equity Partners",
         points: [
           {
-            title: "Execució amb responsabilitat real",
+            title: "Vostè es mou més ràpid que el mercat",
             body:
-              "Acompanyem cada mandat des de l'anàlisi inicial fins a l'execució i el lliurament, ajudant els inversors a passar de revisar una oportunitat a desplegar capital real amb més control i claredat.",
+              "El nostre sourcing succeeix abans que els actius arribin als llistats públics. Quan la majoria d'inversors coneix una oportunitat, nosaltres ja l'hem avaluada.",
           },
           {
-            title: "La nostra xarxa és el seu avantatge",
+            title: "Andorra és complexa — nosaltres eliminem aquesta complexitat",
             body:
-              "Les relacions directes amb propietaris, assessors i operadors locals milloren la qualitat del sourcing i ajuden a distingir entre ofertes visibles i oportunitats realment estratègiques.",
+              "Entre els límits d'inversió estrangera, l'estructuració fiscal i els permisos urbanístics, el marge d'error és alt. Gestionem el procés de principi a fi per eliminar-lo.",
           },
           {
-            title: "Estructura que protegeix la confiança de l'inversor",
+            title: "Només acceptem mandats que podem executar",
             body:
-              "Traduïm l'entorn regulador d'Andorra en un camí pràctic per al capital internacional, abordant cada mandat amb rigor normatiu, disciplina documental i alineació institucional.",
+              "No perseguim volum. Cada relació amb inversors és selectiva, la qual cosa ens permet comprometre'ns plenament amb cada oportunitat que representem.",
           },
         ],
       },
@@ -1060,19 +1060,19 @@ export const contentTranslations: Record<
         cta: "Sobre Equity Partners",
         points: [
           {
-            title: "Execució amb responsabilitat real",
+            title: "Vostè es mou més ràpid que el mercat",
             body:
-              "Acompanyem cada mandat des de l'anàlisi inicial fins a l'execució i el lliurament, ajudant els inversors a passar de revisar una oportunitat a desplegar capital real amb més control i claredat.",
+              "El nostre sourcing succeeix abans que els actius arribin als llistats públics. Quan la majoria d'inversors coneix una oportunitat, nosaltres ja l'hem avaluada.",
           },
           {
-            title: "La nostra xarxa és el seu avantatge",
+            title: "Andorra és complexa — nosaltres eliminem aquesta complexitat",
             body:
-              "Les relacions directes amb propietaris, assessors i operadors locals milloren la qualitat del sourcing i ajuden a distingir entre ofertes visibles i oportunitats realment estratègiques.",
+              "Entre els límits d'inversió estrangera, l'estructuració fiscal i els permisos urbanístics, el marge d'error és alt. Gestionem el procés de principi a fi per eliminar-lo.",
           },
           {
-            title: "Estructura que protegeix la confiança de l'inversor",
+            title: "Només acceptem mandats que podem executar",
             body:
-              "Traduïm l'entorn regulador d'Andorra en un camí pràctic per al capital internacional, abordant cada mandat amb rigor normatiu, disciplina documental i alineació institucional.",
+              "No perseguim volum. Cada relació amb inversors és selectiva, la qual cosa ens permet comprometre'ns plenament amb cada oportunitat que representem.",
           },
         ],
       },

@@ -144,6 +144,26 @@ const languages = [
         }
       </div>
     </div>
+    <div class="mobile-drawer-footer">
+      <p class="mobile-drawer-footer-tagline">Andorra Investment Excellence</p>
+      <div class="mobile-drawer-footer-bottom">
+        <a
+          href="https://www.linkedin.com/company/equity-partners-andorra"
+          class="mobile-drawer-footer-social"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Equity Partners on LinkedIn"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+            <rect x="2" y="9" width="4" height="12"/>
+            <circle cx="4" cy="4" r="2"/>
+          </svg>
+          LinkedIn
+        </a>
+        <span class="mobile-drawer-footer-legal">equitypartners.fund</span>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -987,6 +1007,64 @@ const languages = [
 
     .site-header.is-menu-open .mobile-drawer {
       transform: translateX(0);
+    }
+
+    /* ── Mobile drawer footer ── */
+    .mobile-drawer-footer {
+      margin-top: auto;
+      margin-left: -1.15rem;
+      margin-right: -1.15rem;
+      margin-bottom: -1.5rem;
+      background: #0f1a2a;
+      padding: 1.4rem 1.15rem 1.55rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.07);
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .mobile-drawer-footer-tagline {
+      font-size: 0.64rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.35);
+      margin: 0 0 1.1rem;
+      font-weight: 500;
+      line-height: 1;
+    }
+
+    .mobile-drawer-footer-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+      padding-top: 0.9rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .mobile-drawer-footer-social {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.42rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.65);
+      text-decoration: none;
+      transition: color 160ms ease;
+      line-height: 1;
+    }
+
+    .mobile-drawer-footer-social:hover {
+      color: #ffffff;
+    }
+
+    .mobile-drawer-footer-legal {
+      font-size: 0.6rem;
+      color: rgba(255, 255, 255, 0.22);
+      letter-spacing: 0.07em;
+      line-height: 1;
     }
   }
 </style>

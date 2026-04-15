@@ -1,7 +1,844 @@
 ---
-import Page from "../../blog/[slug].astro";
+import InnerSiteHeader from "../../../components/InnerSiteHeader.astro";
+import NewsletterSignup from "../../../components/NewsletterSignup.astro";
+import SiteFooter from "../../../components/SiteFooter.astro";
+import { blogPosts } from "../../../data/blogPostsEs";
+import { buildLocalizedPath, getLocaleFromUrl } from "../../../lib/i18n";
+import { getContentTranslations } from "../../../i18n/content";
 
-export { getStaticPaths } from "../../blog/[slug].astro";
+export function getStaticPaths() {
+  return blogPosts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const locale = getLocaleFromUrl(Astro.url);
+const content = getContentTranslations(locale).blog;
+const stopWords = new Set([
+  "and",
+  "the",
+  "for",
+  "with",
+  "what",
+  "into",
+  "from",
+  "that",
+  "this",
+  "still",
+  "your",
+  "will",
+  "have",
+  "more",
+  "than",
+  "when",
+  "where",
+  "best",
+  "today",
+  "guide",
+  "prices",
+]);
+
+const tokenize = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((word) => word.length > 2 && !stopWords.has(word));
+
+const postKeywords = new Set([...tokenize(post.title), ...tokenize(post.excerpt)]);
+
+const suggestedPosts = blogPosts
+  .filter((entry) => entry.slug !== post.slug)
+  .map((entry) => {
+    const entryKeywords = new Set([...tokenize(entry.title), ...tokenize(entry.excerpt)]);
+    let sharedKeywordScore = 0;
+
+    for (const keyword of entryKeywords) {
+      if (postKeywords.has(keyword)) sharedKeywordScore += 1;
+    }
+
+    const categoryScore = entry.category === post.category ? 4 : 0;
+
+    return {
+      entry,
+      score: categoryScore + sharedKeywordScore,
+    };
+  })
+  .sort((a, b) => b.score - a.score || a.entry.title.localeCompare(b.entry.title))
+  .slice(0, 3)
+  .map(({ entry }) => entry);
 ---
 
-<Page {...Astro.props} />
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{post.title} | Equity Partners</title>
+    <link rel="icon" type="image/png" href="/EP%20favicon.png" />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
+
+      :root {
+        --bg-paper: #f3f5f9;
+        --bg-white: #ffffff;
+        --text-primary: #1f2835;
+        --text-muted: #5a667a;
+        --text-light: #e8edf5;
+        --accent: #8293ae;
+        --line: #dbe1ea;
+        --brand-navy: #0f1a2a;
+        --max-width: 1120px;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        color: var(--text-primary);
+        background: radial-gradient(circle at 10% -10%, #eef2f8 0, var(--bg-paper) 50%);
+        line-height: 1.6;
+      }
+
+      h1, h2, h3, p { margin: 0; }
+
+      .container {
+        width: min(var(--max-width), 92vw);
+        margin: 0 auto;
+      }
+
+      .article-wrap {
+        margin-top: 4.5rem;
+        padding: 3rem 0 4rem;
+      }
+
+      .breadcrumbs {
+        display: inline-flex;
+        gap: 0.55rem;
+        align-items: center;
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent);
+        text-decoration: none;
+        margin-bottom: 1.2rem;
+      }
+
+      .breadcrumbs:hover { color: #5e7393; }
+
+      .article-shell {
+        background: var(--bg-white);
+        border: 1px solid var(--line);
+        border-radius: 1.1rem;
+        overflow: hidden;
+        box-shadow: 0 18px 36px rgba(14, 25, 39, 0.08);
+      }
+
+      .article-hero {
+        position: relative;
+        min-height: 20rem;
+        display: flex;
+        align-items: flex-end;
+        padding: 2.2rem;
+        color: #f2f6fc;
+        background: linear-gradient(180deg, rgba(8, 12, 19, 0.18), rgba(8, 12, 19, 0.72)),
+          var(--hero-image) center / cover no-repeat;
+      }
+
+      .article-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.8rem;
+        flex-wrap: wrap;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: fit-content;
+        font-size: 0.72rem;
+        line-height: 1.2;
+        padding: 0.28rem 0.56rem;
+        border: 1px solid rgba(232, 239, 251, 0.42);
+        border-radius: 999px;
+        background: rgba(17, 30, 47, 0.35);
+        color: #f0f5ff;
+      }
+
+      .article-hero h1 {
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        font-weight: 700;
+        font-size: clamp(1.75rem, 4vw, 2.85rem);
+        line-height: 1.1;
+        max-width: 66%;
+      }
+
+      .article-hero .subtitle {
+        margin-top: 0.85rem;
+        color: rgba(232, 239, 251, 0.9);
+        max-width: 58ch;
+      }
+
+      .article-body {
+        padding: 2.2rem;
+        display: grid;
+        grid-template-columns: minmax(0, 760px) 240px;
+        justify-content: space-between;
+        gap: 2rem;
+      }
+
+      .article-content {
+        width: 100%;
+        max-width: none;
+      }
+
+      .article-section + .article-section {
+        margin-top: 2rem;
+      }
+
+      .article-section h2 {
+        font-size: clamp(1.28rem, 2.2vw, 1.72rem);
+        line-height: 1.2;
+        color: #22324a;
+        margin-bottom: 0.7rem;
+      }
+
+      .article-section p + p {
+        margin-top: 0.85rem;
+      }
+
+      .article-section p {
+        color: #3d4b61;
+      }
+
+      .article-table-wrap {
+        margin-top: 1.25rem;
+        border: 1px solid #d8e0ec;
+        border-radius: 0.95rem;
+        overflow: hidden;
+        background: #ffffff;
+      }
+
+      .article-table-row {
+        display: grid;
+        grid-template-columns: minmax(220px, 0.9fr) minmax(230px, 1fr) minmax(230px, 1fr);
+        gap: 1rem;
+        padding: 0.9rem 1rem;
+        border-top: 1px solid #e1e7f0;
+        align-items: center;
+      }
+
+      .article-table-row:first-child {
+        border-top: 0;
+        background: #f5f8fd;
+      }
+
+      .article-table-head {
+        color: #6b7c93;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      .article-table-cell-primary {
+        font-size: 1.04rem;
+        color: #24344c;
+        font-weight: 600;
+      }
+
+      .article-table-cell {
+        color: #637389;
+        font-size: 0.88rem;
+        line-height: 1.45;
+      }
+
+      .article-table-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.3rem 0.58rem;
+        border: 1px solid #d2dceb;
+        border-radius: 999px;
+        color: #556780;
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        background: #f7f9fd;
+      }
+
+      .article-sources {
+        margin-top: 1.4rem;
+        padding-top: 1.2rem;
+        border-top: 1px solid #dde5f0;
+      }
+
+      .article-sources h2 {
+        font-size: 1rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #22324a;
+        margin-bottom: 0.7rem;
+      }
+
+      .sources-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 0.7rem;
+      }
+
+      .source-link {
+        color: #49617f;
+        text-decoration: none;
+        word-break: break-word;
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+
+      .source-link:hover {
+        color: #0f1a2a;
+      }
+
+      .article-aside {
+        border-left: 1px solid #dde5f0;
+        padding-left: 1.2rem;
+      }
+
+      .suggested-reads {
+        margin-top: 2rem;
+        background: #0f1a2a;
+        border-top: 1px solid rgba(219, 227, 240, 0.12);
+        border-bottom: 1px solid rgba(219, 227, 240, 0.12);
+        border-radius: 1.1rem;
+        padding: 2rem;
+      }
+
+      .suggested-reads .eyebrow {
+        margin-bottom: 0.85rem;
+        font-size: 0.8rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: #9fb4d2;
+      }
+
+      .suggested-reads h2 {
+        color: #f2f6fc;
+        font-size: clamp(1.9rem, 3.4vw, 3rem);
+        white-space: nowrap;
+        line-height: 1.08;
+      }
+
+      .suggested-reads .home-suggested-grid {
+        margin-top: 1.9rem;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .suggested-reads .home-suggested-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 1rem;
+        border: 1px solid rgba(212, 224, 241, 0.14);
+        background: rgba(255, 255, 255, 0.05);
+        box-shadow: 0 18px 36px rgba(5, 12, 20, 0.18);
+      }
+
+      .suggested-reads .home-suggested-link {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .suggested-reads .home-suggested-card img {
+        width: 100%;
+        height: 14rem;
+        object-fit: cover;
+        transition: transform 320ms ease;
+      }
+
+      .suggested-reads .home-suggested-card:hover img,
+      .suggested-reads .home-suggested-link:hover img {
+        transform: scale(1.04);
+      }
+
+      .suggested-reads .home-suggested-meta {
+        padding: 1.2rem;
+        color: #eef4fb;
+      }
+
+      .suggested-reads .home-suggested-meta h3 {
+        font-size: 1.15rem;
+        line-height: 1.24;
+      }
+
+      .suggested-reads .home-suggested-metrics {
+        margin-top: 0;
+        margin-bottom: 0.65rem;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+      }
+
+      .suggested-reads .home-suggested-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: fit-content;
+        font-size: 0.75rem;
+        line-height: 1.2;
+        padding: 0.28rem 0.56rem;
+        border: 1px solid rgba(214, 225, 240, 0.18);
+        border-radius: 999px;
+        background: rgba(241, 247, 255, 0.08);
+        color: #dce7f5;
+      }
+
+      .suggested-reads .home-suggested-excerpt {
+        margin-top: 0.45rem;
+        color: #c6d3e4;
+        font-size: 0.87rem;
+        line-height: 1.45;
+      }
+
+      .aside-label {
+        font-size: 1rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #22324a;
+        margin-bottom: 0.7rem;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+
+      .aside-kicker {
+        font-size: 0.62rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 0.55rem;
+      }
+
+      .aside-title {
+        margin-top: 0.45rem;
+        font-size: 1.05rem;
+        color: #24344b;
+      }
+
+      .aside-copy {
+        margin-top: 0.55rem;
+        color: #607088;
+        font-size: 0.9rem;
+      }
+
+      .aside-cta {
+        margin-top: 1.15rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        color: #ffffff;
+        background: #53b27f;
+        text-decoration: none;
+        font-size: 0.72rem;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        border-radius: 0.45rem;
+        padding: 0.82rem 1rem;
+        font-weight: 600;
+        line-height: 1;
+        border: 1px solid #53b27f;
+        transition:
+          background-color 180ms ease,
+          transform 180ms ease,
+          color 180ms ease,
+          border-color 180ms ease,
+          box-shadow 180ms ease;
+      }
+
+      .aside-cta:hover {
+        background: #3f9568;
+        border-color: #3f9568;
+        color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(12, 24, 18, 0.22);
+      }
+
+      .footer {
+        background: #0f1a2a;
+        color: #d9e3f2;
+      }
+
+      .footer-top {
+        padding: 3rem 0 2.7rem;
+      }
+
+      .footer-grid {
+        display: grid;
+        grid-template-columns: 1.2fr repeat(3, minmax(0, 1fr));
+        gap: 1.7rem;
+        align-items: start;
+      }
+
+      .footer-grid > div:not(:first-child) {
+        justify-self: start;
+        text-align: left;
+        margin-left: 1.6rem;
+      }
+
+      .footer-grid > div:not(:first-child) .footer-list {
+        justify-items: start;
+      }
+
+      .footer-logo {
+        display: block;
+        width: 220px;
+        max-width: 100%;
+        height: auto;
+        margin-top: -6px;
+        filter: brightness(0) invert(1);
+      }
+
+      .footer-cta {
+        margin-top: 1.6rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #172235;
+        background: rgba(204, 215, 232, 0.92);
+        text-decoration: none;
+        font-size: 0.72rem;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        border-radius: 0.45rem;
+        padding: 0.65rem 0.95rem;
+        font-weight: 600;
+        line-height: 1;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        white-space: nowrap;
+        transition: background-color 180ms ease, transform 180ms ease, color 180ms ease,
+          box-shadow 180ms ease;
+      }
+
+      .footer-cta:hover {
+        background: rgba(224, 233, 246, 1);
+        color: #101b2c;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(6, 12, 20, 0.22);
+      }
+
+      .footer-cta:focus-visible {
+        outline: 2px solid rgba(234, 241, 252, 0.92);
+        outline-offset: 2px;
+      }
+
+      .footer-heading {
+        margin: 0 0 0.75rem;
+        color: #f2f6fc;
+        font-size: 0.72rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-weight: 600;
+        font-weight: 700;
+      }
+
+      .footer-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 0.65rem;
+      }
+
+      .footer-link {
+        color: #c9d4e7;
+        text-decoration: none;
+        font-size: 0.75rem;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+
+      .footer-link:hover {
+        color: #ffffff;
+      }
+
+      .footer-meta {
+        margin: 0;
+        color: #c9d4e7;
+        font-size: 0.74rem;
+        line-height: 1.9;
+      }
+
+      .footer-divider {
+        border-top: 1px solid rgba(205, 219, 238, 0.2);
+      }
+
+      .footer-bottom {
+        padding: 1.3rem 0 1.45rem;
+      }
+
+      .footer-bottom-row {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .footer-copy {
+        margin: 0;
+        color: #aebcd4;
+        font-size: 0.7rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .footer-legal {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+      }
+
+      .footer-legal a {
+        color: #c1cee3;
+        text-decoration: none;
+        font-size: 0.7rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .footer-social {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.45rem;
+      }
+
+      .social-pill {
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        border: 1px solid rgba(220, 231, 246, 0.34);
+        color: #e3ebf8;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: 700;
+      }
+
+      @media (max-width: 980px) {
+        .article-body,
+        .footer-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .suggested-reads .home-suggested-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .article-table-row {
+          grid-template-columns: 1fr;
+        }
+
+        .article-aside {
+          border-left: 0;
+          border-top: 1px solid #dde5f0;
+          padding-left: 0;
+          padding-top: 1rem;
+        }
+      }
+
+      @media (max-width: 680px) {
+        .article-wrap {
+          margin-top: 4.5rem;
+          padding: 1.4rem 0 2.35rem;
+        }
+
+        .article-hero {
+          min-height: 16rem;
+          padding: 1.25rem;
+        }
+
+        .article-body {
+          padding: 1.25rem;
+          gap: 1.25rem;
+        }
+
+        .article-hero h1 {
+          max-width: none;
+          font-size: clamp(1.45rem, 7vw, 2rem);
+        }
+
+        .article-hero .subtitle {
+          margin-top: 0.7rem;
+          font-size: 0.95rem;
+          line-height: 1.5;
+        }
+
+        .suggested-reads {
+          padding: 1.4rem 1.25rem;
+        }
+
+        .suggested-reads h2 {
+          white-space: normal;
+          font-size: clamp(1.45rem, 7vw, 2rem);
+        }
+
+        .footer-grid {
+          grid-template-columns: 1fr;
+          gap: 1.2rem;
+        }
+
+        .footer-grid > div:not(:first-child) {
+          justify-self: start;
+          text-align: left;
+          margin-left: 0;
+        }
+
+        .footer-grid > div:not(:first-child) .footer-list {
+          justify-items: start;
+        }
+
+        .footer-bottom-row {
+          grid-template-columns: 1fr;
+          text-align: left;
+        }
+
+        .footer-legal {
+          justify-content: flex-start;
+        }
+
+        .footer-social {
+          justify-content: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body style={`--hero-image: url('${post.image}')`}>
+    <InnerSiteHeader active="blog" menuToggleId="mobile-menu-toggle-blog-article" locale={locale} currentPath={Astro.url.pathname} />
+
+    <main class="article-wrap">
+      <div class="container">
+        <a class="breadcrumbs" href={buildLocalizedPath("/blog", locale)}>{content.article.breadcrumb}</a>
+
+        <article class="article-shell">
+          <header class="article-hero">
+            <div>
+              <div class="article-meta">
+                <span class="pill">{post.date}</span>
+                <span class="pill">{post.category}</span>
+                <span class="pill">{post.readTime}</span>
+              </div>
+              <h1>{post.title}</h1>
+              <p class="subtitle">{post.excerpt}</p>
+            </div>
+          </header>
+
+          <div class="article-body">
+            <div class="article-content">
+              {
+                post.sections.map((section) => (
+                  <section class="article-section">
+                    <h2>{section.heading}</h2>
+                    {section.paragraphs.map((paragraph) => (<p>{paragraph}</p>))}
+                    {section.table && (
+                      <div class="article-table-wrap">
+                        <div class="article-table-row">
+                          {section.table.headers.map((header) => (
+                            <p class="article-table-head">{header}</p>
+                          ))}
+                        </div>
+                        {section.table.rows.map((row) => (
+                          <div class="article-table-row">
+                            {row.map((cell, index) => (
+                              index === 0 ? (
+                                <p class="article-table-cell-primary">{cell}</p>
+                              ) : index === row.length - 1 && row.length > 2 ? (
+                                <p class="article-table-cell"><span class="article-table-badge">{cell}</span></p>
+                              ) : (
+                                <p class="article-table-cell">{cell}</p>
+                              )
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </section>
+                ))
+              }
+            </div>
+
+            <aside class="article-aside">
+              <p class="aside-kicker">{content.article.asideKicker}</p>
+              <p class="aside-label">{content.article.asideLabel}</p>
+              <p class="aside-copy">{content.article.asideCopy}</p>
+              <a class="aside-cta" href={buildLocalizedPath("/contact", locale)}>{content.article.asideCta}</a>
+              {post.sources && post.sources.length > 0 && (
+                <section class="article-sources">
+                  <h2>{content.article.sourcesTitle}</h2>
+                  <ul class="sources-list">
+                    {post.sources.map((source) => (
+                      <li>
+                        <a class="source-link" href={source.href} target="_blank" rel="noreferrer">
+                          {source.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+            </aside>
+          </div>
+        </article>
+
+        {suggestedPosts.length > 0 && (
+          <section class="suggested-reads">
+            <p class="eyebrow">{content.article.suggestedEyebrow}</p>
+            <h2>{content.article.suggestedTitle}</h2>
+            <div class="home-suggested-grid">
+              {suggestedPosts.map((entry) => (
+                <article class="home-suggested-card">
+                  <a class="home-suggested-link" href={buildLocalizedPath(`/blog/${entry.slug}`, locale)}>
+                    <img src={entry.image} alt={entry.title} loading="lazy" />
+                    <div class="home-suggested-meta">
+                      <div class="home-suggested-metrics">
+                        <span class="home-suggested-pill">{entry.date}</span>
+                        <span class="home-suggested-pill">{entry.category}</span>
+                      </div>
+                      <h3>{entry.title}</h3>
+                      <p class="home-suggested-excerpt">{entry.excerpt}</p>
+                    </div>
+                  </a>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+    </main>
+
+    <NewsletterSignup emailInputId="newsletter-email-article" locale={locale} />
+
+    <SiteFooter locale={locale} />
+
+    <script type="module">
+      const root = document.body;
+      const syncHeaderState = () => {
+        root.classList.toggle("is-scrolled", window.scrollY > 10);
+      };
+
+      syncHeaderState();
+      window.addEventListener("scroll", syncHeaderState, { passive: true });
+    </script>
+  </body>
+</html>

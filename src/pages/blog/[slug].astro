@@ -638,8 +638,11 @@ const suggestedPosts = blogPosts
 
       @media (max-width: 980px) {
         .article-body,
-        .home-suggested-grid,
         .footer-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .suggested-reads .home-suggested-grid {
           grid-template-columns: 1fr;
         }
 

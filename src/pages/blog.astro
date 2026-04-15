@@ -1,5 +1,7 @@
 ---
 import { blogPosts } from "../data/blogPosts";
+import { blogPosts as blogPostsEs } from "../data/blogPostsEs";
+import { blogPosts as blogPostsCa } from "../data/blogPostsCa";
 import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import NewsletterSignup from "../components/NewsletterSignup.astro";
 import SiteFooter from "../components/SiteFooter.astro";
@@ -7,8 +9,8 @@ import { buildLocalizedPath, getLocaleFromUrl } from "../lib/i18n";
 import { getContentTranslations } from "../i18n/content";
 import { getPageTitle } from "../i18n/ui";
 
-const posts = blogPosts;
 const locale = getLocaleFromUrl(Astro.url);
+const posts = locale === "es" ? blogPostsEs : locale === "ca" ? blogPostsCa : blogPosts;
 const content = getContentTranslations(locale).blog;
 ---
 
