@@ -2586,6 +2586,31 @@ const content = getContentTranslations(locale).home;
         border-color: rgba(83, 178, 127, 0.6);
       }
 
+      .wwo-badge-row {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-bottom: 1.6rem;
+      }
+
+      .wwo-badge-row .wwo-badge {
+        margin-bottom: 0;
+      }
+
+      .wwo-coming-soon {
+        font-size: 0.6rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #f5c542;
+        background: rgba(245, 197, 66, 0.12);
+        border: 1px solid rgba(245, 197, 66, 0.3);
+        padding: 0.25rem 0.6rem;
+        border-radius: 999px;
+        line-height: 1;
+        white-space: nowrap;
+      }
+
       .wwo-badge {
         display: inline-flex;
         align-items: center;
@@ -2867,6 +2892,23 @@ const content = getContentTranslations(locale).home;
         }
       }
 
+      /* ── Scroll entrance animations ── */
+      [data-animate] {
+        opacity: 0;
+        transform: translateY(28px);
+        transition: opacity 650ms ease, transform 650ms ease;
+      }
+
+      [data-animate].is-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      [data-animate="delay-1"] { transition-delay: 100ms; }
+      [data-animate="delay-2"] { transition-delay: 200ms; }
+      [data-animate="delay-3"] { transition-delay: 300ms; }
+      [data-animate="delay-4"] { transition-delay: 400ms; }
+
     </style>
   </head>
   <body>
@@ -2884,7 +2926,7 @@ const content = getContentTranslations(locale).home;
 
     <section class="partners-wrap" id="partners-local">
       <a class="partners-link" href={buildLocalizedPath("/partners", locale)} aria-label="View all local partners">
-        <div class="container">
+        <div class="container" data-animate>
           <h2 class="partners-title">{content.localPartnersTitle}</h2>
         </div>
         <div class="partners-marquee" aria-label="Local partner logos">
@@ -2909,7 +2951,7 @@ const content = getContentTranslations(locale).home;
     </section>
 
     <section class="section advantage-home">
-      <div class="container">
+      <div class="container" data-animate>
         <p class="eyebrow">{content.services.eyebrow}</p>
         <h2 class="focus-title">{content.services.title}</h2>
         <p class="focus-intro">{content.services.intro}</p>
@@ -3004,7 +3046,7 @@ const content = getContentTranslations(locale).home;
     </section>
 
     <section class="section home-proof-strip" aria-label="Equity Partners metrics">
-      <div class="container">
+      <div class="container" data-animate>
         <p class="eyebrow">{content.metrics.eyebrow}</p>
         <div class="home-proof-grid">
           <article class="home-proof-metric">
@@ -3028,7 +3070,7 @@ const content = getContentTranslations(locale).home;
     </section>
 
     <section class="section why-equity-home">
-      <div class="container">
+      <div class="container" data-animate>
         <div class="section-header">
           <p class="eyebrow">{content.whyEquity.eyebrow}</p>
           <h2>{content.whyEquity.title}</h2>
@@ -3081,7 +3123,7 @@ const content = getContentTranslations(locale).home;
     </section>
 
     <section class="andorra-adv-v2">
-      <div class="container">
+      <div class="container" data-animate>
         <div class="andorra-adv-v2-header">
           <p class="eyebrow">The Andorra Advantage</p>
           <h2 class="focus-title">Why Andorra</h2>
@@ -3114,7 +3156,7 @@ const content = getContentTranslations(locale).home;
     </section>
 
     <section class="what-we-offer">
-      <div class="container">
+      <div class="container" data-animate>
         <div class="what-we-offer-header">
           <p class="eyebrow">What We Offer</p>
           <h2 class="focus-title">Two Ways to Invest in Andorra</h2>
@@ -3124,7 +3166,10 @@ const content = getContentTranslations(locale).home;
 
           <!-- Option 1: Fund -->
           <div class="wwo-card is-fund">
-            <span class="wwo-badge">Passive Investment</span>
+            <div class="wwo-badge-row">
+              <span class="wwo-badge">Passive Investment</span>
+              <span class="wwo-coming-soon">Coming soon</span>
+            </div>
             <h3 class="wwo-title">Andorra Real Estate Fund</h3>
             <p class="wwo-desc">A fully managed fund giving you exposure to Andorra's real estate market without requiring any active involvement. We handle sourcing, execution, and management end-to-end.</p>
             <div class="wwo-returns">
@@ -3203,7 +3248,7 @@ const content = getContentTranslations(locale).home;
     </section>
 
     <section class="timeline-v2">
-      <div class="container">
+      <div class="container" data-animate>
         <div class="section-header">
           <p class="eyebrow">Timeline</p>
           <h2>The Investment Roadmap</h2>
@@ -3258,7 +3303,7 @@ const content = getContentTranslations(locale).home;
     </section>
 
     <section class="section gateway" id="contact">
-      <div class="container">
+      <div class="container" data-animate>
         <div class="section-header">
           <p class="eyebrow">Contact our Team</p>
           <h2>Start your Andorra investment journey</h2>
@@ -3285,7 +3330,7 @@ const content = getContentTranslations(locale).home;
     </section>
 
     <section class="section projects" id="partners">
-      <div class="container">
+      <div class="container" data-animate>
         <div class="section-header">
           <p class="eyebrow">Featured Developments</p>
           <h2>View our properties under development</h2>
@@ -3393,6 +3438,25 @@ const content = getContentTranslations(locale).home;
 
       syncHeaderState();
       window.addEventListener("scroll", syncHeaderState, { passive: true });
+    </script>
+
+    <script type="module">
+      // Scroll entrance animations
+      const targets = document.querySelectorAll("[data-animate]");
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("is-visible");
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.08 }
+      );
+
+      targets.forEach((el) => observer.observe(el));
     </script>
 
   </body>
