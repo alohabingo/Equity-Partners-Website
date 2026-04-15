@@ -3239,7 +3239,7 @@ const content = getContentTranslations(locale).home;
               </li>
             </ul>
             <div class="wwo-cta">
-              <a href="#">Explore Projects</a>
+              <a href={buildLocalizedPath("/projects", locale)}>Explore Projects</a>
             </div>
           </div>
 
@@ -3363,7 +3363,7 @@ const content = getContentTranslations(locale).home;
             ></button>
           ))}
         </div>
-        <a class="cta-link" href="#">View All Projects</a>
+        <a class="cta-link" href={buildLocalizedPath("/projects", locale)}>View All Projects</a>
       </div>
     </section>
 

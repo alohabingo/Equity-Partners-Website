@@ -1,0 +1,507 @@
+---
+import InnerSiteHeader from "../components/InnerSiteHeader.astro";
+import NewsletterSignup from "../components/NewsletterSignup.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import { buildLocalizedPath, getLocaleFromUrl } from "../lib/i18n";
+import { getPageTitle } from "../i18n/ui";
+import { projects, statusColour } from "../data/projects";
+
+const locale = getLocaleFromUrl(Astro.url) ?? "en";
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{getPageTitle("Projects", locale)}</title>
+    <meta name="description" content="Explore Equity Partners' current real estate development projects in Andorra. View investment details, returns, timelines and project status." />
+    <link rel="icon" type="image/png" href="/EP favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      :root {
+        --navy: #0f1a2a;
+        --green: #53b27f;
+        --green-dark: #3f9568;
+        --line: #dce3ee;
+        --text: #172235;
+        --muted: #5a667a;
+        --font: "Montserrat", "Segoe UI", Arial, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--font);
+        background: #ffffff;
+        color: var(--text);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .container {
+        width: min(1120px, 92vw);
+        margin: 0 auto;
+      }
+
+      /* ── Page Hero ── */
+      .projects-hero {
+        background: var(--navy);
+        padding: 9rem 0 4.5rem;
+        border-bottom: 1px solid rgba(214, 225, 244, 0.12);
+      }
+
+      .projects-hero-inner {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .projects-hero .eyebrow {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--green);
+        margin: 0;
+      }
+
+      .projects-hero h1 {
+        font-size: clamp(2rem, 4vw, 3.2rem);
+        font-weight: 800;
+        color: #ffffff;
+        margin: 0;
+        line-height: 1.08;
+        letter-spacing: -0.01em;
+      }
+
+      .projects-hero p {
+        font-size: 1rem;
+        color: rgba(214, 224, 240, 0.75);
+        margin: 0;
+        max-width: 580px;
+        line-height: 1.7;
+      }
+
+      /* ── Stats strip ── */
+      .projects-stats {
+        background: #f2f5fa;
+        border-bottom: 1px solid var(--line);
+        padding: 1.6rem 0;
+      }
+
+      .projects-stats-inner {
+        display: flex;
+        gap: 3rem;
+        flex-wrap: wrap;
+      }
+
+      .projects-stat {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+      }
+
+      .projects-stat-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--navy);
+        line-height: 1;
+      }
+
+      .projects-stat-label {
+        font-size: 0.65rem;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      /* ── Grid ── */
+      .projects-grid-section {
+        padding: 4rem 0 6rem;
+      }
+
+      .projects-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+      }
+
+      /* ── Project Card ── */
+      .project-card-v2 {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--line);
+        border-radius: 1.2rem;
+        overflow: hidden;
+        background: #ffffff;
+        text-decoration: none;
+        color: inherit;
+        transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+      }
+
+      .project-card-v2:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 24px 52px rgba(15, 26, 42, 0.1);
+        border-color: #c8d3e3;
+      }
+
+      .project-card-v2-image {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16/10;
+        overflow: hidden;
+      }
+
+      .project-card-v2-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 400ms ease;
+      }
+
+      .project-card-v2:hover .project-card-v2-image img {
+        transform: scale(1.04);
+      }
+
+      .project-card-v2-status {
+        position: absolute;
+        top: 0.9rem;
+        left: 0.9rem;
+        font-size: 0.6rem;
+        font-weight: 700;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: #ffffff;
+        padding: 0.3rem 0.7rem;
+        border-radius: 999px;
+        line-height: 1;
+      }
+
+      .project-card-v2-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 1.6rem 1.5rem 1.5rem;
+      }
+
+      .project-card-v2-location {
+        font-size: 0.65rem;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: 0 0 0.5rem;
+      }
+
+      .project-card-v2-name {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--navy);
+        margin: 0 0 0.6rem;
+        line-height: 1.25;
+      }
+
+      .project-card-v2-tagline {
+        font-size: 0.83rem;
+        color: var(--muted);
+        line-height: 1.55;
+        margin: 0 0 1.4rem;
+      }
+
+      .project-card-v2-metrics {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.8rem;
+        padding: 1.1rem 0;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 1.2rem;
+      }
+
+      .project-card-v2-metric {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+      }
+
+      .project-card-v2-metric-value {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--navy);
+        line-height: 1;
+      }
+
+      .project-card-v2-metric-label {
+        font-size: 0.6rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .project-card-v2-metric-value.is-green {
+        color: var(--green);
+      }
+
+      .project-card-v2-footer {
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
+
+      .project-card-v2-sector {
+        font-size: 0.65rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        background: #f0f4fa;
+        padding: 0.3rem 0.7rem;
+        border-radius: 999px;
+      }
+
+      .project-card-v2-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--green);
+        transition: gap 180ms ease;
+      }
+
+      .project-card-v2:hover .project-card-v2-link {
+        gap: 0.65rem;
+      }
+
+      .project-card-v2-link svg {
+        width: 0.8rem;
+        height: 0.8rem;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      /* ── CTA Banner ── */
+      .projects-cta-banner {
+        background: var(--navy);
+        border-top: 1px solid rgba(214, 225, 244, 0.1);
+        padding: 4rem 0;
+      }
+
+      .projects-cta-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 2rem;
+        flex-wrap: wrap;
+      }
+
+      .projects-cta-copy h2 {
+        font-size: clamp(1.4rem, 2.5vw, 2rem);
+        font-weight: 700;
+        color: #ffffff;
+        margin: 0 0 0.5rem;
+        line-height: 1.2;
+      }
+
+      .projects-cta-copy p {
+        font-size: 0.9rem;
+        color: rgba(214, 224, 240, 0.7);
+        margin: 0;
+        line-height: 1.6;
+      }
+
+      .projects-cta-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.9rem 1.8rem;
+        background: var(--green);
+        border: 1px solid var(--green);
+        color: #ffffff;
+        border-radius: 0.55rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+      }
+
+      .projects-cta-btn:hover {
+        background: var(--green-dark);
+        border-color: var(--green-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 12px 28px rgba(15, 60, 35, 0.28);
+      }
+
+      .projects-cta-btn svg {
+        width: 0.85rem;
+        height: 0.85rem;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      /* ── Animations ── */
+      [data-animate] {
+        opacity: 0;
+        transform: translateY(24px);
+        transition: opacity 600ms ease, transform 600ms ease;
+      }
+      [data-animate].is-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      @media (max-width: 860px) {
+        .projects-grid { grid-template-columns: 1fr 1fr; }
+        .projects-cta-inner { flex-direction: column; align-items: flex-start; }
+      }
+
+      @media (max-width: 560px) {
+        .projects-grid { grid-template-columns: 1fr; }
+        .projects-stats-inner { gap: 1.5rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <InnerSiteHeader menuToggleId="mobile-menu-toggle" offsetFirstSection={false} locale={locale} currentPath={Astro.url.pathname} />
+
+    <!-- Hero -->
+    <section class="projects-hero">
+      <div class="container">
+        <div class="projects-hero-inner" data-animate>
+          <p class="eyebrow">Projects Under Development</p>
+          <h1>Our Current Portfolio</h1>
+          <p>A curated selection of high-conviction real estate development opportunities across the Principality of Andorra — each structured to deliver institutional-grade returns.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats strip -->
+    <div class="projects-stats">
+      <div class="container">
+        <div class="projects-stats-inner" data-animate>
+          <div class="projects-stat">
+            <span class="projects-stat-value">3</span>
+            <span class="projects-stat-label">Active projects</span>
+          </div>
+          <div class="projects-stat">
+            <span class="projects-stat-value">€90M+</span>
+            <span class="projects-stat-label">Combined project value</span>
+          </div>
+          <div class="projects-stat">
+            <span class="projects-stat-value">12%+</span>
+            <span class="projects-stat-label">Fixed annual return</span>
+          </div>
+          <div class="projects-stat">
+            <span class="projects-stat-value">74</span>
+            <span class="projects-stat-label">Total units across portfolio</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Project grid -->
+    <section class="projects-grid-section">
+      <div class="container">
+        <div class="projects-grid" data-animate>
+          {projects.map((project) => (
+            <a class="project-card-v2" href={buildLocalizedPath(`/projects/${project.slug}`, locale)}>
+              <div class="project-card-v2-image">
+                <img src={project.image} alt={project.name} loading="lazy" />
+                <span
+                  class="project-card-v2-status"
+                  style={`background: ${statusColour[project.status]}`}
+                >
+                  {project.status}
+                </span>
+              </div>
+              <div class="project-card-v2-body">
+                <p class="project-card-v2-location">{project.parish} · Andorra</p>
+                <h2 class="project-card-v2-name">{project.name}</h2>
+                <p class="project-card-v2-tagline">{project.tagline}</p>
+                <div class="project-card-v2-metrics">
+                  <div class="project-card-v2-metric">
+                    <span class="project-card-v2-metric-value">{project.value}</span>
+                    <span class="project-card-v2-metric-label">Project value</span>
+                  </div>
+                  <div class="project-card-v2-metric">
+                    <span class="project-card-v2-metric-value is-green">{project.fixedReturn}</span>
+                    <span class="project-card-v2-metric-label">Fixed annual return</span>
+                  </div>
+                  <div class="project-card-v2-metric">
+                    <span class="project-card-v2-metric-value">{project.minInvestment}</span>
+                    <span class="project-card-v2-metric-label">Min. investment</span>
+                  </div>
+                  <div class="project-card-v2-metric">
+                    <span class="project-card-v2-metric-value">{project.holdPeriod}</span>
+                    <span class="project-card-v2-metric-label">Hold period</span>
+                  </div>
+                </div>
+                <div class="project-card-v2-footer">
+                  <span class="project-card-v2-sector">{project.sector}</span>
+                  <span class="project-card-v2-link">
+                    View project
+                    <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                  </span>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Banner -->
+    <section class="projects-cta-banner">
+      <div class="container">
+        <div class="projects-cta-inner" data-animate>
+          <div class="projects-cta-copy">
+            <h2>Interested in one of our projects?</h2>
+            <p>Speak with our team to receive a full investment memorandum and discuss your investment profile.</p>
+          </div>
+          <a class="projects-cta-btn" href={buildLocalizedPath("/contact", locale)}>
+            Contact our Team
+            <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <NewsletterSignup emailInputId="newsletter-email-projects" locale={locale} />
+    <SiteFooter locale={locale} />
+
+    <script type="module">
+      const targets = document.querySelectorAll("[data-animate]");
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("is-visible");
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.08 }
+      );
+      targets.forEach((el) => observer.observe(el));
+    </script>
+  </body>
+</html>
