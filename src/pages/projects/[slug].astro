@@ -3,8 +3,7 @@ import InnerSiteHeader from "../../components/InnerSiteHeader.astro";
 import NewsletterSignup from "../../components/NewsletterSignup.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
 import { buildLocalizedPath, getLocaleFromUrl } from "../../lib/i18n";
-import { getPageTitle } from "../../i18n/ui";
-import { projects, getProjectBySlug, statusColour } from "../../data/projects";
+import { projects, statusColour } from "../../data/projects";
 import type { GetStaticPaths } from "astro";
 
 export const getStaticPaths: GetStaticPaths = () => {
@@ -26,7 +25,7 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{getPageTitle(project.name, locale)}</title>
+    <title>{project.name} | Equity Partners</title>
     <meta name="description" content={project.tagline} />
     <link rel="icon" type="image/png" href="/EP favicon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />

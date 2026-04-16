@@ -3,7 +3,6 @@ import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import NewsletterSignup from "../components/NewsletterSignup.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import { buildLocalizedPath, getLocaleFromUrl } from "../lib/i18n";
-import { getPageTitle } from "../i18n/ui";
 import { projects, statusColour } from "../data/projects";
 
 const locale = getLocaleFromUrl(Astro.url) ?? "en";
@@ -14,7 +13,7 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{getPageTitle("Projects", locale)}</title>
+    <title>Projects | Equity Partners</title>
     <meta name="description" content="Explore Equity Partners' current real estate development projects in Andorra. View investment details, returns, timelines and project status." />
     <link rel="icon" type="image/png" href="/EP favicon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
