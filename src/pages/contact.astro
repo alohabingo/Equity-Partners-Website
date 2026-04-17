@@ -316,7 +316,155 @@ const content = getContentTranslations(locale).contact;
         background: var(--bg-white);
         border: 1px solid var(--line);
         border-radius: 1rem;
+        overflow: hidden;
+      }
+
+      .contact-info-card {
+        padding: 0;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .contact-info-header {
+        padding: 1.8rem 1.6rem 1.4rem;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .contact-info-header .eyebrow {
+        color: #53b27f;
+        margin-bottom: 0.5rem;
+      }
+
+      .contact-info-header h3 {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #1f2835;
+        margin: 0 0 0.4rem;
+      }
+
+      .contact-info-header p {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        line-height: 1.6;
+        margin: 0;
+      }
+
+      .contact-info-body {
+        padding: 1.4rem 1.6rem;
+        flex: 1;
+      }
+
+      .contact-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 0;
+      }
+
+      .contact-list li {
+        color: var(--text-muted);
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 0.5rem 0;
+        font-size: 0.88rem;
+        line-height: 1.55;
+      }
+
+      .contact-list li:last-child {
+        padding-bottom: 0;
+      }
+
+      .contact-list li:first-child {
+        padding-top: 0;
+      }
+
+      .contact-list li a {
+        color: inherit;
+        text-decoration: none;
+        transition: color 160ms ease;
+      }
+
+      .contact-list li a:hover {
+        color: #1f2835;
+      }
+
+      .contact-list-icon {
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        border-radius: 0.5rem;
+        background: rgba(83, 178, 127, 0.1);
+        color: #53b27f;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 0.05rem;
+        flex-shrink: 0;
+      }
+
+      .contact-list-icon svg {
+        width: 15px;
+        height: 15px;
+        display: block;
+      }
+
+      /* ── Form tabs ── */
+      .form-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .form-tab-btn {
+        flex: 1;
+        padding: 1rem 1.2rem;
+        font-family: inherit;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        background: #f8fafd;
+        border: none;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        transition: color 180ms ease, background 180ms ease, border-color 180ms ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+
+      .form-tab-btn:first-child {
+        border-right: 1px solid var(--line);
+      }
+
+      .form-tab-btn.is-active {
+        color: #1f2835;
+        background: #ffffff;
+        border-bottom-color: #53b27f;
+      }
+
+      .form-tab-btn svg {
+        width: 14px;
+        height: 14px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex-shrink: 0;
+      }
+
+      .form-panel {
+        display: none;
         padding: 1.3rem;
+      }
+
+      .form-panel.is-active {
+        display: block;
       }
 
       .contact-form {
@@ -399,7 +547,7 @@ const content = getContentTranslations(locale).contact;
         margin: 1rem 0 0;
         padding: 0;
         display: grid;
-        gap: 0.8rem;
+        gap: 0;
       }
 
       .contact-list li {
@@ -728,74 +876,127 @@ const content = getContentTranslations(locale).contact;
         <p class="intro">{content.intro}</p>
         <div class="contact-grid">
           <article class="contact-card">
-            <form class="contact-form" name="contact-inquiry" data-netlify="true" method="post" action="#">
-              <input type="hidden" name="form-name" value="contact-inquiry" />
-              <div class="field-row">
-                <input class="input" type="text" name="first_name" placeholder={content.form.firstName} required />
-                <input class="input" type="text" name="last_name" placeholder={content.form.lastName} required />
-              </div>
-              <div class="field-row">
+
+            <!-- Tab switcher -->
+            <div class="form-tabs" role="tablist">
+              <button
+                class="form-tab-btn is-active"
+                role="tab"
+                aria-selected="true"
+                aria-controls="panel-general"
+                id="tab-general"
+                type="button"
+              >
+                <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                General Inquiry
+              </button>
+              <button
+                class="form-tab-btn"
+                role="tab"
+                aria-selected="false"
+                aria-controls="panel-investor"
+                id="tab-investor"
+                type="button"
+              >
+                <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                Investor Inquiry
+              </button>
+            </div>
+
+            <!-- General Inquiry panel -->
+            <div class="form-panel is-active" id="panel-general" role="tabpanel" aria-labelledby="tab-general">
+              <form class="contact-form" name="general-inquiry" data-netlify="true" method="post" action="#">
+                <input type="hidden" name="form-name" value="general-inquiry" />
+                <div class="field-row">
+                  <input class="input" type="text" name="first_name" placeholder={content.form.firstName} required />
+                  <input class="input" type="text" name="last_name" placeholder={content.form.lastName} required />
+                </div>
                 <input class="input" type="email" name="email" placeholder={content.form.email} required />
-                <input class="input" type="text" name="company" placeholder={content.form.company} />
-              </div>
-              <select class="input" name="investor_type" required>
-                <option value="" disabled selected>{content.form.investorType}</option>
-                {content.form.investorTypeOptions.map((option) => (
-                  <option value={option}>{option}</option>
-                ))}
-              </select>
-              <select class="input" name="investment_timeline" required>
-                <option value="" disabled selected>{content.form.investmentTimeline}</option>
-                {content.form.investmentTimelineOptions.map((option) => (
-                  <option value={option}>{option}</option>
-                ))}
-              </select>
-              <select class="input" name="investment_range" required>
-                <option value="" disabled selected>{content.form.investmentRange}</option>
-                {content.form.investmentRangeOptions.map((option) => (
-                  <option value={option}>{option}</option>
-                ))}
-              </select>
-              <textarea class="textarea" name="message" placeholder={content.form.message} required></textarea>
-              <button class="submit" type="submit">{content.form.submit}</button>
-            </form>
+                <textarea class="textarea" name="message" placeholder="Your message…" required style="min-height: 160px;"></textarea>
+                <button class="submit" type="submit">Send Message</button>
+              </form>
+            </div>
+
+            <!-- Investor Inquiry panel -->
+            <div class="form-panel" id="panel-investor" role="tabpanel" aria-labelledby="tab-investor">
+              <form class="contact-form" name="investor-inquiry" data-netlify="true" method="post" action="#">
+                <input type="hidden" name="form-name" value="investor-inquiry" />
+                <div class="field-row">
+                  <input class="input" type="text" name="first_name" placeholder={content.form.firstName} required />
+                  <input class="input" type="text" name="last_name" placeholder={content.form.lastName} required />
+                </div>
+                <div class="field-row">
+                  <input class="input" type="email" name="email" placeholder={content.form.email} required />
+                  <input class="input" type="text" name="company" placeholder={content.form.company} />
+                </div>
+                <select class="input" name="investor_type" required>
+                  <option value="" disabled selected>{content.form.investorType}</option>
+                  {content.form.investorTypeOptions.map((option) => (
+                    <option value={option}>{option}</option>
+                  ))}
+                </select>
+                <select class="input" name="investment_timeline" required>
+                  <option value="" disabled selected>{content.form.investmentTimeline}</option>
+                  {content.form.investmentTimelineOptions.map((option) => (
+                    <option value={option}>{option}</option>
+                  ))}
+                </select>
+                <select class="input" name="investment_range" required>
+                  <option value="" disabled selected>{content.form.investmentRange}</option>
+                  {content.form.investmentRangeOptions.map((option) => (
+                    <option value={option}>{option}</option>
+                  ))}
+                </select>
+                <textarea class="textarea" name="message" placeholder={content.form.message}></textarea>
+                <button class="submit" type="submit">{content.form.submit}</button>
+              </form>
+            </div>
+
           </article>
 
-          <article class="contact-card">
-            <p class="eyebrow">{content.cardEyebrow}</p>
-            <h3>Equity Partners</h3>
-            <ul class="contact-list">
-              <li>
-                <span class="contact-list-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"></path>
-                    <path d="m22 6-10 7L2 6"></path>
-                  </svg>
-                </span>
-                <span>info@equitypartners.fund</span>
-              </li>
-              <li>
-                <span class="contact-list-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
-                  </svg>
-                </span>
-                <a href="https://wa.me/376668842" target="_blank" rel="noopener noreferrer">+376 668 842</a>
-              </li>
-              <li>
-                <span class="contact-list-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 10.5c0 6-9 12-9 12s-9-6-9-12a9 9 0 1 1 18 0Z"></path>
-                    <circle cx="12" cy="10.5" r="3"></circle>
-                  </svg>
-                </span>
-                <span>
-                  Carrer Prat de la Creu 59-65,<br />
-                  Edificio Prat de la Creu, Bloc A, 4 1ª,<br />
-                  AD500 Andorra la Vella
-                </span>
-              </li>
-            </ul>
+          <article class="contact-card contact-info-card">
+
+            <div class="contact-info-header">
+              <p class="eyebrow">{content.cardEyebrow}</p>
+              <h3>Equity Partners</h3>
+              <p>Reach out directly — our team typically responds within one business day.</p>
+            </div>
+
+            <div class="contact-info-body">
+              <ul class="contact-list">
+                <li>
+                  <span class="contact-list-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"></path>
+                      <path d="m22 6-10 7L2 6"></path>
+                    </svg>
+                  </span>
+                  <span>info@equitypartners.fund</span>
+                </li>
+                <li>
+                  <span class="contact-list-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
+                    </svg>
+                  </span>
+                  <a href="https://wa.me/376668842" target="_blank" rel="noopener noreferrer">+376 668 842</a>
+                </li>
+                <li>
+                  <span class="contact-list-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 10.5c0 6-9 12-9 12s-9-6-9-12a9 9 0 1 1 18 0Z"></path>
+                      <circle cx="12" cy="10.5" r="3"></circle>
+                    </svg>
+                  </span>
+                  <span>
+                    Carrer Prat de la Creu 59-65,<br />
+                    Edificio Prat de la Creu, Bloc A, 4 1ª,<br />
+                    AD500 Andorra la Vella
+                  </span>
+                </li>
+              </ul>
+            </div>
+
           </article>
         </div>
       </div>
@@ -827,9 +1028,28 @@ const content = getContentTranslations(locale).contact;
       const syncHeaderState = () => {
         root.classList.toggle("is-scrolled", window.scrollY > 10);
       };
-
       syncHeaderState();
       window.addEventListener("scroll", syncHeaderState, { passive: true });
+
+      // Form tab switching
+      const tabs = document.querySelectorAll(".form-tab-btn");
+      const panels = document.querySelectorAll(".form-panel");
+
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          const targetId = tab.getAttribute("aria-controls");
+
+          tabs.forEach((t) => {
+            t.classList.remove("is-active");
+            t.setAttribute("aria-selected", "false");
+          });
+          panels.forEach((p) => p.classList.remove("is-active"));
+
+          tab.classList.add("is-active");
+          tab.setAttribute("aria-selected", "true");
+          document.getElementById(targetId).classList.add("is-active");
+        });
+      });
     </script>
   </body>
 </html>

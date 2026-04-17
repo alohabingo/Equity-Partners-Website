@@ -119,8 +119,17 @@ const content = getContentTranslations(locale).home;
         border: 0;
       }
 
+      /* ── Transparent header on homepage (before scroll) ── */
+      body:not(.is-scrolled) .site-header {
+        background: transparent !important;
+        box-shadow: none !important;
+        border-bottom-color: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+
       .hero {
-        min-height: 84vh;
+        min-height: 82vh;
         padding: 2rem 0 2.1rem;
         background: linear-gradient(
             to bottom,
@@ -130,17 +139,17 @@ const content = getContentTranslations(locale).home;
             rgba(6, 8, 12, 0.3) 100%
           ),
           url("/hero-andorra-R2PtlkD-.jpg")
-            center / cover no-repeat;
+            center top / cover no-repeat;
         color: var(--text-light);
         display: flex;
         flex-direction: column;
+        justify-content: center;
       }
 
       .hero-content {
-        margin-top: auto;
         max-width: 50rem;
-        padding-top: 10rem;
-        padding-bottom: 0;
+        padding-top: 7rem;
+        padding-bottom: 3rem;
         transform: translateY(4.5rem);
         animation: rise 900ms 120ms ease both;
       }
@@ -2916,7 +2925,6 @@ const content = getContentTranslations(locale).home;
     <section class="hero">
       <div class="container">
         <div class="hero-content">
-          <p class="hero-kicker">{content.hero.kicker}</p>
           <h1>{content.hero.title}</h1>
           <p class="subline">{content.hero.subline}</p>
           <a class="hero-button" href={buildLocalizedPath("/contact", locale)}>{content.hero.cta}</a>
@@ -3402,7 +3410,7 @@ const content = getContentTranslations(locale).home;
     <script type="module">
       const root = document.body;
       const syncHeaderState = () => {
-        root.classList.toggle("is-scrolled", window.scrollY > 10);
+        root.classList.toggle("is-scrolled", window.scrollY > 60);
       };
 
       const projectGrid = document.querySelector(".project-grid");
