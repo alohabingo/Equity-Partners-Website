@@ -259,7 +259,7 @@ export const contentTranslations: Record<
         firstName: "First name",
         lastName: "Last name",
         email: "Email address",
-        company: "Company",
+        company: "Company (optional)",
         investorType: "Investor type",
         investorTypeOptions: [
           "Individual investor",
@@ -677,7 +677,7 @@ export const contentTranslations: Record<
         firstName: "Nombre",
         lastName: "Apellidos",
         email: "Correo electrónico",
-        company: "Empresa",
+        company: "Empresa (opcional)",
         investorType: "Tipo de inversor",
         investorTypeOptions: [
           "Inversor individual",
@@ -995,7 +995,7 @@ export const contentTranslations: Record<
         firstName: "Nom",
         lastName: "Cognoms",
         email: "Correu electrònic",
-        company: "Empresa",
+        company: "Empresa (opcional)",
         investorType: "Tipus d'inversor",
         investorTypeOptions: [
           "Inversor individual",
