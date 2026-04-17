@@ -425,8 +425,8 @@ const content = getContentTranslations(locale).contact;
         font-weight: 700;
         letter-spacing: 0.1em;
         text-transform: uppercase;
-        color: #ffffff;
-        background: #0f1a2a;
+        color: var(--text-muted);
+        background: #f8fafd;
         border: none;
         border-bottom: 2px solid transparent;
         cursor: pointer;
@@ -438,12 +438,12 @@ const content = getContentTranslations(locale).contact;
       }
 
       .form-tab-btn:first-child {
-        border-right: 1px solid rgba(255, 255, 255, 0.12);
+        border-right: 1px solid var(--line);
       }
 
       .form-tab-btn.is-active {
-        color: #ffffff;
-        background: #1a2a3d;
+        color: #1f2835;
+        background: #ffffff;
         border-bottom-color: #53b27f;
       }
 
