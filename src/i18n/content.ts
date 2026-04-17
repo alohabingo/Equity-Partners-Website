@@ -254,7 +254,7 @@ export const contentTranslations: Record<
       eyebrow: "Investor Inquiry",
       title: "Discuss your Andorra investment options",
       intro:
-        "Reach out to our team to answer any Andorra investment options you may have, or for any additional information you may require.",
+        "Reach out to our team to answer any Andorra investment questions you may have, or for any additional information you may require.",
       form: {
         firstName: "First name",
         lastName: "Last name",
