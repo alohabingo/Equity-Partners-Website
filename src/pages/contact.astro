@@ -502,6 +502,28 @@ const content = getContentTranslations(locale).contact;
         resize: vertical;
       }
 
+      select.input {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a667a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1.15rem center;
+        padding-right: 2.6rem;
+      }
+
+      select.input:required:invalid {
+        color: #9ea9b9;
+      }
+
+      select.input option {
+        color: #1a2433;
+      }
+
+      select.input option[value=""][disabled] {
+        color: #9ea9b9;
+      }
+
       .submit {
         display: inline-flex;
         align-items: center;
