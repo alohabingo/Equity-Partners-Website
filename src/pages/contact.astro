@@ -502,6 +502,12 @@ const content = getContentTranslations(locale).contact;
         resize: vertical;
       }
 
+      .input::placeholder,
+      .textarea::placeholder {
+        color: #7a849a;
+        opacity: 1;
+      }
+
       select.input {
         appearance: none;
         -webkit-appearance: none;
@@ -513,7 +519,7 @@ const content = getContentTranslations(locale).contact;
       }
 
       select.input:required:invalid {
-        color: #9ea9b9;
+        color: #7a849a;
       }
 
       select.input option {
@@ -521,7 +527,7 @@ const content = getContentTranslations(locale).contact;
       }
 
       select.input option[value=""][disabled] {
-        color: #9ea9b9;
+        color: #7a849a;
       }
 
       .submit {
