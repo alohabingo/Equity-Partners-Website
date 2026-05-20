@@ -51,47 +51,73 @@ const content = getContentTranslations(locale).privacy;
 
       .policy-hero {
         margin-top: var(--header-offset);
-        padding: 4rem 0 2rem;
-        background: linear-gradient(180deg, #f4f6fa, #edf1f7);
+        padding: 4rem 0 2.5rem;
+        background: radial-gradient(circle at 10% -10%, #eef2f8 0, var(--paper) 50%);
         border-top: 1px solid var(--line);
         border-bottom: 1px solid var(--line);
       }
 
       .eyebrow {
-        font-size: 0.8rem;
-        letter-spacing: 0.16em;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        font-size: 0.74rem;
+        letter-spacing: 0.28em;
         text-transform: uppercase;
-        color: var(--accent);
-        margin-bottom: 0.85rem;
+        font-weight: 600;
+        color: #3f9568;
+        margin-bottom: 0;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 32px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #53b27f);
+        display: inline-block;
       }
 
       h1 {
         font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
         font-weight: 700;
-        font-size: clamp(2rem, 5vw, 4rem);
-        line-height: 1.08;
-        letter-spacing: 0.02em;
+        font-size: clamp(2rem, 4.4vw, 3.1rem);
+        line-height: 1.05;
+        letter-spacing: -0.012em;
         color: var(--navy);
-        max-width: 18ch;
+        margin-top: 1rem;
+        max-width: none;
+      }
+
+      h1::after {
+        content: "";
+        display: block;
+        width: 64px;
+        height: 3px;
+        background: linear-gradient(90deg, #53b27f, rgba(83, 178, 127, 0));
+        margin-top: 1.1rem;
+        border-radius: 2px;
       }
 
       .policy-hero p {
-        margin-top: 1rem;
-        max-width: 50rem;
+        margin-top: 1.2rem;
+        max-width: none;
+        width: 100%;
         color: var(--slate);
-        font-size: 1rem;
-        line-height: 1.65;
+        font-size: 1.02rem;
+        line-height: 1.6;
       }
 
       .policy-content {
         padding: 4rem 0;
+        background: radial-gradient(circle at 10% -10%, #eef2f8 0, var(--paper) 50%);
       }
 
       .policy-shell {
         background: var(--bg-white);
         border: 1px solid var(--line);
-        border-radius: 1rem;
-        padding: 2rem;
+        border-radius: 1.2rem;
+        padding: 2.4rem;
+        box-shadow: 0 14px 36px rgba(15, 26, 42, 0.07);
       }
 
       .policy-block + .policy-block {
@@ -101,9 +127,21 @@ const content = getContentTranslations(locale).privacy;
       }
 
       .policy-block h2 {
-        font-size: clamp(1.55rem, 3vw, 2.45rem);
-        line-height: 1.12;
+        font-size: clamp(1.35rem, 2.4vw, 1.75rem);
+        line-height: 1.2;
+        font-weight: 700;
+        letter-spacing: -0.005em;
         color: var(--navy);
+      }
+
+      .policy-block h2::after {
+        content: "";
+        display: block;
+        width: 48px;
+        height: 3px;
+        background: linear-gradient(90deg, #53b27f, rgba(83, 178, 127, 0));
+        margin-top: 0.85rem;
+        border-radius: 2px;
       }
 
       .policy-block p,
@@ -120,40 +158,43 @@ const content = getContentTranslations(locale).privacy;
 
       .policy-meta {
         color: var(--slate-light);
-        font-size: 0.86rem;
+        font-size: 0.74rem;
         text-transform: uppercase;
-        letter-spacing: 0.1em;
+        letter-spacing: 0.18em;
+        font-weight: 600;
       }
 
       .policy-contact-button {
-        margin-top: 1.1rem;
+        margin-top: 1.4rem;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: #d8e3f2;
-        color: #132238;
+        background: rgba(83, 178, 127, 0.08);
+        color: #3f9568;
         text-decoration: none;
-        border-radius: 0.45rem;
-        padding: 0.65rem 0.95rem;
-        font-size: 0.72rem;
-        letter-spacing: 0.13em;
+        border-radius: 0.55rem;
+        padding: 0.85rem 1.4rem;
+        font-size: 0.78rem;
+        letter-spacing: 0.18em;
         text-transform: uppercase;
         font-weight: 600;
         line-height: 1;
-        border: 1px solid rgba(216, 227, 242, 0.96);
-        transition: background-color 180ms ease, transform 180ms ease, color 180ms ease, border-color 180ms ease;
+        border: 1px solid rgba(83, 178, 127, 0.55);
+        transition: background 220ms ease, border-color 220ms ease,
+          transform 220ms ease, color 220ms ease, box-shadow 220ms ease;
       }
 
       .policy-contact-button:hover {
         background: #53b27f;
         border-color: #53b27f;
         color: #ffffff;
-        transform: translateY(-1px);
+        transform: translateY(-2px);
+        box-shadow: 0 14px 28px rgba(83, 178, 127, 0.28);
       }
 
       @media (max-width: 980px) {
         .policy-shell {
-          padding: 1.35rem;
+          padding: 1.6rem;
         }
       }
     </style>

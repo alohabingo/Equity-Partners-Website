@@ -18,6 +18,15 @@ export const getStaticPaths: GetStaticPaths = () => {
 
 const { project, locale: propLocale } = Astro.props;
 const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
+
+const partnerSlug = (name: string): string =>
+  name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 ---
 
 <!doctype html>
@@ -164,18 +173,15 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
         display: flex;
         flex-direction: column;
         gap: 0.2rem;
-        padding: 0.4rem 1.6rem 0.4rem 0;
-        border-right: 1px solid var(--line);
-      }
-
-      .project-metric-item:last-child {
-        border-right: none;
-        padding-right: 0;
-        padding-left: 1.6rem;
+        padding: 0.4rem 1.6rem;
       }
 
       .project-metric-item:first-child {
         padding-left: 0;
+      }
+
+      .project-metric-item:last-child {
+        padding-right: 0;
       }
 
       .project-metric-value {
@@ -406,6 +412,67 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
         font-weight: 500;
       }
 
+      /* ── Project Partners ── */
+      .project-partners {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-top: 0.5rem;
+      }
+
+      .project-partner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1.4rem 1rem;
+        border: 1px solid var(--line);
+        border-radius: 0.85rem;
+        background: #ffffff;
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
+        transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+      }
+
+      .project-partner:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 16px 32px rgba(15, 26, 42, 0.08);
+        border-color: #c8d3e3;
+      }
+
+      .project-partner-logo {
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+      }
+
+      .project-partner-logo img {
+        max-height: 56px;
+        max-width: 100%;
+        width: auto;
+        object-fit: contain;
+        display: block;
+      }
+
+      .project-partner-name {
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: var(--navy);
+        margin: 0;
+        text-align: center;
+        line-height: 1.3;
+      }
+
+      @media (max-width: 720px) {
+        .project-partners {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
       /* ── Gallery ── */
       .project-gallery {
         display: grid;
@@ -429,7 +496,7 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
       /* ── Right sidebar ── */
       .project-sidebar {
         position: sticky;
-        top: 5.5rem;
+        top: 8rem;
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
@@ -628,21 +695,16 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
         }
 
         .project-metric-item {
-          border-right: none;
           padding: 0.6rem 0;
-          border-bottom: 1px solid var(--line);
           min-width: calc(50% - 0.5rem);
           flex: none;
           width: calc(50% - 0.5rem);
         }
 
+        .project-metric-item:first-child,
         .project-metric-item:last-child {
-          border-bottom: none;
           padding-left: 0;
-        }
-
-        .project-metric-item:first-child {
-          padding-left: 0;
+          padding-right: 0;
         }
       }
 
@@ -653,11 +715,6 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
 
         .project-gallery img:first-child {
           aspect-ratio: 4/3;
-        }
-
-        .project-metric-item {
-          width: 100%;
-          min-width: 100%;
         }
       }
     </style>
@@ -693,20 +750,16 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
       <div class="container">
         <div class="project-metrics-inner">
           <div class="project-metric-item">
-            <span class="project-metric-value">{project.value}</span>
+            <span class="project-metric-value is-green">{project.value}</span>
             <span class="project-metric-label">Project value</span>
           </div>
           <div class="project-metric-item">
-            <span class="project-metric-value is-green">{project.fixedReturn} p.a.</span>
-            <span class="project-metric-label">Fixed annual return</span>
+            <span class="project-metric-value">{project.units}</span>
+            <span class="project-metric-label">Number of units</span>
           </div>
           <div class="project-metric-item">
-            <span class="project-metric-value">{project.minInvestment}</span>
-            <span class="project-metric-label">Minimum investment</span>
-          </div>
-          <div class="project-metric-item">
-            <span class="project-metric-value">{project.holdPeriod}</span>
-            <span class="project-metric-label">Hold period</span>
+            <span class="project-metric-value">{project.sqm}</span>
+            <span class="project-metric-label">Total area</span>
           </div>
           <div class="project-metric-item">
             <span class="project-metric-value">{project.completionDate}</span>
@@ -795,6 +848,28 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
               </div>
             </div>
 
+            <!-- Project partners -->
+            {project.partners && project.partners.length > 0 && (
+              <div class="project-section" data-animate>
+                <p class="project-section-label">Delivery team</p>
+                <h2>Project Partners</h2>
+                <p>The companies we have partnered with to design, build and deliver this development.</p>
+                <div class="project-partners">
+                  {project.partners.map((partner) => (
+                    <a
+                      class="project-partner"
+                      href={`${buildLocalizedPath("/partners", locale)}#${partnerSlug(partner.name)}`}
+                      aria-label={`View ${partner.name} on the partners page`}
+                    >
+                      <div class="project-partner-logo">
+                        <img src={partner.logo} alt={partner.name} loading="lazy" />
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <!-- Regulatory note -->
             <div class="project-section" data-animate>
               <p class="project-reg-note">{project.regulatoryNote}</p>
@@ -812,43 +887,6 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
 
           <!-- Right sidebar -->
           <aside class="project-sidebar">
-
-            <!-- Investment details card -->
-            <div class="project-sidebar-card" data-animate>
-              <div class="project-sidebar-card-header">
-                <h3>Investment Details</h3>
-              </div>
-              <div class="project-sidebar-card-body">
-                <div class="project-detail-row">
-                  <span class="project-detail-key">Project value</span>
-                  <span class="project-detail-val">{project.value}</span>
-                </div>
-                <div class="project-detail-row">
-                  <span class="project-detail-key">Investment required</span>
-                  <span class="project-detail-val">{project.investmentRequired}</span>
-                </div>
-                <div class="project-detail-row">
-                  <span class="project-detail-key">Min. investment</span>
-                  <span class="project-detail-val">{project.minInvestment}</span>
-                </div>
-                <div class="project-detail-row">
-                  <span class="project-detail-key">Fixed return</span>
-                  <span class="project-detail-val is-green">{project.fixedReturn} p.a.</span>
-                </div>
-                <div class="project-detail-row">
-                  <span class="project-detail-key">Profit share</span>
-                  <span class="project-detail-val">{project.profitShare} on exit</span>
-                </div>
-                <div class="project-detail-row">
-                  <span class="project-detail-key">Hold period</span>
-                  <span class="project-detail-val">{project.holdPeriod}</span>
-                </div>
-                <div class="project-detail-row">
-                  <span class="project-detail-key">Return structure</span>
-                  <span class="project-detail-val" style="font-size:0.72rem">{project.returnStructure}</span>
-                </div>
-              </div>
-            </div>
 
             <!-- Property details card -->
             <div class="project-sidebar-card" data-animate>
@@ -869,19 +907,19 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
                   <span class="project-detail-val">{project.units}</span>
                 </div>
                 <div class="project-detail-row">
-                  <span class="project-detail-key">Total area</span>
+                  <span class="project-detail-key">Buildable area</span>
                   <span class="project-detail-val">{project.sqm}</span>
                 </div>
                 <div class="project-detail-row">
-                  <span class="project-detail-key">Floors</span>
-                  <span class="project-detail-val">{project.floors}</span>
+                  <span class="project-detail-key">Parking area</span>
+                  <span class="project-detail-val">{project.parking}</span>
                 </div>
                 <div class="project-detail-row">
                   <span class="project-detail-key">Est. completion</span>
                   <span class="project-detail-val">{project.completionDate}</span>
                 </div>
                 <div class="project-detail-row">
-                  <span class="project-detail-key">Planning status</span>
+                  <span class="project-detail-key">Project status</span>
                   <span class="project-detail-val" style="font-size:0.72rem">{project.planningStatus}</span>
                 </div>
               </div>
@@ -889,8 +927,8 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
 
             <!-- CTA card -->
             <div class="project-cta-card" data-animate>
-              <h3>Interested in this project?</h3>
-              <p>Speak with our team to receive the full investment memorandum and discuss your investment profile.</p>
+              <h3>Interested in buying this property?</h3>
+              <p>Speak with our team to learn more about availability, pricing and the purchase process for this development.</p>
               <a class="project-cta-btn" href={buildLocalizedPath("/contact", locale)}>
                 Contact our Team
                 <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>

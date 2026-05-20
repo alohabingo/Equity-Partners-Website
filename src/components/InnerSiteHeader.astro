@@ -3,7 +3,7 @@ import { buildLocalizedPath, type Locale } from "../lib/i18n";
 import { getUiTranslations } from "../i18n/ui";
 
 interface Props {
-  active?: "home" | "about" | "partners" | "blog" | "test";
+  active?: "home" | "about" | "portfolio" | "partners" | "blog" | "test";
   menuToggleId: string;
   offsetFirstSection?: boolean;
   locale: Locale;
@@ -41,9 +41,10 @@ const languages = [
     <ul class="menu-list">
       <li><a class:list={["menu-link", active === "home" && "is-active"]} href={buildLocalizedPath("/", locale)}>{t.nav.home}</a></li>
       <li><a class:list={["menu-link", active === "about" && "is-active"]} href={buildLocalizedPath("/about", locale)}>{t.nav.about}</a></li>
+      <li><a class:list={["menu-link", active === "portfolio" && "is-active"]} href={buildLocalizedPath("/projects", locale)}>{t.nav.portfolio}</a></li>
       <li><a class:list={["menu-link", active === "partners" && "is-active"]} href={buildLocalizedPath("/partners", locale)}>{t.nav.partners}</a></li>
       <li><a class:list={["menu-link", active === "blog" && "is-active"]} href={buildLocalizedPath("/blog", locale)}>{t.nav.blog}</a></li>
-      <li><a class:list={["menu-link", active === "test" && "is-active"]} href={buildLocalizedPath("/test", locale)}>{t.nav.test}</a></li>
+      {/* <li><a class:list={["menu-link", active === "test" && "is-active"]} href={buildLocalizedPath("/test", locale)}>{t.nav.test}</a></li> */}
     </ul>
     <a class="menu-cta" href={buildLocalizedPath("/contact", locale)}>{t.nav.contactUs}</a>
     <div class="language-selector" data-language-dropdown>
@@ -101,9 +102,10 @@ const languages = [
     <ul class="mobile-drawer-list">
       <li><a class:list={["mobile-drawer-link", active === "home" && "is-active"]} href={buildLocalizedPath("/", locale)}>{t.nav.home}</a></li>
       <li><a class:list={["mobile-drawer-link", active === "about" && "is-active"]} href={buildLocalizedPath("/about", locale)}>{t.nav.about}</a></li>
+      <li><a class:list={["mobile-drawer-link", active === "portfolio" && "is-active"]} href={buildLocalizedPath("/projects", locale)}>{t.nav.portfolio}</a></li>
       <li><a class:list={["mobile-drawer-link", active === "partners" && "is-active"]} href={buildLocalizedPath("/partners", locale)}>{t.nav.partners}</a></li>
       <li><a class:list={["mobile-drawer-link", active === "blog" && "is-active"]} href={buildLocalizedPath("/blog", locale)}>{t.nav.blog}</a></li>
-      <li><a class:list={["mobile-drawer-link", active === "test" && "is-active"]} href={buildLocalizedPath("/test", locale)}>{t.nav.test}</a></li>
+      {/* <li><a class:list={["mobile-drawer-link", active === "test" && "is-active"]} href={buildLocalizedPath("/test", locale)}>{t.nav.test}</a></li> */}
     </ul>
     <a class="mobile-drawer-cta" href={buildLocalizedPath("/contact", locale)}>{t.nav.contactUs}</a>
     <div class="mobile-drawer-divider" aria-hidden="true"></div>

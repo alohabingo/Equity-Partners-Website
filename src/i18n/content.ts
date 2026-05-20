@@ -181,25 +181,25 @@ export const contentTranslations: Record<
           {
             title: "Full-Cycle Project Development",
             bullets: [
-              "From initial feasibility to final property delivery",
-              "Identifying and securing high-potential land assets",
-              "Transforming acquisitions into institutional-grade assets",
+              "From feasibility to delivery",
+              "Securing high-potential land",
+              "Institutional-grade assets",
             ],
           },
           {
             title: "Local Network & Exclusive Access",
             bullets: [
-              "Access to high-value, off-market opportunities",
-              "Direct ties with local landowners and advisors",
-              "Deep-rooted expertise in the Andorran landscape",
+              "Off-market opportunities",
+              "Direct landowner ties",
+              "Deep Andorran expertise",
             ],
           },
           {
             title: "Regulatory & Structural Expertise",
             bullets: [
-              "Expert navigation of the Principality's compliance",
-              "Translating local rules into executable strategies",
-              "Professional alignment with institutional standards",
+              "Compliance navigation",
+              "Executable strategies",
+              "Institutional alignment",
             ],
           },
         ],
@@ -221,19 +221,19 @@ export const contentTranslations: Record<
         cta: "About Equity Partners",
         points: [
           {
-            title: "We move faster than the market",
+            title: "Speed and decisiveness",
             body:
-              "Our sourcing happens before assets reach public listings. By the time most investors are aware of an opportunity, we have already evaluated it.",
+              "Andorran development moves fast and we move with it — clear decisions, short loops, and no wasted cycles between sourcing and signature.",
           },
           {
-            title: "Andorra can be complex, we remove that complexity",
+            title: "Trust earned, not assumed",
             body:
-              "Between foreign investment limits, tax structuring, and planning approvals, the margin for error is high. We de-risk the process end to end.",
+              "Two decades of disciplined execution across the Principality, with transparent reporting and zero surprises for the investors we represent.",
           },
           {
-            title: "We only provide opportunities we can deliver",
+            title: "Precision over volume",
             body:
-              "We don't chase volume. Every investor relationship is selective, allowing us to commit fully to each opportunity we represent.",
+              "We curate a tight pipeline of institutional-grade opportunities, focused on quality and fit rather than chasing scale at the cost of conviction.",
           },
         ],
       },
@@ -305,7 +305,7 @@ export const contentTranslations: Record<
           title: "Data controller",
           body: [
             "The entity responsible for the processing of your personal data is Equity Partners.",
-            "If you have any privacy-related questions or wish to exercise your rights, you can contact us at info@equitypartnersandorra.com.",
+            "If you have any privacy-related questions or wish to exercise your rights, you can contact us at info@equitypartners.fund.",
           ],
         },
         {
@@ -371,7 +371,7 @@ export const contentTranslations: Record<
         {
           title: "Contact us",
           body: [
-            "If you have questions about this policy or how your data is handled, please contact info@equitypartnersandorra.com.",
+            "If you have questions about this policy or how your data is handled, please contact info@equitypartners.fund.",
           ],
         },
       ],
@@ -521,6 +521,11 @@ export const contentTranslations: Record<
           summary:
             "Hormipresa specializes in high-performance industrialized construction using architectural precast concrete. Their innovative system allows for the rapid delivery of high-quality residential and commercial projects.",
         },
+        {
+          role: "Construction Partner",
+          summary:
+            "Mariné Construccions is a trusted Andorran construction partner delivering high-quality residential developments with deep local expertise.",
+        },
       ],
     },
     blog: {
@@ -558,7 +563,7 @@ export const contentTranslations: Record<
         { title: "Limitation of liability", body: ["To the maximum extent permitted by applicable law, Equity Partners shall not be liable for any loss or damage arising out of or in connection with your use of, or inability to use, this website or reliance on any material available through it.", "This includes, to the extent permitted by law, direct, indirect, incidental, special, or consequential damages, even where Equity Partners has been advised of the possibility of such damages."] },
         { title: "Governing law and jurisdiction", body: ["These Terms of Use shall be governed by the laws applicable in the Principality of Andorra. Any dispute arising out of or in connection with these terms shall be subject to the exclusive jurisdiction of the Courts of Andorra."] },
         { title: "Changes to these terms", body: ["We may update these Terms of Use from time to time. Continued use of the website after changes are published will constitute acceptance of the revised terms.", "We recommend reviewing this page periodically so you remain aware of the current version in force."] },
-        { title: "Contact us", body: ["If you have questions about these Terms of Use, please contact info@equitypartnersandorra.com."] },
+        { title: "Contact us", body: ["If you have questions about these Terms of Use, please contact info@equitypartners.fund."] },
       ],
       contactCta: "Contact Us",
     },
@@ -574,7 +579,7 @@ export const contentTranslations: Record<
         { title: "Types of cookies we may use", bullets: ["Strictly necessary cookies needed for the core operation of the site.", "Performance and analytics cookies that help us understand how the site is used.", "Functionality cookies that remember your preferences and improve your experience."] },
         { title: "Your choices", body: ["You have the right to decide whether to accept or reject cookies. You can do this through any cookie banner or preference tool we may provide, or by adjusting your browser settings directly.", "Most browsers allow you to block or delete cookies. The exact method varies by browser and version."] },
         { title: "Changes to this policy", body: ["We may update this Cookie Policy from time to time to reflect changes in our practices, technologies, or legal requirements. Please review this page periodically to stay informed."] },
-        { title: "Contact us", body: ["If you have questions about our use of cookies or similar technologies, please contact info@equitypartnersandorra.com."] },
+        { title: "Contact us", body: ["If you have questions about our use of cookies or similar technologies, please contact info@equitypartners.fund."] },
       ],
       contactCta: "Contact Us",
     },
@@ -599,25 +604,25 @@ export const contentTranslations: Record<
           {
             title: "Desarrollo integral de proyectos",
             bullets: [
-              "Desde la viabilidad inicial hasta la entrega final del activo",
-              "Identificación y aseguramiento de suelos de alto potencial",
-              "Transformación de adquisiciones en activos de nivel institucional",
+              "De la viabilidad a la entrega",
+              "Suelos de alto potencial",
+              "Activos de nivel institucional",
             ],
           },
           {
             title: "Red local y acceso exclusivo",
             bullets: [
-              "Acceso a oportunidades off-market de alto valor",
-              "Relación directa con propietarios y asesores locales",
-              "Conocimiento profundo del entorno andorrano",
+              "Oportunidades off-market",
+              "Relación directa con propietarios",
+              "Profundo conocimiento de Andorra",
             ],
           },
           {
             title: "Experiencia regulatoria y estructural",
             bullets: [
-              "Navegación experta del marco normativo del Principado",
-              "Traducción de reglas locales en estrategias ejecutables",
-              "Alineación profesional con estándares institucionales",
+              "Navegación normativa",
+              "Estrategias ejecutables",
+              "Alineación institucional",
             ],
           },
         ],
@@ -639,19 +644,19 @@ export const contentTranslations: Record<
         cta: "Sobre Equity Partners",
         points: [
           {
-            title: "Usted se mueve más rápido que el mercado",
+            title: "Rapidez y decisión",
             body:
-              "Nuestro sourcing ocurre antes de que los activos lleguen a los listados públicos. Para cuando la mayoría de inversores conoce una oportunidad, nosotros ya la hemos evaluado.",
+              "El desarrollo en Andorra se mueve rápido y nosotros también — decisiones claras, ciclos cortos y sin tiempo perdido entre el sourcing y la firma.",
           },
           {
-            title: "Andorra es compleja — nosotros eliminamos esa complejidad",
+            title: "Confianza ganada, no presupuesta",
             body:
-              "Entre los límites de inversión extranjera, la estructuración fiscal y los permisos urbanísticos, el margen de error es alto. Gestionamos el proceso de principio a fin para eliminarlo.",
+              "Dos décadas de ejecución disciplinada en el Principado, con reportes transparentes y cero sorpresas para los inversores que representamos.",
           },
           {
-            title: "Solo aceptamos mandatos que podemos ejecutar",
+            title: "Precisión por encima del volumen",
             body:
-              "No perseguimos volumen. Cada relación con inversores es selectiva, lo que nos permite comprometernos plenamente con cada oportunidad que representamos.",
+              "Curamos un pipeline reducido de oportunidades de nivel institucional, centrados en calidad y encaje en lugar de perseguir escala a costa de convicción.",
           },
         ],
       },
@@ -857,6 +862,11 @@ export const contentTranslations: Record<
           summary:
             "Hormipresa se especializa en construcción industrializada de alto rendimiento con hormigón arquitectónico prefabricado. Su sistema innovador permite la entrega rápida de proyectos residenciales y comerciales de alta calidad.",
         },
+        {
+          role: "Socio constructor",
+          summary:
+            "Mariné Construccions es un socio constructor andorrano de confianza que entrega promociones residenciales de alta calidad con un profundo conocimiento local.",
+        },
       ],
     },
     blog: {
@@ -917,25 +927,25 @@ export const contentTranslations: Record<
           {
             title: "Desenvolupament integral de projectes",
             bullets: [
-              "Des de la viabilitat inicial fins al lliurament final de l'actiu",
-              "Identificació i assegurament de sòls d'alt potencial",
-              "Transformació d'adquisicions en actius de nivell institucional",
+              "De la viabilitat al lliurament",
+              "Sòls d'alt potencial",
+              "Actius de nivell institucional",
             ],
           },
           {
             title: "Xarxa local i accés exclusiu",
             bullets: [
-              "Accés a oportunitats off-market d'alt valor",
-              "Relació directa amb propietaris i assessors locals",
-              "Coneixement profund de l'entorn andorrà",
+              "Oportunitats off-market",
+              "Relació directa amb propietaris",
+              "Coneixement profund d'Andorra",
             ],
           },
           {
             title: "Expertesa reguladora i estructural",
             bullets: [
-              "Navegació experta del marc normatiu del Principat",
-              "Traducció de regles locals en estratègies executables",
-              "Alineació professional amb estàndards institucionals",
+              "Navegació normativa",
+              "Estratègies executables",
+              "Alineació institucional",
             ],
           },
         ],
@@ -957,19 +967,19 @@ export const contentTranslations: Record<
         cta: "Sobre Equity Partners",
         points: [
           {
-            title: "Vostè es mou més ràpid que el mercat",
+            title: "Rapidesa i decisió",
             body:
-              "El nostre sourcing succeeix abans que els actius arribin als llistats públics. Quan la majoria d'inversors coneix una oportunitat, nosaltres ja l'hem avaluada.",
+              "El desenvolupament a Andorra es mou ràpid i nosaltres també — decisions clares, cicles curts i sense temps perdut entre el sourcing i la signatura.",
           },
           {
-            title: "Andorra és complexa — nosaltres eliminem aquesta complexitat",
+            title: "Confiança guanyada, no pressuposada",
             body:
-              "Entre els límits d'inversió estrangera, l'estructuració fiscal i els permisos urbanístics, el marge d'error és alt. Gestionem el procés de principi a fi per eliminar-lo.",
+              "Dues dècades d'execució disciplinada al Principat, amb reportatges transparents i zero sorpreses per als inversors que representem.",
           },
           {
-            title: "Només acceptem mandats que podem executar",
+            title: "Precisió per damunt del volum",
             body:
-              "No perseguim volum. Cada relació amb inversors és selectiva, la qual cosa ens permet comprometre'ns plenament amb cada oportunitat que representem.",
+              "Curem un pipeline reduït d'oportunitats de nivell institucional, centrats en qualitat i encaix en lloc de perseguir escala a costa de convicció.",
           },
         ],
       },
@@ -1174,6 +1184,11 @@ export const contentTranslations: Record<
           role: "Construcció sostenible industrialitzada",
           summary:
             "Hormipresa s'especialitza en construcció industrialitzada d'alt rendiment amb formigó arquitectònic prefabricat. El seu sistema innovador permet el lliurament ràpid de projectes residencials i comercials d'alta qualitat.",
+        },
+        {
+          role: "Soci constructor",
+          summary:
+            "Mariné Construccions és un soci constructor andorrà de confiança que lliura promocions residencials d'alta qualitat amb un profund coneixement local.",
         },
       ],
     },

@@ -27,24 +27,24 @@ const advantages = [
 
 const projects = [
   {
-    name: "Nanta Alta Luxury villas",
+    name: "Nanta Alta Luxury Villas",
     status: "Under Construction",
     value: "€50M",
     sector: "Luxury Residential",
     image: "/04c%20copy.jpg",
   },
   {
-    name: "Ordino Heights",
+    name: "Ordino Prestige",
     status: "Pipeline",
-    value: "€18M",
-    sector: "Residential Development",
+    value: "€35M",
+    sector: "Luxury Residential",
     image: "/ordino%20heights.jpg",
   },
   {
-    name: "Funicamp ski Residencies",
+    name: "Funicamp Ski Residencies",
     status: "Pipeline",
-    value: "€22M",
-    sector: "Mixed-Use",
+    value: "€55M",
+    sector: "Luxury Residential",
     image: "/funicamp%20ski.jpg",
   },
 ];
@@ -60,6 +60,7 @@ const localPartners = [
   { name: "Pret a Porter Casas", logo: "/images/partners/pret%20a%20porter%20casas%20logo.svg" },
   { name: "Hormipresa", logo: "/images/partners/hormipresa%20.webp" },
   { name: "MoraBank", logo: "/images/partners/mora%20bank.png" },
+  { name: "Mariné Construccions", logo: "/images/partners/marine.png" },
 ];
 
 const localPartnersLoop = [...localPartners, ...localPartners, ...localPartners, ...localPartners];
@@ -166,19 +167,38 @@ const content = getContentTranslations(locale).home;
         font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
         font-weight: 700;
         font-size: clamp(2rem, 5vw, 4rem);
-        letter-spacing: 0.02em;
-        line-height: 1.08;
+        letter-spacing: -0.012em;
+        line-height: 1.05;
+      }
+
+      h1::after {
+        content: "";
+        display: block;
+        width: 72px;
+        height: 3px;
+        background: linear-gradient(90deg, #53b27f, rgba(83, 178, 127, 0));
+        margin-top: 1.3rem;
+        border-radius: 2px;
       }
 
       .subline {
-        margin-top: 0.9rem;
+        margin-top: 1.1rem;
         max-width: 42rem;
-        color: rgba(255, 255, 255, 0.96);
+        color: #ffffff;
         font-size: clamp(1rem, 1.8vw, 1.2rem);
+        line-height: 1.55;
+        text-shadow: 0 1px 8px rgba(8, 14, 23, 0.45);
+      }
+
+      .hero-actions {
+        margin-top: 1.8rem;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.85rem;
       }
 
       .hero-button {
-        margin-top: 1.6rem;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -186,42 +206,71 @@ const content = getContentTranslations(locale).home;
         color: #ffffff;
         background: #53b27f;
         text-decoration: none;
-        font-size: 0.72rem;
-        letter-spacing: 0.13em;
+        font-size: 0.78rem;
+        letter-spacing: 0.18em;
         text-transform: uppercase;
         font-weight: 600;
         line-height: 1;
-        border-radius: 0.45rem;
-        padding: 0.65rem 0.95rem;
+        border-radius: 0.55rem;
+        padding: 0.95rem 1.5rem;
         border: 1px solid #53b27f;
         white-space: nowrap;
-        transition: background-color 180ms ease, transform 180ms ease, color 180ms ease,
-          border-color 180ms ease, box-shadow 180ms ease;
+        box-shadow: 0 10px 24px rgba(15, 60, 35, 0.28);
+        transition: background-color 220ms ease, transform 220ms ease, color 220ms ease,
+          border-color 220ms ease, box-shadow 220ms ease;
       }
 
       .hero-button:hover {
         background: #3f9568;
         border-color: #3f9568;
-        transform: translateY(-1px);
-        box-shadow: 0 12px 24px rgba(12, 24, 18, 0.22);
+        transform: translateY(-2px);
+        box-shadow: 0 16px 32px rgba(12, 24, 18, 0.34);
+      }
+
+      .hero-button.is-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        color: #ffffff;
+        box-shadow: none;
+        backdrop-filter: blur(6px) saturate(170%) brightness(0.82) contrast(1.05);
+        -webkit-backdrop-filter: blur(6px) saturate(170%) brightness(0.82) contrast(1.05);
+        text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+      }
+
+      .hero-button.is-secondary:hover {
+        background: #53b27f;
+        border-color: #53b27f;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 16px 32px rgba(15, 60, 35, 0.32);
       }
 
       .hero-kicker {
         margin-top: 0;
-        margin-bottom: 1.1rem;
+        margin-bottom: 1.3rem;
         display: inline-flex;
         align-items: center;
-        padding: 0.55rem 0.9rem;
-        border-radius: 0.45rem;
-        background: rgba(15, 26, 42, 0.42);
+        gap: 0.75rem;
+        padding: 0.55rem 1rem;
+        border-radius: 0.5rem;
+        background: rgba(15, 26, 42, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.18);
-        box-shadow: 0 10px 24px rgba(7, 12, 20, 0.18);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        font-size: 0.78rem;
-        letter-spacing: 0.24em;
+        box-shadow: 0 10px 24px rgba(7, 12, 20, 0.22);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        font-size: 0.74rem;
+        letter-spacing: 0.28em;
         text-transform: uppercase;
-        color: #eef4fb;
+        font-weight: 600;
+        color: #9be0b9;
+      }
+
+      .hero-kicker::before {
+        content: "";
+        width: 28px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #6ec595);
+        display: inline-block;
       }
 
       .section {
@@ -231,7 +280,7 @@ const content = getContentTranslations(locale).home;
       .partners-wrap {
         background: #ffffff;
         border-bottom: 1px solid var(--line);
-        padding: 2.2rem 0 2rem;
+        padding: 2.4rem 0 2.2rem;
         overflow: hidden;
       }
 
@@ -247,15 +296,35 @@ const content = getContentTranslations(locale).home;
       }
 
       .partners-title {
-        margin: 0 0 1.4rem;
-        text-align: center;
+        margin: 0 0 1.5rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        width: 100%;
+        justify-content: center;
         font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
-        font-size: 0.8rem;
-        letter-spacing: 0.16em;
+        font-size: 0.74rem;
+        letter-spacing: 0.28em;
         text-transform: uppercase;
-        color: var(--accent);
-        font-weight: 400;
+        color: #3f9568;
+        font-weight: 600;
         text-decoration: none;
+      }
+
+      .partners-title::before,
+      .partners-title::after {
+        content: "";
+        display: inline-block;
+        width: 32px;
+        height: 1px;
+      }
+
+      .partners-title::before {
+        background: linear-gradient(90deg, transparent, #53b27f);
+      }
+
+      .partners-title::after {
+        background: linear-gradient(90deg, #53b27f, transparent);
       }
 
       .partners-divider {
@@ -269,6 +338,20 @@ const content = getContentTranslations(locale).home;
         position: relative;
         overflow: hidden;
         width: 100%;
+        -webkit-mask-image: linear-gradient(
+          90deg,
+          transparent 0%,
+          #000 8%,
+          #000 92%,
+          transparent 100%
+        );
+        mask-image: linear-gradient(
+          90deg,
+          transparent 0%,
+          #000 8%,
+          #000 92%,
+          transparent 100%
+        );
       }
 
       .partners-track {
@@ -521,6 +604,523 @@ const content = getContentTranslations(locale).home;
 
       .advantage-home.is-dark-cards .cta-link {
         color: #f3f7fc;
+      }
+
+      /* ────────────────────────────────────────────────────────────
+         "What we do" — Spotlight treatment (light)
+         Light backdrop with soft tinted glows, white cards,
+         editorial numerals and a green accent rule on hover.
+         Scoped to .advantage-home.is-spotlight so it only affects
+         this section and nothing else on the page.
+         ──────────────────────────────────────────────────────────── */
+      .advantage-home.is-spotlight {
+        position: relative;
+        padding: 5.5rem 0 4.5rem;
+        background: radial-gradient(circle at 10% -10%, #eef2f8 0, #f4f6fa 50%);
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        overflow: hidden;
+      }
+
+      .advantage-home.is-spotlight::before,
+      .advantage-home.is-spotlight::after {
+        content: none;
+      }
+
+      .advantage-home.is-spotlight .container {
+        position: relative;
+        z-index: 1;
+      }
+
+      .advantage-home.is-spotlight .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        color: #3f9568;
+        font-size: 0.74rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+
+      .advantage-home.is-spotlight .eyebrow::before {
+        content: "";
+        width: 32px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #53b27f);
+        display: inline-block;
+      }
+
+      .advantage-home.is-spotlight .focus-title {
+        color: var(--text-primary);
+        font-size: clamp(2rem, 4.4vw, 3.1rem);
+        font-weight: 700;
+        letter-spacing: -0.012em;
+        line-height: 1.05;
+        margin-top: 1rem;
+        max-width: 30rem;
+      }
+
+      .advantage-home.is-spotlight .focus-title::after {
+        content: "";
+        display: block;
+        width: 64px;
+        height: 3px;
+        background: linear-gradient(90deg, #53b27f, rgba(83, 178, 127, 0));
+        margin-top: 1.1rem;
+        border-radius: 2px;
+      }
+
+      .advantage-home.is-spotlight .focus-intro {
+        color: var(--text-muted);
+        max-width: none;
+        width: 100%;
+        margin-top: 1.2rem;
+        font-size: 1.02rem;
+        line-height: 1.6;
+      }
+
+      .advantage-home.is-spotlight .advantage-home-grid {
+        margin-top: 3.2rem;
+        gap: 1.4rem;
+      }
+
+      .advantage-home.is-spotlight .advantage-home-card {
+        position: relative;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 1.2rem;
+        padding: 2.2rem 1.7rem 1.8rem;
+        overflow: hidden;
+        isolation: isolate;
+        box-shadow: 0 10px 30px rgba(15, 26, 42, 0.06);
+        transition: transform 360ms cubic-bezier(0.2, 0.65, 0.35, 1),
+          border-color 360ms ease, box-shadow 360ms ease;
+      }
+
+      .advantage-home.is-spotlight .advantage-home-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 85% 0%, rgba(83, 178, 127, 0.14), transparent 60%);
+        opacity: 0;
+        transition: opacity 360ms ease;
+        z-index: -1;
+        pointer-events: none;
+      }
+
+      .advantage-home.is-spotlight .advantage-home-card::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(83, 178, 127, 0.55), transparent);
+        opacity: 0;
+        transition: opacity 360ms ease;
+      }
+
+      .advantage-home.is-spotlight .advantage-home-card:hover {
+        transform: translateY(-6px);
+        border-color: rgba(83, 178, 127, 0.42);
+        box-shadow: 0 26px 48px rgba(15, 26, 42, 0.12),
+          0 0 0 1px rgba(83, 178, 127, 0.16) inset;
+      }
+
+      .advantage-home.is-spotlight .advantage-home-card:hover::before,
+      .advantage-home.is-spotlight .advantage-home-card:hover::after {
+        opacity: 1;
+      }
+
+      .advantage-home.is-spotlight .advantage-home-card-number {
+        position: absolute;
+        top: 1.2rem;
+        right: 1.5rem;
+        font-size: 3.2rem;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        color: rgba(31, 40, 53, 0.07);
+        line-height: 1;
+        z-index: 0;
+        font-feature-settings: "tnum";
+        transition: color 360ms ease, transform 360ms ease;
+      }
+
+      .advantage-home.is-spotlight .advantage-home-card:hover .advantage-home-card-number {
+        color: rgba(83, 178, 127, 0.32);
+        transform: translateY(-2px);
+      }
+
+      .advantage-home.is-spotlight .advantage-home-grid.is-test .advantage-home-card-head {
+        margin-bottom: 1.4rem;
+        position: relative;
+        z-index: 1;
+      }
+
+      .advantage-home.is-spotlight .advantage-home-grid.is-test .advantage-home-icon {
+        width: 3.1rem;
+        height: 3.1rem;
+        border-radius: 0.85rem;
+        background: linear-gradient(135deg, #53b27f 0%, #3f9568 100%);
+        box-shadow: 0 10px 22px rgba(83, 178, 127, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.22);
+        transition: transform 360ms cubic-bezier(0.2, 0.65, 0.35, 1),
+          box-shadow 360ms ease, background 360ms ease;
+      }
+
+      .advantage-home.is-spotlight
+        .advantage-home-grid.is-test
+        .advantage-home-card:hover
+        .advantage-home-icon {
+        background: linear-gradient(135deg, #5fc48d 0%, #4aa775 100%);
+        transform: scale(1.05) rotate(-3deg);
+        box-shadow: 0 14px 28px rgba(83, 178, 127, 0.34),
+          inset 0 1px 0 rgba(255, 255, 255, 0.28);
+      }
+
+      .advantage-home.is-spotlight
+        .advantage-home-grid.is-test
+        .advantage-home-icon
+        svg {
+        stroke: #ffffff;
+        width: 1.45rem;
+        height: 1.45rem;
+      }
+
+      .advantage-home.is-spotlight
+        .advantage-home-grid.is-test
+        .advantage-home-card:hover
+        .advantage-home-icon
+        svg {
+        stroke: #ffffff;
+      }
+
+      .advantage-home.is-spotlight .advantage-home-card h3 {
+        color: var(--text-primary);
+        font-size: 1.18rem;
+        font-weight: 600;
+        letter-spacing: -0.005em;
+        line-height: 1.25;
+        max-width: 13rem;
+      }
+
+      .advantage-home.is-spotlight .advantage-home-card-divider {
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          rgba(83, 178, 127, 0.5),
+          rgba(83, 178, 127, 0.05)
+        );
+        margin: 0 0 1.25rem;
+        position: relative;
+        z-index: 1;
+      }
+
+      .advantage-home.is-spotlight .advantage-home-list {
+        margin-top: 0;
+        gap: 0.85rem;
+        position: relative;
+        z-index: 1;
+      }
+
+      .advantage-home.is-spotlight .advantage-home-list li {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+
+      .advantage-home.is-spotlight .advantage-home-check {
+        color: #53b27f;
+      }
+
+      .advantage-home.is-spotlight .cta-link {
+        position: relative;
+        z-index: 1;
+        margin-top: 2.6rem;
+        color: #3f9568;
+        font-size: 0.78rem;
+        letter-spacing: 0.18em;
+        padding: 0.85rem 1.4rem;
+        border: 1px solid rgba(83, 178, 127, 0.55);
+        border-bottom-width: 1px;
+        border-radius: 0.55rem;
+        background: rgba(83, 178, 127, 0.08);
+        transition: background 220ms ease, border-color 220ms ease,
+          transform 220ms ease, color 220ms ease, box-shadow 220ms ease;
+      }
+
+      .advantage-home.is-spotlight .cta-link:hover {
+        background: #53b27f;
+        border-color: #53b27f;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 14px 28px rgba(83, 178, 127, 0.28);
+      }
+
+      @media (max-width: 680px) {
+        .advantage-home.is-spotlight {
+          padding: 4rem 0 3.5rem;
+        }
+
+        .advantage-home.is-spotlight .advantage-home-card {
+          padding: 1.9rem 1.5rem 1.6rem;
+        }
+
+        .advantage-home.is-spotlight .advantage-home-card-number {
+          font-size: 2.6rem;
+          top: 1rem;
+          right: 1.2rem;
+        }
+      }
+
+      /* ────────────────────────────────────────────────────────────
+         "Work with the best" — Spotlight treatment (light)
+         Mirrors .advantage-home.is-spotlight so both home sections
+         share the same visual language.
+         ──────────────────────────────────────────────────────────── */
+      .why-equity-home.is-spotlight {
+        position: relative;
+        padding: 5.5rem 0 4.5rem;
+        background: radial-gradient(circle at 10% -10%, #eef2f8 0, #f4f6fa 50%);
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        overflow: hidden;
+      }
+
+      .why-equity-home.is-spotlight::before,
+      .why-equity-home.is-spotlight::after {
+        content: none;
+      }
+
+      .why-equity-home.is-spotlight .container {
+        position: relative;
+        z-index: 1;
+      }
+
+      .why-equity-home.is-spotlight .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        color: #3f9568;
+        font-size: 0.74rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+
+      .why-equity-home.is-spotlight .eyebrow::before {
+        content: "";
+        width: 32px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #53b27f);
+        display: inline-block;
+      }
+
+      .why-equity-home.is-spotlight .section-header h2 {
+        color: var(--text-primary);
+        font-size: clamp(2rem, 4.4vw, 3.1rem);
+        font-weight: 700;
+        letter-spacing: -0.012em;
+        line-height: 1.05;
+        margin-top: 1rem;
+        max-width: none;
+        white-space: nowrap;
+      }
+
+      .why-equity-home.is-spotlight .section-header h2::after {
+        content: "";
+        display: block;
+        width: 64px;
+        height: 3px;
+        background: linear-gradient(90deg, #53b27f, rgba(83, 178, 127, 0));
+        margin-top: 1.1rem;
+        border-radius: 2px;
+      }
+
+      .why-equity-home.is-spotlight .section-header .intro {
+        color: var(--text-muted);
+        max-width: none;
+        width: 100%;
+        margin-top: 1.2rem;
+        font-size: 1.02rem;
+        line-height: 1.6;
+      }
+
+      .why-equity-home.is-spotlight .why-equity-home-body {
+        margin-top: 3rem;
+        gap: 1.4rem;
+      }
+
+      .why-equity-home.is-spotlight .why-equity-home-media {
+        border-radius: 1.2rem;
+        border: 1px solid var(--line);
+        box-shadow: 0 18px 40px rgba(15, 26, 42, 0.07);
+      }
+
+      .why-equity-home.is-spotlight .why-equity-home-points {
+        gap: 1.1rem;
+      }
+
+      .why-equity-home.is-spotlight .why-equity-home-point {
+        position: relative;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 1.2rem;
+        padding: 1.7rem 1.7rem 1.6rem;
+        grid-template-columns: 3rem minmax(0, 1fr);
+        column-gap: 1.1rem;
+        overflow: hidden;
+        isolation: isolate;
+        box-shadow: 0 10px 30px rgba(15, 26, 42, 0.06);
+        transition: transform 360ms cubic-bezier(0.2, 0.65, 0.35, 1),
+          border-color 360ms ease, box-shadow 360ms ease;
+      }
+
+      .why-equity-home.is-spotlight .why-equity-home-point::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 90% 0%, rgba(83, 178, 127, 0.14), transparent 60%);
+        opacity: 0;
+        transition: opacity 360ms ease;
+        z-index: -1;
+        pointer-events: none;
+      }
+
+      .why-equity-home.is-spotlight .why-equity-home-point::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(83, 178, 127, 0.55), transparent);
+        opacity: 0;
+        transition: opacity 360ms ease;
+      }
+
+      .why-equity-home.is-spotlight .why-equity-home-point:hover {
+        transform: translateY(-6px);
+        border-color: rgba(83, 178, 127, 0.42);
+        box-shadow: 0 26px 48px rgba(15, 26, 42, 0.12),
+          0 0 0 1px rgba(83, 178, 127, 0.16) inset;
+      }
+
+      .why-equity-home.is-spotlight .why-equity-home-point:hover::before,
+      .why-equity-home.is-spotlight .why-equity-home-point:hover::after {
+        opacity: 1;
+      }
+
+      .why-equity-home.is-spotlight .why-equity-home-point-number {
+        position: absolute;
+        top: 1rem;
+        right: 1.4rem;
+        font-size: 2.6rem;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        color: rgba(31, 40, 53, 0.07);
+        line-height: 1;
+        z-index: 0;
+        font-feature-settings: "tnum";
+        transition: color 360ms ease, transform 360ms ease;
+      }
+
+      .why-equity-home.is-spotlight .why-equity-home-point:hover .why-equity-home-point-number {
+        color: rgba(83, 178, 127, 0.32);
+        transform: translateY(-2px);
+      }
+
+      .why-equity-home.is-spotlight .why-equity-home-point-icon {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 0.85rem;
+        background: linear-gradient(135deg, #53b27f 0%, #3f9568 100%);
+        box-shadow: 0 10px 22px rgba(83, 178, 127, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.22);
+        transition: transform 360ms cubic-bezier(0.2, 0.65, 0.35, 1),
+          box-shadow 360ms ease, background 360ms ease;
+      }
+
+      .why-equity-home.is-spotlight .why-equity-home-point:hover .why-equity-home-point-icon {
+        background: linear-gradient(135deg, #5fc48d 0%, #4aa775 100%);
+        transform: scale(1.05) rotate(-3deg);
+        box-shadow: 0 14px 28px rgba(83, 178, 127, 0.34),
+          inset 0 1px 0 rgba(255, 255, 255, 0.28);
+      }
+
+      .why-equity-home.is-spotlight .why-equity-home-point-icon svg {
+        stroke: #ffffff;
+        width: 1.4rem;
+        height: 1.4rem;
+      }
+
+      .why-equity-home.is-spotlight .why-equity-home-point:hover .why-equity-home-point-icon svg {
+        stroke: #ffffff;
+      }
+
+      .why-equity-home.is-spotlight .why-equity-home-point-copy h3 {
+        color: var(--text-primary);
+        font-size: 1.15rem;
+        font-weight: 600;
+        letter-spacing: -0.005em;
+        line-height: 1.25;
+        position: relative;
+        z-index: 1;
+        max-width: 16rem;
+      }
+
+      .why-equity-home.is-spotlight .why-equity-home-point-copy p {
+        color: var(--text-muted);
+        font-size: 0.93rem;
+        line-height: 1.55;
+        margin-top: 0.7rem;
+        position: relative;
+        z-index: 1;
+      }
+
+      .why-equity-home.is-spotlight .cta-link {
+        position: relative;
+        z-index: 1;
+        margin-top: 2.6rem;
+        color: #3f9568;
+        font-size: 0.78rem;
+        letter-spacing: 0.18em;
+        padding: 0.85rem 1.4rem;
+        border: 1px solid rgba(83, 178, 127, 0.55);
+        border-bottom-width: 1px;
+        border-radius: 0.55rem;
+        background: rgba(83, 178, 127, 0.08);
+        transition: background 220ms ease, border-color 220ms ease,
+          transform 220ms ease, color 220ms ease, box-shadow 220ms ease;
+      }
+
+      .why-equity-home.is-spotlight .cta-link:hover {
+        background: #53b27f;
+        border-color: #53b27f;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 14px 28px rgba(83, 178, 127, 0.28);
+      }
+
+      @media (max-width: 680px) {
+        .why-equity-home.is-spotlight {
+          padding: 4rem 0 3.5rem;
+        }
+
+        .why-equity-home.is-spotlight .section-header h2 {
+          white-space: normal;
+        }
+
+        .why-equity-home.is-spotlight .why-equity-home-point {
+          padding: 1.5rem 1.4rem;
+        }
+
+        .why-equity-home.is-spotlight .why-equity-home-point-number {
+          font-size: 2.2rem;
+          top: 0.9rem;
+          right: 1.1rem;
+        }
       }
 
       @keyframes partners-scroll {
@@ -2535,6 +3135,284 @@ const content = getContentTranslations(locale).home;
         }
       }
 
+      /* ────────────────────────────────────────────────────────────
+         Timeline V2 — Spotlight treatment (light)
+         Mirrors the other home spotlight sections for visual unity.
+         ──────────────────────────────────────────────────────────── */
+      .timeline-v2.is-spotlight {
+        position: relative;
+        padding: 5.5rem 0 4.5rem;
+        background: radial-gradient(circle at 10% -10%, #eef2f8 0, #f4f6fa 50%);
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        overflow: hidden;
+      }
+
+      .timeline-v2.is-spotlight::before,
+      .timeline-v2.is-spotlight::after {
+        content: none;
+      }
+
+      .timeline-v2.is-spotlight .container {
+        position: relative;
+        z-index: 1;
+      }
+
+      .timeline-v2.is-spotlight .section-header {
+        margin-bottom: 3rem;
+      }
+
+      .timeline-v2.is-spotlight .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        color: #3f9568;
+        font-size: 0.74rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 0;
+      }
+
+      .timeline-v2.is-spotlight .eyebrow::before {
+        content: "";
+        width: 32px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #53b27f);
+        display: inline-block;
+      }
+
+      .timeline-v2.is-spotlight h2 {
+        color: var(--text-primary);
+        font-size: clamp(2rem, 4.4vw, 3.1rem);
+        font-weight: 700;
+        letter-spacing: -0.012em;
+        line-height: 1.05;
+        margin-top: 1rem;
+        margin-bottom: 0;
+        max-width: none;
+        white-space: nowrap;
+      }
+
+      .timeline-v2.is-spotlight h2::after {
+        content: "";
+        display: block;
+        width: 64px;
+        height: 3px;
+        background: linear-gradient(90deg, #53b27f, rgba(83, 178, 127, 0));
+        margin-top: 1.1rem;
+        border-radius: 2px;
+      }
+
+      .timeline-v2.is-spotlight .intro {
+        color: var(--text-muted);
+        max-width: none;
+        width: 100%;
+        margin-top: 1.2rem;
+        font-size: 1.02rem;
+        line-height: 1.6;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-card {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 0;
+        border: 1px solid var(--line);
+        border-radius: 1.2rem;
+        overflow: hidden;
+        background: #ffffff;
+        box-shadow: 0 14px 36px rgba(15, 26, 42, 0.07);
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-col {
+        position: relative;
+        background: transparent;
+        border: none;
+        border-right: 1px solid var(--line);
+        border-radius: 0;
+        padding: 2rem 1.4rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        overflow: hidden;
+        box-shadow: none;
+        transition: background 320ms ease;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-col::before,
+      .timeline-v2.is-spotlight .timeline-v2-col::after {
+        content: none;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-col:last-child {
+        border-right: none;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-col:hover {
+        background: rgba(83, 178, 127, 0.05);
+        transform: none;
+        border-color: var(--line);
+        box-shadow: none;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-step-num {
+        position: relative;
+        z-index: 1;
+        color: #3f9568;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-step-icon {
+        position: relative;
+        z-index: 1;
+        width: 3.4rem;
+        height: 3.4rem;
+        border-radius: 0.95rem;
+        background: linear-gradient(135deg, #53b27f 0%, #3f9568 100%);
+        border: none;
+        box-shadow: 0 10px 22px rgba(83, 178, 127, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.22);
+        margin-bottom: 1rem;
+        transition: transform 360ms cubic-bezier(0.2, 0.65, 0.35, 1),
+          box-shadow 360ms ease, background 360ms ease;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-col:hover .timeline-v2-step-icon {
+        background: linear-gradient(135deg, #5fc48d 0%, #4aa775 100%);
+        border-color: transparent;
+        transform: scale(1.05) rotate(-3deg);
+        box-shadow: 0 14px 28px rgba(83, 178, 127, 0.34),
+          inset 0 1px 0 rgba(255, 255, 255, 0.28);
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-step-icon svg {
+        width: 1.55rem;
+        height: 1.55rem;
+        stroke: #ffffff;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-col:hover .timeline-v2-step-icon svg {
+        stroke: #ffffff;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-col h3 {
+        position: relative;
+        z-index: 1;
+        color: var(--text-primary);
+        font-size: 1.05rem;
+        font-weight: 600;
+        letter-spacing: -0.005em;
+        line-height: 1.25;
+        margin: 0;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-col p {
+        position: relative;
+        z-index: 1;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        line-height: 1.5;
+        margin: 0.7rem auto 0;
+        max-width: 22ch;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-cta {
+        margin-top: 2.4rem;
+        padding: 0;
+        position: relative;
+        z-index: 1;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-cta .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: auto;
+        color: #3f9568;
+        background: rgba(83, 178, 127, 0.08);
+        border: 1px solid rgba(83, 178, 127, 0.55);
+        font-size: 0.78rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        padding: 0.85rem 1.4rem;
+        border-radius: 0.55rem;
+        transition: background 220ms ease, border-color 220ms ease,
+          transform 220ms ease, color 220ms ease, box-shadow 220ms ease;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-cta .button:hover {
+        background: #53b27f;
+        border-color: #53b27f;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 14px 28px rgba(83, 178, 127, 0.28);
+      }
+
+      @media (max-width: 980px) {
+        .timeline-v2.is-spotlight .timeline-v2-card {
+          grid-template-columns: 1fr;
+          gap: 0;
+        }
+
+        .timeline-v2.is-spotlight .timeline-v2-col {
+          display: grid;
+          grid-template-columns: 3.4rem 1fr;
+          grid-template-rows: auto auto auto;
+          column-gap: 1.2rem;
+          align-items: center;
+          text-align: left;
+          padding: 1.6rem 1.4rem;
+          border-right: none;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .timeline-v2.is-spotlight .timeline-v2-col:last-child {
+          border-bottom: none;
+        }
+
+        .timeline-v2.is-spotlight .timeline-v2-step-icon {
+          grid-column: 1;
+          grid-row: 1 / 4;
+          margin: 0;
+          align-self: center;
+          width: 3.4rem;
+          height: 3.4rem;
+        }
+
+        .timeline-v2.is-spotlight .timeline-v2-step-num {
+          grid-column: 2;
+          grid-row: 1;
+          margin-bottom: 0.3rem;
+        }
+
+        .timeline-v2.is-spotlight .timeline-v2-col h3 {
+          grid-column: 2;
+          grid-row: 2;
+        }
+
+        .timeline-v2.is-spotlight .timeline-v2-col p {
+          grid-column: 2;
+          grid-row: 3;
+          margin: 0.5rem 0 0;
+          max-width: none;
+        }
+      }
+
+      @media (max-width: 680px) {
+        .timeline-v2.is-spotlight {
+          padding: 4rem 0 3.5rem;
+        }
+
+        .timeline-v2.is-spotlight h2 {
+          white-space: normal;
+        }
+      }
+
       /* ── What We Offer ── */
       .what-we-offer {
         background: #0f1a2a;
@@ -2901,6 +3779,971 @@ const content = getContentTranslations(locale).home;
         }
       }
 
+      /* ────────────────────────────────────────────────────────────
+         "The Andorra Advantage" — Spotlight treatment (light)
+         Mirrors .advantage-home.is-spotlight and .why-equity-home.is-spotlight
+         so all three home sections share one visual language.
+         ──────────────────────────────────────────────────────────── */
+      .andorra-adv-v2.is-spotlight {
+        position: relative;
+        padding: 5.5rem 0 4.5rem;
+        background: radial-gradient(circle at 10% -10%, #eef2f8 0, #f4f6fa 50%);
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        overflow: hidden;
+      }
+
+      .andorra-adv-v2.is-spotlight::before,
+      .andorra-adv-v2.is-spotlight::after {
+        content: none;
+      }
+
+      .andorra-adv-v2.is-spotlight .container {
+        position: relative;
+        z-index: 1;
+      }
+
+      .andorra-adv-v2.is-spotlight .andorra-adv-v2-header {
+        margin-bottom: 3rem;
+      }
+
+      .andorra-adv-v2.is-spotlight .andorra-adv-v2-header .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        color: #3f9568;
+        font-size: 0.74rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 0;
+      }
+
+      .andorra-adv-v2.is-spotlight .andorra-adv-v2-header .eyebrow::before {
+        content: "";
+        width: 32px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #53b27f);
+        display: inline-block;
+      }
+
+      .andorra-adv-v2.is-spotlight .andorra-adv-v2-header .focus-title {
+        color: var(--text-primary);
+        font-size: clamp(2rem, 4.4vw, 3.1rem);
+        font-weight: 700;
+        letter-spacing: -0.012em;
+        line-height: 1.05;
+        margin-top: 1rem;
+        margin-bottom: 0;
+        max-width: none;
+        white-space: nowrap;
+      }
+
+      .andorra-adv-v2.is-spotlight .andorra-adv-v2-header .focus-title::after {
+        content: "";
+        display: block;
+        width: 64px;
+        height: 3px;
+        background: linear-gradient(90deg, #53b27f, rgba(83, 178, 127, 0));
+        margin-top: 1.1rem;
+        border-radius: 2px;
+      }
+
+      .andorra-adv-v2.is-spotlight .andorra-adv-v2-header .focus-intro {
+        color: var(--text-muted);
+        max-width: none;
+        width: 100%;
+        margin-top: 1.2rem;
+        font-size: 1.02rem;
+        line-height: 1.6;
+      }
+
+      .andorra-adv-v2.is-spotlight .andorra-adv-v2-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.4rem;
+        border: none;
+        border-radius: 0;
+        overflow: visible;
+        background: transparent;
+      }
+
+      .andorra-adv-v2.is-spotlight .andorra-adv-v2-item {
+        position: relative;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 1.2rem;
+        padding: 2.2rem 1.8rem 1.8rem;
+        overflow: hidden;
+        isolation: isolate;
+        box-shadow: 0 10px 30px rgba(15, 26, 42, 0.06);
+        transition: transform 360ms cubic-bezier(0.2, 0.65, 0.35, 1),
+          border-color 360ms ease, box-shadow 360ms ease, background 360ms ease;
+      }
+
+      .andorra-adv-v2.is-spotlight .andorra-adv-v2-item::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 85% 0%, rgba(83, 178, 127, 0.14), transparent 60%);
+        opacity: 0;
+        transition: opacity 360ms ease;
+        z-index: -1;
+        pointer-events: none;
+      }
+
+      .andorra-adv-v2.is-spotlight .andorra-adv-v2-item::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(83, 178, 127, 0.55), transparent);
+        opacity: 0;
+        transition: opacity 360ms ease;
+      }
+
+      .andorra-adv-v2.is-spotlight .andorra-adv-v2-item:hover {
+        background: #ffffff;
+        transform: translateY(-6px);
+        border-color: rgba(83, 178, 127, 0.42);
+        box-shadow: 0 26px 48px rgba(15, 26, 42, 0.12),
+          0 0 0 1px rgba(83, 178, 127, 0.16) inset;
+      }
+
+      .andorra-adv-v2.is-spotlight .andorra-adv-v2-item:hover::before,
+      .andorra-adv-v2.is-spotlight .andorra-adv-v2-item:hover::after {
+        opacity: 1;
+      }
+
+      .andorra-adv-v2.is-spotlight .andorra-adv-v2-number {
+        position: absolute;
+        top: 1.2rem;
+        right: 1.5rem;
+        font-size: 3.2rem;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        color: rgba(31, 40, 53, 0.07);
+        line-height: 1;
+        z-index: 0;
+        font-feature-settings: "tnum";
+        transition: color 360ms ease, transform 360ms ease;
+      }
+
+      .andorra-adv-v2.is-spotlight .andorra-adv-v2-item:hover .andorra-adv-v2-number {
+        color: rgba(83, 178, 127, 0.32);
+        transform: translateY(-2px);
+      }
+
+      .andorra-adv-v2.is-spotlight .andorra-adv-v2-num {
+        position: relative;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        color: #3f9568;
+        font-size: 0.72rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 1rem;
+      }
+
+      .andorra-adv-v2.is-spotlight .andorra-adv-v2-flag {
+        width: 1.1rem;
+        height: 1.1rem;
+        border-radius: 50%;
+        border: 1px solid rgba(83, 178, 127, 0.2);
+        box-shadow: 0 2px 6px rgba(15, 26, 42, 0.1);
+      }
+
+      .andorra-adv-v2.is-spotlight .andorra-adv-v2-item h3 {
+        color: var(--text-primary);
+        font-size: 1.18rem;
+        font-weight: 600;
+        letter-spacing: -0.005em;
+        line-height: 1.3;
+        margin: 0 0 0.55rem;
+        max-width: 16rem;
+        position: relative;
+        z-index: 1;
+      }
+
+      .andorra-adv-v2.is-spotlight .andorra-adv-v2-item p {
+        color: var(--text-muted);
+        font-size: 0.93rem;
+        line-height: 1.55;
+        position: relative;
+        z-index: 1;
+      }
+
+      .andorra-adv-v2.is-spotlight .cta-link {
+        position: relative;
+        z-index: 1;
+        margin-top: 2.6rem;
+        color: #3f9568;
+        font-size: 0.78rem;
+        letter-spacing: 0.18em;
+        padding: 0.85rem 1.4rem;
+        border: 1px solid rgba(83, 178, 127, 0.55);
+        border-bottom-width: 1px;
+        border-radius: 0.55rem;
+        background: rgba(83, 178, 127, 0.08);
+        transition: background 220ms ease, border-color 220ms ease,
+          transform 220ms ease, color 220ms ease, box-shadow 220ms ease;
+      }
+
+      .andorra-adv-v2.is-spotlight .cta-link:hover {
+        background: #53b27f;
+        border-color: #53b27f;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 14px 28px rgba(83, 178, 127, 0.28);
+      }
+
+      @media (max-width: 980px) {
+        .andorra-adv-v2.is-spotlight .andorra-adv-v2-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 680px) {
+        .andorra-adv-v2.is-spotlight {
+          padding: 4rem 0 3.5rem;
+        }
+
+        .andorra-adv-v2.is-spotlight .andorra-adv-v2-header .focus-title {
+          white-space: normal;
+        }
+
+        .andorra-adv-v2.is-spotlight .andorra-adv-v2-item {
+          padding: 1.9rem 1.5rem 1.6rem;
+        }
+
+        .andorra-adv-v2.is-spotlight .andorra-adv-v2-number {
+          font-size: 2.6rem;
+          top: 1rem;
+          right: 1.2rem;
+        }
+      }
+
+      /* ────────────────────────────────────────────────────────────
+         Featured Developments — Spotlight treatment (light)
+         Keeps the light paper backdrop and brings the eyebrow rule,
+         green title underline, full-width intro, refined card hover
+         and pill CTA from the rest of the home spotlight family.
+         ──────────────────────────────────────────────────────────── */
+      .projects.is-spotlight {
+        position: relative;
+        padding: 5.5rem 0 4.5rem;
+        background: radial-gradient(circle at 10% -10%, #eef2f8 0, #f4f6fa 50%);
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        overflow: hidden;
+      }
+
+      .projects.is-spotlight::before,
+      .projects.is-spotlight::after {
+        content: none;
+      }
+
+      .projects.is-spotlight .container {
+        position: relative;
+        z-index: 1;
+      }
+
+      .projects.is-spotlight .section-header {
+        margin-bottom: 3rem;
+      }
+
+      .projects.is-spotlight .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        color: #3f9568;
+        font-size: 0.74rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 0;
+      }
+
+      .projects.is-spotlight .eyebrow::before {
+        content: "";
+        width: 32px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #53b27f);
+        display: inline-block;
+      }
+
+      .projects.is-spotlight h2 {
+        color: var(--text-primary);
+        font-size: clamp(2rem, 4.4vw, 3.1rem);
+        font-weight: 700;
+        letter-spacing: -0.012em;
+        line-height: 1.05;
+        margin-top: 1rem;
+        margin-bottom: 0;
+        max-width: none;
+        white-space: normal;
+      }
+
+      .projects.is-spotlight h2::after {
+        content: "";
+        display: block;
+        width: 64px;
+        height: 3px;
+        background: linear-gradient(90deg, #53b27f, rgba(83, 178, 127, 0));
+        margin-top: 1.1rem;
+        border-radius: 2px;
+      }
+
+      .projects.is-spotlight .intro {
+        color: var(--text-muted);
+        max-width: none;
+        width: 100%;
+        margin-top: 1.2rem;
+        font-size: 1.02rem;
+        line-height: 1.6;
+      }
+
+      .projects.is-spotlight .project-grid {
+        margin-top: 0;
+        gap: 1.4rem;
+      }
+
+      .projects.is-spotlight .project-card {
+        border-radius: 1.2rem;
+        border: 1px solid var(--line);
+        box-shadow: 0 14px 36px rgba(15, 26, 42, 0.08);
+        transition: transform 360ms cubic-bezier(0.2, 0.65, 0.35, 1),
+          border-color 360ms ease, box-shadow 360ms ease;
+      }
+
+      .projects.is-spotlight .project-card:hover {
+        transform: translateY(-6px);
+        border-color: rgba(83, 178, 127, 0.42);
+        box-shadow: 0 30px 60px rgba(15, 26, 42, 0.18),
+          0 0 0 1px rgba(83, 178, 127, 0.16) inset;
+      }
+
+      .projects.is-spotlight .cta-link {
+        position: relative;
+        z-index: 1;
+        margin-top: 2.6rem;
+        color: #3f9568;
+        font-size: 0.78rem;
+        letter-spacing: 0.18em;
+        padding: 0.85rem 1.4rem;
+        border: 1px solid rgba(83, 178, 127, 0.55);
+        border-bottom-width: 1px;
+        border-radius: 0.55rem;
+        background: rgba(83, 178, 127, 0.08);
+        transition: background 220ms ease, border-color 220ms ease,
+          transform 220ms ease, color 220ms ease, box-shadow 220ms ease;
+      }
+
+      .projects.is-spotlight .cta-link:hover {
+        background: #53b27f;
+        border-color: #53b27f;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 14px 28px rgba(83, 178, 127, 0.28);
+      }
+
+      @media (max-width: 680px) {
+        .projects.is-spotlight {
+          padding: 4rem 0 3.5rem;
+        }
+      }
+
+      /* ────────────────────────────────────────────────────────────
+         Suggested Reads — Spotlight treatment (dark)
+         Keeps the dark navy backdrop and adds the same eyebrow rule,
+         green title underline, full-width intro, refined card hover
+         and pill CTA — rebalanced for a dark canvas.
+         ──────────────────────────────────────────────────────────── */
+      .home-suggested-reads.is-spotlight {
+        position: relative;
+        padding: 5.5rem 0 4.5rem;
+        background:
+          radial-gradient(ellipse at 18% 0%, rgba(83, 178, 127, 0.14), transparent 55%),
+          radial-gradient(ellipse at 88% 100%, rgba(130, 147, 174, 0.16), transparent 60%),
+          linear-gradient(160deg, #0a1422 0%, #101e34 50%, #0a1422 100%);
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        overflow: hidden;
+      }
+
+      .home-suggested-reads.is-spotlight::before,
+      .home-suggested-reads.is-spotlight::after {
+        content: "";
+        position: absolute;
+        width: 620px;
+        height: 620px;
+        border-radius: 50%;
+        filter: blur(80px);
+        pointer-events: none;
+        opacity: 0.55;
+      }
+
+      .home-suggested-reads.is-spotlight::before {
+        top: -180px;
+        right: -160px;
+        background: radial-gradient(circle, rgba(83, 178, 127, 0.18), transparent 70%);
+      }
+
+      .home-suggested-reads.is-spotlight::after {
+        bottom: -220px;
+        left: -160px;
+        background: radial-gradient(circle, rgba(130, 147, 174, 0.18), transparent 70%);
+      }
+
+      .home-suggested-reads.is-spotlight .container {
+        position: relative;
+        z-index: 1;
+      }
+
+      .home-suggested-reads.is-spotlight .section-header {
+        margin-bottom: 3rem;
+      }
+
+      .home-suggested-reads.is-spotlight .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        color: #6ec595;
+        font-size: 0.74rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 0;
+      }
+
+      .home-suggested-reads.is-spotlight .eyebrow::before {
+        content: "";
+        width: 32px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #53b27f);
+        display: inline-block;
+      }
+
+      .home-suggested-reads.is-spotlight h2 {
+        color: #f3f7fc;
+        font-size: clamp(2rem, 4.4vw, 3.1rem);
+        font-weight: 700;
+        letter-spacing: -0.012em;
+        line-height: 1.05;
+        margin-top: 1rem;
+        margin-bottom: 0;
+        max-width: none;
+        white-space: normal;
+      }
+
+      .home-suggested-reads.is-spotlight h2::after {
+        content: "";
+        display: block;
+        width: 64px;
+        height: 3px;
+        background: linear-gradient(90deg, #53b27f, rgba(83, 178, 127, 0));
+        margin-top: 1.1rem;
+        border-radius: 2px;
+      }
+
+      .home-suggested-reads.is-spotlight .intro {
+        color: rgba(220, 230, 245, 0.72);
+        max-width: none;
+        width: 100%;
+        margin-top: 1.2rem;
+        font-size: 1.02rem;
+        line-height: 1.6;
+      }
+
+      .home-suggested-reads.is-spotlight .home-suggested-grid {
+        margin-top: 0;
+        gap: 1.4rem;
+      }
+
+      .home-suggested-reads.is-spotlight .home-suggested-card {
+        border-radius: 1.2rem;
+        border: 1px solid rgba(212, 224, 241, 0.14);
+        background: rgba(255, 255, 255, 0.04);
+        box-shadow: 0 18px 40px rgba(5, 12, 20, 0.22);
+        transition: transform 360ms cubic-bezier(0.2, 0.65, 0.35, 1),
+          border-color 360ms ease, box-shadow 360ms ease;
+      }
+
+      .home-suggested-reads.is-spotlight .home-suggested-card:hover {
+        transform: translateY(-6px);
+        border-color: rgba(83, 178, 127, 0.42);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4),
+          0 0 0 1px rgba(83, 178, 127, 0.18) inset;
+      }
+
+      .home-suggested-reads.is-spotlight .cta-link {
+        position: relative;
+        z-index: 1;
+        margin-top: 2.6rem;
+        color: #f3f7fc;
+        font-size: 0.78rem;
+        letter-spacing: 0.18em;
+        padding: 0.85rem 1.4rem;
+        border: 1px solid rgba(83, 178, 127, 0.55);
+        border-bottom-width: 1px;
+        border-radius: 0.55rem;
+        background: rgba(83, 178, 127, 0.10);
+        transition: background 220ms ease, border-color 220ms ease,
+          transform 220ms ease, color 220ms ease, box-shadow 220ms ease;
+      }
+
+      .home-suggested-reads.is-spotlight .cta-link:hover {
+        background: #53b27f;
+        border-color: #53b27f;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 14px 28px rgba(83, 178, 127, 0.32);
+      }
+
+      @media (max-width: 680px) {
+        .home-suggested-reads.is-spotlight {
+          padding: 4rem 0 3.5rem;
+        }
+      }
+
+      /* ────────────────────────────────────────────────────────────
+         What We Offer — Spotlight treatment (dark)
+         Keeps the navy backdrop and adds the unified header rule,
+         green title underline, full-width intro and refined card hover.
+         ──────────────────────────────────────────────────────────── */
+      .what-we-offer.is-spotlight {
+        position: relative;
+        padding: 5.5rem 0 4.5rem;
+        background:
+          radial-gradient(ellipse at 18% 0%, rgba(83, 178, 127, 0.14), transparent 55%),
+          radial-gradient(ellipse at 88% 100%, rgba(130, 147, 174, 0.16), transparent 60%),
+          linear-gradient(160deg, #0a1422 0%, #101e34 50%, #0a1422 100%);
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        overflow: hidden;
+      }
+
+      .what-we-offer.is-spotlight::before,
+      .what-we-offer.is-spotlight::after {
+        content: "";
+        position: absolute;
+        width: 620px;
+        height: 620px;
+        border-radius: 50%;
+        filter: blur(80px);
+        pointer-events: none;
+        opacity: 0.55;
+      }
+
+      .what-we-offer.is-spotlight::before {
+        top: -180px;
+        right: -160px;
+        background: radial-gradient(circle, rgba(83, 178, 127, 0.18), transparent 70%);
+      }
+
+      .what-we-offer.is-spotlight::after {
+        bottom: -220px;
+        left: -160px;
+        background: radial-gradient(circle, rgba(130, 147, 174, 0.18), transparent 70%);
+      }
+
+      .what-we-offer.is-spotlight .container {
+        position: relative;
+        z-index: 1;
+      }
+
+      .what-we-offer.is-spotlight .what-we-offer-header {
+        margin-bottom: 3rem;
+      }
+
+      .what-we-offer.is-spotlight .what-we-offer-header .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        color: #6ec595;
+        font-size: 0.74rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 0;
+      }
+
+      .what-we-offer.is-spotlight .what-we-offer-header .eyebrow::before {
+        content: "";
+        width: 32px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #53b27f);
+        display: inline-block;
+      }
+
+      .what-we-offer.is-spotlight .what-we-offer-header .focus-title {
+        color: #f3f7fc;
+        font-size: clamp(2rem, 4.4vw, 3.1rem);
+        font-weight: 700;
+        letter-spacing: -0.012em;
+        line-height: 1.05;
+        margin-top: 1rem;
+        margin-bottom: 0;
+        max-width: none;
+      }
+
+      .what-we-offer.is-spotlight .what-we-offer-header .focus-title::after {
+        content: "";
+        display: block;
+        width: 64px;
+        height: 3px;
+        background: linear-gradient(90deg, #53b27f, rgba(83, 178, 127, 0));
+        margin-top: 1.1rem;
+        border-radius: 2px;
+      }
+
+      .what-we-offer.is-spotlight .what-we-offer-header .focus-intro {
+        color: rgba(220, 230, 245, 0.72);
+        max-width: none;
+        width: 100%;
+        margin-top: 1.2rem;
+        font-size: 1.02rem;
+        line-height: 1.6;
+      }
+
+      .what-we-offer.is-spotlight .what-we-offer-grid {
+        gap: 1.4rem;
+      }
+
+      .what-we-offer.is-spotlight .wwo-card {
+        border-radius: 1.2rem;
+        box-shadow: 0 18px 40px rgba(5, 12, 20, 0.22);
+        transition: transform 360ms cubic-bezier(0.2, 0.65, 0.35, 1),
+          border-color 360ms ease, box-shadow 360ms ease;
+      }
+
+      .what-we-offer.is-spotlight .wwo-card:hover {
+        transform: translateY(-6px);
+        border-color: rgba(83, 178, 127, 0.45);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4),
+          0 0 0 1px rgba(83, 178, 127, 0.18) inset;
+      }
+
+      @media (max-width: 680px) {
+        .what-we-offer.is-spotlight {
+          padding: 4rem 0 3.5rem;
+        }
+      }
+
+      /* ────────────────────────────────────────────────────────────
+         Contact our Team (Gateway) — Spotlight treatment (dark)
+         Keeps the navy backdrop, adds the unified header rule,
+         green title underline, full-width intro and pill CTA.
+         ──────────────────────────────────────────────────────────── */
+      .gateway.is-spotlight {
+        position: relative;
+        padding: 5.5rem 0 4.5rem;
+        background:
+          radial-gradient(ellipse at 18% 0%, rgba(83, 178, 127, 0.14), transparent 55%),
+          radial-gradient(ellipse at 88% 100%, rgba(130, 147, 174, 0.16), transparent 60%),
+          linear-gradient(160deg, #0a1422 0%, #101e34 50%, #0a1422 100%);
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        overflow: hidden;
+      }
+
+      .gateway.is-spotlight::before,
+      .gateway.is-spotlight::after {
+        content: "";
+        position: absolute;
+        width: 620px;
+        height: 620px;
+        border-radius: 50%;
+        filter: blur(80px);
+        pointer-events: none;
+        opacity: 0.55;
+      }
+
+      .gateway.is-spotlight::before {
+        top: -180px;
+        right: -160px;
+        background: radial-gradient(circle, rgba(83, 178, 127, 0.18), transparent 70%);
+      }
+
+      .gateway.is-spotlight::after {
+        bottom: -220px;
+        left: -160px;
+        background: radial-gradient(circle, rgba(130, 147, 174, 0.18), transparent 70%);
+      }
+
+      .gateway.is-spotlight .container {
+        position: relative;
+        z-index: 1;
+      }
+
+      .gateway.is-spotlight .section-header {
+        margin-bottom: 3rem;
+      }
+
+      .gateway.is-spotlight .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        color: #6ec595;
+        font-size: 0.74rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 0;
+      }
+
+      .gateway.is-spotlight .eyebrow::before {
+        content: "";
+        width: 32px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #53b27f);
+        display: inline-block;
+      }
+
+      .gateway.is-spotlight h2 {
+        color: #f3f7fc;
+        font-size: clamp(2rem, 4.4vw, 3.1rem);
+        font-weight: 700;
+        letter-spacing: -0.012em;
+        line-height: 1.05;
+        margin-top: 1rem;
+        margin-bottom: 0;
+        max-width: none;
+      }
+
+      .gateway.is-spotlight h2::after {
+        content: "";
+        display: block;
+        width: 64px;
+        height: 3px;
+        background: linear-gradient(90deg, #53b27f, rgba(83, 178, 127, 0));
+        margin-top: 1.1rem;
+        border-radius: 2px;
+      }
+
+      .gateway.is-spotlight .intro {
+        color: rgba(220, 230, 245, 0.72);
+        max-width: none;
+        width: 100%;
+        margin-top: 1.2rem;
+        font-size: 1.02rem;
+        line-height: 1.6;
+      }
+
+      .gateway.is-spotlight .leaders {
+        gap: 1.4rem;
+      }
+
+      .gateway.is-spotlight .leaders-image {
+        border-radius: 1.2rem;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 18px 40px rgba(5, 12, 20, 0.22);
+      }
+
+      .gateway.is-spotlight .leaders-copy {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(212, 224, 241, 0.14);
+        border-radius: 1.2rem;
+        box-shadow: 0 18px 40px rgba(5, 12, 20, 0.22);
+        transition: border-color 360ms ease, box-shadow 360ms ease;
+      }
+
+      .gateway.is-spotlight .leaders-copy:hover {
+        border-color: rgba(83, 178, 127, 0.42);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4),
+          0 0 0 1px rgba(83, 178, 127, 0.18) inset;
+      }
+
+      .gateway.is-spotlight .leaders-investor-title {
+        color: #f3f7fc;
+        font-size: clamp(1.3rem, 2.2vw, 1.6rem);
+      }
+
+      .gateway.is-spotlight .leaders-investor-copy {
+        color: rgba(220, 230, 245, 0.72);
+      }
+
+      .gateway.is-spotlight .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 1.4rem;
+        color: #f3f7fc;
+        font-size: 0.78rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        padding: 0.85rem 1.4rem;
+        border: 1px solid rgba(83, 178, 127, 0.55);
+        border-radius: 0.55rem;
+        background: rgba(83, 178, 127, 0.10);
+        transition: background 220ms ease, border-color 220ms ease,
+          transform 220ms ease, color 220ms ease, box-shadow 220ms ease;
+      }
+
+      .gateway.is-spotlight .button:hover {
+        background: #53b27f;
+        border-color: #53b27f;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 14px 28px rgba(83, 178, 127, 0.32);
+      }
+
+      @media (max-width: 680px) {
+        .gateway.is-spotlight {
+          padding: 4rem 0 3.5rem;
+        }
+      }
+
+      /* ────────────────────────────────────────────────────────────
+         Equity Partners in numbers — Spotlight treatment (dark)
+         Keeps the navy backdrop, adds the eyebrow rule and refined
+         metric cards with hover glow.
+         ──────────────────────────────────────────────────────────── */
+      .home-proof-strip.is-spotlight {
+        position: relative;
+        padding: 5rem 0;
+        background:
+          radial-gradient(ellipse at 18% 0%, rgba(83, 178, 127, 0.14), transparent 55%),
+          radial-gradient(ellipse at 88% 100%, rgba(130, 147, 174, 0.16), transparent 60%),
+          linear-gradient(160deg, #0a1422 0%, #101e34 50%, #0a1422 100%);
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        overflow: hidden;
+      }
+
+      .home-proof-strip.is-spotlight::before,
+      .home-proof-strip.is-spotlight::after {
+        content: "";
+        position: absolute;
+        width: 620px;
+        height: 620px;
+        border-radius: 50%;
+        filter: blur(80px);
+        pointer-events: none;
+        opacity: 0.55;
+      }
+
+      .home-proof-strip.is-spotlight::before {
+        top: -180px;
+        right: -160px;
+        background: radial-gradient(circle, rgba(83, 178, 127, 0.18), transparent 70%);
+      }
+
+      .home-proof-strip.is-spotlight::after {
+        bottom: -220px;
+        left: -160px;
+        background: radial-gradient(circle, rgba(130, 147, 174, 0.18), transparent 70%);
+      }
+
+      .home-proof-strip.is-spotlight .container {
+        position: relative;
+        z-index: 1;
+      }
+
+      .home-proof-strip.is-spotlight .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        color: #6ec595;
+        font-size: 0.74rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 1.8rem;
+        transform: none;
+      }
+
+      .home-proof-strip.is-spotlight .eyebrow::before {
+        content: "";
+        width: 32px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #53b27f);
+        display: inline-block;
+      }
+
+      .home-proof-strip.is-spotlight .home-proof-grid {
+        margin-top: 0;
+        gap: 1.4rem;
+      }
+
+      .home-proof-strip.is-spotlight .home-proof-metric {
+        position: relative;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(212, 224, 241, 0.14);
+        border-radius: 1.2rem;
+        overflow: hidden;
+        isolation: isolate;
+        box-shadow: 0 18px 40px rgba(5, 12, 20, 0.22);
+        transition: transform 360ms cubic-bezier(0.2, 0.65, 0.35, 1),
+          border-color 360ms ease, box-shadow 360ms ease;
+      }
+
+      .home-proof-strip.is-spotlight .home-proof-metric::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 85% 0%, rgba(83, 178, 127, 0.22), transparent 60%);
+        opacity: 0;
+        transition: opacity 360ms ease;
+        z-index: -1;
+        pointer-events: none;
+      }
+
+      .home-proof-strip.is-spotlight .home-proof-metric::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(83, 178, 127, 0.55), transparent);
+        opacity: 0;
+        transition: opacity 360ms ease;
+      }
+
+      .home-proof-strip.is-spotlight .home-proof-metric:hover {
+        transform: translateY(-6px);
+        border-color: rgba(83, 178, 127, 0.42);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4),
+          0 0 0 1px rgba(83, 178, 127, 0.18) inset;
+      }
+
+      .home-proof-strip.is-spotlight .home-proof-metric:hover::before,
+      .home-proof-strip.is-spotlight .home-proof-metric:hover::after {
+        opacity: 1;
+      }
+
+      .home-proof-strip.is-spotlight .home-proof-metric-value {
+        position: relative;
+        z-index: 1;
+        color: #f3f7fc;
+        font-size: clamp(2.4rem, 3.8vw, 3.2rem);
+        font-weight: 700;
+        letter-spacing: -0.012em;
+        line-height: 1;
+      }
+
+      .home-proof-strip.is-spotlight .home-proof-metric-label {
+        position: relative;
+        z-index: 1;
+        color: rgba(220, 230, 245, 0.7);
+        font-size: 0.78rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        margin-top: 0.9rem;
+      }
+
+      @media (max-width: 680px) {
+        .home-proof-strip.is-spotlight {
+          padding: 4rem 0 3.5rem;
+        }
+      }
+
       /* ── Scroll entrance animations ── */
       [data-animate] {
         opacity: 0;
@@ -2927,7 +4770,10 @@ const content = getContentTranslations(locale).home;
         <div class="hero-content">
           <h1>{content.hero.title}</h1>
           <p class="subline">{content.hero.subline}</p>
-          <a class="hero-button" href={buildLocalizedPath("/contact", locale)}>{content.hero.cta}</a>
+          <div class="hero-actions">
+            <a class="hero-button" href={buildLocalizedPath("/opportunities", locale)}>{content.hero.cta}</a>
+            <a class="hero-button is-secondary" href={buildLocalizedPath("/contact", locale)}>Request Video Call</a>
+          </div>
         </div>
       </div>
     </section>
@@ -2958,7 +4804,7 @@ const content = getContentTranslations(locale).home;
       </a>
     </section>
 
-    <section class="section advantage-home">
+    <section class="section advantage-home is-spotlight">
       <div class="container" data-animate>
         <p class="eyebrow">{content.services.eyebrow}</p>
         <h2 class="focus-title">{content.services.title}</h2>
@@ -2971,6 +4817,7 @@ const content = getContentTranslations(locale).home;
               </span>
               <h3>{content.services.cards[0].title}</h3>
             </div>
+            <div class="advantage-home-card-divider"></div>
             <ul class="advantage-home-list">
               <li>
                 <span class="advantage-home-check" aria-hidden="true">
@@ -2999,6 +4846,7 @@ const content = getContentTranslations(locale).home;
               </span>
               <h3>{content.services.cards[1].title}</h3>
             </div>
+            <div class="advantage-home-card-divider"></div>
             <ul class="advantage-home-list">
               <li>
                 <span class="advantage-home-check" aria-hidden="true">
@@ -3027,6 +4875,7 @@ const content = getContentTranslations(locale).home;
               </span>
               <h3>{content.services.cards[2].title}</h3>
             </div>
+            <div class="advantage-home-card-divider"></div>
             <ul class="advantage-home-list">
               <li>
                 <span class="advantage-home-check" aria-hidden="true">
@@ -3053,7 +4902,7 @@ const content = getContentTranslations(locale).home;
       </div>
     </section>
 
-    <section class="section home-proof-strip" aria-label="Equity Partners metrics">
+    <section class="section home-proof-strip is-spotlight" aria-label="Equity Partners metrics">
       <div class="container" data-animate>
         <p class="eyebrow">{content.metrics.eyebrow}</p>
         <div class="home-proof-grid">
@@ -3077,7 +4926,7 @@ const content = getContentTranslations(locale).home;
       </div>
     </section>
 
-    <section class="section why-equity-home">
+    <section class="section why-equity-home is-spotlight">
       <div class="container" data-animate>
         <div class="section-header">
           <p class="eyebrow">{content.whyEquity.eyebrow}</p>
@@ -3130,7 +4979,7 @@ const content = getContentTranslations(locale).home;
       </div>
     </section>
 
-    <section class="andorra-adv-v2">
+    <section class="andorra-adv-v2 is-spotlight">
       <div class="container" data-animate>
         <div class="andorra-adv-v2-header">
           <p class="eyebrow">The Andorra Advantage</p>
@@ -3139,22 +4988,26 @@ const content = getContentTranslations(locale).home;
         </div>
         <div class="andorra-adv-v2-grid">
           <div class="andorra-adv-v2-item">
-            <p class="andorra-adv-v2-num"><img class="andorra-adv-v2-flag" src="/images/Icons/flag-round-250.png" alt="Andorra" />01 &nbsp;Fiscal Advantage</p>
+            <span class="andorra-adv-v2-number" aria-hidden="true">01</span>
+            <p class="andorra-adv-v2-num"><img class="andorra-adv-v2-flag" src="/images/Icons/flag-round-250.png" alt="Andorra" />Fiscal Advantage</p>
             <h3>Institutional-Grade Tax Efficiency</h3>
             <p>Andorra offers a capped 10% corporate and personal tax regime, paired with 0% wealth and inheritance taxes — creating a high-performance environment for capital reinvestment and long-term wealth preservation.</p>
           </div>
           <div class="andorra-adv-v2-item">
-            <p class="andorra-adv-v2-num"><img class="andorra-adv-v2-flag" src="/images/Icons/flag-round-250.png" alt="Andorra" />02 &nbsp;Stability</p>
+            <span class="andorra-adv-v2-number" aria-hidden="true">02</span>
+            <p class="andorra-adv-v2-num"><img class="andorra-adv-v2-flag" src="/images/Icons/flag-round-250.png" alt="Andorra" />Stability</p>
             <h3>Sovereign Safe-Haven Status</h3>
             <p>With 700 years of political neutrality and a "Stable" outlook from major credit agencies, the Principality provides a secure jurisdiction for risk mitigation against global geopolitical and economic volatility.</p>
           </div>
           <div class="andorra-adv-v2-item">
-            <p class="andorra-adv-v2-num"><img class="andorra-adv-v2-flag" src="/images/Icons/flag-round-250.png" alt="Andorra" />03 &nbsp;Scarcity</p>
+            <span class="andorra-adv-v2-number" aria-hidden="true">03</span>
+            <p class="andorra-adv-v2-num"><img class="andorra-adv-v2-flag" src="/images/Icons/flag-round-250.png" alt="Andorra" />Scarcity</p>
             <h3>Natural Real Estate Appreciation</h3>
             <p>With only 4% of land being buildable, the natural supply-side constraint ensures long-term asset value growth. This scarcity, combined with rising global demand, creates a high-conviction investment play.</p>
           </div>
           <div class="andorra-adv-v2-item">
-            <p class="andorra-adv-v2-num"><img class="andorra-adv-v2-flag" src="/images/Icons/flag-round-250.png" alt="Andorra" />04 &nbsp;Connectivity</p>
+            <span class="andorra-adv-v2-number" aria-hidden="true">04</span>
+            <p class="andorra-adv-v2-num"><img class="andorra-adv-v2-flag" src="/images/Icons/flag-round-250.png" alt="Andorra" />Connectivity</p>
             <h3>Strategic European Integration</h3>
             <p>Andorra is advancing its Association Agreement with the EU, giving investors a unique best-of-both-worlds scenario: full sovereign fiscal autonomy with operational access to major European markets.</p>
           </div>
@@ -3163,7 +5016,7 @@ const content = getContentTranslations(locale).home;
       </div>
     </section>
 
-    <section class="what-we-offer">
+    <section class="what-we-offer is-spotlight">
       <div class="container" data-animate>
         <div class="what-we-offer-header">
           <p class="eyebrow">What We Offer</p>
@@ -3220,22 +5073,22 @@ const content = getContentTranslations(locale).home;
             <p class="wwo-desc">Finance a single Andorra development project of your choosing. A higher-conviction approach with greater return potential for investors who want direct exposure to a specific opportunity.</p>
             <div class="wwo-returns">
               <div class="wwo-return-item">
-                <p class="wwo-return-value">5%</p>
+                <p class="wwo-return-value">6%</p>
                 <p class="wwo-return-label">Fixed annual return</p>
               </div>
               <div class="wwo-return-item">
-                <p class="wwo-return-value">25%</p>
+                <p class="wwo-return-value">20%</p>
                 <p class="wwo-return-label">Project profit share</p>
               </div>
             </div>
             <ul class="wwo-features">
               <li>
                 <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
-                <span>Fixed 5% annual return on capital deployed into the project</span>
+                <span>Fixed 6% annual return on capital deployed into the project</span>
               </li>
               <li>
                 <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
-                <span>25% share of total project profit on completion</span>
+                <span>20% share of total project profit on completion</span>
               </li>
               <li>
                 <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
@@ -3247,7 +5100,7 @@ const content = getContentTranslations(locale).home;
               </li>
             </ul>
             <div class="wwo-cta">
-              <a href={buildLocalizedPath("/projects", locale)}>Explore Projects</a>
+              <a href={buildLocalizedPath("/opportunities", locale)}>Explore Opportunities</a>
             </div>
           </div>
 
@@ -3255,7 +5108,7 @@ const content = getContentTranslations(locale).home;
       </div>
     </section>
 
-    <section class="timeline-v2">
+    <section class="timeline-v2 is-spotlight">
       <div class="container" data-animate>
         <div class="section-header">
           <p class="eyebrow">Timeline</p>
@@ -3269,23 +5122,23 @@ const content = getContentTranslations(locale).home;
               <svg viewBox="0 0 24 24"><path d="M4 6.5h9a2.5 2.5 0 0 1 2.5 2.5v4A2.5 2.5 0 0 1 13 15.5H9l-3.5 2v-2H4A2.5 2.5 0 0 1 1.5 13V9A2.5 2.5 0 0 1 4 6.5Z"/><path d="M15 9h5a2.5 2.5 0 0 1 2.5 2.5v3A2.5 2.5 0 0 1 20 17h-1.5v2L15 17h-1"/></svg>
             </div>
             <h3>Contact our Team</h3>
-            <p>We start with a short introductory conversation to understand your profile, objectives, and Andorra interest.</p>
+            <p>Initial conversation to understand your profile and Andorra interest.</p>
           </div>
           <div class="timeline-v2-col">
             <span class="timeline-v2-step-num">Step 02</span>
             <div class="timeline-v2-step-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="13" height="13" rx="2.5"/><path d="m16 10 5-3v10l-5-3"/><circle cx="9.5" cy="10.5" r="2.25"/><path d="M6.5 15.5a3.25 3.25 0 0 1 6 0"/></svg>
             </div>
-            <h3>Personal Consultation Call</h3>
-            <p>A deeper consultation helps us map timeline, return expectations, and the right strategic route forward.</p>
+            <h3>Consultation Call</h3>
+            <p>Map timeline, returns, and the strategic route forward.</p>
           </div>
           <div class="timeline-v2-col">
             <span class="timeline-v2-step-num">Step 03</span>
             <div class="timeline-v2-step-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M4 12h16"/></svg>
             </div>
-            <h3>Select Investment Opportunity</h3>
-            <p>We present relevant opportunities that align with mandate, structure, and current project availability.</p>
+            <h3>Select Opportunity</h3>
+            <p>We present opportunities matched to your mandate.</p>
           </div>
           <div class="timeline-v2-col">
             <span class="timeline-v2-step-num">Step 04</span>
@@ -3293,7 +5146,7 @@ const content = getContentTranslations(locale).home;
               <svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
             </div>
             <h3>KYC &amp; Compliance</h3>
-            <p>All onboarding, documentation, and compliance checks are completed before any capital commitment is made.</p>
+            <p>Onboarding and checks before capital commitment.</p>
           </div>
           <div class="timeline-v2-col">
             <span class="timeline-v2-step-num">Step 05</span>
@@ -3301,16 +5154,16 @@ const content = getContentTranslations(locale).home;
               <svg viewBox="0 0 24 24"><path d="M4 16.5 10 10.5l3.5 3.5L20 7.5"/><path d="M14 7.5h6v6"/><path d="M5 19.5h14"/></svg>
             </div>
             <h3>Capital Deployment</h3>
-            <p>Once cleared, capital is deployed into the selected opportunity and project execution begins.</p>
+            <p>Capital is deployed and project execution begins.</p>
           </div>
         </div>
         <div class="timeline-v2-cta">
-          <a class="button" href="#">Contact our Team</a>
+          <a class="button" href={`${buildLocalizedPath("/contact", locale)}#tab-investor`}>Contact our Team</a>
         </div>
       </div>
     </section>
 
-    <section class="section gateway" id="contact">
+    <section class="section gateway is-spotlight" id="contact">
       <div class="container" data-animate>
         <div class="section-header">
           <p class="eyebrow">Contact our Team</p>
@@ -3331,13 +5184,13 @@ const content = getContentTranslations(locale).home;
             <p class="leaders-investor-copy">
               Let our team reach out to you to analyze your investment profile and investment objectives.
             </p>
-            <a class="button" href="#">Contact our Team</a>
+            <a class="button" href={`${buildLocalizedPath("/contact", locale)}#tab-investor`}>Contact our Team</a>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section projects" id="partners">
+    <section class="section projects is-spotlight" id="partners">
       <div class="container" data-animate>
         <div class="section-header">
           <p class="eyebrow">Featured Developments</p>
@@ -3376,7 +5229,7 @@ const content = getContentTranslations(locale).home;
     </section>
 
     {homepageSuggestedPosts.length > 0 && (
-      <section class="section home-suggested-reads">
+      <section class="section home-suggested-reads is-spotlight">
         <div class="container">
           <div class="section-header">
             <p class="eyebrow">Suggested Reads</p>

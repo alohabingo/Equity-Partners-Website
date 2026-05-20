@@ -1,0 +1,1146 @@
+---
+import InnerSiteHeader from "../components/InnerSiteHeader.astro";
+import NewsletterSignup from "../components/NewsletterSignup.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import { buildLocalizedPath, getLocaleFromUrl } from "../lib/i18n";
+import {
+  opportunities,
+  opportunityStatusColour,
+  riskProfileColour,
+} from "../data/opportunities";
+
+const locale = getLocaleFromUrl(Astro.url) ?? "en";
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Investment Opportunities | Equity Partners</title>
+    <meta
+      name="description"
+      content="Live investment opportunities in Andorran real estate curated by Equity Partners. Review deal metrics, target returns, risk profile and timeline for every open raise."
+    />
+    <link rel="icon" type="image/png" href="/EP favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      :root {
+        --navy: #0f1a2a;
+        --green: #53b27f;
+        --green-dark: #3f9568;
+        --amber: #d97447;
+        --blue: #4a90d9;
+        --line: #dce3ee;
+        --text: #172235;
+        --muted: #5a667a;
+        --font: "Montserrat", "Segoe UI", Arial, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--font);
+        background: #ffffff;
+        color: var(--text);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .container {
+        width: min(1120px, 92vw);
+        margin: 0 auto;
+      }
+
+      /* ── Page Hero (Dark spotlight) ── */
+      .opps-hero {
+        position: relative;
+        padding: 9rem 0 5rem;
+        background:
+          radial-gradient(ellipse at 18% 0%, rgba(83, 178, 127, 0.14), transparent 55%),
+          radial-gradient(ellipse at 88% 100%, rgba(130, 147, 174, 0.16), transparent 60%),
+          linear-gradient(160deg, #0a1422 0%, #101e34 50%, #0a1422 100%);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        overflow: hidden;
+      }
+
+      .opps-hero::before,
+      .opps-hero::after {
+        content: "";
+        position: absolute;
+        width: 620px;
+        height: 620px;
+        border-radius: 50%;
+        filter: blur(80px);
+        pointer-events: none;
+        opacity: 0.55;
+      }
+
+      .opps-hero::before {
+        top: -180px;
+        right: -160px;
+        background: radial-gradient(circle, rgba(83, 178, 127, 0.18), transparent 70%);
+      }
+
+      .opps-hero::after {
+        bottom: -220px;
+        left: -160px;
+        background: radial-gradient(circle, rgba(130, 147, 174, 0.18), transparent 70%);
+      }
+
+      .opps-hero .container {
+        position: relative;
+        z-index: 1;
+      }
+
+      .opps-hero-inner {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .opps-hero .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        font-size: 0.74rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: #6ec595;
+        margin: 0;
+      }
+
+      .opps-hero .eyebrow::before {
+        content: "";
+        width: 32px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--green));
+        display: inline-block;
+      }
+
+      .opps-hero h1 {
+        font-size: clamp(2rem, 4.4vw, 3.2rem);
+        font-weight: 700;
+        color: #f3f7fc;
+        margin: 0;
+        line-height: 1.05;
+        letter-spacing: -0.012em;
+      }
+
+      .opps-hero h1::after {
+        content: "";
+        display: block;
+        width: 64px;
+        height: 3px;
+        background: linear-gradient(90deg, var(--green), rgba(83, 178, 127, 0));
+        margin-top: 1.1rem;
+        border-radius: 2px;
+      }
+
+      .opps-hero p {
+        font-size: 1.02rem;
+        color: rgba(220, 230, 245, 0.72);
+        margin: 0;
+        max-width: 42rem;
+        line-height: 1.6;
+      }
+
+      /* ── Stats strip (unified card with dividers) ── */
+      .opps-stats {
+        position: relative;
+        padding: 2.2rem 0;
+        background: radial-gradient(circle at 10% -10%, #eef2f8 0, #f4f6fa 50%);
+        overflow: hidden;
+      }
+
+      .opps-stats .container {
+        position: relative;
+        z-index: 1;
+      }
+
+      .opps-stats-inner {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 1.2rem;
+        overflow: hidden;
+        box-shadow: 0 14px 36px rgba(15, 26, 42, 0.07);
+      }
+
+      .opps-stat {
+        padding: 1.4rem 1.6rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        text-align: center;
+        border-right: 1px solid var(--line);
+        transition: background 320ms ease;
+      }
+
+      .opps-stat:last-child {
+        border-right: none;
+      }
+
+      .opps-stat:hover {
+        background: rgba(83, 178, 127, 0.05);
+      }
+
+      .opps-stat-value {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--navy);
+        letter-spacing: -0.012em;
+        line-height: 1;
+      }
+
+      .opps-stat-label {
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      /* ── Grid (matches projects/About light section) ── */
+      .opps-grid-section {
+        position: relative;
+        padding: 3rem 0 2rem;
+        background: radial-gradient(circle at 10% -10%, #eef2f8 0, #f4f6fa 50%);
+        overflow: hidden;
+      }
+
+      .opps-grid-section .container {
+        position: relative;
+        z-index: 1;
+      }
+
+      .opps-section-heading {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        margin-bottom: 2rem;
+      }
+
+      .opps-section-heading .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        font-size: 0.74rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: #3f9568;
+        margin: 0;
+      }
+
+      .opps-section-heading .eyebrow::before {
+        content: "";
+        width: 32px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--green));
+        display: inline-block;
+      }
+
+      .opps-section-heading h2 {
+        font-size: clamp(2rem, 4.4vw, 3.1rem);
+        font-weight: 700;
+        color: var(--navy);
+        margin: 1rem 0 0;
+        line-height: 1.05;
+        letter-spacing: -0.012em;
+      }
+
+      .opps-section-heading h2::after {
+        content: "";
+        display: block;
+        width: 64px;
+        height: 3px;
+        background: linear-gradient(90deg, var(--green), rgba(83, 178, 127, 0));
+        margin-top: 1.1rem;
+        border-radius: 2px;
+      }
+
+      .opps-section-heading p {
+        color: var(--muted);
+        font-size: 1.02rem;
+        line-height: 1.6;
+        max-width: none;
+        width: 100%;
+        margin: 1.2rem 0 0;
+      }
+
+      .opps-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.4rem;
+      }
+
+      /* ── Opportunity Card ── */
+      .opp-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--line);
+        border-radius: 1.2rem;
+        overflow: hidden;
+        background: #ffffff;
+        text-decoration: none;
+        color: inherit;
+        isolation: isolate;
+        box-shadow: 0 10px 30px rgba(15, 26, 42, 0.06);
+        transition: transform 360ms cubic-bezier(0.2, 0.65, 0.35, 1),
+          box-shadow 360ms ease, border-color 360ms ease;
+      }
+
+      .opp-card::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(83, 178, 127, 0.55), transparent);
+        opacity: 0;
+        transition: opacity 360ms ease;
+        z-index: 2;
+      }
+
+      .opp-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 30px 60px rgba(15, 26, 42, 0.14),
+          0 0 0 1px rgba(83, 178, 127, 0.16) inset;
+        border-color: rgba(83, 178, 127, 0.42);
+      }
+
+      .opp-card:hover::before {
+        opacity: 1;
+      }
+
+      .opp-card-image {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16/10;
+        overflow: hidden;
+      }
+
+      .opp-card-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 400ms ease;
+      }
+
+      .opp-card:hover .opp-card-image img {
+        transform: scale(1.04);
+      }
+
+      .opp-card-chips {
+        position: absolute;
+        top: 0.9rem;
+        left: 0.9rem;
+        display: flex;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+      }
+
+      .opp-card-chip {
+        font-size: 0.58rem;
+        font-weight: 700;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: #ffffff;
+        padding: 0.3rem 0.65rem;
+        border-radius: 999px;
+        line-height: 1;
+      }
+
+      .opp-card-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 1.6rem 1.5rem 1.5rem;
+      }
+
+      .opp-card-location {
+        font-size: 0.65rem;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: 0 0 0.5rem;
+      }
+
+      .opp-card-name {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--navy);
+        margin: 0 0 0.6rem;
+        line-height: 1.25;
+      }
+
+      .opp-card-tagline {
+        font-size: 0.83rem;
+        color: var(--muted);
+        line-height: 1.55;
+        margin: 0 0 1.4rem;
+      }
+
+      .opp-card-metrics {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.8rem;
+        padding: 1.1rem 0;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 1.2rem;
+      }
+
+      .opp-card-metric {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+      }
+
+      .opp-card-metric-value {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--navy);
+        line-height: 1.1;
+      }
+
+      .opp-card-metric-value.is-green {
+        color: var(--green);
+      }
+
+      .opp-card-metric-label {
+        font-size: 0.58rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .opp-card-progress {
+        margin-bottom: 1.2rem;
+      }
+
+      .opp-card-progress-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-size: 0.7rem;
+        color: var(--muted);
+        margin-bottom: 0.4rem;
+      }
+
+      .opp-card-progress-top strong {
+        color: var(--navy);
+        font-weight: 700;
+      }
+
+      .opp-card-progress-bar {
+        width: 100%;
+        height: 6px;
+        background: #ecf1f7;
+        border-radius: 999px;
+        overflow: hidden;
+      }
+
+      .opp-card-progress-fill {
+        height: 100%;
+        background: var(--green);
+        border-radius: 999px;
+      }
+
+      .opp-card-progress-meta {
+        font-size: 0.66rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-top: 0.4rem;
+      }
+
+      .opp-card-footer {
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      .opp-card-sector {
+        font-size: 0.62rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        background: #f0f4fa;
+        padding: 0.3rem 0.7rem;
+        border-radius: 999px;
+      }
+
+      .opp-card-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--green);
+        transition: gap 180ms ease;
+      }
+
+      .opp-card:hover .opp-card-link {
+        gap: 0.65rem;
+      }
+
+      .opp-card-link svg {
+        width: 0.8rem;
+        height: 0.8rem;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      /* ── Investor process strip ── */
+      /* ── Timeline V2 (spotlight) — duplicated from home page ── */
+      .timeline-v2.is-spotlight {
+        position: relative;
+        padding: 5.5rem 0 4.5rem;
+        background: radial-gradient(circle at 10% -10%, #eef2f8 0, #f4f6fa 50%);
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        overflow: hidden;
+      }
+
+      .timeline-v2.is-spotlight .container {
+        position: relative;
+        z-index: 1;
+      }
+
+      .timeline-v2.is-spotlight .section-header {
+        max-width: none;
+        width: 100%;
+        margin-bottom: 3rem;
+      }
+
+      .timeline-v2.is-spotlight .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        color: #3f9568;
+        font-size: 0.74rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin: 0;
+      }
+
+      .timeline-v2.is-spotlight .eyebrow::before {
+        content: "";
+        width: 32px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #53b27f);
+        display: inline-block;
+      }
+
+      .timeline-v2.is-spotlight h2 {
+        color: var(--navy);
+        font-size: clamp(2rem, 4.4vw, 3.1rem);
+        font-weight: 700;
+        letter-spacing: -0.012em;
+        line-height: 1.05;
+        margin: 1rem 0 0;
+        max-width: none;
+        white-space: nowrap;
+      }
+
+      .timeline-v2.is-spotlight h2::after {
+        content: "";
+        display: block;
+        width: 64px;
+        height: 3px;
+        background: linear-gradient(90deg, #53b27f, rgba(83, 178, 127, 0));
+        margin-top: 1.1rem;
+        border-radius: 2px;
+      }
+
+      .timeline-v2.is-spotlight .intro {
+        color: var(--muted);
+        max-width: none;
+        width: 100%;
+        margin-top: 1.2rem;
+        font-size: 1.02rem;
+        line-height: 1.6;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-card {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 0;
+        border: 1px solid var(--line);
+        border-radius: 1.2rem;
+        overflow: hidden;
+        background: #ffffff;
+        box-shadow: 0 14px 36px rgba(15, 26, 42, 0.07);
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-col {
+        position: relative;
+        background: transparent;
+        border: none;
+        border-right: 1px solid var(--line);
+        border-radius: 0;
+        padding: 2rem 1.4rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        overflow: hidden;
+        transition: background 320ms ease;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-col:last-child {
+        border-right: none;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-col:hover {
+        background: rgba(83, 178, 127, 0.05);
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-step-num {
+        color: #3f9568;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-step-icon {
+        width: 3.4rem;
+        height: 3.4rem;
+        border-radius: 0.95rem;
+        background: linear-gradient(135deg, #53b27f 0%, #3f9568 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        box-shadow: 0 10px 22px rgba(83, 178, 127, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.22);
+        margin-bottom: 1rem;
+        transition: transform 360ms cubic-bezier(0.2, 0.65, 0.35, 1),
+          box-shadow 360ms ease, background 360ms ease;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-col:hover .timeline-v2-step-icon {
+        background: linear-gradient(135deg, #5fc48d 0%, #4aa775 100%);
+        transform: scale(1.05) rotate(-3deg);
+        box-shadow: 0 14px 28px rgba(83, 178, 127, 0.34),
+          inset 0 1px 0 rgba(255, 255, 255, 0.28);
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-step-icon svg {
+        width: 1.55rem;
+        height: 1.55rem;
+        stroke: #ffffff;
+        fill: none;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-col h3 {
+        color: var(--navy);
+        font-size: 1.05rem;
+        font-weight: 600;
+        letter-spacing: -0.005em;
+        line-height: 1.25;
+        margin: 0;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-col p {
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.5;
+        margin: 0.7rem auto 0;
+        max-width: 22ch;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-cta {
+        margin-top: 2.4rem;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-cta .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: auto;
+        color: #3f9568;
+        background: rgba(83, 178, 127, 0.08);
+        border: 1px solid rgba(83, 178, 127, 0.55);
+        font-size: 0.78rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        font-weight: 600;
+        padding: 0.85rem 1.4rem;
+        border-radius: 0.55rem;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: background 220ms ease, border-color 220ms ease,
+          transform 220ms ease, color 220ms ease, box-shadow 220ms ease;
+      }
+
+      .timeline-v2.is-spotlight .timeline-v2-cta .button:hover {
+        background: #53b27f;
+        border-color: #53b27f;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 14px 28px rgba(83, 178, 127, 0.28);
+      }
+
+      @media (max-width: 980px) {
+        .timeline-v2.is-spotlight .timeline-v2-card {
+          grid-template-columns: 1fr;
+          gap: 0;
+        }
+
+        .timeline-v2.is-spotlight .timeline-v2-col {
+          display: grid;
+          grid-template-columns: 3.4rem 1fr;
+          grid-template-rows: auto auto auto;
+          column-gap: 1.2rem;
+          align-items: center;
+          text-align: left;
+          padding: 1.6rem 1.4rem;
+          border-right: none;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .timeline-v2.is-spotlight .timeline-v2-col:last-child {
+          border-bottom: none;
+        }
+
+        .timeline-v2.is-spotlight .timeline-v2-step-icon {
+          grid-column: 1;
+          grid-row: 1 / 4;
+          margin: 0;
+          align-self: center;
+        }
+
+        .timeline-v2.is-spotlight .timeline-v2-step-num {
+          grid-column: 2;
+          grid-row: 1;
+          margin-bottom: 0.3rem;
+        }
+
+        .timeline-v2.is-spotlight .timeline-v2-col h3 {
+          grid-column: 2;
+          grid-row: 2;
+        }
+
+        .timeline-v2.is-spotlight .timeline-v2-col p {
+          grid-column: 2;
+          grid-row: 3;
+          margin: 0.5rem 0 0;
+          max-width: none;
+        }
+      }
+
+      @media (max-width: 680px) {
+        .timeline-v2.is-spotlight {
+          padding: 4rem 0 3.5rem;
+        }
+
+        .timeline-v2.is-spotlight h2 {
+          white-space: normal;
+        }
+      }
+
+      /* ── CTA Banner (Dark spotlight) ── */
+      .opps-cta-banner {
+        position: relative;
+        padding: 5rem 0 4.5rem;
+        background:
+          radial-gradient(ellipse at 18% 0%, rgba(83, 178, 127, 0.14), transparent 55%),
+          radial-gradient(ellipse at 88% 100%, rgba(130, 147, 174, 0.16), transparent 60%),
+          linear-gradient(160deg, #0a1422 0%, #101e34 50%, #0a1422 100%);
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        overflow: hidden;
+      }
+
+      .opps-cta-banner::before,
+      .opps-cta-banner::after {
+        content: "";
+        position: absolute;
+        width: 620px;
+        height: 620px;
+        border-radius: 50%;
+        filter: blur(80px);
+        pointer-events: none;
+        opacity: 0.55;
+      }
+
+      .opps-cta-banner::before {
+        top: -180px;
+        right: -160px;
+        background: radial-gradient(circle, rgba(83, 178, 127, 0.18), transparent 70%);
+      }
+
+      .opps-cta-banner::after {
+        bottom: -220px;
+        left: -160px;
+        background: radial-gradient(circle, rgba(130, 147, 174, 0.18), transparent 70%);
+      }
+
+      .opps-cta-banner .container {
+        position: relative;
+        z-index: 1;
+      }
+
+      .opps-cta-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 2rem;
+        flex-wrap: wrap;
+      }
+
+      .opps-cta-copy h2 {
+        font-size: clamp(1.6rem, 3vw, 2.2rem);
+        font-weight: 700;
+        color: #f3f7fc;
+        letter-spacing: -0.012em;
+        margin: 0 0 0.7rem;
+        line-height: 1.15;
+      }
+
+      .opps-cta-copy h2::after {
+        content: "";
+        display: block;
+        width: 64px;
+        height: 3px;
+        background: linear-gradient(90deg, var(--green), rgba(83, 178, 127, 0));
+        margin: 0.9rem 0 1rem;
+        border-radius: 2px;
+      }
+
+      .opps-cta-copy p {
+        font-size: 1rem;
+        color: rgba(220, 230, 245, 0.72);
+        margin: 0;
+        line-height: 1.6;
+        max-width: 540px;
+      }
+
+      .opps-cta-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.85rem 1.4rem;
+        background: rgba(83, 178, 127, 0.10);
+        border: 1px solid rgba(83, 178, 127, 0.55);
+        color: #f3f7fc;
+        border-radius: 0.55rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: background 220ms ease, border-color 220ms ease,
+          transform 220ms ease, color 220ms ease, box-shadow 220ms ease;
+      }
+
+      .opps-cta-btn:hover {
+        background: var(--green);
+        border-color: var(--green);
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 14px 28px rgba(83, 178, 127, 0.32);
+      }
+
+      .opps-cta-btn svg {
+        width: 0.85rem;
+        height: 0.85rem;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      /* ── Animations ── */
+      [data-animate] {
+        opacity: 0;
+        transform: translateY(24px);
+        transition: opacity 600ms ease, transform 600ms ease;
+      }
+
+      [data-animate].is-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      @media (max-width: 860px) {
+        .opps-grid { grid-template-columns: 1fr 1fr; }
+        .opps-stats-inner { grid-template-columns: 1fr; }
+        .opps-stat {
+          border-right: none;
+          border-bottom: 1px solid var(--line);
+        }
+        .opps-stat:last-child {
+          border-bottom: none;
+        }
+        .opps-cta-inner { flex-direction: column; align-items: flex-start; }
+      }
+
+      @media (max-width: 560px) {
+        .opps-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <InnerSiteHeader
+      menuToggleId="mobile-menu-toggle"
+      offsetFirstSection={false}
+      locale={locale}
+      currentPath={Astro.url.pathname}
+    />
+
+    <!-- Hero -->
+    <section class="opps-hero">
+      <div class="container">
+        <div class="opps-hero-inner" data-animate>
+          <p class="eyebrow">Live Investment Opportunities</p>
+          <h1>Invest alongside Equity Partners in Andorran real estate</h1>
+          <p>
+            A live overview of the raises we are currently open to investors
+            on. Each opportunity is underwritten to institutional standards —
+            fixed coupon income, equity upside, and a clear exit path — with
+            full transparency on deal terms, capital stack, timeline and risk.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats strip -->
+    <div class="opps-stats">
+      <div class="container">
+        <div class="opps-stats-inner" data-animate>
+          <div class="opps-stat">
+            <span class="opps-stat-value">{opportunities.length}</span>
+            <span class="opps-stat-label">Live opportunities</span>
+          </div>
+          <div class="opps-stat">
+            <span class="opps-stat-value">€500k</span>
+            <span class="opps-stat-label">Lowest minimum entry</span>
+          </div>
+          <div class="opps-stat">
+            <span class="opps-stat-value">6% + 20%</span>
+            <span class="opps-stat-label">Debt and equity</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Opportunity summary grid -->
+    <section class="opps-grid-section">
+      <div class="container">
+        <div class="opps-section-heading" data-animate>
+          <p class="eyebrow">Open raises</p>
+          <h2>Compare our live opportunities</h2>
+          <p>
+            Headline deal terms and real-time funding progress for every
+            opportunity we currently have open. Click through any card for a
+            full investor-grade breakdown — thesis, capital stack, timeline,
+            risks and due-diligence pack.
+          </p>
+        </div>
+
+        <div class="opps-grid" data-animate>
+          {opportunities.map((opp) => (
+            <a class="opp-card" href={buildLocalizedPath(`/opportunities/${opp.slug}`, locale)}>
+              <div class="opp-card-image">
+                <img src={opp.image} alt={opp.name} loading="lazy" />
+                <div class="opp-card-chips">
+                  <span
+                    class="opp-card-chip"
+                    style={`background: ${opportunityStatusColour[opp.status]}`}
+                  >
+                    {opp.status}
+                  </span>
+                  <span
+                    class="opp-card-chip"
+                    style={`background: ${riskProfileColour[opp.riskProfile]}`}
+                  >
+                    {opp.riskProfile}
+                  </span>
+                </div>
+              </div>
+              <div class="opp-card-body">
+                <p class="opp-card-location">{opp.parish} · Andorra</p>
+                <h3 class="opp-card-name">{opp.name}</h3>
+                <p class="opp-card-tagline">{opp.tagline}</p>
+
+                <div class="opp-card-metrics">
+                  <div class="opp-card-metric">
+                    <span class="opp-card-metric-value is-green">{opp.targetIRR}</span>
+                    <span class="opp-card-metric-label">Target IRR</span>
+                  </div>
+                  <div class="opp-card-metric">
+                    <span class="opp-card-metric-value">{opp.fixedReturn}</span>
+                    <span class="opp-card-metric-label">Fixed coupon</span>
+                  </div>
+                  <div class="opp-card-metric">
+                    <span class="opp-card-metric-value">{opp.minInvestment}</span>
+                    <span class="opp-card-metric-label">Min. investment</span>
+                  </div>
+                  <div class="opp-card-metric">
+                    <span class="opp-card-metric-value">{opp.holdPeriod}</span>
+                    <span class="opp-card-metric-label">Hold period</span>
+                  </div>
+                </div>
+
+                <div class="opp-card-progress">
+                  <div class="opp-card-progress-top">
+                    <span>Funding progress</span>
+                    <strong>{opp.fundingProgress}%</strong>
+                  </div>
+                  <div class="opp-card-progress-bar">
+                    <div
+                      class="opp-card-progress-fill"
+                      style={`width: ${opp.fundingProgress}%`}
+                    ></div>
+                  </div>
+                  <p class="opp-card-progress-meta">
+                    {opp.amountCommitted} · Closes {opp.fundingDeadline}
+                  </p>
+                </div>
+
+                <div class="opp-card-footer">
+                  <span class="opp-card-sector">{opp.sector}</span>
+                  <span class="opp-card-link">
+                    View deal
+                    <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                  </span>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- Investment timeline -->
+    <section class="timeline-v2 is-spotlight">
+      <div class="container" data-animate>
+        <div class="section-header">
+          <p class="eyebrow">Timeline</p>
+          <h2>The Investment Roadmap</h2>
+          <p class="intro">A streamlined onboarding process designed to move you from initial inquiry to active capital deployment.</p>
+        </div>
+        <div class="timeline-v2-card">
+          <div class="timeline-v2-col">
+            <span class="timeline-v2-step-num">Step 01</span>
+            <div class="timeline-v2-step-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 6.5h9a2.5 2.5 0 0 1 2.5 2.5v4A2.5 2.5 0 0 1 13 15.5H9l-3.5 2v-2H4A2.5 2.5 0 0 1 1.5 13V9A2.5 2.5 0 0 1 4 6.5Z"/><path d="M15 9h5a2.5 2.5 0 0 1 2.5 2.5v3A2.5 2.5 0 0 1 20 17h-1.5v2L15 17h-1"/></svg>
+            </div>
+            <h3>Contact our Team</h3>
+            <p>Initial conversation to understand your profile and Andorra interest.</p>
+          </div>
+          <div class="timeline-v2-col">
+            <span class="timeline-v2-step-num">Step 02</span>
+            <div class="timeline-v2-step-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="13" height="13" rx="2.5"/><path d="m16 10 5-3v10l-5-3"/><circle cx="9.5" cy="10.5" r="2.25"/><path d="M6.5 15.5a3.25 3.25 0 0 1 6 0"/></svg>
+            </div>
+            <h3>Consultation Call</h3>
+            <p>Map timeline, returns, and the strategic route forward.</p>
+          </div>
+          <div class="timeline-v2-col">
+            <span class="timeline-v2-step-num">Step 03</span>
+            <div class="timeline-v2-step-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M4 12h16"/></svg>
+            </div>
+            <h3>Select Opportunity</h3>
+            <p>We present opportunities matched to your mandate.</p>
+          </div>
+          <div class="timeline-v2-col">
+            <span class="timeline-v2-step-num">Step 04</span>
+            <div class="timeline-v2-step-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+            </div>
+            <h3>KYC &amp; Compliance</h3>
+            <p>Onboarding and checks before capital commitment.</p>
+          </div>
+          <div class="timeline-v2-col">
+            <span class="timeline-v2-step-num">Step 05</span>
+            <div class="timeline-v2-step-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 16.5 10 10.5l3.5 3.5L20 7.5"/><path d="M14 7.5h6v6"/><path d="M5 19.5h14"/></svg>
+            </div>
+            <h3>Capital Deployment</h3>
+            <p>Capital is deployed and project execution begins.</p>
+          </div>
+        </div>
+        <div class="timeline-v2-cta">
+          <a class="button" href={`${buildLocalizedPath("/contact", locale)}#tab-investor`}>Contact our Team</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Banner -->
+    <section class="opps-cta-banner">
+      <div class="container">
+        <div class="opps-cta-inner" data-animate>
+          <div class="opps-cta-copy">
+            <h2>Speak to our investment team</h2>
+            <p>
+              Request the full information memorandum, financial model and
+              legal pack for any live opportunity. Our team will walk you
+              through the underwriting one-to-one.
+            </p>
+          </div>
+          <a class="opps-cta-btn" href={buildLocalizedPath("/contact", locale)}>
+            Contact our team
+            <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <NewsletterSignup emailInputId="newsletter-email-opportunities" locale={locale} />
+    <SiteFooter locale={locale} />
+
+    <script type="module">
+      const targets = document.querySelectorAll("[data-animate]");
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("is-visible");
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.08 }
+      );
+      targets.forEach((el) => observer.observe(el));
+    </script>
+  </body>
+</html>

@@ -20,7 +20,7 @@ const t = getUiTranslations(locale);
           src="/images/branding/equity-partners-logo-light%20small.png"
           alt="Equity Partners Andorra Property Group"
         />
-        <a class="footer-cta" href={buildLocalizedPath("/contact", locale)}>{t.footer.cta}</a>
+        <a class="footer-cta" href={buildLocalizedPath("/opportunities", locale)}>{t.footer.cta}</a>
       </div>
 
       <div>
@@ -35,9 +35,9 @@ const t = getUiTranslations(locale);
       <div>
         <h3 class="footer-heading">{t.footer.resources}</h3>
         <ul class="footer-list">
-          <li><a class="footer-link" href={withLocalizedHash("/", "#partners", locale)}>{t.footer.projects}</a></li>
+          <li><a class="footer-link" href={buildLocalizedPath("/projects", locale)}>{t.footer.projects}</a></li>
+          <li><a class="footer-link" href={buildLocalizedPath("/opportunities", locale)}>{t.footer.marketReports}</a></li>
           <li><a class="footer-link" href={buildLocalizedPath("/blog", locale)}>{t.nav.blog}</a></li>
-          <li><a class="footer-link" href="#">{t.footer.marketReports}</a></li>
         </ul>
       </div>
 
@@ -51,7 +51,7 @@ const t = getUiTranslations(locale);
                 <path d="m22 6-10 7L2 6"></path>
               </svg>
             </span>
-            <span>info@equitypartnersandorra.com</span>
+            <a class="footer-contact-link" href="mailto:info@equitypartners.fund">info@equitypartners.fund</a>
           </div>
           <div class="footer-contact-item">
             <span class="footer-contact-icon" aria-hidden="true">
@@ -68,7 +68,7 @@ const t = getUiTranslations(locale);
                 <circle cx="12" cy="10.5" r="3"></circle>
               </svg>
             </span>
-            <span>Av. Prat de la Creu 59-65, AD500 <span class="footer-address-city">Andorra</span></span>
+            <span>Av. Prat de la Creu 59-65, AD500 <span class="footer-address-city">Andorra la Vella, Andorra</span></span>
           </div>
         </div>
       </div>
@@ -79,17 +79,22 @@ const t = getUiTranslations(locale);
 
   <div class="footer-bottom">
     <div class="container footer-bottom-row">
-      <p class="footer-copy">© {currentYear} EQUITY PARTNERS. {t.footer.rightsReserved}</p>
-      <div class="footer-legal">
-        <a href={buildLocalizedPath("/privacy-policy", locale)}>{t.footer.privacyPolicy}</a>
-        <a href={buildLocalizedPath("/terms-of-use", locale)}>{t.footer.termsOfUse}</a>
-        <a href={buildLocalizedPath("/cookie-policy", locale)}>{t.footer.cookies}</a>
-      </div>
-      <div class="footer-social">
-        <a class="social-pill" href="#" aria-label="LinkedIn">in</a>
-        <a class="social-pill" href="#" aria-label="X">X</a>
-        <a class="social-pill" href="#" aria-label="YouTube">▶</a>
-        <a class="social-pill" href="#" aria-label="Instagram">IG</a>
+      <p class="footer-copy">EQUITY PARTNERS © {currentYear}. {t.footer.rightsReserved}</p>
+      <div class="footer-bottom-end">
+        <div class="footer-legal">
+          <a href={buildLocalizedPath("/privacy-policy", locale)}>{t.footer.privacyPolicy}</a>
+          <a href={buildLocalizedPath("/terms-of-use", locale)}>{t.footer.termsOfUse}</a>
+          <a href={buildLocalizedPath("/cookie-policy", locale)}>{t.footer.cookies}</a>
+        </div>
+        <div class="footer-social">
+          <a
+            class="social-pill"
+            href="https://www.linkedin.com/company/equity-partners-fund/?viewAsMember=true"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="LinkedIn"
+          >in</a>
+        </div>
       </div>
     </div>
   </div>
@@ -253,10 +258,18 @@ const t = getUiTranslations(locale);
   }
 
   .footer-bottom-row {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    display: flex;
     align-items: center;
-    gap: 1rem;
+    justify-content: space-between;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+  }
+
+  .footer-bottom-end {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    flex-wrap: wrap;
   }
 
   .footer-copy {
@@ -270,8 +283,6 @@ const t = getUiTranslations(locale);
   .footer-legal {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
     flex-wrap: wrap;
   }
 
@@ -281,11 +292,36 @@ const t = getUiTranslations(locale);
     font-size: 0.7rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+    padding: 0 0.85rem;
+    position: relative;
+    transition: color 220ms ease;
+  }
+
+  .footer-legal a:hover {
+    color: #ffffff;
+  }
+
+  .footer-legal a:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: 11px;
+    background: rgba(193, 206, 227, 0.35);
+  }
+
+  .footer-legal a:first-child {
+    padding-left: 0;
+  }
+
+  .footer-legal a:last-child {
+    padding-right: 0;
   }
 
   .footer-social {
     display: flex;
-    justify-content: flex-end;
     gap: 0.45rem;
   }
 
@@ -301,6 +337,16 @@ const t = getUiTranslations(locale);
     justify-content: center;
     font-size: 0.7rem;
     font-weight: 700;
+    transition: background-color 220ms ease, border-color 220ms ease,
+      color 220ms ease, transform 220ms ease, box-shadow 220ms ease;
+  }
+
+  .social-pill:hover {
+    background: #53b27f;
+    border-color: #53b27f;
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(83, 178, 127, 0.32);
   }
 
   @media (max-width: 980px) {
@@ -319,12 +365,12 @@ const t = getUiTranslations(locale);
     }
 
     .footer-bottom-row {
-      grid-template-columns: 1fr;
+      flex-direction: column;
+      align-items: flex-start;
       text-align: left;
     }
 
-    .footer-legal,
-    .footer-social {
+    .footer-legal {
       justify-content: flex-start;
     }
   }

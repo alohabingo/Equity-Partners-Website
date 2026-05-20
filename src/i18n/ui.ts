@@ -15,6 +15,7 @@ type Dictionary = {
   nav: {
     home: string;
     about: string;
+    portfolio: string;
     partners: string;
     blog: string;
     test: string;
@@ -43,6 +44,7 @@ export const uiTranslations: Record<Locale, Dictionary> = {
     nav: {
       home: "Home",
       about: "About",
+      portfolio: "Portfolio",
       partners: "Partners",
       blog: "Blog",
       test: "Test",
@@ -56,8 +58,8 @@ export const uiTranslations: Record<Locale, Dictionary> = {
       contact: "Contact",
       about: "About",
       team: "Team",
-      projects: "Projects",
-      marketReports: "Market Reports",
+      projects: "Portfolio",
+      marketReports: "Opportunities",
       rightsReserved: "All rights reserved.",
       privacyPolicy: "Privacy Policy",
       termsOfUse: "Terms of Use",
@@ -79,6 +81,7 @@ export const uiTranslations: Record<Locale, Dictionary> = {
     nav: {
       home: "Inicio",
       about: "Nosotros",
+      portfolio: "Portafolio",
       partners: "Socios",
       blog: "Blog",
       test: "Pruebas",
@@ -92,8 +95,8 @@ export const uiTranslations: Record<Locale, Dictionary> = {
       contact: "Contacto",
       about: "Nosotros",
       team: "Equipo",
-      projects: "Proyectos",
-      marketReports: "Informes de mercado",
+      projects: "Portafolio",
+      marketReports: "Oportunidades",
       rightsReserved: "Todos los derechos reservados.",
       privacyPolicy: "Política de privacidad",
       termsOfUse: "Términos de uso",
@@ -115,6 +118,7 @@ export const uiTranslations: Record<Locale, Dictionary> = {
     nav: {
       home: "Inici",
       about: "Nosaltres",
+      portfolio: "Portafoli",
       partners: "Socis",
       blog: "Blog",
       test: "Proves",
@@ -128,8 +132,8 @@ export const uiTranslations: Record<Locale, Dictionary> = {
       contact: "Contacte",
       about: "Nosaltres",
       team: "Equip",
-      projects: "Projectes",
-      marketReports: "Informes de mercat",
+      projects: "Portafoli",
+      marketReports: "Oportunitats",
       rightsReserved: "Tots els drets reservats.",
       privacyPolicy: "Política de privacitat",
       termsOfUse: "Termes d'ús",

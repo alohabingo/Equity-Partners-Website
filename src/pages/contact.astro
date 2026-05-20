@@ -288,21 +288,51 @@ const content = getContentTranslations(locale).contact;
       }
 
       .eyebrow {
-        font-size: 0.8rem;
-        letter-spacing: 0.16em;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        font-size: 0.74rem;
+        letter-spacing: 0.28em;
         text-transform: uppercase;
-        color: var(--accent);
-        margin-bottom: 0.85rem;
+        font-weight: 600;
+        color: #3f9568;
+        margin-bottom: 0;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 32px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #53b27f);
+        display: inline-block;
       }
 
       h2 {
-        font-size: clamp(1.55rem, 3vw, 2.3rem);
-        line-height: 1.12;
+        font-size: clamp(2rem, 4.4vw, 3.1rem);
+        font-weight: 700;
+        letter-spacing: -0.012em;
+        line-height: 1.05;
+        margin-top: 1rem;
+        color: var(--text-primary);
+      }
+
+      h2::after {
+        content: "";
+        display: block;
+        width: 64px;
+        height: 3px;
+        background: linear-gradient(90deg, #53b27f, rgba(83, 178, 127, 0));
+        margin-top: 1.1rem;
+        border-radius: 2px;
       }
 
       .intro {
-        margin-top: 0.9rem;
+        margin-top: 1.2rem;
         color: var(--text-muted);
+        font-size: 1.02rem;
+        line-height: 1.6;
+        width: 100%;
+        max-width: none;
       }
 
       .contact-grid {
@@ -333,8 +363,20 @@ const content = getContentTranslations(locale).contact;
       }
 
       .contact-info-header .eyebrow {
-        color: #53b27f;
+        display: inline-flex;
+        gap: 0.5rem;
+        color: #3f9568;
+        font-size: 0.7rem;
+        letter-spacing: 0.22em;
         margin-bottom: 0.5rem;
+      }
+
+      .contact-info-header .eyebrow::before {
+        width: 20px;
+      }
+
+      .contact-info-header h3 {
+        margin-top: 0.45rem;
       }
 
       .contact-info-header h3 {
@@ -697,6 +739,254 @@ const content = getContentTranslations(locale).contact;
         font-size: 0.72rem;
       }
 
+      /* ── Video consultation section ── */
+      .video-consult {
+        padding: 1.5rem 0 4rem;
+      }
+
+      .video-consult-wrap {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 2.4rem;
+        align-items: center;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 1.25rem;
+        padding: 2.6rem 2.4rem;
+        overflow: hidden;
+        box-shadow: 0 18px 44px rgba(15, 26, 42, 0.07);
+      }
+
+      .video-consult-wrap::before {
+        content: "";
+        position: absolute;
+        top: -140px;
+        right: -140px;
+        width: 360px;
+        height: 360px;
+        background: radial-gradient(circle, rgba(83, 178, 127, 0.16), transparent 70%);
+        pointer-events: none;
+      }
+
+      .video-consult-wrap::after {
+        content: "";
+        position: absolute;
+        bottom: -160px;
+        left: -120px;
+        width: 320px;
+        height: 320px;
+        background: radial-gradient(circle, rgba(130, 147, 174, 0.18), transparent 70%);
+        pointer-events: none;
+      }
+
+      .video-consult-copy {
+        position: relative;
+        z-index: 1;
+      }
+
+      .video-consult-copy .eyebrow {
+        color: #53b27f;
+      }
+
+      .video-consult-copy h2 {
+        margin-bottom: 0.85rem;
+        color: var(--text-primary);
+      }
+
+      .video-consult-copy > p {
+        color: var(--text-muted);
+        font-size: 1rem;
+        line-height: 1.6;
+        max-width: 32rem;
+      }
+
+      .video-consult-benefits {
+        list-style: none;
+        margin: 1.6rem 0 1.9rem;
+        padding: 0;
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      .video-consult-benefits li {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        color: var(--text-primary);
+        font-size: 0.93rem;
+        line-height: 1.5;
+        font-weight: 500;
+      }
+
+      .video-consult-check {
+        width: 22px;
+        height: 22px;
+        min-width: 22px;
+        border-radius: 50%;
+        background: rgba(83, 178, 127, 0.14);
+        color: #53b27f;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 0.1rem;
+      }
+
+      .video-consult-check svg {
+        width: 12px;
+        height: 12px;
+        stroke: currentColor;
+        stroke-width: 3;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .video-consult-cta-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      a.video-consult-cta {
+        text-decoration: none;
+      }
+
+      .video-consult-note {
+        color: var(--text-muted);
+        font-size: 0.78rem;
+        letter-spacing: 0.04em;
+      }
+
+      .video-consult-card {
+        position: relative;
+        z-index: 1;
+        background: linear-gradient(160deg, #122035 0%, #1f3050 100%);
+        color: #ffffff;
+        border-radius: 1rem;
+        padding: 1.6rem 1.5rem;
+        box-shadow: 0 24px 48px rgba(15, 26, 42, 0.22);
+        overflow: hidden;
+      }
+
+      .video-consult-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at top right, rgba(83, 178, 127, 0.22), transparent 55%),
+          radial-gradient(circle at bottom left, rgba(130, 147, 174, 0.22), transparent 60%);
+        pointer-events: none;
+      }
+
+      .video-consult-card-header {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 0.7rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #b2c0d4;
+        margin-bottom: 1.3rem;
+        position: relative;
+        z-index: 1;
+      }
+
+      .video-consult-card-status {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #53b27f;
+        box-shadow: 0 0 0 4px rgba(83, 178, 127, 0.22);
+        display: inline-block;
+        animation: video-consult-pulse 2.2s ease-out infinite;
+      }
+
+      @keyframes video-consult-pulse {
+        0%, 100% {
+          box-shadow: 0 0 0 4px rgba(83, 178, 127, 0.22);
+        }
+        50% {
+          box-shadow: 0 0 0 8px rgba(83, 178, 127, 0.08);
+        }
+      }
+
+      .video-consult-card-frame {
+        position: relative;
+        z-index: 1;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 0.85rem;
+        padding: 1.3rem 1.25rem;
+        display: grid;
+        gap: 1rem;
+      }
+
+      .video-consult-avatar-row {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+      }
+
+      .video-consult-avatar {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #53b27f, #3f9568);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 0.95rem;
+        letter-spacing: 0.04em;
+        border: 2px solid rgba(255, 255, 255, 0.14);
+        flex-shrink: 0;
+      }
+
+      .video-consult-avatar.is-alt {
+        background: linear-gradient(135deg, #8293ae, #5e7393);
+      }
+
+      .video-consult-avatar-text strong {
+        display: block;
+        font-size: 0.92rem;
+        color: #ffffff;
+        font-weight: 600;
+      }
+
+      .video-consult-avatar-text span {
+        font-size: 0.76rem;
+        color: #b2c0d4;
+        letter-spacing: 0.02em;
+      }
+
+      .video-consult-card-divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.14), transparent);
+      }
+
+      .video-consult-card-detail {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        align-items: center;
+        gap: 0.55rem 0.7rem;
+        font-size: 0.84rem;
+        color: #cad4e4;
+        line-height: 1.45;
+      }
+
+      .video-consult-card-detail svg {
+        width: 16px;
+        height: 16px;
+        stroke: #53b27f;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
       .map-comparison {
         background: transparent;
         border-top: 1px solid var(--line);
@@ -762,6 +1052,12 @@ const content = getContentTranslations(locale).contact;
 
         .field-row {
           grid-template-columns: 1fr;
+        }
+
+        .video-consult-wrap {
+          grid-template-columns: 1fr;
+          gap: 1.8rem;
+          padding: 1.8rem 1.6rem;
         }
       }
 
@@ -1035,6 +1331,87 @@ const content = getContentTranslations(locale).contact;
       </div>
     </section>
 
+    <section class="section video-consult">
+      <div class="container">
+        <div class="video-consult-wrap">
+          <div class="video-consult-copy">
+            <p class="eyebrow">1:1 Strategy Call</p>
+            <h2>Book a 30-minute video call with our team</h2>
+            <p>
+              Every investor's situation is different. Sit down with one of our partners
+              for a focused, confidential conversation about your goals, budget, and
+              timeline — and walk away with a tailored shortlist of opportunities
+              matched to where you are today.
+            </p>
+            <ul class="video-consult-benefits">
+              <li>
+                <span class="video-consult-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+                A private, no-obligation conversation with a senior partner
+              </li>
+              <li>
+                <span class="video-consult-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+                Personalised review of your investment goals, capacity, and horizon
+              </li>
+              <li>
+                <span class="video-consult-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+                A curated set of opportunities tailored to your profile
+              </li>
+              <li>
+                <span class="video-consult-check" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+                A written follow-up summary delivered after the call
+              </li>
+            </ul>
+            <div class="video-consult-cta-row">
+              <a class="submit video-consult-cta" href="#tab-investor">
+                Schedule Your Call
+              </a>
+              <span class="video-consult-note">30 minutes · Online · Free of charge</span>
+            </div>
+          </div>
+
+          <div class="video-consult-card" aria-hidden="true">
+            <div class="video-consult-card-header">
+              <span class="video-consult-card-status"></span>
+              Equity Partners · Live Consultation
+            </div>
+            <div class="video-consult-card-frame">
+              <div class="video-consult-avatar-row">
+                <span class="video-consult-avatar">EP</span>
+                <span class="video-consult-avatar-text">
+                  <strong>Equity Partners</strong>
+                  <span>Senior Advisor</span>
+                </span>
+              </div>
+              <div class="video-consult-avatar-row">
+                <span class="video-consult-avatar is-alt">You</span>
+                <span class="video-consult-avatar-text">
+                  <strong>You</strong>
+                  <span>Investor</span>
+                </span>
+              </div>
+              <div class="video-consult-card-divider"></div>
+              <div class="video-consult-card-detail">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span>30 minutes · Tailored to your situation</span>
+                <svg viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2"/><polygon points="22 8 16 12 22 16 22 8"/></svg>
+                <span>Secure video call · No software install required</span>
+                <svg viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="m22 6-10 7L2 6"/></svg>
+                <span>Written follow-up summary sent afterwards</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="section map-comparison">
       <div class="container">
         <div class="map-options">
@@ -1068,21 +1445,38 @@ const content = getContentTranslations(locale).contact;
       const tabs = document.querySelectorAll(".form-tab-btn");
       const panels = document.querySelectorAll(".form-panel");
 
-      tabs.forEach((tab) => {
-        tab.addEventListener("click", () => {
-          const targetId = tab.getAttribute("aria-controls");
+      const activateTab = (tab) => {
+        const targetId = tab.getAttribute("aria-controls");
 
-          tabs.forEach((t) => {
-            t.classList.remove("is-active");
-            t.setAttribute("aria-selected", "false");
-          });
-          panels.forEach((p) => p.classList.remove("is-active"));
-
-          tab.classList.add("is-active");
-          tab.setAttribute("aria-selected", "true");
-          document.getElementById(targetId).classList.add("is-active");
+        tabs.forEach((t) => {
+          t.classList.remove("is-active");
+          t.setAttribute("aria-selected", "false");
         });
+        panels.forEach((p) => p.classList.remove("is-active"));
+
+        tab.classList.add("is-active");
+        tab.setAttribute("aria-selected", "true");
+        const panel = document.getElementById(targetId);
+        if (panel) panel.classList.add("is-active");
+      };
+
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => activateTab(tab));
       });
+
+      // Open the Investor Inquiry tab when arriving via #tab-investor or #panel-investor
+      const openTabFromHash = () => {
+        const hash = window.location.hash;
+        if (hash === "#tab-investor" || hash === "#panel-investor") {
+          const investorTab = document.getElementById("tab-investor");
+          if (investorTab) {
+            activateTab(investorTab);
+            investorTab.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }
+      };
+      openTabFromHash();
+      window.addEventListener("hashchange", openTabFromHash);
     </script>
   </body>
 </html>
