@@ -3,7 +3,7 @@ import { buildLocalizedPath, type Locale } from "../lib/i18n";
 import { getUiTranslations } from "../i18n/ui";
 
 interface Props {
-  active?: "home" | "about" | "portfolio" | "partners" | "blog" | "test";
+  active?: "home" | "invest" | "about" | "portfolio" | "partners" | "blog" | "test";
   menuToggleId: string;
   offsetFirstSection?: boolean;
   locale: Locale;
@@ -39,9 +39,9 @@ const languages = [
   </a>
   <nav class="main-nav" aria-label="Primary">
     <ul class="menu-list">
-      <li><a class:list={["menu-link", active === "home" && "is-active"]} href={buildLocalizedPath("/", locale)}>{t.nav.home}</a></li>
-      <li><a class:list={["menu-link", active === "about" && "is-active"]} href={buildLocalizedPath("/about", locale)}>{t.nav.about}</a></li>
+      <li><a class:list={["menu-link", active === "invest" && "is-active"]} href={buildLocalizedPath("/invest", locale)}>{t.nav.invest}</a></li>
       <li><a class:list={["menu-link", active === "portfolio" && "is-active"]} href={buildLocalizedPath("/projects", locale)}>{t.nav.portfolio}</a></li>
+      <li><a class:list={["menu-link", active === "about" && "is-active"]} href={buildLocalizedPath("/about", locale)}>{t.nav.about}</a></li>
       <li><a class:list={["menu-link", active === "partners" && "is-active"]} href={buildLocalizedPath("/partners", locale)}>{t.nav.partners}</a></li>
       <li><a class:list={["menu-link", active === "blog" && "is-active"]} href={buildLocalizedPath("/blog", locale)}>{t.nav.blog}</a></li>
       {/* <li><a class:list={["menu-link", active === "test" && "is-active"]} href={buildLocalizedPath("/test", locale)}>{t.nav.test}</a></li> */}
@@ -100,9 +100,9 @@ const languages = [
       </a>
     </div>
     <ul class="mobile-drawer-list">
-      <li><a class:list={["mobile-drawer-link", active === "home" && "is-active"]} href={buildLocalizedPath("/", locale)}>{t.nav.home}</a></li>
-      <li><a class:list={["mobile-drawer-link", active === "about" && "is-active"]} href={buildLocalizedPath("/about", locale)}>{t.nav.about}</a></li>
+      <li><a class:list={["mobile-drawer-link", active === "invest" && "is-active"]} href={buildLocalizedPath("/invest", locale)}>{t.nav.invest}</a></li>
       <li><a class:list={["mobile-drawer-link", active === "portfolio" && "is-active"]} href={buildLocalizedPath("/projects", locale)}>{t.nav.portfolio}</a></li>
+      <li><a class:list={["mobile-drawer-link", active === "about" && "is-active"]} href={buildLocalizedPath("/about", locale)}>{t.nav.about}</a></li>
       <li><a class:list={["mobile-drawer-link", active === "partners" && "is-active"]} href={buildLocalizedPath("/partners", locale)}>{t.nav.partners}</a></li>
       <li><a class:list={["mobile-drawer-link", active === "blog" && "is-active"]} href={buildLocalizedPath("/blog", locale)}>{t.nav.blog}</a></li>
       {/* <li><a class:list={["mobile-drawer-link", active === "test" && "is-active"]} href={buildLocalizedPath("/test", locale)}>{t.nav.test}</a></li> */}
@@ -309,6 +309,19 @@ const languages = [
         closeLanguageDropdowns();
       }
     });
+  }
+
+  // Toggle body.is-scrolled so the header shrinks / blurs / tints on scroll.
+  // Guarded so it only binds once even if a page also includes the same
+  // snippet inline (existing pages like about.astro do).
+  if (!window.__epScrolledHeaderInit) {
+    window.__epScrolledHeaderInit = true;
+    const root = document.body;
+    const syncHeaderState = () => {
+      root.classList.toggle("is-scrolled", window.scrollY > 10);
+    };
+    syncHeaderState();
+    window.addEventListener("scroll", syncHeaderState, { passive: true });
   }
 </script>
 

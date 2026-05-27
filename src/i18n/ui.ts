@@ -14,6 +14,7 @@ type PageTitleKey =
 type Dictionary = {
   nav: {
     home: string;
+    invest: string;
     about: string;
     portfolio: string;
     partners: string;
@@ -43,6 +44,7 @@ export const uiTranslations: Record<Locale, Dictionary> = {
   en: {
     nav: {
       home: "Home",
+      invest: "Invest",
       about: "About",
       portfolio: "Portfolio",
       partners: "Partners",
@@ -80,6 +82,7 @@ export const uiTranslations: Record<Locale, Dictionary> = {
   es: {
     nav: {
       home: "Inicio",
+      invest: "Invertir",
       about: "Nosotros",
       portfolio: "Portafolio",
       partners: "Socios",
@@ -117,6 +120,7 @@ export const uiTranslations: Record<Locale, Dictionary> = {
   ca: {
     nav: {
       home: "Inici",
+      invest: "Invertir",
       about: "Nosaltres",
       portfolio: "Portafoli",
       partners: "Socis",

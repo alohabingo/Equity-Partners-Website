@@ -355,24 +355,44 @@ const content = getContentTranslations(locale).contact;
         display: flex;
         flex-direction: column;
         align-self: start;
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
       }
 
       .contact-info-header {
-        padding: 1.8rem 1.6rem 1.4rem;
-        border-bottom: 1px solid var(--line);
+        position: relative;
+        padding: 1.95rem 1.7rem 1.65rem;
+        background:
+          radial-gradient(circle at 92% -15%, rgba(83, 178, 127, 0.32), transparent 55%),
+          radial-gradient(circle at 0% 110%, rgba(83, 178, 127, 0.12), transparent 50%),
+          linear-gradient(135deg, #0f1a2a 0%, #1a2c47 100%);
+        border-bottom: none;
+        overflow: hidden;
+      }
+
+      .contact-info-header::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, rgba(83, 178, 127, 0.7), transparent);
       }
 
       .contact-info-header .eyebrow {
         display: inline-flex;
         gap: 0.5rem;
-        color: #3f9568;
+        color: #7bd6a2;
         font-size: 0.7rem;
         letter-spacing: 0.22em;
         margin-bottom: 0.5rem;
       }
 
       .contact-info-header .eyebrow::before {
-        width: 20px;
+        width: 22px;
+        background: linear-gradient(90deg, transparent, #7bd6a2);
       }
 
       .contact-info-header h3 {
@@ -382,20 +402,31 @@ const content = getContentTranslations(locale).contact;
       .contact-info-header h3 {
         font-size: 1.35rem;
         font-weight: 700;
-        color: #1f2835;
+        color: #ffffff;
         margin: 0 0 0.4rem;
       }
 
       .contact-info-header p {
         font-size: 0.82rem;
-        color: var(--text-muted);
+        color: rgba(213, 222, 237, 0.82);
         line-height: 1.6;
         margin: 0;
       }
 
       .contact-info-body {
-        padding: 0.5rem 1.6rem 1.4rem;
+        position: relative;
+        padding: 1rem 1.6rem 1.5rem;
         flex: 1;
+        isolation: isolate;
+      }
+
+      .contact-info-body::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 100% 100%, rgba(83, 178, 127, 0.09), transparent 65%);
+        pointer-events: none;
+        z-index: -1;
       }
 
       .contact-list {
@@ -438,8 +469,8 @@ const content = getContentTranslations(locale).contact;
         width: 34px;
         height: 34px;
         min-width: 34px;
-        border-radius: 0.5rem;
-        background: rgba(83, 178, 127, 0.1);
+        border-radius: 0;
+        background: transparent;
         color: #53b27f;
         display: inline-flex;
         align-items: center;

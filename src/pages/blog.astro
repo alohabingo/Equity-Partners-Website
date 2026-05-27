@@ -417,10 +417,28 @@ const content = getContentTranslations(locale).blog;
       }
 
       .blog-meta {
-        position: static;
+        position: relative;
         z-index: auto;
         padding: 1.2rem;
         color: var(--text-primary);
+        isolation: isolate;
+        overflow: hidden;
+      }
+
+      .blog-meta::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 85% 0%, rgba(83, 178, 127, 0.14), transparent 60%);
+        opacity: 0;
+        transition: opacity 360ms ease;
+        z-index: -1;
+        pointer-events: none;
+      }
+
+      .blog-card:hover .blog-meta::before,
+      .blog-card-link:hover .blog-meta::before {
+        opacity: 1;
       }
 
       .blog-meta h3 {

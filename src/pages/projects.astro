@@ -293,10 +293,28 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
       }
 
       .project-card-v2-body {
+        position: relative;
         flex: 1;
         display: flex;
         flex-direction: column;
         padding: 1.6rem 1.5rem 1.5rem;
+        isolation: isolate;
+        overflow: hidden;
+      }
+
+      .project-card-v2-body::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 85% 0%, rgba(83, 178, 127, 0.14), transparent 60%);
+        opacity: 0;
+        transition: opacity 360ms ease;
+        z-index: -1;
+        pointer-events: none;
+      }
+
+      .project-card-v2:hover .project-card-v2-body::before {
+        opacity: 1;
       }
 
       .project-card-v2-location {
