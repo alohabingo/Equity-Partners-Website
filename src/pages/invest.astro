@@ -6,6 +6,7 @@ import { buildLocalizedPath, getLocaleFromUrl } from "../lib/i18n";
 
 const locale = getLocaleFromUrl(Astro.url) ?? "en";
 const contactHref = buildLocalizedPath("/contact", locale);
+const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
 ---
 
 <!doctype html>
@@ -16,7 +17,7 @@ const contactHref = buildLocalizedPath("/contact", locale);
     <title>Invest with Equity Partners | Andorran Real Estate</title>
     <meta
       name="description"
-      content="Three ways to invest in Andorran real estate with Equity Partners: Debt with indicative coupons of 6–8%, Equity targeting 15–25%, or the most popular Debt + Equity structure blending a 5–7% coupon with 15–25% equity upside. Exact terms are calibrated to each project."
+      content="Three ways to invest in Andorran real estate with Equity Partners: Debt for contractual annual income, Equity for full project upside, or the most popular Debt + Equity structure blending both. Returns are set per project — see live figures on our Opportunities page."
     />
     <link rel="icon" type="image/png" href="/EP favicon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -159,6 +160,19 @@ const contactHref = buildLocalizedPath("/contact", locale);
         margin: 0;
         max-width: 42rem;
         line-height: 1.6;
+      }
+
+      .invest-hero-link {
+        color: #7bd6a2;
+        text-decoration: none;
+        border-bottom: 1px solid rgba(123, 214, 162, 0.45);
+        padding-bottom: 1px;
+        transition: color 200ms ease, border-color 200ms ease;
+      }
+
+      .invest-hero-link:hover {
+        color: #ffffff;
+        border-bottom-color: #ffffff;
       }
 
       /* ────────────────  Section base  ──────────────── */
@@ -387,11 +401,11 @@ const contactHref = buildLocalizedPath("/contact", locale);
       }
 
       .invest-card-return-value {
-        font-size: 1.7rem;
+        font-size: 1.05rem;
         font-weight: 700;
         color: var(--navy);
-        line-height: 1.1;
-        letter-spacing: -0.012em;
+        line-height: 1.25;
+        letter-spacing: -0.01em;
       }
 
       .invest-card-return-value .accent {
@@ -501,6 +515,20 @@ const contactHref = buildLocalizedPath("/contact", locale);
         line-height: 1.5;
       }
 
+      .invest-compare-link {
+        color: var(--green-dark);
+        text-decoration: none;
+        font-weight: 600;
+        border-bottom: 1px solid rgba(63, 149, 104, 0.4);
+        padding-bottom: 1px;
+        transition: color 200ms ease, border-color 200ms ease;
+      }
+
+      .invest-compare-link:hover {
+        color: var(--navy);
+        border-bottom-color: var(--navy);
+      }
+
       .invest-compare {
         width: 100%;
         border-collapse: collapse;
@@ -559,42 +587,64 @@ const contactHref = buildLocalizedPath("/contact", locale);
       .invest-explainer {
         display: flex;
         flex-direction: column;
-        gap: 2rem;
+        gap: 0.9rem;
       }
 
       .invest-explainer-block {
-        display: grid;
-        grid-template-columns: 240px 1fr;
-        gap: 2.4rem;
-        padding: 2rem;
         background: #ffffff;
         border: 1px solid var(--line);
-        border-radius: 1.2rem;
-        box-shadow: 0 10px 28px rgba(15, 26, 42, 0.05);
+        border-radius: 1rem;
+        box-shadow: 0 6px 18px rgba(15, 26, 42, 0.04);
+        overflow: hidden;
+        transition: box-shadow 240ms ease, border-color 240ms ease;
       }
 
-      @media (max-width: 820px) {
-        .invest-explainer-block {
-          grid-template-columns: 1fr;
-          gap: 1.2rem;
-          padding: 1.6rem;
-        }
+      .invest-explainer-block:hover {
+        border-color: rgba(83, 178, 127, 0.35);
+        box-shadow: 0 10px 28px rgba(15, 26, 42, 0.07);
       }
 
-      .invest-explainer-side {
+      .invest-explainer-block[open] {
+        border-color: rgba(83, 178, 127, 0.45);
+        box-shadow: 0 14px 36px rgba(15, 26, 42, 0.09);
+      }
+
+      .invest-explainer-summary {
+        list-style: none;
+        cursor: pointer;
+        padding: 1.4rem 1.6rem;
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+        outline: none;
+      }
+
+      .invest-explainer-summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .invest-explainer-summary::marker {
+        content: "";
+      }
+
+      .invest-explainer-summary:focus-visible {
+        box-shadow: inset 0 0 0 2px rgba(83, 178, 127, 0.4);
+      }
+
+      .invest-explainer-summary-text {
+        flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
-        border-right: 1px solid var(--line);
-        padding-right: 2rem;
+        gap: 0.45rem;
+        min-width: 0;
       }
 
-      @media (max-width: 820px) {
-        .invest-explainer-side {
-          border-right: none;
-          border-bottom: 1px solid var(--line);
-          padding: 0 0 1.2rem;
-        }
+      .invest-explainer-summary-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
       }
 
       .invest-explainer-tag {
@@ -605,8 +655,8 @@ const contactHref = buildLocalizedPath("/contact", locale);
         color: var(--green-dark);
       }
 
-      .invest-explainer-side h3 {
-        font-size: 1.5rem;
+      .invest-explainer-summary h3 {
+        font-size: 1.3rem;
         font-weight: 700;
         color: var(--navy);
         margin: 0;
@@ -614,10 +664,48 @@ const contactHref = buildLocalizedPath("/contact", locale);
       }
 
       .invest-explainer-return {
-        margin-top: 0.4rem;
-        font-size: 1.05rem;
+        font-size: 0.88rem;
         font-weight: 600;
         color: var(--green-dark);
+        white-space: nowrap;
+      }
+
+      .invest-explainer-chevron {
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: rgba(83, 178, 127, 0.1);
+        color: var(--green-dark);
+        flex-shrink: 0;
+        transition: transform 320ms cubic-bezier(0.2, 0.65, 0.35, 1), background 200ms ease;
+      }
+
+      .invest-explainer-chevron svg {
+        width: 14px;
+        height: 14px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .invest-explainer-summary:hover .invest-explainer-chevron {
+        background: rgba(83, 178, 127, 0.2);
+      }
+
+      .invest-explainer-block[open] .invest-explainer-chevron {
+        transform: rotate(180deg);
+      }
+
+      .invest-explainer-body {
+        padding: 0 1.6rem 1.6rem;
+        border-top: 1px solid var(--line);
+        padding-top: 1.4rem;
+        margin-top: 0;
       }
 
       .invest-explainer-body p {
@@ -632,6 +720,45 @@ const contactHref = buildLocalizedPath("/contact", locale);
 
       .invest-explainer-body strong {
         color: var(--navy);
+      }
+
+      @media (max-width: 640px) {
+        .invest-explainer-summary {
+          padding: 1.2rem 1.3rem;
+          gap: 1rem;
+        }
+
+        .invest-explainer-summary h3 {
+          font-size: 1.15rem;
+        }
+
+        .invest-explainer-summary-row {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.3rem;
+        }
+
+        .invest-explainer-return {
+          white-space: normal;
+        }
+
+        .invest-explainer-body {
+          padding: 1.2rem 1.3rem 1.3rem;
+        }
+      }
+
+      .invest-explainer-link {
+        color: var(--green-dark);
+        text-decoration: none;
+        font-weight: 600;
+        border-bottom: 1px solid rgba(63, 149, 104, 0.4);
+        padding-bottom: 1px;
+        transition: color 200ms ease, border-color 200ms ease;
+      }
+
+      .invest-explainer-link:hover {
+        color: var(--navy);
+        border-bottom-color: var(--navy);
       }
 
       /* ────────────────  Bottom CTA  ──────────────── */
@@ -735,10 +862,12 @@ const contactHref = buildLocalizedPath("/contact", locale);
             Investors at Equity Partners can deploy capital through three
             distinct structures — pure Debt for predictable income, pure
             Equity for full project upside, or a blended Debt + Equity
-            position that captures both. The ranges shown below are
-            indicative: the exact coupon, equity share and hold period
-            are calibrated project by project. Every deal is underwritten
-            to the same institutional standard.
+            position that captures both. The pages below describe how
+            each structure works; the exact coupon, equity share and
+            hold period are calibrated project by project. For the
+            actual return on a specific deal, see our
+            <a href={opportunitiesHref} class="invest-hero-link">live Opportunities</a>.
+            Every deal is underwritten to the same institutional standard.
           </p>
         </div>
       </div>
@@ -775,8 +904,8 @@ const contactHref = buildLocalizedPath("/contact", locale);
               and is secured against the underlying real estate.
             </p>
             <div class="invest-card-returns">
-              <span class="invest-card-return-value"><span class="accent">6–8%</span></span>
-              <span class="invest-card-return-label">Indicative annual coupon · set per project</span>
+              <span class="invest-card-return-value"><span class="accent">Annual coupon</span></span>
+              <span class="invest-card-return-label">Set per project · see Opportunities</span>
             </div>
             <ul class="invest-card-features">
               <li>
@@ -827,21 +956,21 @@ const contactHref = buildLocalizedPath("/contact", locale);
               project runs and share in the upside at exit.
             </p>
             <div class="invest-card-returns">
-              <span class="invest-card-return-value"><span class="accent">5–7%</span> + <span class="accent">15–25%</span></span>
-              <span class="invest-card-return-label">Indicative coupon · equity upside · set per project</span>
+              <span class="invest-card-return-value"><span class="accent">Coupon + Equity upside</span></span>
+              <span class="invest-card-return-label">Set per project · see Opportunities</span>
             </div>
             <ul class="invest-card-features">
               <li>
                 <span class="invest-card-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
                 </span>
-                <span>Recurring income on the debt portion (typically 5–7%) while the project develops</span>
+                <span>Recurring contractual income on the debt portion while the project develops</span>
               </li>
               <li>
                 <span class="invest-card-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
                 </span>
-                <span>Target equity return of 15–25% on the equity portion through profit share at exit</span>
+                <span>Equity profit share at exit on the equity portion, calibrated to the deal</span>
               </li>
               <li>
                 <span class="invest-card-check" aria-hidden="true">
@@ -875,8 +1004,8 @@ const contactHref = buildLocalizedPath("/contact", locale);
               three structures, and the longest typical hold.
             </p>
             <div class="invest-card-returns">
-              <span class="invest-card-return-value"><span class="accent">15–25%</span></span>
-              <span class="invest-card-return-label">Indicative target equity return at exit · set per project</span>
+              <span class="invest-card-return-value"><span class="accent">Equity upside at exit</span></span>
+              <span class="invest-card-return-label">Set per project · see Opportunities</span>
             </div>
             <ul class="invest-card-features">
               <li>
@@ -923,7 +1052,7 @@ const contactHref = buildLocalizedPath("/contact", locale);
         </div>
 
         <div class="invest-compare-wrap" data-animate>
-          <p class="invest-compare-note">All return figures are indicative and set per project — the exact coupon, equity share and hold period are calibrated to each deal.</p>
+          <p class="invest-compare-note">Returns are set per project — the exact coupon, equity share and hold period are calibrated to each deal. For actual figures on a specific opportunity, <a href={opportunitiesHref} class="invest-compare-link">see our live Opportunities</a>.</p>
           <table class="invest-compare">
             <thead>
               <tr>
@@ -935,10 +1064,16 @@ const contactHref = buildLocalizedPath("/contact", locale);
             </thead>
             <tbody>
               <tr>
-                <td class="invest-compare-row-label">Indicative return</td>
-                <td>6–8% coupon</td>
-                <td class="is-highlight">5–7% coupon + 15–25% equity</td>
-                <td>15–25% target return</td>
+                <td class="invest-compare-row-label">Return mechanic</td>
+                <td>Annual coupon</td>
+                <td class="is-highlight">Coupon + equity profit share</td>
+                <td>Equity profit share</td>
+              </tr>
+              <tr>
+                <td class="invest-compare-row-label">When you get paid</td>
+                <td>Throughout the project</td>
+                <td class="is-highlight">During the project + at exit</td>
+                <td>At project exit</td>
               </tr>
               <tr>
                 <td class="invest-compare-row-label">Income profile</td>
@@ -997,19 +1132,29 @@ const contactHref = buildLocalizedPath("/contact", locale);
         <div class="invest-explainer">
 
           <!-- DEBT explainer -->
-          <article class="invest-explainer-block" data-animate>
-            <div class="invest-explainer-side">
-              <span class="invest-explainer-tag">Structure 01</span>
-              <h3>Debt</h3>
-              <span class="invest-explainer-return">6–8% indicative coupon · set per project</span>
-            </div>
+          <details class="invest-explainer-block" data-animate>
+            <summary class="invest-explainer-summary">
+              <div class="invest-explainer-summary-text">
+                <span class="invest-explainer-tag">Structure 01</span>
+                <div class="invest-explainer-summary-row">
+                  <h3>Debt</h3>
+                  <span class="invest-explainer-return">Annual coupon · set per project</span>
+                </div>
+              </div>
+              <span class="invest-explainer-chevron" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+              </span>
+            </summary>
             <div class="invest-explainer-body">
               <p>
                 In a debt position you are <strong>lending capital</strong> to
                 the project rather than owning a piece of it. In return you
-                receive a contractual annual coupon — typically in the
-                6–8% range, calibrated deal by deal — paid out at agreed
-                intervals throughout the life of the investment.
+                receive a contractual annual coupon, calibrated deal by
+                deal and paid out at agreed intervals throughout the life
+                of the investment. The exact coupon depends on the
+                specific project — see our
+                <a href={opportunitiesHref} class="invest-explainer-link">live Opportunities</a>
+                for current figures.
               </p>
               <p>
                 Your capital sits <strong>senior in the capital stack</strong>,
@@ -1031,15 +1176,22 @@ const contactHref = buildLocalizedPath("/contact", locale);
                 and value capital preservation over outsized return.
               </p>
             </div>
-          </article>
+          </details>
 
           <!-- DEBT + EQUITY explainer -->
-          <article class="invest-explainer-block" data-animate>
-            <div class="invest-explainer-side">
-              <span class="invest-explainer-tag">Structure 02 · Most popular</span>
-              <h3>Debt + Equity</h3>
-              <span class="invest-explainer-return">5–7% coupon + 15–25% equity upside · set per project</span>
-            </div>
+          <details class="invest-explainer-block" data-animate>
+            <summary class="invest-explainer-summary">
+              <div class="invest-explainer-summary-text">
+                <span class="invest-explainer-tag">Structure 02 · Most popular</span>
+                <div class="invest-explainer-summary-row">
+                  <h3>Debt + Equity</h3>
+                  <span class="invest-explainer-return">Coupon + Equity upside · set per project</span>
+                </div>
+              </div>
+              <span class="invest-explainer-chevron" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+              </span>
+            </summary>
             <div class="invest-explainer-body">
               <p>
                 A blended position — and the structure the
@@ -1049,13 +1201,15 @@ const contactHref = buildLocalizedPath("/contact", locale);
                 stack at once.
               </p>
               <p>
-                The debt portion pays an annual coupon — typically in the
-                5–7% range, slightly below the pure-debt rate because you
-                are also participating in the equity upside. The equity
-                portion targets a return in the 15–25% range, paid out as
-                a share of project profit when the asset is sold or
-                refinanced. The split between debt and equity, and the
-                exact figures within each range, are set per project.
+                The debt portion pays an annual coupon — typically
+                slightly below the pure-debt coupon, because you are
+                also participating in the equity upside. The equity
+                portion pays out as a share of project profit when the
+                asset is sold or refinanced. The split between debt and
+                equity, and the exact figures on both sides, are set per
+                project — see our
+                <a href={opportunitiesHref} class="invest-explainer-link">live Opportunities</a>
+                for current figures.
               </p>
               <p>
                 The result is a profile that <strong>balances downside
@@ -1072,15 +1226,22 @@ const contactHref = buildLocalizedPath("/contact", locale);
                 base.
               </p>
             </div>
-          </article>
+          </details>
 
           <!-- EQUITY explainer -->
-          <article class="invest-explainer-block" data-animate>
-            <div class="invest-explainer-side">
-              <span class="invest-explainer-tag">Structure 03</span>
-              <h3>Equity</h3>
-              <span class="invest-explainer-return">15–25% target return at exit · set per project</span>
-            </div>
+          <details class="invest-explainer-block" data-animate>
+            <summary class="invest-explainer-summary">
+              <div class="invest-explainer-summary-text">
+                <span class="invest-explainer-tag">Structure 03</span>
+                <div class="invest-explainer-summary-row">
+                  <h3>Equity</h3>
+                  <span class="invest-explainer-return">Equity profit share at exit · set per project</span>
+                </div>
+              </div>
+              <span class="invest-explainer-chevron" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+              </span>
+            </summary>
             <div class="invest-explainer-body">
               <p>
                 In an equity position you take a <strong>direct ownership
@@ -1091,9 +1252,11 @@ const contactHref = buildLocalizedPath("/contact", locale);
               <p>
                 There is no coupon. Instead, returns are realised when the
                 project is sold or refinanced — at which point you receive
-                your pro-rata share of the profit. Target returns typically
-                fall in the 15–25% range, set on a per-project basis and
-                reflecting the higher risk and longer lock-up profile.
+                your pro-rata share of the profit. Target returns are set
+                on a per-project basis and reflect the specific risk and
+                lock-up profile of the deal. For the actual target on a
+                specific opportunity, see our
+                <a href={opportunitiesHref} class="invest-explainer-link">live Opportunities</a>.
               </p>
               <p>
                 Equity sits <strong>subordinated to debt</strong> in the
@@ -1110,7 +1273,7 @@ const contactHref = buildLocalizedPath("/contact", locale);
                 potential</strong> of the three structures.
               </p>
             </div>
-          </article>
+          </details>
 
         </div>
       </div>

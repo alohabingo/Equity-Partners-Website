@@ -167,7 +167,7 @@ export const contentTranslations: Record<
         kicker: "ANDORRA • INVESTMENT • EXCELLENCE",
         title: "Your strategic partner for Andorra real estate investments.",
         subline:
-          "Equity Partners connects investor capital to disciplined Andorran real estate execution.",
+          "The bridge between international investor capital and Andorra's high-barrier real estate market.",
         cta: "Explore Opportunities",
       },
       localPartnersTitle: "OUR LOCAL PARTNERS",

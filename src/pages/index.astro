@@ -227,17 +227,26 @@ const content = getContentTranslations(locale).home;
         box-shadow: 0 16px 32px rgba(12, 24, 18, 0.34);
       }
 
+      /* ─────────────────────────────────────────────────────────────
+         Secondary hero button — frosted-glass / glossy treatment.
+         The white text needs to read cleanly over the hero image, so:
+         (1) the gradient background must stay above ~0.20 opacity,
+         (2) brightness in the backdrop-filter must stay <= 0.78, and
+         (3) the text-shadow stays — it carries the legibility.
+         Do not weaken these values without testing on a light image.
+         ───────────────────────────────────────────────────────────── */
       .hero-button.is-secondary {
-        background: rgba(255, 255, 255, 0.14);
-        border: 1px solid rgba(255, 255, 255, 0.42);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.22) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.6);
         color: #ffffff;
         box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.25),
-          inset 0 -1px 0 rgba(255, 255, 255, 0.06),
-          0 5px 14px rgba(0, 0, 0, 0.15);
-        backdrop-filter: blur(9px) saturate(170%) brightness(0.86) contrast(1.04);
-        -webkit-backdrop-filter: blur(9px) saturate(170%) brightness(0.86) contrast(1.04);
-        text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+          inset 0 1px 0 rgba(255, 255, 255, 0.6),
+          inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+          0 8px 22px rgba(0, 0, 0, 0.26);
+        backdrop-filter: blur(14px) saturate(170%) brightness(0.74) contrast(1.08);
+        -webkit-backdrop-filter: blur(14px) saturate(170%) brightness(0.74) contrast(1.08);
+        text-shadow: 0 1px 12px rgba(0, 0, 0, 0.75);
       }
 
       .hero-button.is-secondary:hover {
@@ -3565,12 +3574,12 @@ const content = getContentTranslations(locale).home;
       }
 
       .wwo-return-value {
-        font-size: clamp(1.7rem, 2.8vw, 2.2rem);
+        font-size: 1.05rem;
         font-weight: 700;
         color: #ffffff;
         font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
-        line-height: 1;
-        margin-bottom: 0.3rem;
+        line-height: 1.25;
+        margin-bottom: 0.4rem;
       }
 
       .wwo-card.is-direct .wwo-return-value {
@@ -4419,6 +4428,19 @@ const content = getContentTranslations(locale).home;
         line-height: 1.6;
       }
 
+      .what-we-offer.is-spotlight .focus-intro-link {
+        color: #7bd6a2;
+        text-decoration: none;
+        border-bottom: 1px solid rgba(123, 214, 162, 0.45);
+        padding-bottom: 1px;
+        transition: color 200ms ease, border-color 200ms ease;
+      }
+
+      .what-we-offer.is-spotlight .focus-intro-link:hover {
+        color: #ffffff;
+        border-bottom-color: #ffffff;
+      }
+
       .what-we-offer.is-spotlight .what-we-offer-grid {
         gap: 1.4rem;
       }
@@ -5029,7 +5051,7 @@ const content = getContentTranslations(locale).home;
         <div class="what-we-offer-header">
           <p class="eyebrow">What We Offer</p>
           <h2 class="focus-title">Two Ways to Invest in Andorra</h2>
-          <p class="focus-intro">Whether you prefer a fully managed fund or hands-on project financing, we provide a structured entry into Andorra's high-barrier real estate market.</p>
+          <p class="focus-intro">Whether you prefer a fully managed fund or hands-on project financing, we provide a structured entry into Andorra's high-barrier real estate market. Exact returns are calibrated to each project — see the indicative ranges on our <a href={buildLocalizedPath("/invest", locale)} class="focus-intro-link">Invest page</a>.</p>
         </div>
         <div class="what-we-offer-grid">
 
@@ -5043,18 +5065,18 @@ const content = getContentTranslations(locale).home;
             <p class="wwo-desc">A fully managed fund giving you exposure to Andorra's real estate market without requiring any active involvement. We handle sourcing, execution, and management end-to-end.</p>
             <div class="wwo-returns">
               <div class="wwo-return-item">
-                <p class="wwo-return-value">7%</p>
-                <p class="wwo-return-label">Fixed annual return</p>
+                <p class="wwo-return-value">Annual coupon</p>
+                <p class="wwo-return-label">Indicative — set per project</p>
               </div>
               <div class="wwo-return-item">
-                <p class="wwo-return-value">0</p>
-                <p class="wwo-return-label">Active participation required</p>
+                <p class="wwo-return-value">Fully passive</p>
+                <p class="wwo-return-label">No active involvement</p>
               </div>
             </div>
             <ul class="wwo-features">
               <li>
                 <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
-                <span>Fixed 7% annual return on capital invested</span>
+                <span>Contractual annual coupon, calibrated per project</span>
               </li>
               <li>
                 <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
@@ -5070,7 +5092,7 @@ const content = getContentTranslations(locale).home;
               </li>
             </ul>
             <div class="wwo-cta">
-              <a href="#">Learn More</a>
+              <a href={buildLocalizedPath("/invest", locale)}>See Indicative Ranges</a>
             </div>
           </div>
 
@@ -5078,25 +5100,25 @@ const content = getContentTranslations(locale).home;
           <div class="wwo-card is-direct">
             <span class="wwo-badge">Active Investment</span>
             <h3 class="wwo-title">Direct Project Financing</h3>
-            <p class="wwo-desc">Finance a single Andorra development project of your choosing. A higher-conviction approach with greater return potential for investors who want direct exposure to a specific opportunity.</p>
+            <p class="wwo-desc">Finance a single Andorra development project . A higher-conviction approach with greater return potential for investors who want direct exposure to a specific opportunity.</p>
             <div class="wwo-returns">
               <div class="wwo-return-item">
-                <p class="wwo-return-value">6%</p>
-                <p class="wwo-return-label">Fixed annual return</p>
+                <p class="wwo-return-value">Annual coupon</p>
+                <p class="wwo-return-label">Indicative — set per project</p>
               </div>
               <div class="wwo-return-item">
-                <p class="wwo-return-value">20%</p>
-                <p class="wwo-return-label">Project profit share</p>
+                <p class="wwo-return-value">Equity upside</p>
+                <p class="wwo-return-label">Profit share at exit</p>
               </div>
             </div>
             <ul class="wwo-features">
               <li>
                 <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
-                <span>Fixed 6% annual return on capital deployed into the project</span>
+                <span>Contractual annual coupon, calibrated to the project</span>
               </li>
               <li>
                 <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
-                <span>20% share of total project profit on completion</span>
+                <span>Share of total project profit on completion — set per deal</span>
               </li>
               <li>
                 <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
