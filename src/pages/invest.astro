@@ -112,7 +112,6 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
         display: flex;
         flex-direction: column;
         gap: 1rem;
-        max-width: 48rem;
       }
 
       .invest-hero .eyebrow {
@@ -158,7 +157,6 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
         font-size: 1.02rem;
         color: rgba(220, 230, 245, 0.72);
         margin: 0;
-        max-width: 42rem;
         line-height: 1.6;
       }
 
@@ -258,7 +256,6 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
         font-size: 1.02rem;
         line-height: 1.6;
         margin: 1.2rem 0 0;
-        max-width: 50rem;
       }
 
       .invest-section.is-spotlight .invest-section-heading p {
@@ -324,72 +321,87 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
 
       .invest-card-badge {
         position: absolute;
-        top: -0.8rem;
+        top: -0.7rem;
         left: 50%;
         transform: translateX(-50%);
         background: var(--green);
         color: #ffffff;
-        font-size: 0.66rem;
+        font-size: 0.62rem;
         font-weight: 700;
-        letter-spacing: 0.22em;
+        letter-spacing: 0.16em;
         text-transform: uppercase;
-        padding: 0.45rem 0.9rem;
+        padding: 0.4rem 0.85rem;
         border-radius: 999px;
+        line-height: 1;
         box-shadow: 0 6px 14px rgba(83, 178, 127, 0.35);
       }
 
-      .invest-card-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 0.7rem;
-        background: rgba(83, 178, 127, 0.1);
-        color: var(--green-dark);
+      /* Role pill — product family (Andorra Real Estate Fund / Direct Project Financing) */
+      .invest-card-role {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        background: rgba(15, 26, 42, 0.06);
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        width: fit-content;
         margin-bottom: 1.1rem;
       }
 
-      .invest-card-icon svg {
-        width: 22px;
-        height: 22px;
-        fill: none;
-        stroke: currentColor;
-        stroke-width: 2;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-      }
-
-      .invest-card-eyebrow {
-        font-size: 0.68rem;
-        font-weight: 600;
-        letter-spacing: 0.22em;
-        text-transform: uppercase;
+      .invest-card.is-featured .invest-card-role {
+        background: rgba(83, 178, 127, 0.14);
         color: var(--green-dark);
-        margin: 0 0 0.35rem;
       }
 
       .invest-card h3 {
-        font-size: 1.5rem;
+        font-size: 1.55rem;
         font-weight: 700;
         color: var(--navy);
-        margin: 0 0 0.7rem;
+        margin: 0 0 0.4rem;
         letter-spacing: -0.01em;
+        line-height: 1.2;
+      }
+
+      /* Subtitle — Passive Investment · Lowest Risk, etc. */
+      .invest-card-subtitle {
+        font-size: 0.74rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: 0 0 0.85rem;
+      }
+
+      /* Fading divider — matches advantage-home-card-divider on the homepage */
+      .invest-card-divider {
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          rgba(83, 178, 127, 0.5),
+          rgba(83, 178, 127, 0.05)
+        );
+        margin: 0.65rem 0 1.25rem;
       }
 
       .invest-card-tagline {
         font-size: 0.95rem;
-        color: var(--muted);
-        line-height: 1.55;
+        color: var(--text);
+        line-height: 1.6;
         margin: 0 0 1.4rem;
       }
 
+      /* Iconified returns card — matches homepage What We Offer styling */
       .invest-card-returns {
-        display: flex;
-        flex-direction: column;
-        gap: 0.2rem;
-        padding: 1rem 1.1rem;
-        border-radius: 0.75rem;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 1rem;
+        align-items: center;
+        padding: 1.05rem 1.15rem;
+        border-radius: 0.85rem;
         background: var(--line-soft);
         border: 1px solid var(--line);
         margin-bottom: 1.4rem;
@@ -400,24 +412,61 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
         border-color: rgba(83, 178, 127, 0.3);
       }
 
-      .invest-card-return-value {
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: var(--navy);
-        line-height: 1.25;
-        letter-spacing: -0.01em;
+      .invest-card-returns-icon {
+        width: 3.4rem;
+        height: 3.4rem;
+        border-radius: 0.7rem;
+        background: rgba(15, 26, 42, 0.05);
+        border: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        flex-shrink: 0;
       }
 
-      .invest-card-return-value .accent {
+      .invest-card.is-featured .invest-card-returns-icon {
+        background: rgba(83, 178, 127, 0.16);
+        border-color: rgba(83, 178, 127, 0.3);
         color: var(--green-dark);
       }
 
-      .invest-card-return-label {
-        font-size: 0.7rem;
+      .invest-card-returns-icon svg {
+        width: 1.5rem;
+        height: 1.5rem;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .invest-card-returns-label {
+        font-size: 0.66rem;
         font-weight: 600;
-        letter-spacing: 0.2em;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
         color: var(--muted);
+        margin: 0 0 0.4rem;
+      }
+
+      .invest-card-returns-value {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--navy);
+        line-height: 1.3;
+        margin: 0 0 0.3rem;
+      }
+
+      .invest-card.is-featured .invest-card-returns-value {
+        color: var(--green-dark);
+      }
+
+      .invest-card-returns-sub {
+        font-size: 0.78rem;
+        color: var(--muted);
+        margin: 0;
+        line-height: 1.4;
       }
 
       .invest-card-features {
@@ -541,15 +590,42 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
         font-weight: 700;
         text-align: left;
         padding: 1.1rem 1.3rem;
-        font-size: 0.78rem;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
         border-bottom: 1px solid var(--line);
+        vertical-align: top;
       }
 
       .invest-compare thead th.is-highlight {
         background: rgba(83, 178, 127, 0.12);
         color: var(--green-dark);
+      }
+
+      /* Column header role pill (synced with structure cards) */
+      .invest-compare-th-role {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.3rem 0.65rem;
+        border-radius: 999px;
+        background: rgba(15, 26, 42, 0.08);
+        font-size: 0.56rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 0.55rem;
+        line-height: 1.1;
+      }
+
+      .invest-compare thead th.is-highlight .invest-compare-th-role {
+        background: rgba(83, 178, 127, 0.2);
+        color: var(--green-dark);
+      }
+
+      .invest-compare-th-title {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
       }
 
       .invest-compare tbody td {
@@ -859,15 +935,8 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
           <p class="eyebrow">Three Ways to Invest</p>
           <h1>Choose how you participate in Andorran real estate</h1>
           <p>
-            Investors at Equity Partners can deploy capital through three
-            distinct structures — pure Debt for predictable income, pure
-            Equity for full project upside, or a blended Debt + Equity
-            position that captures both. The pages below describe how
-            each structure works; the exact coupon, equity share and
-            hold period are calibrated project by project. For the
-            actual return on a specific deal, see our
-            <a href={opportunitiesHref} class="invest-hero-link">live Opportunities</a>.
-            Every deal is underwritten to the same institutional standard.
+            Choose between Debt, Equity, or our most popular Debt + Equity structure. Returns vary per project. See our
+            <a href={opportunitiesHref} class="invest-hero-link">live Opportunities</a> for current figures.
           </p>
         </div>
       </div>
@@ -889,30 +958,29 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
         <div class="invest-grid" data-animate>
           <!-- DEBT -->
           <article class="invest-card">
-            <div class="invest-card-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <path d="M3 21h18" />
-                <path d="M5 21V10l7-5 7 5v11" />
-                <path d="M9 21v-6h6v6" />
-              </svg>
-            </div>
-            <p class="invest-card-eyebrow">Lower risk · Income focused</p>
+            <span class="invest-card-role">Andorra Real Estate Fund</span>
             <h3>Debt</h3>
+            <p class="invest-card-subtitle">Passive Investment · Lowest Risk</p>
+            <div class="invest-card-divider" aria-hidden="true"></div>
             <p class="invest-card-tagline">
-              You lend capital to the project and receive a contractual
-              annual coupon. Your position sits senior in the capital stack
-              and is secured against the underlying real estate.
+              You lend capital to the project and receive a contractual annual coupon. Your position sits senior in the capital stack and is secured against the underlying real estate, with no exposure to project upside or downside.
             </p>
             <div class="invest-card-returns">
-              <span class="invest-card-return-value"><span class="accent">Annual coupon</span></span>
-              <span class="invest-card-return-label">Set per project · see Opportunities</span>
+              <span class="invest-card-returns-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </span>
+              <div>
+                <p class="invest-card-returns-label">Headline return</p>
+                <p class="invest-card-returns-value">Annual coupon</p>
+                <p class="invest-card-returns-sub">Return varies per project · shared on your call</p>
+              </div>
             </div>
             <ul class="invest-card-features">
               <li>
                 <span class="invest-card-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
                 </span>
-                <span>Predictable contractual payments — no exposure to project upside or downside</span>
+                <span>Predictable contractual payments, with no project performance exposure</span>
               </li>
               <li>
                 <span class="invest-card-check" aria-hidden="true">
@@ -924,40 +992,37 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
                 <span class="invest-card-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
                 </span>
-                <span>Shorter typical hold — capital returns at project completion or refinancing</span>
+                <span>Fully passive, with no involvement once committed</span>
               </li>
               <li>
                 <span class="invest-card-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
                 </span>
-                <span>Best for investors prioritising capital preservation and clear cash flow</span>
+                <span>Shorter typical hold, capital returns at project completion or refinancing</span>
               </li>
             </ul>
-            <a class="invest-card-cta" href={contactHref}>Request Video Call</a>
+            <a class="invest-card-cta" href={`${contactHref}#video-call`}>Request Video Call</a>
           </article>
 
           <!-- DEBT + EQUITY (featured) -->
           <article class="invest-card is-featured">
             <span class="invest-card-badge">Most popular</span>
-            <div class="invest-card-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <path d="M4 20h16" />
-                <path d="M6 20V8l6-4 6 4v12" />
-                <path d="M10 20v-6h4v6" />
-                <path d="m17 4 3 2-3 2" />
-              </svg>
-            </div>
-            <p class="invest-card-eyebrow">Balanced · Most chosen</p>
+            <span class="invest-card-role">Direct Project Financing</span>
             <h3>Debt + Equity</h3>
+            <p class="invest-card-subtitle">Active Investment · Balanced Risk + Upside</p>
+            <div class="invest-card-divider" aria-hidden="true"></div>
             <p class="invest-card-tagline">
-              The structure most of our investors choose. Part of your
-              capital earns a contractual coupon; the rest takes an
-              ownership stake — so you get recurring income while the
-              project runs and share in the upside at exit.
+              Part of your capital earns a contractual coupon, while the rest takes an ownership stake, so you get recurring income while the project runs and share in the upside at exit. You participate directly in the project's progress.
             </p>
             <div class="invest-card-returns">
-              <span class="invest-card-return-value"><span class="accent">Coupon + Equity upside</span></span>
-              <span class="invest-card-return-label">Set per project · see Opportunities</span>
+              <span class="invest-card-returns-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M3 17 9 11l4 4 8-8"/><path d="M14 7h7v7"/></svg>
+              </span>
+              <div>
+                <p class="invest-card-returns-label">Headline return</p>
+                <p class="invest-card-returns-value">Annual coupon + Equity upside</p>
+                <p class="invest-card-returns-sub">Return varies per project · shared on your call</p>
+              </div>
             </div>
             <ul class="invest-card-features">
               <li>
@@ -970,49 +1035,49 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
                 <span class="invest-card-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
                 </span>
-                <span>Equity profit share at exit on the equity portion, calibrated to the deal</span>
+                <span>Equity profit share at exit on the equity portion</span>
               </li>
               <li>
                 <span class="invest-card-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
                 </span>
-                <span>Balances downside protection (secured debt) with full upside participation (equity)</span>
+                <span>Active participation in the project you back, with a direct stake in its success</span>
               </li>
               <li>
                 <span class="invest-card-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
                 </span>
-                <span>The structure the majority of our investors deploy capital through</span>
+                <span>The structure most of our investors choose</span>
               </li>
             </ul>
-            <a class="invest-card-cta" href={contactHref}>Request Video Call</a>
+            <a class="invest-card-cta" href={`${contactHref}#video-call`}>Request Video Call</a>
           </article>
 
           <!-- EQUITY -->
           <article class="invest-card">
-            <div class="invest-card-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <path d="M3 17 9 11l4 4 8-8" />
-                <path d="M14 7h7v7" />
-              </svg>
-            </div>
-            <p class="invest-card-eyebrow">Higher upside · Full participation</p>
+            <span class="invest-card-role">Direct Project Financing</span>
             <h3>Equity</h3>
+            <p class="invest-card-subtitle">Active Investment · Highest Upside</p>
+            <div class="invest-card-divider" aria-hidden="true"></div>
             <p class="invest-card-tagline">
-              You take an ownership stake in the project and share fully
-              in the profit at exit. The highest return potential of the
-              three structures, and the longest typical hold.
+              Take a pure ownership stake in a single project and share fully in the profit at exit, with the highest return potential of the three structures and the longest typical hold. Less common than Debt + Equity, but available for investors comfortable with full project exposure.
             </p>
             <div class="invest-card-returns">
-              <span class="invest-card-return-value"><span class="accent">Equity upside at exit</span></span>
-              <span class="invest-card-return-label">Set per project · see Opportunities</span>
+              <span class="invest-card-returns-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><line x1="6" y1="20" x2="6" y2="16"/><line x1="12" y1="20" x2="12" y2="11"/><line x1="18" y1="20" x2="18" y2="6"/></svg>
+              </span>
+              <div>
+                <p class="invest-card-returns-label">Headline return</p>
+                <p class="invest-card-returns-value">Equity profit share</p>
+                <p class="invest-card-returns-sub">Return varies per project · shared on your call</p>
+              </div>
             </div>
             <ul class="invest-card-features">
               <li>
                 <span class="invest-card-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
                 </span>
-                <span>Full participation in project profits — uncapped upside</span>
+                <span>Full participation in project profits, with uncapped upside</span>
               </li>
               <li>
                 <span class="invest-card-check" aria-hidden="true">
@@ -1024,16 +1089,16 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
                 <span class="invest-card-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
                 </span>
-                <span>Returns realised at project exit — longer lock-up, no interim coupon</span>
+                <span>Active participation in the project you back, with a direct stake in its success</span>
               </li>
               <li>
                 <span class="invest-card-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
                 </span>
-                <span>Best for investors comfortable with project risk in exchange for maximum return</span>
+                <span>Returns realised at project exit, with longer lock-up and no interim coupon</span>
               </li>
             </ul>
-            <a class="invest-card-cta" href={contactHref}>Request Video Call</a>
+            <a class="invest-card-cta" href={`${contactHref}#video-call`}>Request Video Call</a>
           </article>
         </div>
       </div>
@@ -1052,14 +1117,23 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
         </div>
 
         <div class="invest-compare-wrap" data-animate>
-          <p class="invest-compare-note">Returns are set per project — the exact coupon, equity share and hold period are calibrated to each deal. For actual figures on a specific opportunity, <a href={opportunitiesHref} class="invest-compare-link">see our live Opportunities</a>.</p>
+          <p class="invest-compare-note">Returns vary per project. The exact coupon, equity share and hold period are calibrated to each deal and shared on your call. For live opportunities and current figures, <a href={opportunitiesHref} class="invest-compare-link">see our Opportunities page</a>.</p>
           <table class="invest-compare">
             <thead>
               <tr>
                 <th></th>
-                <th>Debt</th>
-                <th class="is-highlight">Debt + Equity</th>
-                <th>Equity</th>
+                <th>
+                  <span class="invest-compare-th-role">Andorra Real Estate Fund</span>
+                  <span class="invest-compare-th-title">Debt</span>
+                </th>
+                <th class="is-highlight">
+                  <span class="invest-compare-th-role">Direct Project Financing</span>
+                  <span class="invest-compare-th-title">Debt + Equity</span>
+                </th>
+                <th>
+                  <span class="invest-compare-th-role">Direct Project Financing</span>
+                  <span class="invest-compare-th-title">Equity</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -1078,7 +1152,7 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
               <tr>
                 <td class="invest-compare-row-label">Income profile</td>
                 <td>Predictable, contractual</td>
-                <td class="is-highlight">Mixed — coupon + exit profit</td>
+                <td class="is-highlight">Coupon + exit profit</td>
                 <td>Lump sum at exit</td>
               </tr>
               <tr>
@@ -1108,7 +1182,7 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
               <tr>
                 <td class="invest-compare-row-label">Best suited to</td>
                 <td>Capital preservation</td>
-                <td class="is-highlight">Most investors — balanced profile</td>
+                <td class="is-highlight">Most investors (balanced profile)</td>
                 <td>Return maximisation</td>
               </tr>
             </tbody>
@@ -1292,7 +1366,7 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
               questions on returns, risk and timeline.
             </p>
           </div>
-          <a class="invest-cta-btn" href={contactHref}>
+          <a class="invest-cta-btn" href={`${contactHref}#video-call`}>
             Request Video Call
             <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </a>

@@ -180,11 +180,9 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
         flex-direction: column;
         gap: 0.2rem;
         padding: 0.4rem 1.6rem 0.4rem 0;
-        border-right: 1px solid var(--line);
       }
 
       .opp-metric-item:last-child {
-        border-right: none;
         padding-right: 0;
         padding-left: 1.6rem;
       }
@@ -821,6 +819,107 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
         .opp-gallery img:first-child { aspect-ratio: 4/3; }
         .opp-metric-item { width: 100%; min-width: 100%; }
       }
+
+      /* ────────────────────────────────────────────────────────────
+         Variation 1 — Redesign of the metrics strip (currently scoped
+         to ordino-lodge-resort for review). Matches the styling of
+         the stats card on the opportunities listing page.
+         ──────────────────────────────────────────────────────────── */
+      .opp-metrics-strip.is-redesign {
+        background: radial-gradient(circle at 10% -10%, #eef2f8 0, #f4f6fa 50%);
+        padding: 2.2rem 0;
+        border-bottom: none;
+      }
+
+      .opp-metrics-strip.is-redesign .opp-metrics-inner {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 1.2rem;
+        overflow: hidden;
+        box-shadow: 0 14px 36px rgba(15, 26, 42, 0.07);
+      }
+
+      .opp-metrics-strip.is-redesign .opp-metric-item {
+        flex: none;
+        min-width: 0;
+        width: auto;
+        padding: 1.4rem 1.6rem;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 0.35rem;
+        border-right: 1px solid var(--line);
+        border-bottom: none;
+        transition: background 320ms ease;
+      }
+
+      .opp-metrics-strip.is-redesign .opp-metric-item:first-child {
+        padding-left: 1.6rem;
+      }
+
+      .opp-metrics-strip.is-redesign .opp-metric-item:last-child {
+        border-right: none;
+        padding-left: 1.6rem;
+        padding-right: 1.6rem;
+      }
+
+      .opp-metrics-strip.is-redesign .opp-metric-item:hover {
+        background: rgba(83, 178, 127, 0.05);
+      }
+
+      .opp-metrics-strip.is-redesign .opp-metric-value {
+        font-size: 1.6rem;
+        font-weight: 700;
+        letter-spacing: -0.012em;
+        line-height: 1;
+      }
+
+      .opp-metrics-strip.is-redesign .opp-metric-label {
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+      }
+
+      @media (max-width: 820px) {
+        .opp-metrics-strip.is-redesign .opp-metrics-inner {
+          grid-template-columns: 1fr 1fr;
+        }
+        .opp-metrics-strip.is-redesign .opp-metric-item {
+          border-bottom: 1px solid var(--line);
+        }
+        .opp-metrics-strip.is-redesign .opp-metric-item:nth-child(2n) {
+          border-right: none;
+        }
+        .opp-metrics-strip.is-redesign .opp-metric-item:nth-last-child(-n+2) {
+          border-bottom: none;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .opp-metrics-strip.is-redesign .opp-metrics-inner {
+          grid-template-columns: 1fr;
+        }
+        .opp-metrics-strip.is-redesign .opp-metric-item {
+          border-right: none !important;
+          border-bottom: 1px solid var(--line);
+          width: 100%;
+        }
+        .opp-metrics-strip.is-redesign .opp-metric-item:last-child {
+          border-bottom: none;
+        }
+      }
+
+      /* Darker section-separator borders — applied to all detail pages */
+      .opp-metrics-strip.has-dark-borders {
+        border-bottom: 1px solid rgba(15, 26, 42, 0.2);
+      }
+
+      .opp-breadcrumb.has-dark-borders {
+        border-bottom-color: rgba(15, 26, 42, 0.2);
+      }
     </style>
   </head>
   <body>
@@ -862,24 +961,20 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
     </section>
 
     <!-- Key metrics strip -->
-    <div class="opp-metrics-strip">
+    <div class="opp-metrics-strip is-redesign has-dark-borders">
       <div class="container">
         <div class="opp-metrics-inner">
           <div class="opp-metric-item">
-            <span class="opp-metric-value is-green">{opp.targetIRR}</span>
-            <span class="opp-metric-label">Target IRR</span>
+            <span class="opp-metric-value is-green">{opp.minInvestment}</span>
+            <span class="opp-metric-label">Min investment</span>
           </div>
           <div class="opp-metric-item">
-            <span class="opp-metric-value">{opp.equityMultiple}</span>
-            <span class="opp-metric-label">Equity multiple</span>
+            <span class="opp-metric-value">{opp.equityRaise}</span>
+            <span class="opp-metric-label">Equity raise</span>
           </div>
           <div class="opp-metric-item">
-            <span class="opp-metric-value">{opp.fixedReturn} p.a.</span>
-            <span class="opp-metric-label">Fixed coupon</span>
-          </div>
-          <div class="opp-metric-item">
-            <span class="opp-metric-value">{opp.minInvestment}</span>
-            <span class="opp-metric-label">Min. investment</span>
+            <span class="opp-metric-value">{opp.totalProjectValue}</span>
+            <span class="opp-metric-label">Project value</span>
           </div>
           <div class="opp-metric-item">
             <span class="opp-metric-value">{opp.holdPeriod}</span>
@@ -890,7 +985,7 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
     </div>
 
     <!-- Breadcrumb -->
-    <div class="opp-breadcrumb">
+    <div class="opp-breadcrumb has-dark-borders">
       <div class="container">
         <div class="opp-breadcrumb-inner">
           <a href={buildLocalizedPath("/", locale)}>Home</a>
@@ -1022,24 +1117,6 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
               <p>{opp.exitStrategy}</p>
             </div>
 
-            <!-- Key risks -->
-            <div class="opp-section" data-animate>
-              <p class="opp-section-label">Risk disclosure</p>
-              <h2>Key risks</h2>
-              <ul class="opp-risks">
-                {opp.keyRisks.map((r) => <li>{r}</li>)}
-              </ul>
-            </div>
-
-            <!-- DD pack -->
-            <div class="opp-section" data-animate>
-              <p class="opp-section-label">Documentation</p>
-              <h2>Due-diligence pack</h2>
-              <ul class="opp-doc-grid">
-                {opp.dueDiligenceDocs.map((d) => <li>{d}</li>)}
-              </ul>
-            </div>
-
             <!-- Regulatory note -->
             <div class="opp-section" data-animate>
               <p class="opp-reg-note">
@@ -1067,32 +1144,16 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
               </div>
               <div class="opp-sidebar-card-body">
                 <div class="opp-detail-row">
-                  <span class="opp-detail-key">Target IRR</span>
-                  <span class="opp-detail-val is-green">{opp.targetIRR}</span>
+                  <span class="opp-detail-key">Investment structure</span>
+                  <span class="opp-detail-val is-green">{opp.structure}</span>
                 </div>
                 <div class="opp-detail-row">
-                  <span class="opp-detail-key">Equity multiple</span>
-                  <span class="opp-detail-val">{opp.equityMultiple}</span>
-                </div>
-                <div class="opp-detail-row">
-                  <span class="opp-detail-key">Fixed coupon</span>
-                  <span class="opp-detail-val is-green">{opp.fixedReturn} p.a.</span>
-                </div>
-                <div class="opp-detail-row">
-                  <span class="opp-detail-key">Profit share</span>
-                  <span class="opp-detail-val">{opp.profitShare} on exit</span>
-                </div>
-                <div class="opp-detail-row">
-                  <span class="opp-detail-key">Cash yield</span>
-                  <span class="opp-detail-val is-small">{opp.cashYield}</span>
+                  <span class="opp-detail-key">Headline return</span>
+                  <span class="opp-detail-val">{opp.headlineReturn}</span>
                 </div>
                 <div class="opp-detail-row">
                   <span class="opp-detail-key">Hold period</span>
                   <span class="opp-detail-val">{opp.holdPeriod}</span>
-                </div>
-                <div class="opp-detail-row">
-                  <span class="opp-detail-key">Return structure</span>
-                  <span class="opp-detail-val is-small">{opp.returnStructure}</span>
                 </div>
               </div>
 
@@ -1137,14 +1198,6 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
                   <span class="opp-detail-val">{opp.minInvestment}</span>
                 </div>
                 <div class="opp-detail-row">
-                  <span class="opp-detail-key">Max. investment</span>
-                  <span class="opp-detail-val">{opp.maxInvestment}</span>
-                </div>
-                <div class="opp-detail-row">
-                  <span class="opp-detail-key">Closing date</span>
-                  <span class="opp-detail-val">{opp.fundingDeadline}</span>
-                </div>
-                <div class="opp-detail-row">
                   <span class="opp-detail-key">Risk profile</span>
                   <span class="opp-detail-val">{opp.riskProfile}</span>
                 </div>
@@ -1178,10 +1231,6 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
                   <span class="opp-detail-val">{opp.floors}</span>
                 </div>
                 <div class="opp-detail-row">
-                  <span class="opp-detail-key">Completion</span>
-                  <span class="opp-detail-val">{opp.completionDate}</span>
-                </div>
-                <div class="opp-detail-row">
                   <span class="opp-detail-key">Planning</span>
                   <span class="opp-detail-val is-small">{opp.planningStatus}</span>
                 </div>
@@ -1190,7 +1239,7 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
 
             <!-- CTA card -->
             <div class="opp-cta-card" data-animate>
-              <h3>Request the deal pack</h3>
+              <h3>Request additional information</h3>
               <p>Speak with our investment team to receive the full information memorandum, financial model and legal documentation for this opportunity.</p>
               <a class="opp-cta-btn" href={buildLocalizedPath("/contact", locale)}>
                 Contact our team

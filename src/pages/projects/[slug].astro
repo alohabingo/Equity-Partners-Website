@@ -708,6 +708,106 @@ const partnerSlug = (name: string): string =>
         }
       }
 
+      /* ────────────────────────────────────────────────────────────
+         Variation 1 redesign — matches the stats card on the
+         opportunities listing page and opportunity detail pages.
+         ──────────────────────────────────────────────────────────── */
+      .project-metrics-strip.is-redesign {
+        background: radial-gradient(circle at 10% -10%, #eef2f8 0, #f4f6fa 50%);
+        padding: 2.2rem 0;
+        border-bottom: none;
+      }
+
+      .project-metrics-strip.is-redesign .project-metrics-inner {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 1.2rem;
+        overflow: hidden;
+        box-shadow: 0 14px 36px rgba(15, 26, 42, 0.07);
+      }
+
+      .project-metrics-strip.is-redesign .project-metric-item {
+        flex: none;
+        min-width: 0;
+        width: auto;
+        padding: 1.4rem 1.6rem;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 0.35rem;
+        border-right: 1px solid var(--line);
+        border-bottom: none;
+        transition: background 320ms ease;
+      }
+
+      .project-metrics-strip.is-redesign .project-metric-item:first-child {
+        padding-left: 1.6rem;
+      }
+
+      .project-metrics-strip.is-redesign .project-metric-item:last-child {
+        border-right: none;
+        padding-left: 1.6rem;
+        padding-right: 1.6rem;
+      }
+
+      .project-metrics-strip.is-redesign .project-metric-item:hover {
+        background: rgba(83, 178, 127, 0.05);
+      }
+
+      .project-metrics-strip.is-redesign .project-metric-value {
+        font-size: 1.6rem;
+        font-weight: 700;
+        letter-spacing: -0.012em;
+        line-height: 1;
+      }
+
+      .project-metrics-strip.is-redesign .project-metric-label {
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+      }
+
+      @media (max-width: 820px) {
+        .project-metrics-strip.is-redesign .project-metrics-inner {
+          grid-template-columns: 1fr 1fr;
+        }
+        .project-metrics-strip.is-redesign .project-metric-item {
+          border-bottom: 1px solid var(--line);
+        }
+        .project-metrics-strip.is-redesign .project-metric-item:nth-child(2n) {
+          border-right: none;
+        }
+        .project-metrics-strip.is-redesign .project-metric-item:nth-last-child(-n+2) {
+          border-bottom: none;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .project-metrics-strip.is-redesign .project-metrics-inner {
+          grid-template-columns: 1fr;
+        }
+        .project-metrics-strip.is-redesign .project-metric-item {
+          border-right: none !important;
+          border-bottom: 1px solid var(--line);
+          width: 100%;
+        }
+        .project-metrics-strip.is-redesign .project-metric-item:last-child {
+          border-bottom: none;
+        }
+      }
+
+      /* Darker section-separator borders (currently scoped to ordino-heights for review) */
+      .project-metrics-strip.has-dark-borders {
+        border-bottom: 1px solid rgba(15, 26, 42, 0.2);
+      }
+
+      .project-breadcrumb.has-dark-borders {
+        border-bottom-color: rgba(15, 26, 42, 0.2);
+      }
+
       @media (max-width: 560px) {
         .project-gallery {
           grid-template-columns: 1fr;
@@ -746,7 +846,7 @@ const partnerSlug = (name: string): string =>
     </section>
 
     <!-- Key metrics strip -->
-    <div class="project-metrics-strip">
+    <div class="project-metrics-strip is-redesign has-dark-borders">
       <div class="container">
         <div class="project-metrics-inner">
           <div class="project-metric-item">
@@ -770,7 +870,7 @@ const partnerSlug = (name: string): string =>
     </div>
 
     <!-- Breadcrumb -->
-    <div class="project-breadcrumb">
+    <div class="project-breadcrumb has-dark-borders">
       <div class="container">
         <div class="project-breadcrumb-inner">
           <a href={buildLocalizedPath("/", locale)}>Home</a>

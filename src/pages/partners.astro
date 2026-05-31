@@ -37,12 +37,6 @@ const partners = [
     logo: "/images/partners/engel volkers logo.png",
   },
   {
-    name: "Creand",
-    role: "",
-    summary: "",
-    logo: "/images/partners/creand.webp",
-  },
-  {
     name: "MoraBank",
     role: "",
     summary: "",
@@ -715,16 +709,6 @@ const localizedPartners = partners.map((partner, index) => ({
                       target="_blank"
                       rel="noreferrer"
                       aria-label="Visit Pret a Porter Casas"
-                    >
-                      <img src={partner.logo} alt={partner.name} loading="lazy" />
-                    </a>
-                  ) : partner.name === "Creand" ? (
-                    <a
-                      class="partner-logo-link"
-                      href="https://creand.ad/en/people/"
-                      target="_blank"
-                      rel="noreferrer"
-                      aria-label="Visit Creand"
                     >
                       <img src={partner.logo} alt={partner.name} loading="lazy" />
                     </a>

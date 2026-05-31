@@ -168,7 +168,7 @@ export const contentTranslations: Record<
         title: "Your strategic partner for Andorra real estate investments.",
         subline:
           "The bridge between international investor capital and Andorra's high-barrier real estate market.",
-        cta: "Explore Opportunities",
+        cta: "Contact our Team",
       },
       localPartnersTitle: "OUR LOCAL PARTNERS",
       services: {
@@ -499,11 +499,6 @@ export const contentTranslations: Record<
         {
           role: "Financial Services",
           summary:
-            "Creand is a leading Andorran financial group that provides specialized financing solutions and strategic banking services for large-scale real estate developments and investment projects. They offer us deep expertise in project funding and local market dynamics.",
-        },
-        {
-          role: "Financial Services",
-          summary:
             "MoraBanc provides a comprehensive suite of corporate financing solutions, including specialized business mortgages and strategic credit facilities tailored for large-scale real estate and commercial developments.",
         },
         {
@@ -591,7 +586,7 @@ export const contentTranslations: Record<
         title: "Su socio estratégico para inversiones inmobiliarias en Andorra.",
         subline:
           "Equity Partners conecta capital inversor con una ejecución inmobiliaria disciplinada en Andorra.",
-        cta: "Explorar oportunidades",
+        cta: "Contactar con el equipo",
       },
       localPartnersTitle: "NUESTROS SOCIOS LOCALES",
       services: {
@@ -840,11 +835,6 @@ export const contentTranslations: Record<
         {
           role: "Servicios financieros",
           summary:
-            "Creand es un grupo financiero andorrano líder que ofrece soluciones especializadas de financiación y servicios bancarios estratégicos para desarrollos inmobiliarios e inversiones a gran escala. Aporta una profunda experiencia en financiación de proyectos y dinámica de mercado local.",
-        },
-        {
-          role: "Servicios financieros",
-          summary:
             "MoraBanc ofrece una gama completa de soluciones de financiación corporativa, incluidas hipotecas empresariales especializadas y líneas de crédito estratégicas adaptadas a desarrollos inmobiliarios y comerciales de gran escala.",
         },
         {
@@ -914,7 +904,7 @@ export const contentTranslations: Record<
         title: "El seu soci estratègic per a inversions immobiliàries a Andorra.",
         subline:
           "Equity Partners connecta capital inversor amb una execució immobiliària disciplinada a Andorra.",
-        cta: "Explora oportunitats",
+        cta: "Contacta amb l'equip",
       },
       localPartnersTitle: "ELS NOSTRES SOCIS LOCALS",
       services: {
@@ -1159,11 +1149,6 @@ export const contentTranslations: Record<
           role: "Immobiliari de luxe",
           summary:
             "Com a firma internacional líder en el segment premium, Engel & Völkers aporta un equip d'experts locals amb profund coneixement del mercat i assessorament professional, garantint que cada transacció es gestioni amb la discreció i el prestigi que defineixen el mercat de luxe andorrà.",
-        },
-        {
-          role: "Serveis financers",
-          summary:
-            "Creand és un grup financer andorrà líder que ofereix solucions especialitzades de finançament i serveis bancaris estratègics per a desenvolupaments immobiliaris i inversions a gran escala. Aporta una profunda experiència en finançament de projectes i dinàmica de mercat local.",
         },
         {
           role: "Serveis financers",

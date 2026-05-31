@@ -770,6 +770,20 @@ const content = getContentTranslations(locale).contact;
         font-size: 0.72rem;
       }
 
+      /* Thin separator between investor inquiry form and 1:1 strategy call */
+      .contact-section-divider {
+        width: min(1120px, 92vw);
+        margin: 0 auto;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(15, 26, 42, 0.18) 25%,
+          rgba(15, 26, 42, 0.18) 75%,
+          transparent 100%
+        );
+      }
+
       /* ── Video consultation section ── */
       .video-consult {
         padding: 1.5rem 0 4rem;
@@ -1040,10 +1054,23 @@ const content = getContentTranslations(locale).contact;
       }
 
       .map-option-label {
-        color: var(--accent);
-        font-size: 0.72rem;
-        letter-spacing: 0.16em;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        font-size: 0.74rem;
+        letter-spacing: 0.28em;
         text-transform: uppercase;
+        font-weight: 600;
+        color: #3f9568;
+        margin-bottom: 0;
+      }
+
+      .map-option-label::before {
+        content: "";
+        width: 32px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #53b27f);
+        display: inline-block;
       }
 
       .map-option h3 {
@@ -1221,6 +1248,22 @@ const content = getContentTranslations(locale).contact;
         }
       }
     </style>
+    <script is:inline>
+      // Run before paint to prevent the browser auto-scrolling to anchors.
+      // We remember the intent so the main script can handle scrolling afterwards.
+      (function () {
+        try {
+          var h = window.location.hash;
+          if (h === "#tab-investor" || h === "#panel-investor") {
+            window.__openInvestorTab = true;
+            history.replaceState(null, "", window.location.pathname + window.location.search);
+          } else if (h === "#video-call") {
+            window.__scrollVideoCallToCenter = true;
+            history.replaceState(null, "", window.location.pathname + window.location.search);
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <InnerSiteHeader menuToggleId="mobile-menu-toggle-contact" locale={locale} currentPath={Astro.url.pathname} />
@@ -1362,7 +1405,9 @@ const content = getContentTranslations(locale).contact;
       </div>
     </section>
 
-    <section class="section video-consult">
+    <div class="contact-section-divider" id="video-call-anchor" aria-hidden="true"></div>
+
+    <section class="section video-consult" id="video-call">
       <div class="container">
         <div class="video-consult-wrap">
           <div class="video-consult-copy">
@@ -1392,12 +1437,6 @@ const content = getContentTranslations(locale).contact;
                   <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                 </span>
                 A curated set of opportunities tailored to your profile
-              </li>
-              <li>
-                <span class="video-consult-check" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                </span>
-                A written follow-up summary delivered after the call
               </li>
             </ul>
             <div class="video-consult-cta-row">
@@ -1434,8 +1473,8 @@ const content = getContentTranslations(locale).contact;
                 <span>30 minutes · Tailored to your situation</span>
                 <svg viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2"/><polygon points="22 8 16 12 22 16 22 8"/></svg>
                 <span>Secure video call · No software install required</span>
-                <svg viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="m22 6-10 7L2 6"/></svg>
-                <span>Written follow-up summary sent afterwards</span>
+                <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <span>No obligation · Pure exploratory conversation</span>
               </div>
             </div>
           </div>
@@ -1495,19 +1534,64 @@ const content = getContentTranslations(locale).contact;
         tab.addEventListener("click", () => activateTab(tab));
       });
 
-      // Open the Investor Inquiry tab when arriving via #tab-investor or #panel-investor
-      const openTabFromHash = () => {
+      // Open the Investor Inquiry tab when arriving via #tab-investor / #panel-investor.
+      // The early head script strips the hash + sets window.__openInvestorTab so the
+      // browser does not auto-scroll. We honor either signal here.
+      const openInvestorTabIfNeeded = () => {
         const hash = window.location.hash;
+        const intent =
+          window.__openInvestorTab === true ||
+          hash === "#tab-investor" ||
+          hash === "#panel-investor";
+        if (!intent) return;
+        const investorTab = document.getElementById("tab-investor");
+        if (investorTab) {
+          activateTab(investorTab);
+        }
+        window.__openInvestorTab = false;
+        // If a hash slipped through (e.g. user pasted URL after load), clear it
+        // without scrolling, so refresh keeps the page at the top.
         if (hash === "#tab-investor" || hash === "#panel-investor") {
-          const investorTab = document.getElementById("tab-investor");
-          if (investorTab) {
-            activateTab(investorTab);
-            investorTab.scrollIntoView({ behavior: "smooth", block: "start" });
-          }
+          history.replaceState(null, "", window.location.pathname + window.location.search);
         }
       };
-      openTabFromHash();
-      window.addEventListener("hashchange", openTabFromHash);
+      openInvestorTabIfNeeded();
+      window.addEventListener("hashchange", openInvestorTabIfNeeded);
+
+      // When arriving via #video-call, scroll so the section separator (the
+      // thin line between the form section and the 1:1 strategy call section)
+      // sits right at the bottom edge of the fixed header. The video-consult
+      // section then opens directly underneath, leaving the section break
+      // visible at the top — feels intentional rather than mid-page-jumped.
+      const scrollVideoCallIntoView = () => {
+        const hash = window.location.hash;
+        const intent =
+          window.__scrollVideoCallToCenter === true || hash === "#video-call";
+        if (!intent) return;
+
+        const anchor =
+          document.getElementById("video-call-anchor") ||
+          document.getElementById("video-call");
+        if (anchor) {
+          requestAnimationFrame(() => {
+            const header = document.querySelector(".site-header");
+            const headerHeight = header ? header.offsetHeight : 80;
+            const anchorRect = anchor.getBoundingClientRect();
+            const anchorTop = window.scrollY + anchorRect.top;
+            window.scrollTo({
+              top: Math.max(0, anchorTop - headerHeight),
+              behavior: "smooth",
+            });
+          });
+        }
+
+        window.__scrollVideoCallToCenter = false;
+        if (hash === "#video-call") {
+          history.replaceState(null, "", window.location.pathname + window.location.search);
+        }
+      };
+      scrollVideoCallIntoView();
+      window.addEventListener("hashchange", scrollVideoCallIntoView);
     </script>
   </body>
 </html>

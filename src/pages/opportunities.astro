@@ -147,8 +147,20 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
         font-size: 1.02rem;
         color: rgba(220, 230, 245, 0.72);
         margin: 0;
-        max-width: 42rem;
         line-height: 1.6;
+      }
+
+      .opps-hero-link {
+        color: var(--green-light, #7bd6a2);
+        text-decoration: none;
+        border-bottom: 1px solid rgba(123, 214, 162, 0.45);
+        padding-bottom: 1px;
+        transition: color 200ms ease, border-color 200ms ease;
+      }
+
+      .opps-hero-link:hover {
+        color: #ffffff;
+        border-bottom-color: #ffffff;
       }
 
       /* ── Stats strip (unified card with dividers) ── */
@@ -430,23 +442,24 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
         gap: 0.2rem;
       }
 
+      .opp-card-metric-label {
+        font-size: 0.6rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 0.15rem;
+      }
+
       .opp-card-metric-value {
-        font-size: 1.05rem;
-        font-weight: 800;
+        font-size: 0.92rem;
+        font-weight: 700;
         color: var(--navy);
-        line-height: 1.1;
+        line-height: 1.25;
       }
 
       .opp-card-metric-value.is-green {
         color: var(--green);
-      }
-
-      .opp-card-metric-label {
-        font-size: 0.58rem;
-        font-weight: 600;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--muted);
       }
 
       .opp-card-progress {
@@ -489,43 +502,297 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
         margin-top: 0.4rem;
       }
 
-      .opp-card-footer {
+      .opp-card-progress-note {
+        font-size: 0.62rem;
+        color: var(--muted);
+        font-style: italic;
+        margin: 0.4rem 0 0;
+      }
+
+      /* CTA stack (View opportunity + Request video call) */
+      .opp-card-ctas {
         margin-top: auto;
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.5rem;
-        flex-wrap: wrap;
+        flex-direction: column;
+        gap: 0.55rem;
       }
 
-      .opp-card-sector {
-        font-size: 0.62rem;
-        font-weight: 600;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--muted);
-        background: #f0f4fa;
-        padding: 0.3rem 0.7rem;
-        border-radius: 999px;
-      }
-
-      .opp-card-link {
+      .opp-card-cta {
         display: inline-flex;
         align-items: center;
-        gap: 0.4rem;
-        font-size: 0.66rem;
-        font-weight: 700;
-        letter-spacing: 0.1em;
+        justify-content: center;
+        gap: 0.5rem;
+        width: 100%;
+        background: var(--navy);
+        color: #ffffff;
+        text-decoration: none;
+        font-size: 0.74rem;
+        font-weight: 600;
+        letter-spacing: 0.18em;
         text-transform: uppercase;
-        color: var(--green);
-        transition: gap 180ms ease;
+        padding: 0.85rem 1.4rem;
+        border-radius: 0.55rem;
+        border: 1px solid var(--navy);
+        transition: background 220ms ease, transform 220ms ease, border-color 220ms ease;
       }
 
-      .opp-card:hover .opp-card-link {
-        gap: 0.65rem;
+      .opp-card-cta:hover {
+        background: var(--green);
+        border-color: var(--green);
+        transform: translateY(-1px);
       }
 
-      .opp-card-link svg {
+      .opp-card-cta.is-secondary {
+        background: transparent;
+        color: var(--green-dark);
+        border-color: rgba(83, 178, 127, 0.4);
+      }
+
+      .opp-card-cta.is-secondary:hover {
+        background: rgba(83, 178, 127, 0.08);
+        color: var(--green-dark);
+        border-color: var(--green);
+      }
+
+      /* ────────────────────────────────────────────────────────────
+         6th card — Investment structures callout (Variation B)
+         Sits in the same grid slot as opportunity cards; dark navy
+         background with iconified Q&A "options" for each structure.
+         ──────────────────────────────────────────────────────────── */
+      .opp-card-info {
+        position: relative;
+        background:
+          radial-gradient(ellipse at 80% -10%, rgba(83, 178, 127, 0.16), transparent 55%),
+          linear-gradient(160deg, #0a1422 0%, #101e34 60%, #0a1422 100%);
+        border: 1px solid rgba(83, 178, 127, 0.32);
+        border-radius: 1.2rem;
+        overflow: hidden;
+        box-shadow: 0 18px 40px rgba(5, 12, 20, 0.22);
+        color: #f3f7fc;
+        display: flex;
+        flex-direction: column;
+        min-height: 460px;
+      }
+
+      .opp-card-info-inner {
+        padding: 1.5rem 1.4rem 1.4rem;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+      }
+
+      .info-eyebrow {
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #7bd6a2;
+        margin: 0 0 0.55rem;
+      }
+
+      .info-question {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #f3f7fc;
+        line-height: 1.25;
+        letter-spacing: -0.005em;
+        margin: 0 0 0.9rem;
+      }
+
+      .info-body {
+        font-size: 0.8rem;
+        line-height: 1.55;
+        color: rgba(220, 230, 245, 0.72);
+        margin: 0 0 1rem;
+      }
+
+      .info-option {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.85rem;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        border-radius: 0.7rem;
+        padding: 0.75rem 0.9rem;
+        margin-bottom: 0.55rem;
+        transition: background 220ms ease, border-color 220ms ease;
+      }
+
+      .info-option:hover {
+        background: rgba(83, 178, 127, 0.08);
+        border-color: rgba(83, 178, 127, 0.35);
+      }
+
+      .info-option-icon {
+        width: 2.35rem;
+        height: 2.35rem;
+        border-radius: 0.55rem;
+        background: rgba(83, 178, 127, 0.18);
+        border: 1px solid rgba(83, 178, 127, 0.4);
+        color: #7bd6a2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .info-option-icon svg {
+        width: 1.05rem;
+        height: 1.05rem;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .info-option-name {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #f3f7fc;
+        margin: 0 0 0.18rem;
+        line-height: 1.2;
+      }
+
+      .info-option-hint {
+        font-size: 0.7rem;
+        color: rgba(220, 230, 245, 0.7);
+        line-height: 1.4;
+        margin: 0;
+      }
+
+      .info-note {
+        font-size: 0.72rem;
+        line-height: 1.5;
+        color: rgba(220, 230, 245, 0.6);
+        font-style: italic;
+        margin: 0.85rem 0 1.1rem;
+      }
+
+      /* "Read about structures" — fully solid green, sits below the note */
+      .info-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.55rem;
+        padding: 0.75rem 1.1rem;
+        border-radius: 0.55rem;
+        background: var(--green);
+        border: 1px solid var(--green);
+        color: #fff;
+        text-decoration: none;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        transition: background 220ms ease, transform 220ms ease;
+        margin-bottom: 0.9rem;
+      }
+
+      .info-cta:hover {
+        background: #5fc189;
+        transform: translateY(-1px);
+      }
+
+      .info-cta svg {
+        width: 0.85rem;
+        height: 0.85rem;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      /* Bottom "personal guidance" section — title + clickable video row,
+         anchored to the bottom of the info card via margin-top: auto. */
+      .info-video-section {
+        margin-top: auto;
+      }
+
+      /* Video-call callout (Variation A — subtle clickable row).
+         Sized and typed to match the structure option cards above. */
+      .info-video-row {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 0.85rem;
+        align-items: center;
+        background: rgba(83, 178, 127, 0.10);
+        border: 1px solid rgba(83, 178, 127, 0.35);
+        border-radius: 0.7rem;
+        padding: 0.75rem 0.9rem;
+        text-decoration: none;
+        transition: background 220ms ease, border-color 220ms ease;
+      }
+
+      .info-video-row:hover {
+        background: rgba(83, 178, 127, 0.16);
+        border-color: rgba(83, 178, 127, 0.55);
+      }
+
+      .info-video-icon {
+        width: 2.35rem;
+        height: 2.35rem;
+        border-radius: 0.55rem;
+        background: rgba(83, 178, 127, 0.18);
+        border: 1px solid rgba(83, 178, 127, 0.4);
+        color: #7bd6a2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .info-video-icon svg {
+        width: 1.05rem;
+        height: 1.05rem;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .info-video-text {
+        color: #f3f7fc;
+        font-size: 0.82rem;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+
+      .info-video-text small {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 400;
+        color: rgba(220, 230, 245, 0.7);
+        margin-top: 0.18rem;
+        line-height: 1.4;
+      }
+
+      .info-video-arrow {
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 50%;
+        background: var(--green);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .info-video-arrow svg {
+        width: 0.7rem;
+        height: 0.7rem;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .opp-card-cta svg {
         width: 0.8rem;
         height: 0.8rem;
         stroke: currentColor;
@@ -946,13 +1213,10 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
     <section class="opps-hero">
       <div class="container">
         <div class="opps-hero-inner" data-animate>
-          <p class="eyebrow">Live Investment Opportunities</p>
-          <h1>Invest alongside Equity Partners in Andorran real estate</h1>
+          <p class="eyebrow">Example opportunities</p>
+          <h1>A snapshot of opportunities similar to what we offer</h1>
           <p>
-            A live overview of the raises we are currently open to investors
-            on. Each opportunity is underwritten to institutional standards —
-            fixed coupon income, equity upside, and a clear exit path — with
-            full transparency on deal terms, capital stack, timeline and risk.
+            Five illustrative deals across different sectors, ticket sizes, and structures (Debt, Debt + Equity, Equity). Exact returns, ticket sizes and hold periods are calibrated per project and shared on a <a href={`${buildLocalizedPath("/contact", locale)}#video-call`} class="opps-hero-link">video call</a>, where we match a project to your budget and mandate.
           </p>
         </div>
       </div>
@@ -964,15 +1228,15 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
         <div class="opps-stats-inner" data-animate>
           <div class="opps-stat">
             <span class="opps-stat-value">{opportunities.length}</span>
-            <span class="opps-stat-label">Live opportunities</span>
+            <span class="opps-stat-label">Example opportunities</span>
           </div>
           <div class="opps-stat">
             <span class="opps-stat-value">€500k</span>
             <span class="opps-stat-label">Lowest minimum entry</span>
           </div>
           <div class="opps-stat">
-            <span class="opps-stat-value">6% + 20%</span>
-            <span class="opps-stat-label">Debt and equity</span>
+            <span class="opps-stat-value">24–60 months</span>
+            <span class="opps-stat-label">Typical hold range</span>
           </div>
         </div>
       </div>
@@ -981,20 +1245,9 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
     <!-- Opportunity summary grid -->
     <section class="opps-grid-section">
       <div class="container">
-        <div class="opps-section-heading" data-animate>
-          <p class="eyebrow">Open raises</p>
-          <h2>Compare our live opportunities</h2>
-          <p>
-            Headline deal terms and real-time funding progress for every
-            opportunity we currently have open. Click through any card for a
-            full investor-grade breakdown — thesis, capital stack, timeline,
-            risks and due-diligence pack.
-          </p>
-        </div>
-
         <div class="opps-grid" data-animate>
           {opportunities.map((opp) => (
-            <a class="opp-card" href={buildLocalizedPath(`/opportunities/${opp.slug}`, locale)}>
+            <article class="opp-card">
               <div class="opp-card-image">
                 <img src={opp.image} alt={opp.name} loading="lazy" />
                 <div class="opp-card-chips">
@@ -1002,7 +1255,7 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
                     class="opp-card-chip"
                     style={`background: ${opportunityStatusColour[opp.status]}`}
                   >
-                    {opp.status}
+                    {opp.status === "Open for Investment" ? "Open" : opp.status}
                   </span>
                   <span
                     class="opp-card-chip"
@@ -1019,27 +1272,27 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
 
                 <div class="opp-card-metrics">
                   <div class="opp-card-metric">
-                    <span class="opp-card-metric-value is-green">{opp.targetIRR}</span>
-                    <span class="opp-card-metric-label">Target IRR</span>
+                    <span class="opp-card-metric-label">Structure</span>
+                    <span class="opp-card-metric-value is-green">{opp.structure}</span>
                   </div>
                   <div class="opp-card-metric">
-                    <span class="opp-card-metric-value">{opp.fixedReturn}</span>
-                    <span class="opp-card-metric-label">Fixed coupon</span>
+                    <span class="opp-card-metric-label">Headline return</span>
+                    <span class="opp-card-metric-value">Shared on request</span>
                   </div>
                   <div class="opp-card-metric">
-                    <span class="opp-card-metric-value">{opp.minInvestment}</span>
-                    <span class="opp-card-metric-label">Min. investment</span>
+                    <span class="opp-card-metric-label">Min ticket</span>
+                    <span class="opp-card-metric-value">From {opp.minInvestment}</span>
                   </div>
                   <div class="opp-card-metric">
-                    <span class="opp-card-metric-value">{opp.holdPeriod}</span>
                     <span class="opp-card-metric-label">Hold period</span>
+                    <span class="opp-card-metric-value">{opp.holdPeriod}</span>
                   </div>
                 </div>
 
                 <div class="opp-card-progress">
                   <div class="opp-card-progress-top">
-                    <span>Funding progress</span>
-                    <strong>{opp.fundingProgress}%</strong>
+                    <span><strong>{opp.fundingProgress}%</strong> funding complete</span>
+                    <span>{opp.amountCommitted}</span>
                   </div>
                   <div class="opp-card-progress-bar">
                     <div
@@ -1047,21 +1300,84 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
                       style={`width: ${opp.fundingProgress}%`}
                     ></div>
                   </div>
-                  <p class="opp-card-progress-meta">
-                    {opp.amountCommitted} · Closes {opp.fundingDeadline}
-                  </p>
+                  <p class="opp-card-progress-note">Illustrative figures only</p>
                 </div>
 
-                <div class="opp-card-footer">
-                  <span class="opp-card-sector">{opp.sector}</span>
-                  <span class="opp-card-link">
-                    View deal
+                <div class="opp-card-ctas">
+                  <a class="opp-card-cta" href={buildLocalizedPath(`/opportunities/${opp.slug}`, locale)}>
+                    View opportunity
                     <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                  </span>
+                  </a>
+                  <a class="opp-card-cta is-secondary" href={`${buildLocalizedPath("/contact", locale)}#video-call`}>
+                    Request video call
+                  </a>
                 </div>
               </div>
-            </a>
+            </article>
           ))}
+
+          <!-- 6th card — Investment structures callout (Variation B) -->
+          <article class="opp-card-info">
+            <div class="opp-card-info-inner">
+              <p class="info-eyebrow">Investment structures</p>
+              <h3 class="info-question">Which structure fits your mandate?</h3>
+              <p class="info-body">Every opportunity is open to Debt, Debt + Equity or Equity. The structure shown on each card is the most commonly chosen for that deal, but the final call is always yours, tailored to your mandate.</p>
+
+              <div class="info-option">
+                <span class="info-option-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </span>
+                <div>
+                  <p class="info-option-name">Debt</p>
+                  <p class="info-option-hint">For predictable income, lowest risk. Annual coupon, no project upside.</p>
+                </div>
+              </div>
+
+              <div class="info-option">
+                <span class="info-option-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M3 17 9 11l4 4 8-8"/><path d="M14 7h7v7"/></svg>
+                </span>
+                <div>
+                  <p class="info-option-name">Debt + Equity</p>
+                  <p class="info-option-hint">Most chosen. Recurring coupon plus equity profit share at exit.</p>
+                </div>
+              </div>
+
+              <div class="info-option">
+                <span class="info-option-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><line x1="6" y1="20" x2="6" y2="16"/><line x1="12" y1="20" x2="12" y2="11"/><line x1="18" y1="20" x2="18" y2="6"/></svg>
+                </span>
+                <div>
+                  <p class="info-option-name">Equity</p>
+                  <p class="info-option-hint">For highest return potential. Full profit share at exit, longest hold.</p>
+                </div>
+              </div>
+
+              <p class="info-note">Returns, hold periods, and ticket sizes are calibrated to the structure you choose.</p>
+
+              <a href={buildLocalizedPath("/invest", locale)} class="info-cta">
+                Read about structures
+                <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </a>
+
+              <!-- Bottom section: personal guidance title + clickable video row -->
+              <div class="info-video-section">
+                <h3 class="info-question">Want personalized guidance?</h3>
+                <a href={`${buildLocalizedPath("/contact", locale)}#video-call`} class="info-video-row">
+                  <span class="info-video-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                  </span>
+                  <span class="info-video-text">
+                    Discuss your strategy
+                    <small>30-min video call with our team</small>
+                  </span>
+                  <span class="info-video-arrow" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                  </span>
+                </a>
+              </div>
+            </div>
+          </article>
         </div>
       </div>
     </section>
@@ -1127,15 +1443,13 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
       <div class="container">
         <div class="opps-cta-inner" data-animate>
           <div class="opps-cta-copy">
-            <h2>Speak to our investment team</h2>
+            <h2>View actual live opportunities</h2>
             <p>
-              Request the full information memorandum, financial model and
-              legal pack for any live opportunity. Our team will walk you
-              through the underwriting one-to-one.
+              Real live opportunities are shared on a video call. We'll review your budget, target return and timeline, and match you to a current deal.
             </p>
           </div>
-          <a class="opps-cta-btn" href={buildLocalizedPath("/contact", locale)}>
-            Contact our team
+          <a class="opps-cta-btn" href={`${buildLocalizedPath("/contact", locale)}#video-call`}>
+            Request video call
             <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </a>
         </div>

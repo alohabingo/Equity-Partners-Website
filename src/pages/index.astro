@@ -54,7 +54,6 @@ const localPartners = [
   { name: "DATA", logo: "/images/partners/DATA LOGO.png" },
   { name: "Emindset Law", logo: "/images/partners/Emindset LAW LOGO.png" },
   { name: "Govern d'Andorra", logo: "/images/partners/Govern d'Andorra logo.png" },
-  { name: "Creand", logo: "/images/partners/creand.webp" },
   { name: "Engel & Volkers", logo: "/images/partners/engel volkers logo.png" },
   { name: "Heracles", logo: "/images/partners/heracles%20logo.png" },
   { name: "Pret a Porter Casas", logo: "/images/partners/pret%20a%20porter%20casas%20logo.svg" },
@@ -237,16 +236,16 @@ const content = getContentTranslations(locale).home;
          ───────────────────────────────────────────────────────────── */
       .hero-button.is-secondary {
         background:
-          linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.22) 100%);
+          linear-gradient(180deg, rgba(255, 255, 255, 0.48) 0%, rgba(255, 255, 255, 0.26) 100%);
         border: 1px solid rgba(255, 255, 255, 0.6);
         color: #ffffff;
         box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.6),
-          inset 0 -1px 0 rgba(255, 255, 255, 0.08),
-          0 8px 22px rgba(0, 0, 0, 0.26);
-        backdrop-filter: blur(14px) saturate(170%) brightness(0.74) contrast(1.08);
-        -webkit-backdrop-filter: blur(14px) saturate(170%) brightness(0.74) contrast(1.08);
-        text-shadow: 0 1px 12px rgba(0, 0, 0, 0.75);
+          inset 0 1px 0 rgba(255, 255, 255, 0.65),
+          inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+          0 10px 28px rgba(0, 0, 0, 0.32);
+        backdrop-filter: blur(22px) saturate(170%) brightness(0.7) contrast(1.1);
+        -webkit-backdrop-filter: blur(22px) saturate(170%) brightness(0.7) contrast(1.1);
+        text-shadow: 0 2px 14px rgba(0, 0, 0, 0.85);
       }
 
       .hero-button.is-secondary:hover {
@@ -1519,9 +1518,21 @@ const content = getContentTranslations(locale).home;
         align-self: center;
       }
 
-      .why-equity-home-point-copy p {
+      .why-equity-home-point-divider {
         grid-column: 1 / 3;
         grid-row: 2;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          rgba(83, 178, 127, 0.5),
+          rgba(83, 178, 127, 0.05)
+        );
+        margin-top: 0.7rem;
+      }
+
+      .why-equity-home-point-copy p {
+        grid-column: 1 / 3;
+        grid-row: 3;
         margin-top: 0.75rem;
         margin-bottom: -0.3rem;
         color: #5f7087;
@@ -1623,6 +1634,8 @@ const content = getContentTranslations(locale).home;
         display: flex;
         align-items: flex-end;
         border: 1px solid #d7deea;
+        text-decoration: none;
+        color: inherit;
       }
 
       .project-card img {
@@ -2810,7 +2823,7 @@ const content = getContentTranslations(locale).home;
 
         .why-equity-home-point {
           grid-template-columns: 3.75rem 1fr;
-          grid-template-rows: auto auto;
+          grid-template-rows: auto auto auto;
           align-items: center;
         }
 
@@ -2845,7 +2858,7 @@ const content = getContentTranslations(locale).home;
 
         .why-equity-home-point-copy p {
           grid-column: 1 / 3;
-          grid-row: 2;
+          grid-row: 3;
           margin-top: 0.5rem;
           margin-bottom: -0.3rem;
         }
@@ -3451,153 +3464,193 @@ const content = getContentTranslations(locale).home;
         max-width: none;
       }
 
+      /* Top row: two prominent cards */
       .what-we-offer-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 1.5rem;
+        margin-bottom: 1.5rem;
       }
 
       .wwo-card {
-        border-radius: 1.2rem;
-        padding: 2.4rem 2.4rem 2.2rem;
+        background: #13202f;
+        border: 1px solid rgba(214, 225, 244, 0.14);
+        border-radius: 1.1rem;
+        padding: 2rem 2rem 1.85rem;
         display: flex;
         flex-direction: column;
-        border: 1px solid rgba(214, 225, 244, 0.14);
+        position: relative;
         transition: border-color 220ms ease, transform 180ms ease, box-shadow 180ms ease;
       }
 
       .wwo-card:hover {
-        border-color: rgba(83, 178, 127, 0.45);
-        transform: translateY(-3px);
-        box-shadow: 0 24px 48px rgba(8, 14, 23, 0.35);
+        transform: translateY(-2px);
       }
 
-      .wwo-card.is-fund {
-        background: rgba(246, 251, 255, 0.05);
+      .wwo-card.is-featured {
+        background: linear-gradient(180deg, rgba(83, 178, 127, 0.05) 0%, #13202f 55%);
+        border-color: rgba(83, 178, 127, 0.30);
       }
 
-      .wwo-card.is-direct {
-        background: rgba(83, 178, 127, 0.07);
-        border-color: rgba(83, 178, 127, 0.25);
+      .wwo-card.is-featured:hover {
+        border-color: rgba(83, 178, 127, 0.55);
       }
 
-      .wwo-card.is-direct:hover {
-        border-color: rgba(83, 178, 127, 0.6);
-      }
-
-      .wwo-badge-row {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        margin-bottom: 1.6rem;
-      }
-
-      .wwo-badge-row .wwo-badge {
-        margin-bottom: 0;
-      }
-
-      .wwo-coming-soon {
-        font-size: 0.6rem;
+      /* Most popular badge */
+      .wwo-badge-popular {
+        position: absolute;
+        top: -0.7rem;
+        right: 2rem;
+        background: #53b27f;
+        color: #ffffff;
+        font-size: 0.62rem;
         font-weight: 700;
-        letter-spacing: 0.12em;
+        letter-spacing: 0.16em;
         text-transform: uppercase;
-        color: #f5c542;
-        background: rgba(245, 197, 66, 0.12);
-        border: 1px solid rgba(245, 197, 66, 0.3);
-        padding: 0.25rem 0.6rem;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        padding: 0.4rem 0.85rem;
         border-radius: 999px;
         line-height: 1;
-        white-space: nowrap;
       }
 
-      .wwo-badge {
+      /* Role pill */
+      .wwo-role {
         display: inline-flex;
         align-items: center;
-        gap: 0.4rem;
+        margin-bottom: 1.5rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        background: rgba(214, 225, 244, 0.1);
         font-size: 0.68rem;
         font-weight: 700;
         letter-spacing: 0.14em;
         text-transform: uppercase;
         font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
-        padding: 0.3rem 0.75rem;
-        border-radius: 999px;
-        margin-bottom: 1.6rem;
+        color: #9fb4d2;
         width: fit-content;
       }
 
-      .wwo-card.is-fund .wwo-badge {
-        background: rgba(214, 225, 244, 0.1);
-        color: #9fb4d2;
-      }
-
-      .wwo-card.is-direct .wwo-badge {
+      .wwo-card.is-featured .wwo-role {
         background: rgba(83, 178, 127, 0.18);
         color: #53b27f;
       }
 
+      /* Title block */
       .wwo-title {
         color: #f4f8ff;
-        font-size: 1.4rem;
+        font-size: 1.55rem;
         font-weight: 700;
         font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
-        margin: 0 0 0.5rem;
-        line-height: 1.25;
+        line-height: 1.2;
+        margin: 0 0 0.35rem;
       }
 
-      .wwo-desc {
-        color: #9fb4d2;
-        font-size: 0.93rem;
-        line-height: 1.6;
-        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
-        margin: 0 0 2rem;
-      }
-
-      .wwo-returns {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 2rem;
-        flex-wrap: wrap;
-      }
-
-      .wwo-return-item {
-        flex: 1;
-        min-width: 8rem;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(214, 225, 244, 0.12);
-        border-radius: 0.85rem;
-        padding: 1.1rem 1.2rem;
-      }
-
-      .wwo-card.is-direct .wwo-return-item {
-        background: rgba(83, 178, 127, 0.08);
-        border-color: rgba(83, 178, 127, 0.2);
-      }
-
-      .wwo-return-value {
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: #ffffff;
-        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
-        line-height: 1.25;
-        margin-bottom: 0.4rem;
-      }
-
-      .wwo-card.is-direct .wwo-return-value {
-        color: #53b27f;
-      }
-
-      .wwo-return-label {
-        font-size: 0.72rem;
-        font-weight: 500;
+      .wwo-subtitle {
+        font-size: 0.78rem;
+        font-weight: 600;
         letter-spacing: 0.08em;
         text-transform: uppercase;
         color: #9fb4d2;
         font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        margin: 0 0 0.85rem;
       }
 
+      /* Fading divider — matches advantage-home-card-divider on Why Equity section */
+      .wwo-divider {
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          rgba(83, 178, 127, 0.5),
+          rgba(83, 178, 127, 0.05)
+        );
+        margin: 0.65rem 0 1.25rem;
+      }
+
+      .wwo-desc {
+        color: #d6e0ef;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        margin: 0 0 1.75rem;
+      }
+
+      /* Returns box — iconified data card with leading icon column */
+      .wwo-returns {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 1rem;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(214, 225, 244, 0.08);
+        border-radius: 0.85rem;
+        padding: 1.05rem 1.15rem;
+        margin-bottom: 1.75rem;
+      }
+
+      .wwo-card.is-featured .wwo-returns {
+        background: rgba(83, 178, 127, 0.08);
+        border-color: rgba(83, 178, 127, 0.30);
+      }
+
+      .wwo-returns-icon {
+        width: 3.4rem;
+        height: 3.4rem;
+        border-radius: 0.7rem;
+        background: rgba(214, 225, 244, 0.08);
+        border: 1px solid rgba(214, 225, 244, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #9fb4d2;
+        flex-shrink: 0;
+      }
+
+      .wwo-card.is-featured .wwo-returns-icon {
+        background: rgba(83, 178, 127, 0.18);
+        border-color: rgba(83, 178, 127, 0.30);
+        color: #53b27f;
+      }
+
+      .wwo-returns-icon svg {
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+
+      .wwo-returns-label {
+        font-size: 0.66rem;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #9fb4d2;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        margin: 0 0 0.4rem;
+      }
+
+      .wwo-returns-value {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #f4f8ff;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        line-height: 1.3;
+        margin: 0 0 0.3rem;
+      }
+
+      .wwo-card.is-featured .wwo-returns-value {
+        color: #53b27f;
+      }
+
+      .wwo-returns-sub {
+        font-size: 0.78rem;
+        color: #9fb4d2;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        margin: 0;
+        line-height: 1.4;
+      }
+
+      /* Feature list */
       .wwo-features {
         list-style: none;
-        margin: 0 0 2.2rem;
+        margin: 0 0 2rem;
         padding: 0;
         display: grid;
         gap: 0.75rem;
@@ -3615,8 +3668,8 @@ const content = getContentTranslations(locale).home;
       }
 
       .wwo-check {
-        width: 1.1rem;
-        height: 1.1rem;
+        width: 1.05rem;
+        height: 1.05rem;
         margin-top: 0.15rem;
         color: #53b27f;
         flex-shrink: 0;
@@ -3632,49 +3685,159 @@ const content = getContentTranslations(locale).home;
         stroke-linejoin: round;
       }
 
+      /* CTA */
       .wwo-cta {
         margin-top: auto;
+        padding-top: 0.5rem;
       }
 
       .wwo-cta a {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        padding: 0.7rem 1.5rem;
-        border-radius: 0.45rem;
-        font-size: 0.72rem;
+        gap: 0.55rem;
+        padding: 0.85rem 1.4rem;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(214, 225, 244, 0.14);
+        border-radius: 0.55rem;
+        color: #f4f8ff;
+        font-size: 0.88rem;
         font-weight: 600;
-        letter-spacing: 0.13em;
-        text-transform: uppercase;
         text-decoration: none;
         font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
-        transition: background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+        transition: background 180ms ease, border-color 180ms ease;
       }
 
-      .wwo-card.is-fund .wwo-cta a {
-        background: rgba(214, 225, 244, 0.12);
-        color: #f4f8ff;
+      .wwo-cta a:hover {
+        background: rgba(255, 255, 255, 0.07);
+        border-color: rgba(214, 225, 244, 0.25);
       }
 
-      .wwo-card.is-fund .wwo-cta a:hover {
-        background: rgba(214, 225, 244, 0.2);
-        transform: translateY(-1px);
-      }
-
-      .wwo-card.is-direct .wwo-cta a {
+      .wwo-card.is-featured .wwo-cta a {
         background: #53b27f;
+        border-color: #53b27f;
         color: #ffffff;
       }
 
-      .wwo-card.is-direct .wwo-cta a:hover {
-        background: #3f9568;
-        transform: translateY(-1px);
-        box-shadow: 0 12px 24px rgba(12, 24, 18, 0.3);
+      .wwo-card.is-featured .wwo-cta a:hover {
+        background: #5fc189;
+        border-color: #5fc189;
       }
 
-      @media (max-width: 760px) {
+      .wwo-cta-arrow {
+        transition: transform 180ms ease;
+      }
+
+      .wwo-cta a:hover .wwo-cta-arrow {
+        transform: translateX(3px);
+      }
+
+      /* Equity compact strip */
+      .wwo-equity-strip {
+        background: #13202f;
+        border: 1px solid rgba(214, 225, 244, 0.14);
+        border-radius: 1.1rem;
+        padding: 1.5rem 1.75rem;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 1.75rem;
+        align-items: center;
+        transition: border-color 220ms ease;
+      }
+
+      .wwo-equity-strip:hover {
+        border-color: rgba(83, 178, 127, 0.30);
+      }
+
+      .wwo-equity-left {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        min-width: 11rem;
+      }
+
+      .wwo-equity-role {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        background: rgba(83, 178, 127, 0.18);
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        color: #53b27f;
+        width: fit-content;
+        margin-bottom: 0.3rem;
+      }
+
+      .wwo-equity-title {
+        color: #f4f8ff;
+        font-size: 1.25rem;
+        font-weight: 700;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        line-height: 1.2;
+        margin: 0;
+      }
+
+      .wwo-equity-sub {
+        font-size: 0.74rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #9fb4d2;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        margin: 0;
+      }
+
+      .wwo-equity-desc {
+        color: #d6e0ef;
+        font-size: 0.9rem;
+        line-height: 1.55;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        margin: 0;
+        border-left: 1px solid rgba(214, 225, 244, 0.14);
+        padding-left: 1.5rem;
+      }
+
+      .wwo-equity-cta a {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.65rem 1.1rem;
+        background: transparent;
+        border: 1px solid rgba(83, 178, 127, 0.30);
+        border-radius: 0.55rem;
+        color: #53b27f;
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-decoration: none;
+        white-space: nowrap;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        transition: background 180ms ease, border-color 180ms ease;
+      }
+
+      .wwo-equity-cta a:hover {
+        background: rgba(83, 178, 127, 0.08);
+        border-color: rgba(83, 178, 127, 0.55);
+      }
+
+      @media (max-width: 920px) {
         .what-we-offer-grid {
           grid-template-columns: 1fr;
+        }
+        .wwo-card {
+          padding: 1.75rem;
+        }
+        .wwo-equity-strip {
+          grid-template-columns: 1fr;
+          gap: 1.1rem;
+        }
+        .wwo-equity-desc {
+          border-left: 0;
+          border-top: 1px solid rgba(214, 225, 244, 0.14);
+          padding-left: 0;
+          padding-top: 1.1rem;
         }
       }
 
@@ -4145,6 +4308,42 @@ const content = getContentTranslations(locale).home;
           0 0 0 1px rgba(83, 178, 127, 0.16) inset;
       }
 
+      /* Hover-reveal "View" pill in the top-right of each project card */
+      .project-card-view-pill {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        z-index: 3;
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 0.95rem;
+        border-radius: 999px;
+        background: #53b27f;
+        color: #ffffff;
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        text-decoration: none;
+        line-height: 1;
+        opacity: 0;
+        transform: translateY(-4px);
+        transition: opacity 260ms ease, transform 260ms ease, background 220ms ease;
+        pointer-events: none;
+        box-shadow: 0 6px 14px rgba(83, 178, 127, 0.35);
+      }
+
+      .project-card:hover .project-card-view-pill,
+      .project-card:focus-within .project-card-view-pill {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+
+      .project-card-view-pill:hover {
+        background: #3f9568;
+      }
+
       .projects.is-spotlight .cta-link {
         position: relative;
         z-index: 1;
@@ -4459,6 +4658,34 @@ const content = getContentTranslations(locale).home;
           0 0 0 1px rgba(83, 178, 127, 0.18) inset;
       }
 
+      .what-we-offer.is-spotlight .cta-link {
+        position: relative;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 2.6rem;
+        color: #f3f7fc;
+        font-size: 0.78rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        text-decoration: none;
+        padding: 0.85rem 1.4rem;
+        border: 1px solid rgba(83, 178, 127, 0.55);
+        border-radius: 0.55rem;
+        background: rgba(83, 178, 127, 0.10);
+        transition: background 220ms ease, border-color 220ms ease,
+          transform 220ms ease, color 220ms ease, box-shadow 220ms ease;
+      }
+
+      .what-we-offer.is-spotlight .cta-link:hover {
+        background: #53b27f;
+        border-color: #53b27f;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 14px 28px rgba(83, 178, 127, 0.32);
+      }
+
       @media (max-width: 680px) {
         .what-we-offer.is-spotlight {
           padding: 4rem 0 3.5rem;
@@ -4623,9 +4850,37 @@ const content = getContentTranslations(locale).home;
         box-shadow: 0 14px 28px rgba(83, 178, 127, 0.32);
       }
 
+      /* Primary variant — solid green fill with white text (Request video call) */
+      .gateway.is-spotlight .button.is-primary {
+        background: #53b27f;
+        border-color: #53b27f;
+        color: #ffffff;
+      }
+
+      .gateway.is-spotlight .button.is-primary:hover {
+        background: #5fc189;
+        border-color: #5fc189;
+      }
+
+      /* Two-button row inside the leaders card */
+      .gateway.is-spotlight .leaders-cta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1.4rem;
+      }
+
+      .gateway.is-spotlight .leaders-cta-row .button {
+        margin-top: 0;
+      }
+
       @media (max-width: 680px) {
         .gateway.is-spotlight {
           padding: 4rem 0 3.5rem;
+        }
+
+        .gateway.is-spotlight .leaders-cta-row .button {
+          width: 100%;
         }
       }
 
@@ -4801,8 +5056,8 @@ const content = getContentTranslations(locale).home;
           <h1>{content.hero.title}</h1>
           <p class="subline">{content.hero.subline}</p>
           <div class="hero-actions">
-            <a class="hero-button" href={buildLocalizedPath("/opportunities", locale)}>{content.hero.cta}</a>
-            <a class="hero-button is-secondary" href={buildLocalizedPath("/contact", locale)}>Request Video Call</a>
+            <a class="hero-button" href={`${buildLocalizedPath("/contact", locale)}#tab-investor`}>{content.hero.cta}</a>
+            <a class="hero-button is-secondary" href={`${buildLocalizedPath("/contact", locale)}#video-call`}>Request Video Call</a>
           </div>
         </div>
       </div>
@@ -4974,6 +5229,7 @@ const content = getContentTranslations(locale).home;
               </span>
               <div class="why-equity-home-point-copy">
                 <h3>{content.whyEquity.points[0].title}</h3>
+                <div class="why-equity-home-point-divider" aria-hidden="true"></div>
                 <p>{content.whyEquity.points[0].body}</p>
               </div>
             </article>
@@ -4983,6 +5239,7 @@ const content = getContentTranslations(locale).home;
               </span>
               <div class="why-equity-home-point-copy">
                 <h3>{content.whyEquity.points[1].title}</h3>
+                <div class="why-equity-home-point-divider" aria-hidden="true"></div>
                 <p>{content.whyEquity.points[1].body}</p>
               </div>
             </article>
@@ -4992,6 +5249,7 @@ const content = getContentTranslations(locale).home;
               </span>
               <div class="why-equity-home-point-copy">
                 <h3>{content.whyEquity.points[2].title}</h3>
+                <div class="why-equity-home-point-divider" aria-hidden="true"></div>
                 <p>{content.whyEquity.points[2].body}</p>
               </div>
             </article>
@@ -5049,92 +5307,112 @@ const content = getContentTranslations(locale).home;
     <section class="what-we-offer is-spotlight">
       <div class="container" data-animate>
         <div class="what-we-offer-header">
-          <p class="eyebrow">What We Offer</p>
-          <h2 class="focus-title">Two Ways to Invest in Andorra</h2>
-          <p class="focus-intro">Whether you prefer a fully managed fund or hands-on project financing, we provide a structured entry into Andorra's high-barrier real estate market. Exact returns are calibrated to each project — see the indicative ranges on our <a href={buildLocalizedPath("/invest", locale)} class="focus-intro-link">Invest page</a>.</p>
+          <p class="eyebrow">What we offer</p>
+          <h2 class="focus-title">Three ways to invest in Andorra</h2>
+          <p class="focus-intro">Choose between predictable contractual income or active participation in a specific Andorran development project. Returns are calibrated per project and shared during your call. See the structures on our <a href={buildLocalizedPath("/invest", locale)} class="focus-intro-link">Invest page</a> for the full picture.</p>
         </div>
+
         <div class="what-we-offer-grid">
 
-          <!-- Option 1: Fund -->
-          <div class="wwo-card is-fund">
-            <div class="wwo-badge-row">
-              <span class="wwo-badge">Passive Investment</span>
-              <span class="wwo-coming-soon">Coming soon</span>
-            </div>
-            <h3 class="wwo-title">Andorra Real Estate Fund</h3>
-            <p class="wwo-desc">A fully managed fund giving you exposure to Andorra's real estate market without requiring any active involvement. We handle sourcing, execution, and management end-to-end.</p>
+          <!-- Debt -->
+          <article class="wwo-card">
+            <div class="wwo-role">Andorra Real Estate Fund</div>
+            <h3 class="wwo-title">Debt</h3>
+            <p class="wwo-subtitle">Passive Investment · Lowest Risk</p>
+            <div class="wwo-divider" aria-hidden="true"></div>
+            <p class="wwo-desc">You lend capital to the project and receive a contractual annual coupon. Your position sits senior in the capital stack and is secured against the underlying real estate, with no exposure to project upside or downside.</p>
             <div class="wwo-returns">
-              <div class="wwo-return-item">
-                <p class="wwo-return-value">Annual coupon</p>
-                <p class="wwo-return-label">Indicative — set per project</p>
-              </div>
-              <div class="wwo-return-item">
-                <p class="wwo-return-value">Fully passive</p>
-                <p class="wwo-return-label">No active involvement</p>
+              <span class="wwo-returns-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </span>
+              <div>
+                <p class="wwo-returns-label">Headline return</p>
+                <p class="wwo-returns-value">Annual coupon</p>
+                <p class="wwo-returns-sub">Return varies per project · shared on your call</p>
               </div>
             </div>
             <ul class="wwo-features">
               <li>
                 <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
-                <span>Contractual annual coupon, calibrated per project</span>
+                <span>Predictable contractual payments, with no project performance exposure</span>
               </li>
               <li>
                 <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
-                <span>Fully passive — no decisions or involvement required</span>
+                <span>Capital secured against the property, senior to equity in repayment priority</span>
               </li>
               <li>
                 <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
-                <span>Diversified exposure across the Andorran real estate portfolio</span>
-              </li>
-              <li>
-                <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
-                <span>Professional asset management with full transparency</span>
+                <span>Fully passive, with no involvement once committed</span>
               </li>
             </ul>
             <div class="wwo-cta">
-              <a href={buildLocalizedPath("/invest", locale)}>See Indicative Ranges</a>
+              <a href={`${buildLocalizedPath("/contact", locale)}#video-call`}>
+                Request video call
+                <svg class="wwo-cta-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </a>
             </div>
-          </div>
+          </article>
 
-          <!-- Option 2: Direct Project -->
-          <div class="wwo-card is-direct">
-            <span class="wwo-badge">Active Investment</span>
-            <h3 class="wwo-title">Direct Project Financing</h3>
-            <p class="wwo-desc">Finance a single Andorra development project . A higher-conviction approach with greater return potential for investors who want direct exposure to a specific opportunity.</p>
+          <!-- Debt + Equity (featured) -->
+          <article class="wwo-card is-featured">
+            <span class="wwo-badge-popular">Most popular</span>
+            <div class="wwo-role">Direct Project Financing</div>
+            <h3 class="wwo-title">Debt + Equity</h3>
+            <p class="wwo-subtitle">Active Investment · Balanced Risk + Upside</p>
+            <div class="wwo-divider" aria-hidden="true"></div>
+            <p class="wwo-desc">Part of your capital earns a contractual coupon, while the rest takes an ownership stake, so you get recurring income while the project runs and share in the upside at exit. You participate directly in the project's progress.</p>
             <div class="wwo-returns">
-              <div class="wwo-return-item">
-                <p class="wwo-return-value">Annual coupon</p>
-                <p class="wwo-return-label">Indicative — set per project</p>
-              </div>
-              <div class="wwo-return-item">
-                <p class="wwo-return-value">Equity upside</p>
-                <p class="wwo-return-label">Profit share at exit</p>
+              <span class="wwo-returns-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 9 11l4 4 8-8"/><path d="M14 7h7v7"/></svg>
+              </span>
+              <div>
+                <p class="wwo-returns-label">Headline return</p>
+                <p class="wwo-returns-value">Annual coupon + Equity upside</p>
+                <p class="wwo-returns-sub">Return varies per project · shared on your call</p>
               </div>
             </div>
             <ul class="wwo-features">
               <li>
                 <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
-                <span>Contractual annual coupon, calibrated to the project</span>
+                <span>Recurring contractual income on the debt portion while the project develops</span>
               </li>
               <li>
                 <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
-                <span>Share of total project profit on completion — set per deal</span>
+                <span>Equity profit share at exit on the equity portion</span>
               </li>
               <li>
                 <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
-                <span>Choose the specific project you want to finance</span>
-              </li>
-              <li>
-                <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
-                <span>Investment amount tied to the project financing requirement</span>
+                <span>Active participation in the project you back, with a direct stake in its success</span>
               </li>
             </ul>
             <div class="wwo-cta">
-              <a href={buildLocalizedPath("/opportunities", locale)}>Explore Opportunities</a>
+              <a href={`${buildLocalizedPath("/contact", locale)}#video-call`}>
+                Request video call
+                <svg class="wwo-cta-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </a>
             </div>
-          </div>
+          </article>
 
         </div>
+
+        <!-- Equity compact strip -->
+        <article class="wwo-equity-strip">
+          <div class="wwo-equity-left">
+            <span class="wwo-equity-role">Direct Project Financing</span>
+            <h3 class="wwo-equity-title">Equity</h3>
+            <p class="wwo-equity-sub">Active Investment · Highest Upside</p>
+          </div>
+          <p class="wwo-equity-desc">Take a pure ownership stake in a single project and share fully in the profit at exit, with the highest return potential of the three structures and the longest typical hold. Less common than Debt + Equity, but available on request for investors comfortable with full project exposure.</p>
+          <div class="wwo-equity-cta">
+            <a href={`${buildLocalizedPath("/contact", locale)}#video-call`}>
+              Request video call
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
+          </div>
+        </article>
+
+        <a class="cta-link" href={buildLocalizedPath("/invest", locale)}>More investment information</a>
+
       </div>
     </section>
 
@@ -5214,7 +5492,10 @@ const content = getContentTranslations(locale).home;
             <p class="leaders-investor-copy">
               Let our team reach out to you to analyze your investment profile and investment objectives.
             </p>
-            <a class="button" href={`${buildLocalizedPath("/contact", locale)}#tab-investor`}>Contact our Team</a>
+            <div class="leaders-cta-row">
+              <a class="button" href={`${buildLocalizedPath("/contact", locale)}#tab-investor`}>Contact our Team</a>
+              <a class="button is-primary" href={`${buildLocalizedPath("/contact", locale)}#video-call`}>Schedule online consultation</a>
+            </div>
           </div>
         </div>
       </div>
@@ -5230,8 +5511,13 @@ const content = getContentTranslations(locale).home;
         <div class="project-grid">
           {
             projects.map((project) => (
-              <article class="project-card">
+              <a
+                class="project-card"
+                href={buildLocalizedPath("/projects", locale)}
+                aria-label={`View all projects — ${project.name}`}
+              >
                 <img src={project.image} alt={project.name} />
+                <span class="project-card-view-pill" aria-hidden="true">View</span>
                 <div class="project-meta">
                   <h3>{project.name}</h3>
                   <div class="metrics">
@@ -5240,7 +5526,7 @@ const content = getContentTranslations(locale).home;
                     <span class="pill">Sector: {project.sector}</span>
                   </div>
                 </div>
-              </article>
+              </a>
             ))
           }
         </div>
