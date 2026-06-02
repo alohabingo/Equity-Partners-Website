@@ -625,9 +625,9 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
       }
 
       .info-option-icon {
-        width: 2.35rem;
-        height: 2.35rem;
-        border-radius: 0.55rem;
+        width: 2.85rem;
+        height: 2.85rem;
+        border-radius: 0.65rem;
         background: rgba(83, 178, 127, 0.18);
         border: 1px solid rgba(83, 178, 127, 0.4);
         color: #7bd6a2;
@@ -638,8 +638,8 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
       }
 
       .info-option-icon svg {
-        width: 1.05rem;
-        height: 1.05rem;
+        width: 1.3rem;
+        height: 1.3rem;
         stroke: currentColor;
         fill: none;
         stroke-width: 2;
@@ -1107,6 +1107,18 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
         flex-wrap: wrap;
       }
 
+      /* Secondary callout inside the bottom CTA banner */
+      .opps-cta-personal {
+        margin-top: 2.4rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        max-width: 38rem;
+      }
+
+      .opps-cta-personal .info-question {
+        margin-bottom: 0.9rem;
+      }
+
       .opps-cta-copy h2 {
         font-size: clamp(1.6rem, 3vw, 2.2rem);
         font-weight: 700;
@@ -1268,20 +1280,19 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
               <div class="opp-card-body">
                 <p class="opp-card-location">{opp.parish} · Andorra</p>
                 <h3 class="opp-card-name">{opp.name}</h3>
-                <p class="opp-card-tagline">{opp.tagline}</p>
 
                 <div class="opp-card-metrics">
                   <div class="opp-card-metric">
-                    <span class="opp-card-metric-label">Structure</span>
-                    <span class="opp-card-metric-value is-green">{opp.structure}</span>
+                    <span class="opp-card-metric-label">Required investment</span>
+                    <span class="opp-card-metric-value is-green">{opp.equityRaise}</span>
                   </div>
                   <div class="opp-card-metric">
                     <span class="opp-card-metric-label">Headline return</span>
                     <span class="opp-card-metric-value">Shared on request</span>
                   </div>
                   <div class="opp-card-metric">
-                    <span class="opp-card-metric-label">Min ticket</span>
-                    <span class="opp-card-metric-value">From {opp.minInvestment}</span>
+                    <span class="opp-card-metric-label">Buildable area</span>
+                    <span class="opp-card-metric-value">{opp.sqm}</span>
                   </div>
                   <div class="opp-card-metric">
                     <span class="opp-card-metric-label">Hold period</span>
@@ -1360,22 +1371,6 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
                 <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </a>
 
-              <!-- Bottom section: personal guidance title + clickable video row -->
-              <div class="info-video-section">
-                <h3 class="info-question">Want personalized guidance?</h3>
-                <a href={`${buildLocalizedPath("/contact", locale)}#video-call`} class="info-video-row">
-                  <span class="info-video-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-                  </span>
-                  <span class="info-video-text">
-                    Discuss your strategy
-                    <small>30-min video call with our team</small>
-                  </span>
-                  <span class="info-video-arrow" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                  </span>
-                </a>
-              </div>
             </div>
           </article>
         </div>
@@ -1451,6 +1446,22 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
           <a class="opps-cta-btn" href={`${buildLocalizedPath("/contact", locale)}#video-call`}>
             Request video call
             <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
+        </div>
+
+        <div class="opps-cta-personal" data-animate>
+          <h3 class="info-question">Want personalized guidance?</h3>
+          <a href={`${buildLocalizedPath("/contact", locale)}#video-call`} class="info-video-row">
+            <span class="info-video-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            </span>
+            <span class="info-video-text">
+              Discuss your strategy
+              <small>30-min video call with our team</small>
+            </span>
+            <span class="info-video-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </span>
           </a>
         </div>
       </div>

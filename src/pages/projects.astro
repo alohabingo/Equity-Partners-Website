@@ -6,6 +6,17 @@ import { buildLocalizedPath, getLocaleFromUrl } from "../lib/i18n";
 import { projects, statusColour } from "../data/projects";
 
 const locale = getLocaleFromUrl(Astro.url) ?? "en";
+
+// Sum the square metres of every project currently being built or developed,
+// so the stats strip stays accurate even as projects move through the pipeline.
+const totalAreaUnderDevelopment = projects
+  .filter((p) => p.status === "Under Construction" || p.status === "Under development")
+  .reduce((sum, p) => {
+    const num = parseInt(p.sqm.replace(/[^\d]/g, ""), 10);
+    return sum + (Number.isNaN(num) ? 0 : num);
+  }, 0);
+const totalAreaUnderDevelopmentLabel =
+  totalAreaUnderDevelopment.toLocaleString("en-US") + " m²";
 ---
 
 <!doctype html>
@@ -602,8 +613,8 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
             <span class="projects-stat-label">Combined project value</span>
           </div>
           <div class="projects-stat">
-            <span class="projects-stat-value">155</span>
-            <span class="projects-stat-label">Total units across portfolio</span>
+            <span class="projects-stat-value">{totalAreaUnderDevelopmentLabel}</span>
+            <span class="projects-stat-label">Total area under development</span>
           </div>
         </div>
       </div>

@@ -256,6 +256,20 @@ const content = getContentTranslations(locale).home;
         box-shadow: 0 16px 32px rgba(10, 20, 34, 0.38);
       }
 
+      /* On mobile the hero CTAs stack — size both to the wider button
+         (kept compact, not full width) so their lengths match. */
+      @media (max-width: 680px) {
+        .hero-actions {
+          display: grid;
+          grid-template-columns: max-content;
+          justify-content: start;
+        }
+
+        .hero-button {
+          width: auto;
+        }
+      }
+
       .hero-kicker {
         margin-top: 0;
         margin-bottom: 1.3rem;
@@ -4874,6 +4888,15 @@ const content = getContentTranslations(locale).home;
         margin-top: 0;
       }
 
+      /* On mobile the leaders card is single-column; split the two CTAs
+         into exactly equal halves so they share the row evenly. */
+      @media (max-width: 980px) {
+        .gateway.is-spotlight .leaders-cta-row .button {
+          flex: 1 1 0;
+          min-width: 0;
+        }
+      }
+
       @media (max-width: 680px) {
         .gateway.is-spotlight {
           padding: 4rem 0 3.5rem;
@@ -5057,18 +5080,18 @@ const content = getContentTranslations(locale).home;
           <p class="subline">{content.hero.subline}</p>
           <div class="hero-actions">
             <a class="hero-button" href={`${buildLocalizedPath("/contact", locale)}#tab-investor`}>{content.hero.cta}</a>
-            <a class="hero-button is-secondary" href={`${buildLocalizedPath("/contact", locale)}#video-call`}>Request Video Call</a>
+            <a class="hero-button is-secondary" href={`${buildLocalizedPath("/contact", locale)}#video-call`}>{content.hero.ctaSecondary}</a>
           </div>
         </div>
       </div>
     </section>
 
     <section class="partners-wrap" id="partners-local">
-      <a class="partners-link" href={buildLocalizedPath("/partners", locale)} aria-label="View all local partners">
+      <a class="partners-link" href={buildLocalizedPath("/partners", locale)} aria-label={content.aria.partnersLink}>
         <div class="container" data-animate>
           <h2 class="partners-title">{content.localPartnersTitle}</h2>
         </div>
-        <div class="partners-marquee" aria-label="Local partner logos">
+        <div class="partners-marquee" aria-label={content.aria.partnersMarquee}>
           <div class="partners-track">
             {
               localPartnersLoop.map((partner) => (
@@ -5187,7 +5210,7 @@ const content = getContentTranslations(locale).home;
       </div>
     </section>
 
-    <section class="section home-proof-strip is-spotlight" aria-label="Equity Partners metrics">
+    <section class="section home-proof-strip is-spotlight" aria-label={content.aria.metricsStrip}>
       <div class="container" data-animate>
         <p class="eyebrow">{content.metrics.eyebrow}</p>
         <div class="home-proof-grid">
@@ -5220,7 +5243,7 @@ const content = getContentTranslations(locale).home;
         </div>
         <div class="why-equity-home-body">
           <div class="why-equity-home-media">
-            <img src="/04c copy.jpg" alt="Equity Partners development and Andorra property view" loading="lazy" />
+            <img src="/04c copy.jpg" alt={content.aria.whyEquityImage} loading="lazy" />
           </div>
           <div class="why-equity-home-points">
             <article class="why-equity-home-point">
@@ -5259,95 +5282,71 @@ const content = getContentTranslations(locale).home;
       </div>
     </section>
 
-    <section class="test-image-break" aria-label="Andorra night landscape">
+    <section class="test-image-break" aria-label={content.aria.testImageBreak}>
       <div class="test-image-title-wrap">
-        <h2 class="test-image-title">
-          We open the door to Andorra’s high-barrier foreign investment landscape, bridging the gap between global capital and Andorran opportunity.
-        </h2>
+        <h2 class="test-image-title">{content.testImageBreak.quote}</h2>
       </div>
     </section>
 
     <section class="andorra-adv-v2 is-spotlight">
       <div class="container" data-animate>
         <div class="andorra-adv-v2-header">
-          <p class="eyebrow">The Andorra Advantage</p>
-          <h2 class="focus-title">Why Andorra</h2>
-          <p class="focus-intro">We open the doors to Andorra's exclusive investment landscape by providing a structural bridge that allows international firms to deploy capital into Andorra without compromising on institutional standards.</p>
+          <p class="eyebrow">{content.andorraAdvantage.eyebrow}</p>
+          <h2 class="focus-title">{content.andorraAdvantage.title}</h2>
+          <p class="focus-intro">{content.andorraAdvantage.intro}</p>
         </div>
         <div class="andorra-adv-v2-grid">
-          <div class="andorra-adv-v2-item">
-            <span class="andorra-adv-v2-number" aria-hidden="true">01</span>
-            <p class="andorra-adv-v2-num"><img class="andorra-adv-v2-flag" src="/images/Icons/flag-round-250.png" alt="Andorra" />Fiscal Advantage</p>
-            <h3>Institutional-Grade Tax Efficiency</h3>
-            <p>Andorra offers a capped 10% corporate and personal tax regime, paired with 0% wealth and inheritance taxes — creating a high-performance environment for capital reinvestment and long-term wealth preservation.</p>
-          </div>
-          <div class="andorra-adv-v2-item">
-            <span class="andorra-adv-v2-number" aria-hidden="true">02</span>
-            <p class="andorra-adv-v2-num"><img class="andorra-adv-v2-flag" src="/images/Icons/flag-round-250.png" alt="Andorra" />Stability</p>
-            <h3>Sovereign Safe-Haven Status</h3>
-            <p>With 700 years of political neutrality and a "Stable" outlook from major credit agencies, the Principality provides a secure jurisdiction for risk mitigation against global geopolitical and economic volatility.</p>
-          </div>
-          <div class="andorra-adv-v2-item">
-            <span class="andorra-adv-v2-number" aria-hidden="true">03</span>
-            <p class="andorra-adv-v2-num"><img class="andorra-adv-v2-flag" src="/images/Icons/flag-round-250.png" alt="Andorra" />Scarcity</p>
-            <h3>Natural Real Estate Appreciation</h3>
-            <p>With only 4% of land being buildable, the natural supply-side constraint ensures long-term asset value growth. This scarcity, combined with rising global demand, creates a high-conviction investment play.</p>
-          </div>
-          <div class="andorra-adv-v2-item">
-            <span class="andorra-adv-v2-number" aria-hidden="true">04</span>
-            <p class="andorra-adv-v2-num"><img class="andorra-adv-v2-flag" src="/images/Icons/flag-round-250.png" alt="Andorra" />Connectivity</p>
-            <h3>Strategic European Integration</h3>
-            <p>Andorra is advancing its Association Agreement with the EU, giving investors a unique best-of-both-worlds scenario: full sovereign fiscal autonomy with operational access to major European markets.</p>
-          </div>
+          {content.andorraAdvantage.items.map((item, index) => (
+            <div class="andorra-adv-v2-item">
+              <span class="andorra-adv-v2-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+              <p class="andorra-adv-v2-num"><img class="andorra-adv-v2-flag" src="/images/Icons/flag-round-250.png" alt="Andorra" />{item.label}</p>
+              <h3>{item.title}</h3>
+              <p>{item.body}</p>
+            </div>
+          ))}
         </div>
-        <a class="cta-link" href="/blog">Explore More Advantages</a>
+        <a class="cta-link" href="/blog">{content.andorraAdvantage.cta}</a>
       </div>
     </section>
 
     <section class="what-we-offer is-spotlight">
       <div class="container" data-animate>
         <div class="what-we-offer-header">
-          <p class="eyebrow">What we offer</p>
-          <h2 class="focus-title">Three ways to invest in Andorra</h2>
-          <p class="focus-intro">Choose between predictable contractual income or active participation in a specific Andorran development project. Returns are calibrated per project and shared during your call. See the structures on our <a href={buildLocalizedPath("/invest", locale)} class="focus-intro-link">Invest page</a> for the full picture.</p>
+          <p class="eyebrow">{content.whatWeOffer.eyebrow}</p>
+          <h2 class="focus-title">{content.whatWeOffer.title}</h2>
+          <p class="focus-intro">{content.whatWeOffer.introBefore}<a href={buildLocalizedPath("/invest", locale)} class="focus-intro-link">{content.whatWeOffer.introLinkLabel}</a>{content.whatWeOffer.introAfter}</p>
         </div>
 
         <div class="what-we-offer-grid">
 
           <!-- Debt -->
           <article class="wwo-card">
-            <div class="wwo-role">Andorra Real Estate Fund</div>
-            <h3 class="wwo-title">Debt</h3>
-            <p class="wwo-subtitle">Passive Investment · Lowest Risk</p>
+            <div class="wwo-role">{content.whatWeOffer.debt.role}</div>
+            <h3 class="wwo-title">{content.whatWeOffer.debt.title}</h3>
+            <p class="wwo-subtitle">{content.whatWeOffer.debt.subtitle}</p>
             <div class="wwo-divider" aria-hidden="true"></div>
-            <p class="wwo-desc">You lend capital to the project and receive a contractual annual coupon. Your position sits senior in the capital stack and is secured against the underlying real estate, with no exposure to project upside or downside.</p>
+            <p class="wwo-desc">{content.whatWeOffer.debt.desc}</p>
             <div class="wwo-returns">
               <span class="wwo-returns-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               </span>
               <div>
-                <p class="wwo-returns-label">Headline return</p>
-                <p class="wwo-returns-value">Annual coupon</p>
-                <p class="wwo-returns-sub">Return varies per project · shared on your call</p>
+                <p class="wwo-returns-label">{content.whatWeOffer.returnLabel}</p>
+                <p class="wwo-returns-value">{content.whatWeOffer.debt.returnValue}</p>
+                <p class="wwo-returns-sub">{content.whatWeOffer.returnSub}</p>
               </div>
             </div>
             <ul class="wwo-features">
-              <li>
-                <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
-                <span>Predictable contractual payments, with no project performance exposure</span>
-              </li>
-              <li>
-                <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
-                <span>Capital secured against the property, senior to equity in repayment priority</span>
-              </li>
-              <li>
-                <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
-                <span>Fully passive, with no involvement once committed</span>
-              </li>
+              {content.whatWeOffer.debt.features.map((feature) => (
+                <li>
+                  <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+                  <span>{feature}</span>
+                </li>
+              ))}
             </ul>
             <div class="wwo-cta">
               <a href={`${buildLocalizedPath("/contact", locale)}#video-call`}>
-                Request video call
+                {content.whatWeOffer.requestCta}
                 <svg class="wwo-cta-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </a>
             </div>
@@ -5355,39 +5354,33 @@ const content = getContentTranslations(locale).home;
 
           <!-- Debt + Equity (featured) -->
           <article class="wwo-card is-featured">
-            <span class="wwo-badge-popular">Most popular</span>
-            <div class="wwo-role">Direct Project Financing</div>
-            <h3 class="wwo-title">Debt + Equity</h3>
-            <p class="wwo-subtitle">Active Investment · Balanced Risk + Upside</p>
+            <span class="wwo-badge-popular">{content.whatWeOffer.badgePopular}</span>
+            <div class="wwo-role">{content.whatWeOffer.debtEquity.role}</div>
+            <h3 class="wwo-title">{content.whatWeOffer.debtEquity.title}</h3>
+            <p class="wwo-subtitle">{content.whatWeOffer.debtEquity.subtitle}</p>
             <div class="wwo-divider" aria-hidden="true"></div>
-            <p class="wwo-desc">Part of your capital earns a contractual coupon, while the rest takes an ownership stake, so you get recurring income while the project runs and share in the upside at exit. You participate directly in the project's progress.</p>
+            <p class="wwo-desc">{content.whatWeOffer.debtEquity.desc}</p>
             <div class="wwo-returns">
               <span class="wwo-returns-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 9 11l4 4 8-8"/><path d="M14 7h7v7"/></svg>
               </span>
               <div>
-                <p class="wwo-returns-label">Headline return</p>
-                <p class="wwo-returns-value">Annual coupon + Equity upside</p>
-                <p class="wwo-returns-sub">Return varies per project · shared on your call</p>
+                <p class="wwo-returns-label">{content.whatWeOffer.returnLabel}</p>
+                <p class="wwo-returns-value">{content.whatWeOffer.debtEquity.returnValue}</p>
+                <p class="wwo-returns-sub">{content.whatWeOffer.returnSub}</p>
               </div>
             </div>
             <ul class="wwo-features">
-              <li>
-                <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
-                <span>Recurring contractual income on the debt portion while the project develops</span>
-              </li>
-              <li>
-                <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
-                <span>Equity profit share at exit on the equity portion</span>
-              </li>
-              <li>
-                <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
-                <span>Active participation in the project you back, with a direct stake in its success</span>
-              </li>
+              {content.whatWeOffer.debtEquity.features.map((feature) => (
+                <li>
+                  <span class="wwo-check" aria-hidden="true"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+                  <span>{feature}</span>
+                </li>
+              ))}
             </ul>
             <div class="wwo-cta">
               <a href={`${buildLocalizedPath("/contact", locale)}#video-call`}>
-                Request video call
+                {content.whatWeOffer.requestCta}
                 <svg class="wwo-cta-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </a>
             </div>
@@ -5398,20 +5391,20 @@ const content = getContentTranslations(locale).home;
         <!-- Equity compact strip -->
         <article class="wwo-equity-strip">
           <div class="wwo-equity-left">
-            <span class="wwo-equity-role">Direct Project Financing</span>
-            <h3 class="wwo-equity-title">Equity</h3>
-            <p class="wwo-equity-sub">Active Investment · Highest Upside</p>
+            <span class="wwo-equity-role">{content.whatWeOffer.equityStrip.role}</span>
+            <h3 class="wwo-equity-title">{content.whatWeOffer.equityStrip.title}</h3>
+            <p class="wwo-equity-sub">{content.whatWeOffer.equityStrip.subtitle}</p>
           </div>
-          <p class="wwo-equity-desc">Take a pure ownership stake in a single project and share fully in the profit at exit, with the highest return potential of the three structures and the longest typical hold. Less common than Debt + Equity, but available on request for investors comfortable with full project exposure.</p>
+          <p class="wwo-equity-desc">{content.whatWeOffer.equityStrip.desc}</p>
           <div class="wwo-equity-cta">
             <a href={`${buildLocalizedPath("/contact", locale)}#video-call`}>
-              Request video call
+              {content.whatWeOffer.equityStrip.cta}
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
             </a>
           </div>
         </article>
 
-        <a class="cta-link" href={buildLocalizedPath("/invest", locale)}>More investment information</a>
+        <a class="cta-link" href={buildLocalizedPath("/invest", locale)}>{content.whatWeOffer.ctaMore}</a>
 
       </div>
     </section>
@@ -5419,54 +5412,54 @@ const content = getContentTranslations(locale).home;
     <section class="timeline-v2 is-spotlight">
       <div class="container" data-animate>
         <div class="section-header">
-          <p class="eyebrow">Timeline</p>
-          <h2>The Investment Roadmap</h2>
-          <p class="intro">A streamlined onboarding process designed to move you from initial inquiry to active capital deployment.</p>
+          <p class="eyebrow">{content.timeline.eyebrow}</p>
+          <h2>{content.timeline.title}</h2>
+          <p class="intro">{content.timeline.intro}</p>
         </div>
         <div class="timeline-v2-card">
           <div class="timeline-v2-col">
-            <span class="timeline-v2-step-num">Step 01</span>
+            <span class="timeline-v2-step-num">{content.timeline.stepPrefix} 01</span>
             <div class="timeline-v2-step-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M4 6.5h9a2.5 2.5 0 0 1 2.5 2.5v4A2.5 2.5 0 0 1 13 15.5H9l-3.5 2v-2H4A2.5 2.5 0 0 1 1.5 13V9A2.5 2.5 0 0 1 4 6.5Z"/><path d="M15 9h5a2.5 2.5 0 0 1 2.5 2.5v3A2.5 2.5 0 0 1 20 17h-1.5v2L15 17h-1"/></svg>
             </div>
-            <h3>Contact our Team</h3>
-            <p>Initial conversation to understand your profile and Andorra interest.</p>
+            <h3>{content.timeline.steps[0].title}</h3>
+            <p>{content.timeline.steps[0].body}</p>
           </div>
           <div class="timeline-v2-col">
-            <span class="timeline-v2-step-num">Step 02</span>
+            <span class="timeline-v2-step-num">{content.timeline.stepPrefix} 02</span>
             <div class="timeline-v2-step-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="13" height="13" rx="2.5"/><path d="m16 10 5-3v10l-5-3"/><circle cx="9.5" cy="10.5" r="2.25"/><path d="M6.5 15.5a3.25 3.25 0 0 1 6 0"/></svg>
             </div>
-            <h3>Consultation Call</h3>
-            <p>Map timeline, returns, and the strategic route forward.</p>
+            <h3>{content.timeline.steps[1].title}</h3>
+            <p>{content.timeline.steps[1].body}</p>
           </div>
           <div class="timeline-v2-col">
-            <span class="timeline-v2-step-num">Step 03</span>
+            <span class="timeline-v2-step-num">{content.timeline.stepPrefix} 03</span>
             <div class="timeline-v2-step-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M4 12h16"/></svg>
             </div>
-            <h3>Select Opportunity</h3>
-            <p>We present opportunities matched to your mandate.</p>
+            <h3>{content.timeline.steps[2].title}</h3>
+            <p>{content.timeline.steps[2].body}</p>
           </div>
           <div class="timeline-v2-col">
-            <span class="timeline-v2-step-num">Step 04</span>
+            <span class="timeline-v2-step-num">{content.timeline.stepPrefix} 04</span>
             <div class="timeline-v2-step-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
             </div>
-            <h3>KYC &amp; Compliance</h3>
-            <p>Onboarding and checks before capital commitment.</p>
+            <h3>{content.timeline.steps[3].title}</h3>
+            <p>{content.timeline.steps[3].body}</p>
           </div>
           <div class="timeline-v2-col">
-            <span class="timeline-v2-step-num">Step 05</span>
+            <span class="timeline-v2-step-num">{content.timeline.stepPrefix} 05</span>
             <div class="timeline-v2-step-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M4 16.5 10 10.5l3.5 3.5L20 7.5"/><path d="M14 7.5h6v6"/><path d="M5 19.5h14"/></svg>
             </div>
-            <h3>Capital Deployment</h3>
-            <p>Capital is deployed and project execution begins.</p>
+            <h3>{content.timeline.steps[4].title}</h3>
+            <p>{content.timeline.steps[4].body}</p>
           </div>
         </div>
         <div class="timeline-v2-cta">
-          <a class="button" href={`${buildLocalizedPath("/contact", locale)}#tab-investor`}>Contact our Team</a>
+          <a class="button" href={`${buildLocalizedPath("/contact", locale)}#tab-investor`}>{content.timeline.cta}</a>
         </div>
       </div>
     </section>
@@ -5474,27 +5467,23 @@ const content = getContentTranslations(locale).home;
     <section class="section gateway is-spotlight" id="contact">
       <div class="container" data-animate>
         <div class="section-header">
-          <p class="eyebrow">Contact our Team</p>
-          <h2>Start your Andorra investment journey</h2>
-          <p class="intro">
-            Schedule a confidential consultation with our team to explore aligned opportunities in the Principality.
-          </p>
+          <p class="eyebrow">{content.gateway.eyebrow}</p>
+          <h2>{content.gateway.title}</h2>
+          <p class="intro">{content.gateway.intro}</p>
         </div>
         <div class="leaders">
           <div class="leaders-image">
             <img
               src="/01_stone%20copy%202.jpg"
-              alt="Equity Partners leadership"
+              alt="Equity Partners"
             />
           </div>
           <div class="leaders-copy">
-            <h3 class="leaders-investor-title">Request additional investor information</h3>
-            <p class="leaders-investor-copy">
-              Let our team reach out to you to analyze your investment profile and investment objectives.
-            </p>
+            <h3 class="leaders-investor-title">{content.gateway.requestTitle}</h3>
+            <p class="leaders-investor-copy">{content.gateway.requestBody}</p>
             <div class="leaders-cta-row">
-              <a class="button" href={`${buildLocalizedPath("/contact", locale)}#tab-investor`}>Contact our Team</a>
-              <a class="button is-primary" href={`${buildLocalizedPath("/contact", locale)}#video-call`}>Schedule online consultation</a>
+              <a class="button" href={`${buildLocalizedPath("/contact", locale)}#tab-investor`}>{content.gateway.contactCta}</a>
+              <a class="button is-primary" href={`${buildLocalizedPath("/contact", locale)}#video-call`}>{content.gateway.scheduleCta}</a>
             </div>
           </div>
         </div>
@@ -5504,9 +5493,9 @@ const content = getContentTranslations(locale).home;
     <section class="section projects is-spotlight" id="partners">
       <div class="container" data-animate>
         <div class="section-header">
-          <p class="eyebrow">Featured Developments</p>
-          <h2>View our properties under development</h2>
-          <p class="intro">Balanced proof architecture: demonstrated execution plus visible momentum.</p>
+          <p class="eyebrow">{content.featuredDevelopments.eyebrow}</p>
+          <h2>{content.featuredDevelopments.title}</h2>
+          <p class="intro">{content.featuredDevelopments.intro}</p>
         </div>
         <div class="project-grid">
           {
@@ -5514,33 +5503,33 @@ const content = getContentTranslations(locale).home;
               <a
                 class="project-card"
                 href={buildLocalizedPath("/projects", locale)}
-                aria-label={`View all projects — ${project.name}`}
+                aria-label={`${content.aria.projectCardLabel} — ${project.name}`}
               >
                 <img src={project.image} alt={project.name} />
-                <span class="project-card-view-pill" aria-hidden="true">View</span>
+                <span class="project-card-view-pill" aria-hidden="true">{content.featuredDevelopments.viewLabel}</span>
                 <div class="project-meta">
                   <h3>{project.name}</h3>
                   <div class="metrics">
-                    <span class="pill">Value: {project.value}</span>
-                    <span class="pill">Status: {project.status}</span>
-                    <span class="pill">Sector: {project.sector}</span>
+                    <span class="pill">{content.featuredDevelopments.valueLabel}: {project.value}</span>
+                    <span class="pill">{content.featuredDevelopments.statusLabel}: {content.statusLabels[project.status] ?? project.status}</span>
+                    <span class="pill">{content.featuredDevelopments.sectorLabel}: {content.sectorLabels[project.sector] ?? project.sector}</span>
                   </div>
                 </div>
               </a>
             ))
           }
         </div>
-        <div class="project-carousel-dots" aria-label="Project carousel navigation">
+        <div class="project-carousel-dots" aria-label={content.aria.carouselNav}>
           {projects.map((project, index) => (
             <button
               class:list={["project-carousel-dot", index === 0 && "is-active"]}
               type="button"
-              aria-label={`Go to project ${index + 1}: ${project.name}`}
+              aria-label={`${content.aria.goToProject} ${index + 1}: ${project.name}`}
               data-project-dot={index}
             ></button>
           ))}
         </div>
-        <a class="cta-link" href={buildLocalizedPath("/projects", locale)}>View All Projects</a>
+        <a class="cta-link" href={buildLocalizedPath("/projects", locale)}>{content.featuredDevelopments.viewAllCta}</a>
       </div>
     </section>
 
@@ -5548,8 +5537,8 @@ const content = getContentTranslations(locale).home;
       <section class="section home-suggested-reads is-spotlight">
         <div class="container">
           <div class="section-header">
-            <p class="eyebrow">Suggested Reads</p>
-            <h2>Continue exploring the Andorran market.</h2>
+            <p class="eyebrow">{content.suggestedReads.eyebrow}</p>
+            <h2>{content.suggestedReads.title}</h2>
           </div>
           <div class="home-suggested-grid">
             {homepageSuggestedPosts.map((entry) => (
@@ -5568,7 +5557,7 @@ const content = getContentTranslations(locale).home;
               </article>
             ))}
           </div>
-          <a class="cta-link" href="/blog">See more insights</a>
+          <a class="cta-link" href="/blog">{content.suggestedReads.ctaMore}</a>
         </div>
       </section>
     )}

@@ -6,6 +6,7 @@ type HomeContent = {
     title: string;
     subline: string;
     cta: string;
+    ctaSecondary: string;
   };
   localPartnersTitle: string;
   services: {
@@ -29,6 +30,95 @@ type HomeContent = {
     cta: string;
     points: Array<{ title: string; body: string }>;
   };
+  aria: {
+    partnersLink: string;
+    partnersMarquee: string;
+    metricsStrip: string;
+    whyEquityImage: string;
+    testImageBreak: string;
+    carouselNav: string;
+    projectCardLabel: string;
+    goToProject: string;
+  };
+  testImageBreak: {
+    quote: string;
+  };
+  andorraAdvantage: {
+    eyebrow: string;
+    title: string;
+    intro: string;
+    cta: string;
+    items: Array<{ label: string; title: string; body: string }>;
+  };
+  whatWeOffer: {
+    eyebrow: string;
+    title: string;
+    introBefore: string;
+    introLinkLabel: string;
+    introAfter: string;
+    badgePopular: string;
+    requestCta: string;
+    ctaMore: string;
+    returnLabel: string;
+    returnSub: string;
+    debt: {
+      role: string;
+      title: string;
+      subtitle: string;
+      desc: string;
+      returnValue: string;
+      features: string[];
+    };
+    debtEquity: {
+      role: string;
+      title: string;
+      subtitle: string;
+      desc: string;
+      returnValue: string;
+      features: string[];
+    };
+    equityStrip: {
+      role: string;
+      title: string;
+      subtitle: string;
+      desc: string;
+      cta: string;
+    };
+  };
+  timeline: {
+    eyebrow: string;
+    title: string;
+    intro: string;
+    cta: string;
+    stepPrefix: string;
+    steps: Array<{ title: string; body: string }>;
+  };
+  gateway: {
+    eyebrow: string;
+    title: string;
+    intro: string;
+    requestTitle: string;
+    requestBody: string;
+    contactCta: string;
+    scheduleCta: string;
+  };
+  featuredDevelopments: {
+    eyebrow: string;
+    title: string;
+    intro: string;
+    viewLabel: string;
+    valueLabel: string;
+    statusLabel: string;
+    sectorLabel: string;
+    viewAllCta: string;
+  };
+  suggestedReads: {
+    eyebrow: string;
+    title: string;
+    ctaMore: string;
+  };
+  statusLabels: Record<string, string>;
+  sectorLabels: Record<string, string>;
 };
 
 type NewsletterContent = {
@@ -167,8 +257,9 @@ export const contentTranslations: Record<
         kicker: "ANDORRA • INVESTMENT • EXCELLENCE",
         title: "Your strategic partner for Andorra real estate investments.",
         subline:
-          "The bridge between international investor capital and Andorra's high-barrier real estate market.",
+          "Our team of professionals gives international investors a seamless experience to Andorra's high-barrier real estate market.",
         cta: "Contact our Team",
+        ctaSecondary: "Request Video Call",
       },
       localPartnersTitle: "OUR LOCAL PARTNERS",
       services: {
@@ -236,6 +327,166 @@ export const contentTranslations: Record<
               "We curate a tight pipeline of institutional-grade opportunities, focused on quality and fit rather than chasing scale at the cost of conviction.",
           },
         ],
+      },
+      aria: {
+        partnersLink: "View all local partners",
+        partnersMarquee: "Local partner logos",
+        metricsStrip: "Equity Partners metrics",
+        whyEquityImage: "Equity Partners development and Andorra property view",
+        testImageBreak: "Andorra night landscape",
+        carouselNav: "Project carousel navigation",
+        projectCardLabel: "View all projects",
+        goToProject: "Go to project",
+      },
+      testImageBreak: {
+        quote:
+          "We open the door to Andorra's high-barrier foreign investment landscape, bridging the gap between global capital and Andorran opportunity.",
+      },
+      andorraAdvantage: {
+        eyebrow: "The Andorra Advantage",
+        title: "Why Andorra",
+        intro:
+          "We open the doors to Andorra's exclusive investment landscape by providing a structural bridge that allows international firms to deploy capital into Andorra without compromising on institutional standards.",
+        cta: "Explore More Advantages",
+        items: [
+          {
+            label: "Fiscal Advantage",
+            title: "Institutional-Grade Tax Efficiency",
+            body:
+              "Andorra offers a capped 10% corporate and personal tax regime, paired with 0% wealth and inheritance taxes — creating a high-performance environment for capital reinvestment and long-term wealth preservation.",
+          },
+          {
+            label: "Stability",
+            title: "Sovereign Safe-Haven Status",
+            body:
+              "With 700 years of political neutrality and a \"Stable\" outlook from major credit agencies, the Principality provides a secure jurisdiction for risk mitigation against global geopolitical and economic volatility.",
+          },
+          {
+            label: "Scarcity",
+            title: "Natural Real Estate Appreciation",
+            body:
+              "With only 4% of land being buildable, the natural supply-side constraint ensures long-term asset value growth. This scarcity, combined with rising global demand, creates a high-conviction investment play.",
+          },
+          {
+            label: "Connectivity",
+            title: "Strategic European Integration",
+            body:
+              "Andorra is advancing its Association Agreement with the EU, giving investors a unique best-of-both-worlds scenario: full sovereign fiscal autonomy with operational access to major European markets.",
+          },
+        ],
+      },
+      whatWeOffer: {
+        eyebrow: "What we offer",
+        title: "Three ways to invest in Andorra",
+        introBefore:
+          "Choose between predictable contractual income or active participation in a specific Andorran development project. Returns are calibrated per project and shared during your call. See the structures on our ",
+        introLinkLabel: "Invest page",
+        introAfter: " for the full picture.",
+        badgePopular: "Most popular",
+        requestCta: "Request video call",
+        ctaMore: "More investment information",
+        returnLabel: "Headline return",
+        returnSub: "Return varies per project · shared on your call",
+        debt: {
+          role: "Andorra Real Estate Fund",
+          title: "Debt",
+          subtitle: "Passive Investment · Lowest Risk",
+          desc:
+            "You lend capital to the project and receive a contractual annual coupon. Your position sits senior in the capital stack and is secured against the underlying real estate, with no exposure to project upside or downside.",
+          returnValue: "Annual coupon",
+          features: [
+            "Predictable contractual payments, with no project performance exposure",
+            "Capital secured against the property, senior to equity in repayment priority",
+            "Fully passive, with no involvement once committed",
+          ],
+        },
+        debtEquity: {
+          role: "Direct Project Financing",
+          title: "Debt + Equity",
+          subtitle: "Active Investment · Balanced Risk + Upside",
+          desc:
+            "Part of your capital earns a contractual coupon, while the rest takes an ownership stake, so you get recurring income while the project runs and share in the upside at exit. You participate directly in the project's progress.",
+          returnValue: "Annual coupon + Equity upside",
+          features: [
+            "Recurring contractual income on the debt portion while the project develops",
+            "Equity profit share at exit on the equity portion",
+            "Active participation in the project you back, with a direct stake in its success",
+          ],
+        },
+        equityStrip: {
+          role: "Direct Project Financing",
+          title: "Equity",
+          subtitle: "Active Investment · Highest Upside",
+          desc:
+            "Take a pure ownership stake in a single project and share fully in the profit at exit, with the highest return potential of the three structures and the longest typical hold. Less common than Debt + Equity, but available on request for investors comfortable with full project exposure.",
+          cta: "Request video call",
+        },
+      },
+      timeline: {
+        eyebrow: "Timeline",
+        title: "The Investment Roadmap",
+        intro:
+          "A streamlined onboarding process designed to move you from initial inquiry to active capital deployment.",
+        cta: "Contact our Team",
+        stepPrefix: "Step",
+        steps: [
+          {
+            title: "Contact our Team",
+            body: "Initial conversation to understand your profile and Andorra interest.",
+          },
+          {
+            title: "Consultation Call",
+            body: "Map timeline, returns, and the strategic route forward.",
+          },
+          {
+            title: "Select Opportunity",
+            body: "We present opportunities matched to your mandate.",
+          },
+          {
+            title: "KYC & Compliance",
+            body: "Onboarding and checks before capital commitment.",
+          },
+          {
+            title: "Capital Deployment",
+            body: "Capital is deployed and project execution begins.",
+          },
+        ],
+      },
+      gateway: {
+        eyebrow: "Contact our Team",
+        title: "Start your Andorra investment journey",
+        intro:
+          "Schedule a confidential consultation with our team to explore aligned opportunities in the Principality.",
+        requestTitle: "Request additional investor information",
+        requestBody:
+          "Let our team reach out to you to analyze your investment profile and investment objectives.",
+        contactCta: "Contact our Team",
+        scheduleCta: "Schedule online consultation",
+      },
+      featuredDevelopments: {
+        eyebrow: "Featured Developments",
+        title: "View our properties under development",
+        intro: "Balanced proof architecture: demonstrated execution plus visible momentum.",
+        viewLabel: "View",
+        valueLabel: "Value",
+        statusLabel: "Status",
+        sectorLabel: "Sector",
+        viewAllCta: "View All Projects",
+      },
+      suggestedReads: {
+        eyebrow: "Suggested Reads",
+        title: "Continue exploring the Andorran market.",
+        ctaMore: "See more insights",
+      },
+      statusLabels: {
+        "Under Construction": "Under Construction",
+        "Under development": "Under development",
+        "Pipeline": "Pipeline",
+        "Financing Open": "Financing Open",
+        "Completed": "Completed",
+      },
+      sectorLabels: {
+        "Luxury Residential": "Luxury Residential",
       },
     },
     newsletter: {
@@ -587,6 +838,7 @@ export const contentTranslations: Record<
         subline:
           "Equity Partners conecta capital inversor con una ejecución inmobiliaria disciplinada en Andorra.",
         cta: "Contactar con el equipo",
+        ctaSecondary: "Solicitar videollamada",
       },
       localPartnersTitle: "NUESTROS SOCIOS LOCALES",
       services: {
@@ -654,6 +906,166 @@ export const contentTranslations: Record<
               "Curamos un pipeline reducido de oportunidades de nivel institucional, centrados en calidad y encaje en lugar de perseguir escala a costa de convicción.",
           },
         ],
+      },
+      aria: {
+        partnersLink: "Ver todos los socios locales",
+        partnersMarquee: "Logotipos de socios locales",
+        metricsStrip: "Métricas de Equity Partners",
+        whyEquityImage: "Desarrollo de Equity Partners y vista inmobiliaria de Andorra",
+        testImageBreak: "Paisaje nocturno de Andorra",
+        carouselNav: "Navegación del carrusel de proyectos",
+        projectCardLabel: "Ver todos los proyectos",
+        goToProject: "Ir al proyecto",
+      },
+      testImageBreak: {
+        quote:
+          "Abrimos la puerta al panorama de inversión extranjera de alta barrera de Andorra, conectando el capital global con la oportunidad andorrana.",
+      },
+      andorraAdvantage: {
+        eyebrow: "La ventaja andorrana",
+        title: "Por qué Andorra",
+        intro:
+          "Abrimos las puertas al exclusivo panorama de inversión de Andorra mediante un puente estructural que permite a firmas internacionales desplegar capital en Andorra sin comprometer estándares institucionales.",
+        cta: "Explorar más ventajas",
+        items: [
+          {
+            label: "Ventaja fiscal",
+            title: "Eficiencia fiscal de nivel institucional",
+            body:
+              "Andorra ofrece un régimen fiscal con tope del 10% para sociedades y personas físicas, combinado con un 0% en impuestos sobre el patrimonio y sucesiones — creando un entorno de alto rendimiento para la reinversión de capital y la preservación de patrimonio a largo plazo.",
+          },
+          {
+            label: "Estabilidad",
+            title: "Estatus soberano de refugio seguro",
+            body:
+              "Con 700 años de neutralidad política y una perspectiva «Estable» de las principales agencias de calificación, el Principado ofrece una jurisdicción segura para mitigar el riesgo frente a la volatilidad geopolítica y económica global.",
+          },
+          {
+            label: "Escasez",
+            title: "Revalorización inmobiliaria natural",
+            body:
+              "Con solo un 4% del suelo edificable, la restricción natural de oferta asegura el crecimiento del valor de los activos a largo plazo. Esta escasez, unida a una demanda global en aumento, genera una tesis de inversión de alta convicción.",
+          },
+          {
+            label: "Conectividad",
+            title: "Integración europea estratégica",
+            body:
+              "Andorra avanza en su Acuerdo de Asociación con la UE, ofreciendo a los inversores un escenario único: plena autonomía fiscal soberana con acceso operativo a los principales mercados europeos.",
+          },
+        ],
+      },
+      whatWeOffer: {
+        eyebrow: "Qué ofrecemos",
+        title: "Tres formas de invertir en Andorra",
+        introBefore:
+          "Elija entre una renta contractual predecible o la participación activa en un proyecto específico de desarrollo andorrano. Las rentabilidades se calibran por proyecto y se comparten durante su llamada. Consulte las estructuras en nuestra ",
+        introLinkLabel: "página de Inversión",
+        introAfter: " para una visión completa.",
+        badgePopular: "Más popular",
+        requestCta: "Solicitar videollamada",
+        ctaMore: "Más información sobre inversión",
+        returnLabel: "Rentabilidad principal",
+        returnSub: "La rentabilidad varía por proyecto · se comparte en su llamada",
+        debt: {
+          role: "Fondo Inmobiliario de Andorra",
+          title: "Deuda",
+          subtitle: "Inversión pasiva · Riesgo más bajo",
+          desc:
+            "Usted presta capital al proyecto y recibe un cupón anual contractual. Su posición es preferente dentro de la estructura de capital y está garantizada por el inmueble subyacente, sin exposición al beneficio o pérdida del proyecto.",
+          returnValue: "Cupón anual",
+          features: [
+            "Pagos contractuales predecibles, sin exposición al rendimiento del proyecto",
+            "Capital garantizado por la propiedad, preferente sobre la equity en prioridad de pago",
+            "Totalmente pasivo, sin participación una vez comprometido",
+          ],
+        },
+        debtEquity: {
+          role: "Financiación directa de proyecto",
+          title: "Deuda + Equity",
+          subtitle: "Inversión activa · Riesgo equilibrado + Plusvalía",
+          desc:
+            "Parte de su capital genera un cupón contractual, mientras que el resto toma una participación en el proyecto, obteniendo así renta recurrente durante la ejecución y participando en la plusvalía en la salida. Usted participa directamente en el avance del proyecto.",
+          returnValue: "Cupón anual + Plusvalía de equity",
+          features: [
+            "Renta contractual recurrente sobre la parte de deuda durante el desarrollo del proyecto",
+            "Reparto de beneficios de equity en la salida sobre la parte de equity",
+            "Participación activa en el proyecto que respalda, con una participación directa en su éxito",
+          ],
+        },
+        equityStrip: {
+          role: "Financiación directa de proyecto",
+          title: "Equity",
+          subtitle: "Inversión activa · Mayor potencial de plusvalía",
+          desc:
+            "Toma una participación íntegra en un único proyecto y comparte plenamente en el beneficio en la salida, con el mayor potencial de rentabilidad de las tres estructuras y el plazo de tenencia típico más largo. Menos habitual que Deuda + Equity, pero disponible bajo petición para inversores cómodos con la exposición total al proyecto.",
+          cta: "Solicitar videollamada",
+        },
+      },
+      timeline: {
+        eyebrow: "Recorrido",
+        title: "La hoja de ruta de la inversión",
+        intro:
+          "Un proceso de incorporación optimizado para guiarle desde el contacto inicial hasta el despliegue activo del capital.",
+        cta: "Contactar con el equipo",
+        stepPrefix: "Paso",
+        steps: [
+          {
+            title: "Contactar con el equipo",
+            body: "Conversación inicial para entender su perfil y su interés por Andorra.",
+          },
+          {
+            title: "Llamada de consultoría",
+            body: "Calendario, rentabilidades y trazado de la ruta estratégica.",
+          },
+          {
+            title: "Seleccionar oportunidad",
+            body: "Le presentamos oportunidades acordes con su mandato.",
+          },
+          {
+            title: "KYC y Cumplimiento",
+            body: "Onboarding y verificaciones antes del compromiso de capital.",
+          },
+          {
+            title: "Despliegue de capital",
+            body: "Se despliega el capital y comienza la ejecución del proyecto.",
+          },
+        ],
+      },
+      gateway: {
+        eyebrow: "Contactar con el equipo",
+        title: "Comience su recorrido de inversión en Andorra",
+        intro:
+          "Programe una consulta confidencial con nuestro equipo para explorar oportunidades alineadas en el Principado.",
+        requestTitle: "Solicitar información adicional para inversores",
+        requestBody:
+          "Permita que nuestro equipo se ponga en contacto con usted para analizar su perfil y objetivos de inversión.",
+        contactCta: "Contactar con el equipo",
+        scheduleCta: "Programar consulta online",
+      },
+      featuredDevelopments: {
+        eyebrow: "Desarrollos destacados",
+        title: "Vea nuestras propiedades en desarrollo",
+        intro: "Una arquitectura de pruebas equilibrada: ejecución demostrada y momentum visible.",
+        viewLabel: "Ver",
+        valueLabel: "Valor",
+        statusLabel: "Estado",
+        sectorLabel: "Sector",
+        viewAllCta: "Ver todos los proyectos",
+      },
+      suggestedReads: {
+        eyebrow: "Lecturas sugeridas",
+        title: "Continúe explorando el mercado andorrano.",
+        ctaMore: "Ver más artículos",
+      },
+      statusLabels: {
+        "Under Construction": "En construcción",
+        "Under development": "En desarrollo",
+        "Pipeline": "En cartera",
+        "Financing Open": "Financiación abierta",
+        "Completed": "Completado",
+      },
+      sectorLabels: {
+        "Luxury Residential": "Residencial de lujo",
       },
     },
     newsletter: {
@@ -905,6 +1317,7 @@ export const contentTranslations: Record<
         subline:
           "Equity Partners connecta capital inversor amb una execució immobiliària disciplinada a Andorra.",
         cta: "Contacta amb l'equip",
+        ctaSecondary: "Sol·licitar videotrucada",
       },
       localPartnersTitle: "ELS NOSTRES SOCIS LOCALS",
       services: {
@@ -972,6 +1385,166 @@ export const contentTranslations: Record<
               "Curem un pipeline reduït d'oportunitats de nivell institucional, centrats en qualitat i encaix en lloc de perseguir escala a costa de convicció.",
           },
         ],
+      },
+      aria: {
+        partnersLink: "Veure tots els socis locals",
+        partnersMarquee: "Logotips dels socis locals",
+        metricsStrip: "Mètriques d'Equity Partners",
+        whyEquityImage: "Desenvolupament d'Equity Partners i vista immobiliària d'Andorra",
+        testImageBreak: "Paisatge nocturn d'Andorra",
+        carouselNav: "Navegació del carrusel de projectes",
+        projectCardLabel: "Veure tots els projectes",
+        goToProject: "Anar al projecte",
+      },
+      testImageBreak: {
+        quote:
+          "Obrim la porta al panorama d'inversió estrangera d'alta barrera d'Andorra, connectant el capital global amb l'oportunitat andorrana.",
+      },
+      andorraAdvantage: {
+        eyebrow: "L'avantatge andorrà",
+        title: "Per què Andorra",
+        intro:
+          "Obrim les portes al panorama exclusiu d'inversió d'Andorra mitjançant un pont estructural que permet a firmes internacionals desplegar capital a Andorra sense comprometre estàndards institucionals.",
+        cta: "Explorar més avantatges",
+        items: [
+          {
+            label: "Avantatge fiscal",
+            title: "Eficiència fiscal de nivell institucional",
+            body:
+              "Andorra ofereix un règim fiscal amb límit del 10% per a societats i persones físiques, combinat amb un 0% en impostos sobre el patrimoni i successions — creant un entorn d'alt rendiment per a la reinversió de capital i la preservació del patrimoni a llarg termini.",
+          },
+          {
+            label: "Estabilitat",
+            title: "Estatus sobirà de refugi segur",
+            body:
+              "Amb 700 anys de neutralitat política i una perspectiva «Estable» de les principals agències de qualificació, el Principat ofereix una jurisdicció segura per mitigar el risc davant la volatilitat geopolítica i econòmica global.",
+          },
+          {
+            label: "Escassetat",
+            title: "Revaloració immobiliària natural",
+            body:
+              "Amb només un 4% del sòl edificable, la restricció natural de l'oferta assegura el creixement del valor dels actius a llarg termini. Aquesta escassetat, unida a una demanda global creixent, genera una tesi d'inversió d'alta convicció.",
+          },
+          {
+            label: "Connectivitat",
+            title: "Integració europea estratègica",
+            body:
+              "Andorra avança en el seu Acord d'Associació amb la UE, oferint als inversors un escenari únic: plena autonomia fiscal sobirana amb accés operatiu als principals mercats europeus.",
+          },
+        ],
+      },
+      whatWeOffer: {
+        eyebrow: "Què oferim",
+        title: "Tres maneres d'invertir a Andorra",
+        introBefore:
+          "Trieu entre una renda contractual previsible o la participació activa en un projecte específic de desenvolupament andorrà. Les rendibilitats es calibren per projecte i es comparteixen durant la trucada. Consulteu les estructures a la nostra ",
+        introLinkLabel: "pàgina d'Inversió",
+        introAfter: " per a una visió completa.",
+        badgePopular: "Més popular",
+        requestCta: "Sol·licitar videotrucada",
+        ctaMore: "Més informació sobre inversió",
+        returnLabel: "Rendibilitat principal",
+        returnSub: "La rendibilitat varia segons el projecte · es comparteix a la trucada",
+        debt: {
+          role: "Fons Immobiliari d'Andorra",
+          title: "Deute",
+          subtitle: "Inversió passiva · Risc més baix",
+          desc:
+            "Vostè presta capital al projecte i rep un cupó anual contractual. La seva posició és preferent dins de l'estructura de capital i està garantida per l'immoble subjacent, sense exposició al benefici o pèrdua del projecte.",
+          returnValue: "Cupó anual",
+          features: [
+            "Pagaments contractuals previsibles, sense exposició al rendiment del projecte",
+            "Capital garantit per l'immoble, preferent sobre l'equity en prioritat de pagament",
+            "Totalment passiu, sense participació un cop compromès",
+          ],
+        },
+        debtEquity: {
+          role: "Finançament directe de projecte",
+          title: "Deute + Equity",
+          subtitle: "Inversió activa · Risc equilibrat + Plusvàlua",
+          desc:
+            "Una part del seu capital genera un cupó contractual, mentre que la resta pren una participació en el projecte, obtenint així una renda recurrent durant l'execució i participant en la plusvàlua a la sortida. Vostè participa directament en el progrés del projecte.",
+          returnValue: "Cupó anual + Plusvàlua d'equity",
+          features: [
+            "Renda contractual recurrent sobre la part de deute durant el desenvolupament del projecte",
+            "Repartiment de beneficis d'equity a la sortida sobre la part d'equity",
+            "Participació activa en el projecte que recolza, amb una participació directa en el seu èxit",
+          ],
+        },
+        equityStrip: {
+          role: "Finançament directe de projecte",
+          title: "Equity",
+          subtitle: "Inversió activa · Major potencial de plusvàlua",
+          desc:
+            "Prengui una participació íntegra en un únic projecte i comparteixi plenament el benefici a la sortida, amb el major potencial de rendibilitat de les tres estructures i el termini de tinença típic més llarg. Menys habitual que Deute + Equity, però disponible sota demanda per a inversors còmodes amb l'exposició total al projecte.",
+          cta: "Sol·licitar videotrucada",
+        },
+      },
+      timeline: {
+        eyebrow: "Recorregut",
+        title: "El full de ruta de la inversió",
+        intro:
+          "Un procés d'incorporació optimitzat per guiar-lo des del contacte inicial fins al desplegament actiu del capital.",
+        cta: "Contacta amb l'equip",
+        stepPrefix: "Pas",
+        steps: [
+          {
+            title: "Contacta amb l'equip",
+            body: "Conversa inicial per entendre el seu perfil i el seu interès per Andorra.",
+          },
+          {
+            title: "Trucada de consultoria",
+            body: "Calendari, rendibilitats i traçat de la ruta estratègica.",
+          },
+          {
+            title: "Seleccionar oportunitat",
+            body: "Li presentem oportunitats d'acord amb el seu mandat.",
+          },
+          {
+            title: "KYC i Compliment",
+            body: "Onboarding i verificacions abans del compromís de capital.",
+          },
+          {
+            title: "Desplegament de capital",
+            body: "Es desplega el capital i comença l'execució del projecte.",
+          },
+        ],
+      },
+      gateway: {
+        eyebrow: "Contacta amb l'equip",
+        title: "Comenci el seu recorregut d'inversió a Andorra",
+        intro:
+          "Programi una consulta confidencial amb el nostre equip per explorar oportunitats alineades al Principat.",
+        requestTitle: "Sol·licitar informació addicional per a inversors",
+        requestBody:
+          "Permeti que el nostre equip es posi en contacte amb vostè per analitzar el seu perfil i objectius d'inversió.",
+        contactCta: "Contacta amb l'equip",
+        scheduleCta: "Programar consulta en línia",
+      },
+      featuredDevelopments: {
+        eyebrow: "Desenvolupaments destacats",
+        title: "Vegi les nostres propietats en desenvolupament",
+        intro: "Una arquitectura de proves equilibrada: execució demostrada i momentum visible.",
+        viewLabel: "Veure",
+        valueLabel: "Valor",
+        statusLabel: "Estat",
+        sectorLabel: "Sector",
+        viewAllCta: "Veure tots els projectes",
+      },
+      suggestedReads: {
+        eyebrow: "Lectures suggerides",
+        title: "Continuï explorant el mercat andorrà.",
+        ctaMore: "Veure més articles",
+      },
+      statusLabels: {
+        "Under Construction": "En construcció",
+        "Under development": "En desenvolupament",
+        "Pipeline": "En cartera",
+        "Financing Open": "Finançament obert",
+        "Completed": "Completat",
+      },
+      sectorLabels: {
+        "Luxury Residential": "Residencial de luxe",
       },
     },
     newsletter: {

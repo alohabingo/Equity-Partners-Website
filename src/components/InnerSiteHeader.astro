@@ -739,14 +739,24 @@ const languages = [
     }
 
     .main-nav {
-      position: static;
-      gap: 0.55rem;
+      /* Mobile navigation lives entirely in the slide-in drawer, so the
+         inline nav (links, language selector and Contact us button) is
+         hidden here. */
+      display: none;
+    }
+
+    .logo {
+      /* Nudge the logo slightly inward from the left edge on mobile. */
+      margin-left: 0.6rem;
     }
 
     .menu-toggle {
       display: inline-flex;
       position: relative;
       top: -10px;
+      /* Logo on the left, hamburger pushed to the right. */
+      order: 2;
+      margin-left: auto;
       border: 0;
       box-shadow: none;
       z-index: 250;
@@ -934,6 +944,9 @@ const languages = [
       height: 2rem;
       padding: 0;
       margin-top: 0.35rem;
+      /* Push the close (×) to the far right, leaving the logo on the left. */
+      order: 2;
+      margin-left: auto;
       border: 0;
       background: transparent;
       color: #ffffff;

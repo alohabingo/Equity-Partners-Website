@@ -80,7 +80,7 @@ export const opportunities: Opportunity[] = [
   // ──────────────────────────────────────────────────────────
   {
     slug: "andorra-la-vella-commercial-plaza",
-    name: "Andorra la Vella Commercial Plaza",
+    name: "Project Andorra la Vella",
     tagline:
       "Mixed-use commercial plaza in the capital's financial district, with predictable long-lease income from established tenants.",
     status: "Open for Investment",
@@ -144,6 +144,7 @@ export const opportunities: Opportunity[] = [
       "Currency movements for non-EUR investors",
     ],
     milestones: [
+      { label: "Architect due diligence completed", date: "Q1 2026", done: true },
       { label: "Investor financing open", date: "Q2 2026", done: true },
       { label: "Financing closed & capital deployed", date: "Q4 2026", done: false },
       { label: "Project execution", date: "Q1 2027 onward", done: false },
@@ -168,7 +169,7 @@ export const opportunities: Opportunity[] = [
   // ──────────────────────────────────────────────────────────
   {
     slug: "ordino-lodge-resort",
-    name: "Ordino Lodge Resort",
+    name: "Project Ordino",
     tagline:
       "Boutique 30-key mountain lodge at the gateway to Andorra's only UNESCO biosphere reserve, blending contractual income with equity upside.",
     status: "Open for Investment",
@@ -236,6 +237,7 @@ export const opportunities: Opportunity[] = [
       "Liquidity: investor capital is locked for the full hold period",
     ],
     milestones: [
+      { label: "Architect due diligence completed", date: "Q1 2026", done: true },
       { label: "Investor financing open", date: "Q2 2026", done: true },
       { label: "Financing closed & capital deployed", date: "Q1 2027", done: false },
       { label: "Project execution", date: "Q1 2027 – Q3 2028", done: false },
@@ -261,7 +263,7 @@ export const opportunities: Opportunity[] = [
   // ──────────────────────────────────────────────────────────
   {
     slug: "escaldes-penthouse-collection",
-    name: "Escaldes Penthouse Collection",
+    name: "Project Escaldes",
     tagline:
       "Branded penthouse collection in central Escaldes-Engordany — pure equity play with full project upside on exit. Major institutional ticket size.",
     status: "Waitlist",
@@ -330,6 +332,7 @@ export const opportunities: Opportunity[] = [
       "Liquidity: equity is locked through the full development and sell-down period",
     ],
     milestones: [
+      { label: "Architect due diligence completed", date: "Q2 2026", done: true },
       { label: "Investor financing open", date: "Q1 2027 (expected)", done: false },
       { label: "Financing closed & capital deployed", date: "Q3 2027", done: false },
       { label: "Project execution", date: "Q3 2027 – Q4 2029", done: false },
@@ -355,7 +358,7 @@ export const opportunities: Opportunity[] = [
   // ──────────────────────────────────────────────────────────
   {
     slug: "canillo-wellness-retreat",
-    name: "Canillo Wellness Retreat",
+    name: "Project Canillo",
     tagline:
       "48-key boutique wellness hotel at the Soldeu–El Tarter gateway, with spa, restaurant and freehold real estate upside. Fully funded — closed example.",
     status: "Closed",
@@ -423,6 +426,7 @@ export const opportunities: Opportunity[] = [
       "Liquidity: investor capital is locked for the full hold period",
     ],
     milestones: [
+      { label: "Architect due diligence completed", date: "Q4 2024", done: true },
       { label: "Investor financing open", date: "Q1 2025", done: true },
       { label: "Financing closed & capital deployed", date: "Q3 2025", done: true },
       { label: "Project execution", date: "Q1 2026 – Q3 2027", done: false },
@@ -448,7 +452,7 @@ export const opportunities: Opportunity[] = [
   // ──────────────────────────────────────────────────────────
   {
     slug: "la-massana-alpine-residences",
-    name: "La Massana Alpine Residences",
+    name: "Project La Massana",
     tagline:
       "Boutique 16-unit alpine residential scheme adjacent to the Vallnord–Pal Arinsal ski lift, structured for contractual income plus equity upside on exit.",
     status: "Open for Investment",
@@ -516,6 +520,7 @@ export const opportunities: Opportunity[] = [
       "Liquidity: investor equity is locked for the full hold period",
     ],
     milestones: [
+      { label: "Architect due diligence completed", date: "Q1 2026", done: true },
       { label: "Investor financing open", date: "Q2 2026", done: true },
       { label: "Financing closed & capital deployed", date: "Q1 2027", done: false },
       { label: "Project execution", date: "Q1 2027 – Q1 2028", done: false },

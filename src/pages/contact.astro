@@ -10,6 +10,18 @@ const mapEmbedUrl =
   "https://maps.google.com/maps?q=42.506278,1.522801&t=&z=18&ie=UTF8&iwloc=&output=embed";
 const locale = getLocaleFromUrl(Astro.url);
 const content = getContentTranslations(locale).contact;
+
+// Pre-filled mailto for the "Schedule Your Call" button — opens the
+// investor's default email client with a polite, ready-to-send request.
+const scheduleCallSubject = "Investor inquiry — Video call request";
+const scheduleCallBody = `Hi Equity Partners team,
+
+I'd like to schedule a 30-minute online call to learn more about your current investment opportunities and discuss whether they might suit my profile.
+
+Could you let me know a few times that work for your team?
+
+Thanks,`;
+const scheduleCallMailto = `mailto:info@equitypartners.fund?cc=${encodeURIComponent("bing@belugand.com")}&subject=${encodeURIComponent(scheduleCallSubject)}&body=${encodeURIComponent(scheduleCallBody)}`;
 ---
 
 <html lang={locale}>
@@ -894,8 +906,24 @@ const content = getContentTranslations(locale).contact;
         flex-wrap: wrap;
       }
 
-      a.video-consult-cta {
+      a.video-consult-cta,
+      .video-consult-cta.submit {
         text-decoration: none;
+        padding: 0.95rem 1.6rem;
+        font-size: 0.85rem;
+        min-width: 180px;
+        letter-spacing: 0.16em;
+        border-radius: 0.55rem;
+      }
+
+      /* Larger submit buttons on both contact form panels */
+      #panel-investor .submit,
+      #panel-general .submit {
+        padding: 0.95rem 1.6rem;
+        font-size: 0.85rem;
+        min-width: 180px;
+        letter-spacing: 0.16em;
+        border-radius: 0.55rem;
       }
 
       .video-consult-note {
@@ -1311,7 +1339,7 @@ const content = getContentTranslations(locale).contact;
                   <input class="input" type="text" name="last_name" placeholder={content.form.lastName} required />
                 </div>
                 <input class="input" type="email" name="email" placeholder={content.form.email} required />
-                <textarea class="textarea" name="message" placeholder="Your message…" required style="min-height: 160px;"></textarea>
+                <textarea class="textarea" name="message" placeholder="Your message…" required style="min-height: 110px;"></textarea>
                 <button class="submit" type="submit">Send Message</button>
               </form>
             </div>
@@ -1440,7 +1468,7 @@ const content = getContentTranslations(locale).contact;
               </li>
             </ul>
             <div class="video-consult-cta-row">
-              <a class="submit video-consult-cta" href="#tab-investor">
+              <a class="submit video-consult-cta" href={scheduleCallMailto}>
                 Schedule Your Call
               </a>
               <span class="video-consult-note">30 minutes · Online · Free of charge</span>
@@ -1472,7 +1500,7 @@ const content = getContentTranslations(locale).contact;
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 <span>30 minutes · Tailored to your situation</span>
                 <svg viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2"/><polygon points="22 8 16 12 22 16 22 8"/></svg>
-                <span>Secure video call · No software install required</span>
+                <span>Online call · Join from anywhere</span>
                 <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 <span>No obligation · Pure exploratory conversation</span>
               </div>

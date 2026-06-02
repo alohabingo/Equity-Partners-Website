@@ -13,7 +13,7 @@ export interface Project {
   slug: string;
   name: string;
   tagline: string;
-  status: "Under Construction" | "Pipeline" | "Financing Open" | "Completed";
+  status: "Under Construction" | "Under development" | "Pipeline" | "Financing Open" | "Completed";
   location: string;
   parish: string;
   sector: string;
@@ -101,7 +101,7 @@ export const projects: Project[] = [
     slug: "ordino-heights",
     name: "Ordino Prestige",
     tagline: "A premium residential development in Andorra's most tranquil and sought-after northern parish.",
-    status: "Pipeline",
+    status: "Under development",
     location: "Ordino, Andorra",
     parish: "Ordino",
     sector: "Luxury Residential",
@@ -156,7 +156,7 @@ export const projects: Project[] = [
     slug: "funicamp-ski-residencies",
     name: "Funicamp Ski Residencies",
     tagline: "Luxury ski-in/ski-out residencies at the gateway to Grandvalira, Europe's largest ski domain.",
-    status: "Pipeline",
+    status: "Under development",
     location: "Encamp, Andorra",
     parish: "Encamp",
     sector: "Luxury Residential",
@@ -210,6 +210,7 @@ export function getProjectBySlug(slug: string): Project | undefined {
 
 export const statusColour: Record<string, string> = {
   "Under Construction": "#53b27f",
+  "Under development": "#53b27f",
   "Pipeline": "#f5a623",
   "Financing Open": "#4a90d9",
   "Completed": "#8494a9",

@@ -26,7 +26,7 @@ const t = getUiTranslations(locale);
       <div>
         <h3 class="footer-heading">{t.footer.company}</h3>
         <ul class="footer-list">
-          <li><a class="footer-link" href={withLocalizedHash("/", "#about", locale)}>{t.footer.about}</a></li>
+          <li><a class="footer-link" href={buildLocalizedPath("/about", locale)}>{t.footer.about}</a></li>
           <li><a class="footer-link" href={withLocalizedHash("/about", "#team", locale)}>{t.footer.team}</a></li>
           <li><a class="footer-link" href={buildLocalizedPath("/partners", locale)}>{t.nav.partners}</a></li>
         </ul>
