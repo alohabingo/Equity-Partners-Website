@@ -1634,7 +1634,7 @@ const content = getContentTranslations(locale).home;
         gap: 1rem;
       }
 
-      .project-carousel-dots {
+      .carousel-dots {
         display: none;
         visibility: hidden;
         pointer-events: none;
@@ -2696,8 +2696,9 @@ const content = getContentTranslations(locale).home;
 
         .project-card {
           min-height: 19rem;
-          flex: 0 0 100%;
-          scroll-snap-align: start;
+          flex: 0 0 85%;
+          scroll-snap-align: center;
+          box-shadow: none;
         }
 
         .project-meta {
@@ -2708,7 +2709,8 @@ const content = getContentTranslations(locale).home;
           font-size: 1.05rem;
         }
 
-        .project-carousel-dots {
+        /* ── Generic swipe carousel (Featured Developments / Equity Partners / Work with the best) ── */
+        .carousel-dots {
           margin-top: 0.9rem;
           display: flex;
           visibility: visible;
@@ -2717,19 +2719,69 @@ const content = getContentTranslations(locale).home;
           gap: 0.45rem;
         }
 
-        .project-carousel-dot {
+        .carousel-dot {
           width: 0.5rem;
           height: 0.5rem;
           border-radius: 999px;
-          background: #c7d2e2;
+          background: #cfe6d9;
           border: 0;
           padding: 0;
-          transition: transform 180ms ease, background-color 180ms ease;
+          cursor: pointer;
+          transition: width 240ms ease, background-color 240ms ease;
         }
 
-        .project-carousel-dot.is-active {
-          background: #172235;
-          transform: scale(1.15);
+        .carousel-dot.is-active {
+          width: 1.45rem;
+          background: #53b27f;
+        }
+
+        /* Equity Partners ("What we do") cards → horizontal swipe */
+        .advantage-home.is-spotlight .advantage-home-grid {
+          margin-top: 1.9rem;
+          display: flex;
+          grid-template-columns: none;
+          gap: 0.85rem;
+          width: 100%;
+          margin-left: 0;
+          overflow-x: auto;
+          overscroll-behavior-x: contain;
+          scroll-snap-type: x mandatory;
+          -webkit-overflow-scrolling: touch;
+          padding-bottom: 0.35rem;
+          scrollbar-width: none;
+        }
+
+        .advantage-home.is-spotlight .advantage-home-grid::-webkit-scrollbar {
+          display: none;
+        }
+
+        .advantage-home.is-spotlight .advantage-home-card {
+          flex: 0 0 85%;
+          scroll-snap-align: center;
+          box-shadow: none;
+        }
+
+        /* Work with the best ("Why Equity Partners") points → horizontal swipe */
+        .why-equity-home.is-spotlight .why-equity-home-points {
+          display: flex;
+          gap: 0.85rem;
+          width: 100%;
+          overflow-x: auto;
+          overscroll-behavior-x: contain;
+          scroll-snap-type: x mandatory;
+          -webkit-overflow-scrolling: touch;
+          padding-bottom: 0.35rem;
+          scrollbar-width: none;
+        }
+
+        .why-equity-home.is-spotlight .why-equity-home-points::-webkit-scrollbar {
+          display: none;
+        }
+
+        .why-equity-home.is-spotlight .why-equity-home-point {
+          flex: 0 0 85%;
+          scroll-snap-align: center;
+          box-shadow: none;
         }
 
         .metrics {
@@ -5117,7 +5169,7 @@ const content = getContentTranslations(locale).home;
         <p class="eyebrow">{content.services.eyebrow}</p>
         <h2 class="focus-title">{content.services.title}</h2>
         <p class="focus-intro">{content.services.intro}</p>
-        <div class="advantage-home-grid is-test">
+        <div class="advantage-home-grid is-test" data-carousel="services" data-carousel-item=".advantage-home-card">
           <article class="advantage-home-card">
             <div class="advantage-home-card-head">
               <span class="advantage-home-icon" aria-hidden="true">
@@ -5206,6 +5258,16 @@ const content = getContentTranslations(locale).home;
             </ul>
           </article>
         </div>
+        <div class="carousel-dots" data-carousel-dots="services" aria-label={content.aria.carouselNav}>
+          {content.services.cards.map((card, index) => (
+            <button
+              class:list={["carousel-dot", index === 0 && "is-active"]}
+              type="button"
+              aria-label={`${index + 1}`}
+              data-carousel-dot
+            ></button>
+          ))}
+        </div>
         <a class="cta-link" href={buildLocalizedPath("/about", locale)}>{content.services.cta}</a>
       </div>
     </section>
@@ -5245,7 +5307,7 @@ const content = getContentTranslations(locale).home;
           <div class="why-equity-home-media">
             <img src="/04c copy.jpg" alt={content.aria.whyEquityImage} loading="lazy" />
           </div>
-          <div class="why-equity-home-points">
+          <div class="why-equity-home-points" data-carousel="whyEquity" data-carousel-item=".why-equity-home-point">
             <article class="why-equity-home-point">
               <span class="why-equity-home-point-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
@@ -5277,6 +5339,16 @@ const content = getContentTranslations(locale).home;
               </div>
             </article>
           </div>
+        </div>
+        <div class="carousel-dots" data-carousel-dots="whyEquity" aria-label={content.aria.carouselNav}>
+          {content.whyEquity.points.map((point, index) => (
+            <button
+              class:list={["carousel-dot", index === 0 && "is-active"]}
+              type="button"
+              aria-label={`${index + 1}`}
+              data-carousel-dot
+            ></button>
+          ))}
         </div>
         <a class="cta-link" href={buildLocalizedPath("/about", locale)}>{content.whyEquity.cta}</a>
       </div>
@@ -5497,7 +5569,7 @@ const content = getContentTranslations(locale).home;
           <h2>{content.featuredDevelopments.title}</h2>
           <p class="intro">{content.featuredDevelopments.intro}</p>
         </div>
-        <div class="project-grid">
+        <div class="project-grid" data-carousel="projects" data-carousel-item=".project-card">
           {
             projects.map((project) => (
               <a
@@ -5519,13 +5591,13 @@ const content = getContentTranslations(locale).home;
             ))
           }
         </div>
-        <div class="project-carousel-dots" aria-label={content.aria.carouselNav}>
+        <div class="carousel-dots" data-carousel-dots="projects" aria-label={content.aria.carouselNav}>
           {projects.map((project, index) => (
             <button
-              class:list={["project-carousel-dot", index === 0 && "is-active"]}
+              class:list={["carousel-dot", index === 0 && "is-active"]}
               type="button"
               aria-label={`${content.aria.goToProject} ${index + 1}: ${project.name}`}
-              data-project-dot={index}
+              data-carousel-dot
             ></button>
           ))}
         </div>
@@ -5571,36 +5643,52 @@ const content = getContentTranslations(locale).home;
         root.classList.toggle("is-scrolled", window.scrollY > 60);
       };
 
-      const projectGrid = document.querySelector(".project-grid");
-      const projectDots = Array.from(document.querySelectorAll("[data-project-dot]"));
+      // Generic swipe carousels (Featured Developments, "Equity Partners"
+      // cards and "Work with the best" points). Each scroller is marked with
+      // data-carousel + data-carousel-item, and its dots live in a
+      // data-carousel + data-carousel-item, and its dots live in a
+      // sibling [data-carousel-dots="<key>"] wrapper.
+      document.querySelectorAll("[data-carousel]").forEach((grid) => {
+        const key = grid.getAttribute("data-carousel");
+        const itemSel = grid.getAttribute("data-carousel-item");
+        const dotsWrap = document.querySelector(`[data-carousel-dots="${key}"]`);
+        const dots = dotsWrap ? Array.from(dotsWrap.querySelectorAll("[data-carousel-dot]")) : [];
+        if (!itemSel || dots.length === 0) return;
 
-      if (projectGrid && projectDots.length > 0) {
-        const syncProjectDots = () => {
-          const card = projectGrid.querySelector(".project-card");
-          if (!card) return;
-
-          const cardWidth = card.getBoundingClientRect().width;
-          const gap = parseFloat(getComputedStyle(projectGrid).columnGap || getComputedStyle(projectGrid).gap || "0");
-          const step = cardWidth + gap;
-          const activeIndex = Math.max(0, Math.min(projectDots.length - 1, Math.round(projectGrid.scrollLeft / step)));
-
-          projectDots.forEach((dot, index) => {
+        // Active dot = the card whose centre is closest to the scroller's
+        // centre (robust with centre snap-align and peeking neighbours).
+        const syncDots = () => {
+          const items = Array.from(grid.querySelectorAll(itemSel));
+          if (!items.length) return;
+          const viewportCenter = grid.scrollLeft + grid.clientWidth / 2;
+          let activeIndex = 0;
+          let bestDistance = Infinity;
+          items.forEach((item, index) => {
+            const itemCenter = item.offsetLeft - grid.offsetLeft + item.offsetWidth / 2;
+            const distance = Math.abs(itemCenter - viewportCenter);
+            if (distance < bestDistance) {
+              bestDistance = distance;
+              activeIndex = index;
+            }
+          });
+          dots.forEach((dot, index) => {
             dot.classList.toggle("is-active", index === activeIndex);
           });
         };
 
-        projectDots.forEach((dot, index) => {
+        dots.forEach((dot, index) => {
           dot.addEventListener("click", () => {
-            const card = projectGrid.querySelectorAll(".project-card")[index];
-            if (!card) return;
-            projectGrid.scrollTo({ left: card.offsetLeft - projectGrid.offsetLeft, behavior: "smooth" });
+            const item = grid.querySelectorAll(itemSel)[index];
+            if (!item) return;
+            const target = item.offsetLeft - grid.offsetLeft + item.offsetWidth / 2 - grid.clientWidth / 2;
+            grid.scrollTo({ left: Math.max(0, target), behavior: "smooth" });
           });
         });
 
-        projectGrid.addEventListener("scroll", syncProjectDots, { passive: true });
-        window.addEventListener("resize", syncProjectDots);
-        syncProjectDots();
-      }
+        grid.addEventListener("scroll", syncDots, { passive: true });
+        window.addEventListener("resize", syncDots);
+        syncDots();
+      });
 
       syncHeaderState();
       window.addEventListener("scroll", syncHeaderState, { passive: true });
