@@ -79,7 +79,7 @@ export const opportunities: Opportunity[] = [
   //  1. Andorra la Vella Commercial Plaza — Debt — €2M
   // ──────────────────────────────────────────────────────────
   {
-    slug: "andorra-la-vella-commercial-plaza",
+    slug: "project-andorra-la-vella",
     name: "Project Andorra la Vella",
     tagline:
       "Mixed-use commercial plaza in the capital's financial district, with predictable long-lease income from established tenants.",
@@ -115,7 +115,7 @@ export const opportunities: Opportunity[] = [
     ],
 
     description:
-      "Andorra la Vella Commercial Plaza is a fully operational mixed-use commercial building in the heart of the capital's financial district. Long-lease tenants across retail at street level and four floors of professional office space generate predictable monthly rental income. The debt structure offers senior secured exposure to a stabilised, income-producing asset, with no development or lease-up risk.",
+      "This project in Andorra la Vella is a fully operational mixed-use commercial building in the heart of the capital's financial district. Long-lease tenants across retail at street level and four floors of professional office space generate predictable monthly rental income. The debt structure offers senior secured exposure to a stabilised, income-producing asset, with no development or lease-up risk.",
     investmentThesis:
       "Andorra la Vella's commercial core is a chronically under-supplied market. The capital's banking sector, professional services, and government functions all concentrate within a few hundred metres of this site, anchoring sustained demand for quality office and retail space. With leases already in place and the asset already producing, debt holders are insulated from development, lease-up and tenant risk that earlier-stage projects carry.",
     highlights: [
@@ -168,7 +168,7 @@ export const opportunities: Opportunity[] = [
   //  2. Ordino Lodge Resort — Debt + Equity — €8M
   // ──────────────────────────────────────────────────────────
   {
-    slug: "ordino-lodge-resort",
+    slug: "project-ordino",
     name: "Project Ordino",
     tagline:
       "Boutique 30-key mountain lodge at the gateway to Andorra's only UNESCO biosphere reserve, blending contractual income with equity upside.",
@@ -204,7 +204,7 @@ export const opportunities: Opportunity[] = [
     ],
 
     description:
-      "Ordino Lodge Resort is a 30-key boutique mountain lodge positioned at the gateway to the Ordino-Arcalís ski area and Andorra's only UNESCO biosphere reserve. The concept pairs traditional Pyrenean architecture with a refined hospitality programme — destination restaurant, library bar, treatment suite, and ski-in / ski-out access. The hold structure delivers contractual income during the construction phase and equity upside on exit through either institutional sale or refinance at stabilised operating yield.",
+      "This project in Ordino is a 30-key boutique mountain lodge positioned at the gateway to the Ordino-Arcalís ski area and Andorra's only UNESCO biosphere reserve. The concept pairs traditional Pyrenean architecture with a refined hospitality programme — destination restaurant, library bar, treatment suite, and ski-in / ski-out access. The hold structure delivers contractual income during the construction phase and equity upside on exit through either institutional sale or refinance at stabilised operating yield.",
     investmentThesis:
       "Ordino is Andorra's quietest, most exclusive parish — preferred by international residents seeking discretion and natural surroundings over the busier southern resorts. Hospitality supply at the boutique end remains thin, and the UNESCO designation creates a natural development cap that protects existing operators from over-supply. The combination of construction-phase coupon income and a clear stabilised-yield exit makes this an attractive blended structure.",
     highlights: [
@@ -262,7 +262,7 @@ export const opportunities: Opportunity[] = [
   //  3. Escaldes Penthouse Collection — Equity — €80M
   // ──────────────────────────────────────────────────────────
   {
-    slug: "escaldes-penthouse-collection",
+    slug: "project-escaldes",
     name: "Project Escaldes",
     tagline:
       "Branded penthouse collection in central Escaldes-Engordany — pure equity play with full project upside on exit. Major institutional ticket size.",
@@ -298,7 +298,7 @@ export const opportunities: Opportunity[] = [
     ],
 
     description:
-      "Escaldes Penthouse Collection is a landmark luxury residential development in central Escaldes-Engordany. The project comprises 24 penthouses and 6 sky-villas across two connected towers, each unit benefiting from full-height glazing, private terraces, and views over the river to the Pyrenees. Building amenities include a concierge service, private gym, indoor pool, treatment rooms, and a residents' lounge. The pure equity structure gives investors uncapped upside on project profits at exit.",
+      "This project in Escaldes-Engordany is a landmark luxury residential development in the heart of the parish. The project comprises 24 penthouses and 6 sky-villas across two connected towers, each unit benefiting from full-height glazing, private terraces, and views over the river to the Pyrenees. Building amenities include a concierge service, private gym, indoor pool, treatment rooms, and a residents' lounge. The pure equity structure gives investors uncapped upside on project profits at exit.",
     investmentThesis:
       "The high end of the Andorran residential market — €15k+ per square metre prime — has structurally limited supply and growing international demand. Active-residency permits and the country's tax framework continue to attract ultra-HNW relocations from across Europe. A landmark branded scheme at this scale and quality has no comparable competitor in the current pipeline. The pure equity structure is designed for institutional and family-office investors who want concentrated exposure to the top of the market.",
     highlights: [
@@ -357,7 +357,7 @@ export const opportunities: Opportunity[] = [
   //  4. Canillo Wellness Retreat — Debt + Equity — €15M — CLOSED at 100%
   // ──────────────────────────────────────────────────────────
   {
-    slug: "canillo-wellness-retreat",
+    slug: "project-canillo",
     name: "Project Canillo",
     tagline:
       "48-key boutique wellness hotel at the Soldeu–El Tarter gateway, with spa, restaurant and freehold real estate upside. Fully funded — closed example.",
@@ -393,7 +393,7 @@ export const opportunities: Opportunity[] = [
     ],
 
     description:
-      "Canillo Wellness Retreat is a 48-key branded boutique hotel positioned at the gateway to the Soldeu–El Tarter ski area. The asset blends a destination spa, signature restaurant, and freehold real estate, structured to capture both operating cash flow and capital appreciation on exit. This opportunity is now fully funded and shown here as a closed example — the cohort of investors who participated are now in the construction phase of the hold.",
+      "This project in Canillo is a 48-key branded boutique hotel positioned at the gateway to the Soldeu–El Tarter ski area. The asset blends a destination spa, signature restaurant, and freehold real estate, structured to capture both operating cash flow and capital appreciation on exit. This opportunity is now fully funded and shown here as a closed example — the cohort of investors who participated are now in the construction phase of the hold.",
     investmentThesis:
       "Canillo's positioning at the entry to the largest Andorran ski domain creates structural demand for hospitality keys at the boutique end. The wellness positioning addresses a gap in the local market — sophisticated international travellers seeking a refined alternative to the larger commercial hotels. Supply at this segment is naturally constrained, and the asset benefits from both the development upside and stabilised operating yield post-opening.",
     highlights: [
@@ -451,7 +451,7 @@ export const opportunities: Opportunity[] = [
   //  5. La Massana Alpine Residences — Debt + Equity — €4M
   // ──────────────────────────────────────────────────────────
   {
-    slug: "la-massana-alpine-residences",
+    slug: "project-la-massana",
     name: "Project La Massana",
     tagline:
       "Boutique 16-unit alpine residential scheme adjacent to the Vallnord–Pal Arinsal ski lift, structured for contractual income plus equity upside on exit.",
@@ -487,7 +487,7 @@ export const opportunities: Opportunity[] = [
     ],
 
     description:
-      "La Massana Alpine Residences is a boutique development of 16 high-specification apartments positioned within walking distance of the Pal Arinsal gondola. The design pairs traditional Andorran stone and timber façades with a contemporary interior programme — oversized glazing, double-aspect living spaces, and a shared wellness suite with spa, sauna and gym. Apartments range from two to four bedrooms and are designed to appeal to the growing segment of international residents relocating to Andorra on active residency permits.",
+      "This project in La Massana is a boutique development of 16 high-specification apartments positioned within walking distance of the Pal Arinsal gondola. The design pairs traditional Andorran stone and timber façades with a contemporary interior programme — oversized glazing, double-aspect living spaces, and a shared wellness suite with spa, sauna and gym. Apartments range from two to four bedrooms and are designed to appeal to the growing segment of international residents relocating to Andorra on active residency permits.",
     investmentThesis:
       "La Massana has seen sustained growth in prime residential values as demand from international residents continues to outpace new supply. With only 4% of Andorran land buildable, ski-adjacent parcels at this scale rarely come to market. The land is already acquired at an attractive basis, planning permission is granted, and presales interest is strong — de-risking the project well ahead of construction start. Investors benefit from a contractual coupon through the build phase and share in upside on exit through unit sales.",
     highlights: [

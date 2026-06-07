@@ -2,6 +2,7 @@
 import InnerSiteHeader from "../../components/InnerSiteHeader.astro";
 import NewsletterSignup from "../../components/NewsletterSignup.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
+import SEO from "../../components/SEO.astro";
 import { blogPosts } from "../../data/blogPosts";
 import { buildLocalizedPath, getLocaleFromUrl } from "../../lib/i18n";
 import { getContentTranslations } from "../../i18n/content";
@@ -69,13 +70,54 @@ const suggestedPosts = blogPosts
   .sort((a, b) => b.score - a.score || a.entry.title.localeCompare(b.entry.title))
   .slice(0, 3)
   .map(({ entry }) => entry);
+
+const siteUrl = (Astro.site?.toString() ?? "https://equitypartners.fund/").replace(/\/$/, "");
+const monthMap: Record<string, string> = {
+  Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06",
+  Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12",
+};
+const dateMatch = post.date.match(/([A-Za-z]{3})\s+(\d{4})/);
+const datePublished =
+  dateMatch && monthMap[dateMatch[1]] ? `${dateMatch[2]}-${monthMap[dateMatch[1]]}` : undefined;
+
+const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: post.title,
+  description: post.excerpt,
+  image: post.image,
+  ...(datePublished ? { datePublished } : {}),
+  author: { "@type": "Organization", name: "Equity Partners" },
+  publisher: {
+    "@type": "Organization",
+    name: "Equity Partners",
+    logo: {
+      "@type": "ImageObject",
+      url: `${siteUrl}/images/branding/equity-partners-logo-dark.png`,
+    },
+  },
+  mainEntityOfPage: siteUrl + buildLocalizedPath(`/blog/${post.slug}`, locale),
+};
 ---
 
 <html lang={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
-    <title>{post.title} | Equity Partners</title>
+    <SEO
+      title={`${post.title} | Equity Partners`}
+      description={post.excerpt}
+      locale={locale}
+      path={Astro.url.pathname}
+      image={post.image}
+      type="article"
+      breadcrumb={[
+        { name: "Home", path: "/" },
+        { name: "Blog", path: "/blog" },
+        { name: post.title, path: `/blog/${post.slug}` },
+      ]}
+      jsonLd={articleSchema}
+    />
     <link rel="icon" type="image/png" href="/EP%20favicon.png" />
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");

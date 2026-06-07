@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://equitypartners.fund/sitemap-index.xml

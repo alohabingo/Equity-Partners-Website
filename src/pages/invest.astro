@@ -2,6 +2,7 @@
 import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import NewsletterSignup from "../components/NewsletterSignup.astro";
 import SiteFooter from "../components/SiteFooter.astro";
+import SEO from "../components/SEO.astro";
 import { buildLocalizedPath, getLocaleFromUrl } from "../lib/i18n";
 
 const locale = getLocaleFromUrl(Astro.url) ?? "en";
@@ -14,10 +15,11 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Invest with Equity Partners | Andorran Real Estate</title>
-    <meta
-      name="description"
-      content="Three ways to invest in Andorran real estate with Equity Partners: Debt for contractual annual income, Equity for full project upside, or the most popular Debt + Equity structure blending both. Returns are set per project — see live figures on our Opportunities page."
+    <SEO
+      title="Invest with Equity Partners | Andorran Real Estate"
+      description="Three ways to invest in Andorran real estate with Equity Partners: Debt for contractual annual income, Equity for full project upside, or the most popular Debt + Equity structure blending both. Returns are set per project — see live figures on our Opportunities page."
+      locale={locale}
+      path={Astro.url.pathname}
     />
     <link rel="icon" type="image/png" href="/EP favicon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -943,7 +945,7 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
     </section>
 
     <!-- ───────────  Three structure cards  ─────────── -->
-    <section class="invest-section is-light">
+    <section class="invest-section is-light" id="structures">
       <div class="container">
         <div class="invest-section-heading" data-animate>
           <p class="eyebrow">Investment structures</p>

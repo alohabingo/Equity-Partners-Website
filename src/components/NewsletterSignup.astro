@@ -197,7 +197,8 @@ const newsletterFormName = "newsletter-signup";
 
   .newsletter-input {
     flex: none;
-    width: min(280px, 100%);
+    /* Bigger on desktop, scaling down smoothly as the viewport narrows. */
+    width: clamp(280px, 24vw, 340px);
     max-width: 100%;
     min-width: 0;
     height: 44px;
@@ -210,11 +211,12 @@ const newsletterFormName = "newsletter-signup";
     outline: none;
     font-family: inherit;
     box-sizing: border-box;
+    transition: border-color 180ms ease, box-shadow 180ms ease;
   }
 
   .newsletter-input:focus {
-    border-color: #9eb0ca;
-    box-shadow: 0 0 0 2px rgba(130, 147, 174, 0.18);
+    border-color: #53b27f;
+    box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.22);
   }
 
   .newsletter-button {

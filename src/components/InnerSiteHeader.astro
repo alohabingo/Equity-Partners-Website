@@ -404,7 +404,7 @@ const languages = [
     top: -12px;
     filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))
       drop-shadow(0 0 10px rgba(8, 14, 23, 0.35));
-    transition: top 320ms ease, margin-top 320ms ease;
+    transition: top 320ms ease, margin-top 320ms ease, opacity 320ms ease;
   }
 
   .main-nav {
@@ -812,18 +812,21 @@ const languages = [
       display: block;
       position: fixed;
       inset: 0;
-      background: rgba(8, 14, 23, 0.7);
+      background: rgba(8, 14, 23, 0.55);
+      backdrop-filter: blur(12px) saturate(115%);
+      -webkit-backdrop-filter: blur(12px) saturate(115%);
       opacity: 0;
       pointer-events: none;
       transition: opacity 240ms ease;
       z-index: 230;
     }
 
+    /* Side drawer that slides in from the right. */
     .mobile-drawer {
       display: flex;
       position: fixed;
       top: 0;
-      left: 0;
+      right: 0;
       width: min(75vw, 26rem);
       max-width: 100%;
       height: 100vh;
@@ -831,10 +834,10 @@ const languages = [
       gap: 1.8rem;
       padding: 1.2rem 1.15rem 1.5rem;
       background: #ffffff;
-      border-top-right-radius: 1rem;
-      border-bottom-right-radius: 1rem;
+      border-top-left-radius: 1rem;
+      border-bottom-left-radius: 1rem;
       box-shadow: 0 22px 46px rgba(11, 18, 29, 0.18);
-      transform: translateX(-100%);
+      transform: translateX(100%);
       transition: transform 260ms ease;
       z-index: 240;
     }
@@ -848,7 +851,7 @@ const languages = [
       padding: 1.6rem 1.15rem 1.2rem;
       background: #172235;
       color: #ffffff;
-      border-top-right-radius: 1rem;
+      border-top-left-radius: 1rem;
     }
 
     .mobile-drawer-brand {
@@ -1026,6 +1029,12 @@ const languages = [
     .site-header.is-menu-open .menu-toggle {
       opacity: 0;
       pointer-events: none;
+    }
+
+    /* Fade out the header logo while the drawer is open so only the
+       in-drawer logo shows; it fades back in when the menu closes. */
+    .site-header.is-menu-open .logo {
+      opacity: 0;
     }
 
     .site-header.is-menu-open .menu-backdrop {

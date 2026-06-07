@@ -4,7 +4,11 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   site: 'https://equitypartners.fund',
-  integrations: [sitemap()],
+  integrations: [
+    sitemap({
+      filter: (page) => !/\/test\/?$/.test(page),
+    }),
+  ],
   vite: {
     plugins: [tailwindcss()],
     cacheDir: '/tmp/vite-ep-cache'

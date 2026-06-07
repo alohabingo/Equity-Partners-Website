@@ -1,0 +1,138 @@
+---
+import {
+  buildLocalizedPath,
+  supportedLocales,
+  defaultLocale,
+  type Locale,
+} from "../lib/i18n";
+
+interface Crumb {
+  name: string;
+  path: string;
+}
+
+interface Props {
+  title: string;
+  description: string;
+  locale: Locale;
+  /** The current pathname, e.g. Astro.url.pathname */
+  path: string;
+  /** OG/Twitter share image (absolute URL or site-relative path) */
+  image?: string;
+  /** og:type — "website" for most pages, "article" for blog posts */
+  type?: string;
+  /** Emit WebSite schema (homepage only) */
+  isHome?: boolean;
+  /** Breadcrumb trail → BreadcrumbList schema. Paths are language-neutral. */
+  breadcrumb?: Crumb[];
+  /** Extra JSON-LD object(s) to emit (e.g. BlogPosting) */
+  jsonLd?: Record<string, any> | Record<string, any>[];
+}
+
+const {
+  title,
+  description,
+  locale,
+  path,
+  image = "/og-default.jpg",
+  type = "website",
+  isHome = false,
+  breadcrumb,
+  jsonLd,
+} = Astro.props;
+
+const siteUrl = (Astro.site?.toString() ?? "https://equitypartners.fund/").replace(/\/$/, "");
+
+// Strip any locale prefix to get the language-neutral base path,
+// then rebuild canonical + alternate URLs per locale.
+const basePath = path.replace(/^\/(es|ca)(?=\/|$)/, "") || "/";
+const canonical = siteUrl + buildLocalizedPath(basePath, locale);
+const ogImage = image.startsWith("http") ? image : siteUrl + image;
+
+const ogLocale: Record<Locale, string> = {
+  en: "en_US",
+  es: "es_ES",
+  ca: "ca_ES",
+};
+
+// ── Structured data (JSON-LD) ──
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Equity Partners",
+  alternateName: "Equity Partners — Andorra Property Group",
+  url: siteUrl,
+  logo: `${siteUrl}/images/branding/equity-partners-logo-dark.png`,
+  image: `${siteUrl}/og-default.jpg`,
+  description:
+    "Andorra-based real estate investment group giving international investors institutional-grade access to the Principality's high-barrier property market.",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Carrer Prat de la Creu 59-65",
+    postalCode: "AD500",
+    addressLocality: "Andorra la Vella",
+    addressCountry: "AD",
+  },
+  areaServed: { "@type": "Country", name: "Andorra" },
+  sameAs: ["https://www.linkedin.com/company/equity-partners-andorra"],
+};
+
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Equity Partners",
+  url: siteUrl,
+  inLanguage: [...supportedLocales],
+  publisher: { "@type": "Organization", name: "Equity Partners" },
+};
+
+const breadcrumbSchema =
+  breadcrumb && breadcrumb.length
+    ? {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: breadcrumb.map((b, i) => ({
+          "@type": "ListItem",
+          position: i + 1,
+          name: b.name,
+          item: siteUrl + buildLocalizedPath(b.path, locale),
+        })),
+      }
+    : null;
+
+const schemas: Record<string, any>[] = [organizationSchema];
+if (isHome) schemas.push(websiteSchema);
+if (breadcrumbSchema) schemas.push(breadcrumbSchema);
+if (jsonLd) schemas.push(...(Array.isArray(jsonLd) ? jsonLd : [jsonLd]));
+---
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+
+{
+  supportedLocales.map((alt) => (
+    <link rel="alternate" hreflang={alt} href={siteUrl + buildLocalizedPath(basePath, alt as Locale)} />
+  ))
+}
+<link rel="alternate" hreflang="x-default" href={siteUrl + buildLocalizedPath(basePath, defaultLocale)} />
+
+<!-- Open Graph -->
+<meta property="og:type" content={type} />
+<meta property="og:site_name" content="Equity Partners" />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:locale" content={ogLocale[locale]} />
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />
+
+<!-- Structured data -->
+{schemas.map((s) => (
+  <script type="application/ld+json" set:html={JSON.stringify(s)} />
+))}

@@ -1,6 +1,7 @@
 ---
 import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
+import SEO from "../components/SEO.astro";
 import { getLocaleFromUrl } from "../lib/i18n";
 import { buildLocalizedPath } from "../lib/i18n";
 import { getContentTranslations } from "../i18n/content";
@@ -13,7 +14,12 @@ const content = getContentTranslations(locale).privacy;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
-    <title>{getPageTitle(locale, "privacyPolicy")}</title>
+    <SEO
+      title={getPageTitle(locale, "privacyPolicy")}
+      description="How Equity Partners collects, uses and protects your personal data."
+      locale={locale}
+      path={Astro.url.pathname}
+    />
     <link rel="icon" type="image/png" href="/EP%20favicon.png" />
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");

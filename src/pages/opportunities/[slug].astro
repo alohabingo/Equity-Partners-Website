@@ -2,6 +2,7 @@
 import InnerSiteHeader from "../../components/InnerSiteHeader.astro";
 import NewsletterSignup from "../../components/NewsletterSignup.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
+import SEO from "../../components/SEO.astro";
 import { buildLocalizedPath, getLocaleFromUrl } from "../../lib/i18n";
 import {
   opportunities,
@@ -29,8 +30,17 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{opp.name} | Investment Opportunity | Equity Partners</title>
-    <meta name="description" content={opp.tagline} />
+    <SEO
+      title={`${opp.name} | Investment Opportunity | Equity Partners`}
+      description={opp.tagline}
+      locale={locale}
+      path={Astro.url.pathname}
+      breadcrumb={[
+        { name: "Home", path: "/" },
+        { name: "Opportunities", path: "/opportunities" },
+        { name: opp.name, path: `/opportunities/${opp.slug}` },
+      ]}
+    />
     <link rel="icon" type="image/png" href="/EP favicon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -965,16 +975,16 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
       <div class="container">
         <div class="opp-metrics-inner">
           <div class="opp-metric-item">
-            <span class="opp-metric-value is-green">{opp.minInvestment}</span>
-            <span class="opp-metric-label">Min investment</span>
-          </div>
-          <div class="opp-metric-item">
-            <span class="opp-metric-value">{opp.equityRaise}</span>
+            <span class="opp-metric-value is-green">{opp.equityRaise}</span>
             <span class="opp-metric-label">Equity raise</span>
           </div>
           <div class="opp-metric-item">
             <span class="opp-metric-value">{opp.totalProjectValue}</span>
             <span class="opp-metric-label">Project value</span>
+          </div>
+          <div class="opp-metric-item">
+            <span class="opp-metric-value">{opp.sqm}</span>
+            <span class="opp-metric-label">Buildable area</span>
           </div>
           <div class="opp-metric-item">
             <span class="opp-metric-value">{opp.holdPeriod}</span>
@@ -1063,7 +1073,7 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
               </div>
             </div>
 
-            <!-- Capital stack -->
+            {/* Capital structure / Capital stack — hidden for now (easy to restore).
             <div class="opp-section" data-animate>
               <p class="opp-section-label">Capital structure</p>
               <h2>Capital stack</h2>
@@ -1085,6 +1095,7 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
                 ))}
               </div>
             </div>
+            */}
 
             <!-- Milestones -->
             <div class="opp-section" data-animate>
@@ -1144,7 +1155,7 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
               </div>
               <div class="opp-sidebar-card-body">
                 <div class="opp-detail-row">
-                  <span class="opp-detail-key">Investment structure</span>
+                  <span class="opp-detail-key">Suggested investment type</span>
                   <span class="opp-detail-val is-green">{opp.structure}</span>
                 </div>
                 <div class="opp-detail-row">
@@ -1157,7 +1168,8 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
                 </div>
               </div>
 
-              <!-- Funding progress -->
+              {/* Funding progress — hidden for now. Keep this block to
+                  easily restore it in the future.
               <div class="opp-sidebar-progress">
                 <div class="opp-sidebar-progress-top">
                   <span>Funding progress</span>
@@ -1173,6 +1185,7 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
                   {opp.amountCommitted} · Closes {opp.fundingDeadline}
                 </p>
               </div>
+              */}
             </div>
 
             <!-- Capital raise card -->
@@ -1189,10 +1202,12 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
                   <span class="opp-detail-key">Equity raise</span>
                   <span class="opp-detail-val">{opp.equityRaise}</span>
                 </div>
+                {/* Committed row — hidden for now (easy to restore).
                 <div class="opp-detail-row">
                   <span class="opp-detail-key">Committed</span>
                   <span class="opp-detail-val is-small">{opp.amountCommitted}</span>
                 </div>
+                */}
                 <div class="opp-detail-row">
                   <span class="opp-detail-key">Min. investment</span>
                   <span class="opp-detail-val">{opp.minInvestment}</span>

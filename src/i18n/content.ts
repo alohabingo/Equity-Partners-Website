@@ -461,7 +461,7 @@ export const contentTranslations: Record<
         requestBody:
           "Let our team reach out to you to analyze your investment profile and investment objectives.",
         contactCta: "Contact our Team",
-        scheduleCta: "Schedule online consultation",
+        scheduleCta: "1-1 strategy call",
       },
       featuredDevelopments: {
         eyebrow: "Featured Developments",
@@ -1040,7 +1040,7 @@ export const contentTranslations: Record<
         requestBody:
           "Permita que nuestro equipo se ponga en contacto con usted para analizar su perfil y objetivos de inversión.",
         contactCta: "Contactar con el equipo",
-        scheduleCta: "Programar consulta online",
+        scheduleCta: "Llamada estratégica 1-1",
       },
       featuredDevelopments: {
         eyebrow: "Desarrollos destacados",
@@ -1519,7 +1519,7 @@ export const contentTranslations: Record<
         requestBody:
           "Permeti que el nostre equip es posi en contacte amb vostè per analitzar el seu perfil i objectius d'inversió.",
         contactCta: "Contacta amb l'equip",
-        scheduleCta: "Programar consulta en línia",
+        scheduleCta: "Trucada estratègica 1-1",
       },
       featuredDevelopments: {
         eyebrow: "Desenvolupaments destacats",

@@ -2,6 +2,7 @@
 import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import NewsletterSignup from "../components/NewsletterSignup.astro";
 import SiteFooter from "../components/SiteFooter.astro";
+import SEO from "../components/SEO.astro";
 import { buildLocalizedPath, getLocaleFromUrl } from "../lib/i18n";
 import { projects, statusColour } from "../data/projects";
 
@@ -24,8 +25,12 @@ const totalAreaUnderDevelopmentLabel =
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Projects | Equity Partners</title>
-    <meta name="description" content="Explore Equity Partners' current real estate development projects in Andorra. View investment details, returns, timelines and project status." />
+    <SEO
+      title="Projects | Equity Partners"
+      description="Explore Equity Partners' current real estate development projects in Andorra. View investment details, returns, timelines and project status."
+      locale={locale}
+      path={Astro.url.pathname}
+    />
     <link rel="icon" type="image/png" href="/EP favicon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

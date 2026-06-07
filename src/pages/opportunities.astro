@@ -2,6 +2,7 @@
 import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import NewsletterSignup from "../components/NewsletterSignup.astro";
 import SiteFooter from "../components/SiteFooter.astro";
+import SEO from "../components/SEO.astro";
 import { buildLocalizedPath, getLocaleFromUrl } from "../lib/i18n";
 import {
   opportunities,
@@ -17,10 +18,11 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Investment Opportunities | Equity Partners</title>
-    <meta
-      name="description"
-      content="Live investment opportunities in Andorran real estate curated by Equity Partners. Review deal metrics, target returns, risk profile and timeline for every open raise."
+    <SEO
+      title="Investment Opportunities | Equity Partners"
+      description="Live investment opportunities in Andorran real estate curated by Equity Partners. Review deal metrics, target returns, risk profile and timeline for every open raise."
+      locale={locale}
+      path={Astro.url.pathname}
     />
     <link rel="icon" type="image/png" href="/EP favicon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -582,12 +584,12 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
       }
 
       .info-eyebrow {
-        font-size: 0.62rem;
+        font-size: 0.8rem;
         font-weight: 700;
         letter-spacing: 0.2em;
         text-transform: uppercase;
         color: #7bd6a2;
-        margin: 0 0 0.55rem;
+        margin: 0 0 0.6rem;
       }
 
       .info-question {
@@ -614,14 +616,20 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
         background: rgba(255, 255, 255, 0.04);
         border: 1px solid rgba(255, 255, 255, 0.10);
         border-radius: 0.7rem;
-        padding: 0.75rem 0.9rem;
-        margin-bottom: 0.55rem;
-        transition: background 220ms ease, border-color 220ms ease;
+        padding: 0.9rem;
+        margin-bottom: 0.85rem;
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
+        transition: background 220ms ease, border-color 220ms ease,
+          transform 220ms ease, box-shadow 220ms ease;
       }
 
       .info-option:hover {
         background: rgba(83, 178, 127, 0.08);
         border-color: rgba(83, 178, 127, 0.35);
+        transform: translateY(-3px);
+        box-shadow: 0 12px 24px rgba(5, 12, 20, 0.28);
       }
 
       .info-option-icon {
@@ -687,7 +695,10 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
         letter-spacing: 0.16em;
         text-transform: uppercase;
         transition: background 220ms ease, transform 220ms ease;
-        margin-bottom: 0.9rem;
+        /* Push to the bottom of the card so it lines up with the
+           "Request video call" CTA on the adjacent opportunity cards. */
+        margin-top: auto;
+        margin-bottom: 0;
       }
 
       .info-cta:hover {
@@ -1334,7 +1345,7 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
               <h3 class="info-question">Which structure fits your mandate?</h3>
               <p class="info-body">Every opportunity is open to Debt, Debt + Equity or Equity. The structure shown on each card is the most commonly chosen for that deal, but the final call is always yours, tailored to your mandate.</p>
 
-              <div class="info-option">
+              <a class="info-option" href={`${buildLocalizedPath("/invest", locale)}#structures`}>
                 <span class="info-option-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                 </span>
@@ -1342,9 +1353,9 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
                   <p class="info-option-name">Debt</p>
                   <p class="info-option-hint">For predictable income, lowest risk. Annual coupon, no project upside.</p>
                 </div>
-              </div>
+              </a>
 
-              <div class="info-option">
+              <a class="info-option" href={`${buildLocalizedPath("/invest", locale)}#structures`}>
                 <span class="info-option-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><path d="M3 17 9 11l4 4 8-8"/><path d="M14 7h7v7"/></svg>
                 </span>
@@ -1352,9 +1363,9 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
                   <p class="info-option-name">Debt + Equity</p>
                   <p class="info-option-hint">Most chosen. Recurring coupon plus equity profit share at exit.</p>
                 </div>
-              </div>
+              </a>
 
-              <div class="info-option">
+              <a class="info-option" href={`${buildLocalizedPath("/invest", locale)}#structures`}>
                 <span class="info-option-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><line x1="6" y1="20" x2="6" y2="16"/><line x1="12" y1="20" x2="12" y2="11"/><line x1="18" y1="20" x2="18" y2="6"/></svg>
                 </span>
@@ -1362,7 +1373,7 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
                   <p class="info-option-name">Equity</p>
                   <p class="info-option-hint">For highest return potential. Full profit share at exit, longest hold.</p>
                 </div>
-              </div>
+              </a>
 
               <p class="info-note">Returns, hold periods, and ticket sizes are calibrated to the structure you choose.</p>
 

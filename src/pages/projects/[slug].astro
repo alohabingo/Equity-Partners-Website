@@ -2,6 +2,7 @@
 import InnerSiteHeader from "../../components/InnerSiteHeader.astro";
 import NewsletterSignup from "../../components/NewsletterSignup.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
+import SEO from "../../components/SEO.astro";
 import { buildLocalizedPath, getLocaleFromUrl } from "../../lib/i18n";
 import { projects, statusColour } from "../../data/projects";
 import type { GetStaticPaths } from "astro";
@@ -34,8 +35,17 @@ const partnerSlug = (name: string): string =>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{project.name} | Equity Partners</title>
-    <meta name="description" content={project.tagline} />
+    <SEO
+      title={`${project.name} | Equity Partners`}
+      description={project.tagline}
+      locale={locale}
+      path={Astro.url.pathname}
+      breadcrumb={[
+        { name: "Home", path: "/" },
+        { name: "Projects", path: "/projects" },
+        { name: project.name, path: `/projects/${project.slug}` },
+      ]}
+    />
     <link rel="icon" type="image/png" href="/EP favicon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
