@@ -1112,31 +1112,42 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
         z-index: 1;
       }
 
-      .opps-cta-grid {
-        display: grid;
-        grid-template-columns: 1.1fr 0.9fr;
-        gap: 2rem;
-        align-items: center;
+      .opps-cta-header {
+        margin-bottom: 1.4rem;
       }
 
       .opps-cta-eyebrow {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.7rem;
         margin: 0;
-        color: #7bd6a2;
-        font-size: 0.72rem;
+        color: #6ec595;
+        font-size: 0.74rem;
         font-weight: 600;
-        letter-spacing: 0.22em;
+        letter-spacing: 0.28em;
         text-transform: uppercase;
       }
 
       .opps-cta-eyebrow::before {
         content: "";
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: var(--green);
+        width: 32px;
+        height: 1px;
+        display: inline-block;
+        background: linear-gradient(90deg, transparent, var(--green));
+      }
+
+      .opps-cta-card {
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 14px;
+        padding: 2rem;
+      }
+
+      .opps-cta-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 2rem;
+        align-items: center;
       }
 
       .opps-cta-headline-row {
@@ -1187,8 +1198,8 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
       }
 
       .opps-cta-panel {
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 0.9rem;
         padding: 1.4rem 1.5rem;
       }
@@ -1524,39 +1535,44 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
     <!-- CTA Banner -->
     <section class="opps-cta-banner">
       <div class="container">
-        <div class="opps-cta-grid" data-animate>
-          <div class="opps-cta-main">
-            <p class="opps-cta-eyebrow">Live opportunities</p>
-            <div class="opps-cta-headline-row">
-              <span class="opps-cta-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-              </span>
-              <h2>Ready to see live opportunities?</h2>
+        <div class="opps-cta-header" data-animate>
+          <p class="opps-cta-eyebrow">Live opportunities</p>
+        </div>
+
+        <div class="opps-cta-card" data-animate>
+          <div class="opps-cta-grid">
+            <div class="opps-cta-main">
+              <div class="opps-cta-headline-row">
+                <span class="opps-cta-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                </span>
+                <h2>Ready to see live opportunities?</h2>
+              </div>
+              <p class="opps-cta-text">
+                The opportunities on this page are illustrative. We share real, current deals on a private video call.
+              </p>
+              <a class="opps-cta-btn" href={`${buildLocalizedPath("/contact", locale)}#video-call`}>
+                Request a video call
+                <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </a>
             </div>
-            <p class="opps-cta-text">
-              The opportunities on this page are illustrative. We share real, current deals on a private video call.
-            </p>
-            <a class="opps-cta-btn" href={`${buildLocalizedPath("/contact", locale)}#video-call`}>
-              Request a video call
-              <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-            </a>
-          </div>
-          <div class="opps-cta-panel">
-            <p class="opps-cta-panel-title">On the call, we'll</p>
-            <ul class="opps-cta-list">
-              <li>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
-                <span>Review your budget &amp; mandate</span>
-              </li>
-              <li>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
-                <span>Walk you through current deals</span>
-              </li>
-              <li>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
-                <span>Match you to the right structure</span>
-              </li>
-            </ul>
+            <div class="opps-cta-panel">
+              <p class="opps-cta-panel-title">On the call, we'll</p>
+              <ul class="opps-cta-list">
+                <li>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
+                  <span>Review your budget &amp; mandate</span>
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
+                  <span>Walk you through current deals</span>
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
+                  <span>Match you to the right structure</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
