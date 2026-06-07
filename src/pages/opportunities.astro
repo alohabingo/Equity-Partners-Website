@@ -297,6 +297,7 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 1.4rem;
+        align-items: start;
       }
 
       /* ── Opportunity Card ── */
@@ -409,7 +410,7 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
         font-weight: 600;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--muted);
+        color: var(--green-dark);
         margin: 0 0 0.5rem;
       }
 
@@ -573,7 +574,8 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
         color: #f3f7fc;
         display: flex;
         flex-direction: column;
-        min-height: 460px;
+        /* Match the height of the opportunity cards in the same row. */
+        align-self: stretch;
       }
 
       .opp-card-info-inner {
@@ -1110,65 +1112,139 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
         z-index: 1;
       }
 
-      .opps-cta-inner {
+      .opps-cta-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 2rem;
+        align-items: center;
+      }
+
+      .opps-cta-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+        color: #7bd6a2;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+      }
+
+      .opps-cta-eyebrow::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--green);
+      }
+
+      .opps-cta-headline-row {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 2rem;
-        flex-wrap: wrap;
+        gap: 0.95rem;
+        margin-top: 0.7rem;
       }
 
-      /* Secondary callout inside the bottom CTA banner */
-      .opps-cta-personal {
-        margin-top: 2.4rem;
-        padding-top: 2rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.12);
-        max-width: 38rem;
+      .opps-cta-icon {
+        width: 3rem;
+        height: 3rem;
+        flex-shrink: 0;
+        border-radius: 0.8rem;
+        background: rgba(83, 178, 127, 0.16);
+        border: 1px solid rgba(83, 178, 127, 0.4);
+        color: #7bd6a2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
-      .opps-cta-personal .info-question {
-        margin-bottom: 0.9rem;
+      .opps-cta-icon svg {
+        width: 1.35rem;
+        height: 1.35rem;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
 
-      .opps-cta-copy h2 {
-        font-size: clamp(1.6rem, 3vw, 2.2rem);
-        font-weight: 700;
+      .opps-cta-grid h2 {
+        margin: 0;
         color: #f3f7fc;
+        font-size: clamp(1.4rem, 3vw, 1.7rem);
+        font-weight: 700;
         letter-spacing: -0.012em;
-        margin: 0 0 0.7rem;
         line-height: 1.15;
       }
 
-      .opps-cta-copy h2::after {
-        content: "";
-        display: block;
-        width: 64px;
-        height: 3px;
-        background: linear-gradient(90deg, var(--green), rgba(83, 178, 127, 0));
-        margin: 0.9rem 0 1rem;
-        border-radius: 2px;
-      }
-
-      .opps-cta-copy p {
+      .opps-cta-text {
+        margin: 0.9rem 0 0;
         font-size: 1rem;
         color: rgba(220, 230, 245, 0.72);
-        margin: 0;
         line-height: 1.6;
-        max-width: 540px;
+        max-width: 36rem;
+      }
+
+      .opps-cta-panel {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.9rem;
+        padding: 1.4rem 1.5rem;
+      }
+
+      .opps-cta-panel-title {
+        margin: 0 0 0.9rem;
+        color: #7bd6a2;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .opps-cta-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+      }
+
+      .opps-cta-list li {
+        display: flex;
+        gap: 0.6rem;
+        align-items: flex-start;
+        color: #e7eef7;
+        font-size: 0.95rem;
+        line-height: 1.4;
+      }
+
+      .opps-cta-list svg {
+        width: 1.1rem;
+        height: 1.1rem;
+        flex-shrink: 0;
+        margin-top: 0.05rem;
+        stroke: #7bd6a2;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
 
       .opps-cta-btn {
         display: inline-flex;
         align-items: center;
         gap: 0.55rem;
-        padding: 0.85rem 1.4rem;
-        background: rgba(83, 178, 127, 0.10);
-        border: 1px solid rgba(83, 178, 127, 0.55);
-        color: #f3f7fc;
+        margin-top: 1.4rem;
+        padding: 0.9rem 1.5rem;
+        background: var(--green);
+        border: 1px solid var(--green);
+        color: #ffffff;
         border-radius: 0.55rem;
-        font-size: 0.78rem;
+        font-size: 0.74rem;
         font-weight: 600;
-        letter-spacing: 0.18em;
+        letter-spacing: 0.16em;
         text-transform: uppercase;
         text-decoration: none;
         white-space: nowrap;
@@ -1177,8 +1253,8 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
       }
 
       .opps-cta-btn:hover {
-        background: var(--green);
-        border-color: var(--green);
+        background: #5fc189;
+        border-color: #5fc189;
         color: #ffffff;
         transform: translateY(-2px);
         box-shadow: 0 14px 28px rgba(83, 178, 127, 0.32);
@@ -1216,7 +1292,7 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
         .opps-stat:last-child {
           border-bottom: none;
         }
-        .opps-cta-inner { flex-direction: column; align-items: flex-start; }
+        .opps-cta-grid { grid-template-columns: 1fr; }
       }
 
       @media (max-width: 560px) {
@@ -1311,6 +1387,8 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
                   </div>
                 </div>
 
+                {/* Funding completion bar — hidden for now (illustrative page).
+                    Keep this block to easily restore it in the future.
                 <div class="opp-card-progress">
                   <div class="opp-card-progress-top">
                     <span><strong>{opp.fundingProgress}%</strong> funding complete</span>
@@ -1324,6 +1402,7 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
                   </div>
                   <p class="opp-card-progress-note">Illustrative figures only</p>
                 </div>
+                */}
 
                 <div class="opp-card-ctas">
                   <a class="opp-card-cta" href={buildLocalizedPath(`/opportunities/${opp.slug}`, locale)}>
@@ -1343,7 +1422,7 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
             <div class="opp-card-info-inner">
               <p class="info-eyebrow">Investment structures</p>
               <h3 class="info-question">Which structure fits your mandate?</h3>
-              <p class="info-body">Every opportunity is open to Debt, Debt + Equity or Equity. The structure shown on each card is the most commonly chosen for that deal, but the final call is always yours, tailored to your mandate.</p>
+              <p class="info-body">Every opportunity is open to Debt, Debt + Equity or Equity. The final call is always yours, tailored to your mandate.</p>
 
               <a class="info-option" href={`${buildLocalizedPath("/invest", locale)}#structures`}>
                 <span class="info-option-icon" aria-hidden="true">
@@ -1374,8 +1453,6 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
                   <p class="info-option-hint">For highest return potential. Full profit share at exit, longest hold.</p>
                 </div>
               </a>
-
-              <p class="info-note">Returns, hold periods, and ticket sizes are calibrated to the structure you choose.</p>
 
               <a href={buildLocalizedPath("/invest", locale)} class="info-cta">
                 Read about structures
@@ -1447,33 +1524,40 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
     <!-- CTA Banner -->
     <section class="opps-cta-banner">
       <div class="container">
-        <div class="opps-cta-inner" data-animate>
-          <div class="opps-cta-copy">
-            <h2>View actual live opportunities</h2>
-            <p>
-              Real live opportunities are shared on a video call. We'll review your budget, target return and timeline, and match you to a current deal.
+        <div class="opps-cta-grid" data-animate>
+          <div class="opps-cta-main">
+            <p class="opps-cta-eyebrow">Live opportunities</p>
+            <div class="opps-cta-headline-row">
+              <span class="opps-cta-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+              </span>
+              <h2>Ready to see live opportunities?</h2>
+            </div>
+            <p class="opps-cta-text">
+              The opportunities on this page are illustrative. We share real, current deals on a private video call.
             </p>
-          </div>
-          <a class="opps-cta-btn" href={`${buildLocalizedPath("/contact", locale)}#video-call`}>
-            Request video call
-            <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          </a>
-        </div>
-
-        <div class="opps-cta-personal" data-animate>
-          <h3 class="info-question">Want personalized guidance?</h3>
-          <a href={`${buildLocalizedPath("/contact", locale)}#video-call`} class="info-video-row">
-            <span class="info-video-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-            </span>
-            <span class="info-video-text">
-              Discuss your strategy
-              <small>30-min video call with our team</small>
-            </span>
-            <span class="info-video-arrow" aria-hidden="true">
+            <a class="opps-cta-btn" href={`${buildLocalizedPath("/contact", locale)}#video-call`}>
+              Request a video call
               <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-            </span>
-          </a>
+            </a>
+          </div>
+          <div class="opps-cta-panel">
+            <p class="opps-cta-panel-title">On the call, we'll</p>
+            <ul class="opps-cta-list">
+              <li>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
+                <span>Review your budget &amp; mandate</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
+                <span>Walk you through current deals</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
+                <span>Match you to the right structure</span>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </section>
