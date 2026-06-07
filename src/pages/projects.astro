@@ -479,62 +479,103 @@ const totalAreaUnderDevelopmentLabel =
         z-index: 1;
       }
 
-      .projects-cta-inner {
+      .projects-cta-header {
+        margin-bottom: 1.4rem;
+      }
+
+      .projects-cta-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        margin: 0;
+        color: #6ec595;
+        font-size: 0.74rem;
+        font-weight: 600;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+      }
+
+      .projects-cta-eyebrow::before {
+        content: "";
+        width: 32px;
+        height: 1px;
+        display: inline-block;
+        background: linear-gradient(90deg, transparent, var(--green));
+      }
+
+      .projects-cta-card {
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 14px;
+        padding: 2rem;
+      }
+
+      .projects-cta-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 2rem;
+        align-items: center;
+      }
+
+      .projects-cta-headline-row {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 2rem;
-        flex-wrap: wrap;
+        gap: 0.95rem;
       }
 
-      .projects-cta-copy {
-        flex: 1 1 auto;
-        max-width: 640px;
-      }
-
-      .projects-cta-btn {
+      .projects-cta-icon {
+        width: 3rem;
+        height: 3rem;
         flex-shrink: 0;
-        margin-left: auto;
+        border-radius: 0.8rem;
+        background: rgba(83, 178, 127, 0.16);
+        border: 1px solid rgba(83, 178, 127, 0.4);
+        color: #7bd6a2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
-      .projects-cta-copy h2 {
-        font-size: clamp(1.6rem, 3vw, 2.2rem);
-        font-weight: 700;
+      .projects-cta-icon svg {
+        width: 1.35rem;
+        height: 1.35rem;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .projects-cta-grid h2 {
+        margin: 0;
         color: #f3f7fc;
+        font-size: clamp(1.4rem, 3vw, 1.7rem);
+        font-weight: 700;
         letter-spacing: -0.012em;
-        margin: 0 0 0.7rem;
         line-height: 1.15;
       }
 
-      .projects-cta-copy h2::after {
-        content: "";
-        display: block;
-        width: 64px;
-        height: 3px;
-        background: linear-gradient(90deg, var(--green), rgba(83, 178, 127, 0));
-        margin: 0.9rem 0 1rem;
-        border-radius: 2px;
-      }
-
-      .projects-cta-copy p {
+      .projects-cta-text {
+        margin: 0.9rem 0 0;
         font-size: 1rem;
         color: rgba(220, 230, 245, 0.72);
-        margin: 0;
         line-height: 1.6;
+        max-width: 36rem;
       }
 
       .projects-cta-btn {
         display: inline-flex;
         align-items: center;
         gap: 0.55rem;
-        padding: 0.85rem 1.4rem;
-        background: rgba(83, 178, 127, 0.10);
-        border: 1px solid rgba(83, 178, 127, 0.55);
-        color: #f3f7fc;
+        margin-top: 1.4rem;
+        padding: 0.9rem 1.5rem;
+        background: var(--green);
+        border: 1px solid var(--green);
+        color: #ffffff;
         border-radius: 0.55rem;
-        font-size: 0.78rem;
+        font-size: 0.74rem;
         font-weight: 600;
-        letter-spacing: 0.18em;
+        letter-spacing: 0.16em;
         text-transform: uppercase;
         text-decoration: none;
         white-space: nowrap;
@@ -543,8 +584,8 @@ const totalAreaUnderDevelopmentLabel =
       }
 
       .projects-cta-btn:hover {
-        background: var(--green);
-        border-color: var(--green);
+        background: #5fc189;
+        border-color: #5fc189;
         color: #ffffff;
         transform: translateY(-2px);
         box-shadow: 0 14px 28px rgba(83, 178, 127, 0.32);
@@ -554,6 +595,52 @@ const totalAreaUnderDevelopmentLabel =
         width: 0.85rem;
         height: 0.85rem;
         stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .projects-cta-panel {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 0.9rem;
+        padding: 1.4rem 1.5rem;
+      }
+
+      .projects-cta-panel-title {
+        margin: 0 0 0.9rem;
+        color: #7bd6a2;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .projects-cta-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+      }
+
+      .projects-cta-list li {
+        display: flex;
+        gap: 0.6rem;
+        align-items: flex-start;
+        color: #e7eef7;
+        font-size: 0.95rem;
+        line-height: 1.4;
+      }
+
+      .projects-cta-list svg {
+        width: 1.1rem;
+        height: 1.1rem;
+        flex-shrink: 0;
+        margin-top: 0.05rem;
+        stroke: #7bd6a2;
         fill: none;
         stroke-width: 2;
         stroke-linecap: round;
@@ -581,9 +668,7 @@ const totalAreaUnderDevelopmentLabel =
         .projects-stat:last-child {
           border-bottom: none;
         }
-        .projects-cta-inner { flex-direction: column; align-items: flex-start; }
-        .projects-cta-copy { max-width: none; }
-        .projects-cta-btn { margin-left: 0; }
+        .projects-cta-grid { grid-template-columns: 1fr; }
       }
 
       @media (max-width: 560px) {
@@ -679,15 +764,45 @@ const totalAreaUnderDevelopmentLabel =
     <!-- CTA Banner -->
     <section class="projects-cta-banner">
       <div class="container">
-        <div class="projects-cta-inner" data-animate>
-          <div class="projects-cta-copy">
-            <h2>Interested in purchasing a property?</h2>
-            <p>Property prices in Andorra's most sought-after areas appreciate by an average of 8% per year, making them a strong long-term investment. Speak with our team to learn more about availability, pricing and the purchase process.</p>
+        <div class="projects-cta-header" data-animate>
+          <p class="projects-cta-eyebrow">Property purchase</p>
+        </div>
+
+        <div class="projects-cta-card" data-animate>
+          <div class="projects-cta-grid">
+            <div class="projects-cta-main">
+              <div class="projects-cta-headline-row">
+                <span class="projects-cta-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </span>
+                <h2>Investment by property purchase</h2>
+              </div>
+              <p class="projects-cta-text">
+                Property prices in Andorra's most sought-after areas appreciate around 8% a year — a strong long-term hold. Talk to our team to explore what's available.
+              </p>
+              <a class="projects-cta-btn" href={buildLocalizedPath("/contact", locale)}>
+                Contact our team
+                <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </a>
+            </div>
+            <div class="projects-cta-panel">
+              <p class="projects-cta-panel-title">Our team can help with</p>
+              <ul class="projects-cta-list">
+                <li>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
+                  <span>Current availability &amp; pricing</span>
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
+                  <span>The purchase process &amp; timeline</span>
+                </li>
+                <li>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
+                  <span>Residency &amp; tax considerations</span>
+                </li>
+              </ul>
+            </div>
           </div>
-          <a class="projects-cta-btn" href={buildLocalizedPath("/contact", locale)}>
-            Contact our Team
-            <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          </a>
         </div>
       </div>
     </section>
