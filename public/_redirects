@@ -1,0 +1,19 @@
+# 301 redirects: renamed opportunity slugs (old -> new), all languages
+
+/opportunities/andorra-la-vella-commercial-plaza      /opportunities/project-andorra-la-vella   301
+/opportunities/ordino-lodge-resort                    /opportunities/project-ordino             301
+/opportunities/escaldes-penthouse-collection          /opportunities/project-escaldes           301
+/opportunities/canillo-wellness-retreat               /opportunities/project-canillo            301
+/opportunities/la-massana-alpine-residences           /opportunities/project-la-massana         301
+
+/es/opportunities/andorra-la-vella-commercial-plaza   /es/opportunities/project-andorra-la-vella   301
+/es/opportunities/ordino-lodge-resort                 /es/opportunities/project-ordino             301
+/es/opportunities/escaldes-penthouse-collection       /es/opportunities/project-escaldes           301
+/es/opportunities/canillo-wellness-retreat            /es/opportunities/project-canillo            301
+/es/opportunities/la-massana-alpine-residences        /es/opportunities/project-la-massana         301
+
+/ca/opportunities/andorra-la-vella-commercial-plaza   /ca/opportunities/project-andorra-la-vella   301
+/ca/opportunities/ordino-lodge-resort                 /ca/opportunities/project-ordino             301
+/ca/opportunities/escaldes-penthouse-collection       /ca/opportunities/project-escaldes           301
+/ca/opportunities/canillo-wellness-retreat            /ca/opportunities/project-canillo            301
+/ca/opportunities/la-massana-alpine-residences        /ca/opportunities/project-la-massana         301
