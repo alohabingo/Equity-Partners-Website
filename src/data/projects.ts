@@ -98,7 +98,7 @@ export const projects: Project[] = [
     ],
   },
   {
-    slug: "ordino-heights",
+    slug: "ordino-prestige",
     name: "Ordino Prestige",
     tagline: "A premium residential development in Andorra's most tranquil and sought-after northern parish.",
     status: "Under development",
@@ -117,7 +117,7 @@ export const projects: Project[] = [
     sqm: "6,800 m²",
     parking: "TBC",
     floors: "6 storeys",
-    image: "/ordino%20heights.jpg",
+    image: "/Ordino%20Prestige.jpeg",
     gallery: [
       "/ordino%20heights.jpg",
       "/ordino%20heights%202.webp",
