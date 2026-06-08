@@ -98,7 +98,7 @@ export const projects: Project[] = [
     ],
   },
   {
-    slug: "ordino-prestige",
+    slug: "ordino-heights",
     name: "Ordino Prestige",
     tagline: "A premium residential development in Andorra's most tranquil and sought-after northern parish.",
     status: "Under development",

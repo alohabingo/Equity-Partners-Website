@@ -17,11 +17,3 @@
 /ca/opportunities/escaldes-penthouse-collection       /ca/opportunities/project-escaldes           301
 /ca/opportunities/canillo-wellness-retreat            /ca/opportunities/project-canillo            301
 /ca/opportunities/la-massana-alpine-residences        /ca/opportunities/project-la-massana         301
-
-# Renamed project slug (with and without trailing slash)
-/projects/ordino-heights       /projects/ordino-prestige      301
-/projects/ordino-heights/      /projects/ordino-prestige      301
-/es/projects/ordino-heights    /es/projects/ordino-prestige   301
-/es/projects/ordino-heights/   /es/projects/ordino-prestige   301
-/ca/projects/ordino-heights    /ca/projects/ordino-prestige   301
-/ca/projects/ordino-heights/   /ca/projects/ordino-prestige   301
