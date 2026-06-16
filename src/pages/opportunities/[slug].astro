@@ -11,18 +11,182 @@ import {
 } from "../../data/opportunities";
 import type { GetStaticPaths } from "astro";
 
+// English route. The /es/ and /ca/ routes are thin wrappers
+// (src/pages/{es,ca}/opportunities/[slug].astro) that render this page as a
+// component, passing the localized `opp` from opportunitiesEs/opportunitiesCa.
 export const getStaticPaths: GetStaticPaths = () => {
-  const locales = ["en", "es", "ca"];
-  return opportunities.flatMap((opp) =>
-    locales.map((locale) => ({
-      params: { slug: opp.slug },
-      props: { opp, locale },
-    }))
-  );
+  return opportunities.map((opp) => ({
+    params: { slug: opp.slug },
+    props: { opp },
+  }));
 };
 
-const { opp, locale: propLocale } = Astro.props;
-const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
+const { opp } = Astro.props;
+const locale = getLocaleFromUrl(Astro.url) ?? "en";
+
+const copy = {
+  en: {
+    seoTitleMid: "Investment Opportunity",
+    breadcrumbHome: "Home",
+    breadcrumbOpportunities: "Opportunities",
+    statusFull: {
+      "Open for Investment": "Open for Investment",
+      "Closing Soon": "Closing Soon",
+      "Closed": "Closed",
+      "Waitlist": "Waitlist",
+      "Fully Subscribed": "Fully Subscribed",
+    } as Record<string, string>,
+    structureLabels: {
+      "Debt": "Debt",
+      "Debt + Equity": "Debt + Equity",
+      "Equity": "Equity",
+    } as Record<string, string>,
+    metricEquityRaise: "Equity raise",
+    metricProjectValue: "Project value",
+    metricBuildableArea: "Buildable area",
+    metricHoldPeriod: "Hold period",
+    galleryImageWord: "image",
+    overviewLabel: "The opportunity",
+    overviewTitle: "Asset overview",
+    thesisLabel: "Why invest",
+    thesisTitle: "Investment thesis",
+    highlightsLabel: "Deal strengths",
+    highlightsTitle: "Why this deal",
+    useOfFundsLabel: "Capital deployment",
+    useOfFundsTitle: "Use of funds",
+    milestonesLabel: "Timeline",
+    milestonesTitle: "Project milestones",
+    exitLabel: "Liquidity",
+    exitTitle: "Exit strategy",
+    regNoteStrong: "Compliance & structure.",
+    backLink: "Back to all opportunities",
+    dealTermsTitle: "Deal terms",
+    suggestedType: "Suggested investment type",
+    headlineReturn: "Headline return",
+    capitalRaiseTitle: "Capital raise",
+    minInvestment: "Min. investment",
+    riskProfile: "Risk profile",
+    assetDetailsTitle: "Asset details",
+    location: "Location",
+    sector: "Sector",
+    units: "Units",
+    grossArea: "Gross area",
+    storeys: "Storeys",
+    planning: "Planning",
+    ctaTitle: "Request additional information",
+    ctaBody:
+      "Speak with our investment team to receive the full information memorandum, financial model and legal documentation for this opportunity.",
+    ctaButton: "Contact our team",
+  },
+  es: {
+    seoTitleMid: "Oportunidad de inversión",
+    breadcrumbHome: "Inicio",
+    breadcrumbOpportunities: "Oportunidades",
+    statusFull: {
+      "Open for Investment": "Abierta a inversión",
+      "Closing Soon": "Cierre próximo",
+      "Closed": "Cerrada",
+      "Waitlist": "Lista de espera",
+      "Fully Subscribed": "Totalmente suscrita",
+    } as Record<string, string>,
+    structureLabels: {
+      "Debt": "Deuda",
+      "Debt + Equity": "Deuda + Equity",
+      "Equity": "Equity",
+    } as Record<string, string>,
+    metricEquityRaise: "Captación de equity",
+    metricProjectValue: "Valor del proyecto",
+    metricBuildableArea: "Superficie edificable",
+    metricHoldPeriod: "Plazo de tenencia",
+    galleryImageWord: "imagen",
+    overviewLabel: "La oportunidad",
+    overviewTitle: "Descripción del activo",
+    thesisLabel: "Por qué invertir",
+    thesisTitle: "Tesis de inversión",
+    highlightsLabel: "Fortalezas de la operación",
+    highlightsTitle: "Por qué esta operación",
+    useOfFundsLabel: "Despliegue de capital",
+    useOfFundsTitle: "Uso de los fondos",
+    milestonesLabel: "Calendario",
+    milestonesTitle: "Hitos del proyecto",
+    exitLabel: "Liquidez",
+    exitTitle: "Estrategia de salida",
+    regNoteStrong: "Cumplimiento y estructura.",
+    backLink: "Volver a todas las oportunidades",
+    dealTermsTitle: "Términos de la operación",
+    suggestedType: "Tipo de inversión sugerido",
+    headlineReturn: "Rentabilidad principal",
+    capitalRaiseTitle: "Captación de capital",
+    minInvestment: "Inversión mínima",
+    riskProfile: "Perfil de riesgo",
+    assetDetailsTitle: "Detalles del activo",
+    location: "Ubicación",
+    sector: "Sector",
+    units: "Unidades",
+    grossArea: "Superficie bruta",
+    storeys: "Plantas",
+    planning: "Situación urbanística",
+    ctaTitle: "Solicitar información adicional",
+    ctaBody:
+      "Hable con nuestro equipo de inversión para recibir el memorando de información completo, el modelo financiero y la documentación legal de esta oportunidad.",
+    ctaButton: "Contactar con el equipo",
+  },
+  ca: {
+    seoTitleMid: "Oportunitat d'inversió",
+    breadcrumbHome: "Inici",
+    breadcrumbOpportunities: "Oportunitats",
+    statusFull: {
+      "Open for Investment": "Oberta a inversió",
+      "Closing Soon": "Tancament proper",
+      "Closed": "Tancada",
+      "Waitlist": "Llista d'espera",
+      "Fully Subscribed": "Totalment subscrita",
+    } as Record<string, string>,
+    structureLabels: {
+      "Debt": "Deute",
+      "Debt + Equity": "Deute + Equity",
+      "Equity": "Equity",
+    } as Record<string, string>,
+    metricEquityRaise: "Captació d'equity",
+    metricProjectValue: "Valor del projecte",
+    metricBuildableArea: "Superfície edificable",
+    metricHoldPeriod: "Termini de tinença",
+    galleryImageWord: "imatge",
+    overviewLabel: "L'oportunitat",
+    overviewTitle: "Descripció de l'actiu",
+    thesisLabel: "Per què invertir",
+    thesisTitle: "Tesi d'inversió",
+    highlightsLabel: "Fortaleses de l'operació",
+    highlightsTitle: "Per què aquesta operació",
+    useOfFundsLabel: "Desplegament de capital",
+    useOfFundsTitle: "Ús dels fons",
+    milestonesLabel: "Calendari",
+    milestonesTitle: "Fites del projecte",
+    exitLabel: "Liquiditat",
+    exitTitle: "Estratègia de sortida",
+    regNoteStrong: "Compliment i estructura.",
+    backLink: "Tornar a totes les oportunitats",
+    dealTermsTitle: "Termes de l'operació",
+    suggestedType: "Tipus d'inversió suggerit",
+    headlineReturn: "Rendibilitat principal",
+    capitalRaiseTitle: "Captació de capital",
+    minInvestment: "Inversió mínima",
+    riskProfile: "Perfil de risc",
+    assetDetailsTitle: "Detalls de l'actiu",
+    location: "Ubicació",
+    sector: "Sector",
+    units: "Unitats",
+    grossArea: "Superfície bruta",
+    storeys: "Plantes",
+    planning: "Situació urbanística",
+    ctaTitle: "Sol·licitar informació addicional",
+    ctaBody:
+      "Parli amb el nostre equip d'inversió per rebre el memoràndum d'informació complet, el model financer i la documentació legal d'aquesta oportunitat.",
+    ctaButton: "Contacta amb l'equip",
+  },
+};
+
+const t = copy[locale];
 ---
 
 <!doctype html>
@@ -31,13 +195,13 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <SEO
-      title={`${opp.name} | Investment Opportunity | Equity Partners`}
+      title={`${opp.name} | ${t.seoTitleMid} | Equity Partners`}
       description={opp.tagline}
       locale={locale}
       path={Astro.url.pathname}
       breadcrumb={[
-        { name: "Home", path: "/" },
-        { name: "Opportunities", path: "/opportunities" },
+        { name: t.breadcrumbHome, path: "/" },
+        { name: t.breadcrumbOpportunities, path: "/opportunities" },
         { name: opp.name, path: `/opportunities/${opp.slug}` },
       ]}
     />
@@ -954,7 +1118,7 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
               class="opp-hero-chip"
               style={`background: ${opportunityStatusColour[opp.status]}`}
             >
-              {opp.status}
+              {t.statusFull[opp.status]}
             </span>
             <span
               class="opp-hero-chip"
@@ -976,19 +1140,19 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
         <div class="opp-metrics-inner">
           <div class="opp-metric-item">
             <span class="opp-metric-value is-green">{opp.equityRaise}</span>
-            <span class="opp-metric-label">Equity raise</span>
+            <span class="opp-metric-label">{t.metricEquityRaise}</span>
           </div>
           <div class="opp-metric-item">
             <span class="opp-metric-value">{opp.totalProjectValue}</span>
-            <span class="opp-metric-label">Project value</span>
+            <span class="opp-metric-label">{t.metricProjectValue}</span>
           </div>
           <div class="opp-metric-item">
             <span class="opp-metric-value">{opp.sqm}</span>
-            <span class="opp-metric-label">Buildable area</span>
+            <span class="opp-metric-label">{t.metricBuildableArea}</span>
           </div>
           <div class="opp-metric-item">
             <span class="opp-metric-value">{opp.holdPeriod}</span>
-            <span class="opp-metric-label">Hold period</span>
+            <span class="opp-metric-label">{t.metricHoldPeriod}</span>
           </div>
         </div>
       </div>
@@ -998,9 +1162,9 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
     <div class="opp-breadcrumb has-dark-borders">
       <div class="container">
         <div class="opp-breadcrumb-inner">
-          <a href={buildLocalizedPath("/", locale)}>Home</a>
+          <a href={buildLocalizedPath("/", locale)}>{t.breadcrumbHome}</a>
           <span class="opp-breadcrumb-sep">/</span>
-          <a href={buildLocalizedPath("/opportunities", locale)}>Opportunities</a>
+          <a href={buildLocalizedPath("/opportunities", locale)}>{t.breadcrumbOpportunities}</a>
           <span class="opp-breadcrumb-sep">/</span>
           <span class="opp-breadcrumb-current">{opp.name}</span>
         </div>
@@ -1021,7 +1185,7 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
                 {opp.gallery.map((src, i) => (
                   <img
                     src={src}
-                    alt={`${opp.name} — image ${i + 1}`}
+                    alt={`${opp.name} — ${t.galleryImageWord} ${i + 1}`}
                     loading={i === 0 ? "eager" : "lazy"}
                   />
                 ))}
@@ -1030,22 +1194,22 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
 
             <!-- Description -->
             <div class="opp-section" data-animate>
-              <p class="opp-section-label">The opportunity</p>
-              <h2>Asset overview</h2>
+              <p class="opp-section-label">{t.overviewLabel}</p>
+              <h2>{t.overviewTitle}</h2>
               <p>{opp.description}</p>
             </div>
 
             <!-- Investment thesis -->
             <div class="opp-section" data-animate>
-              <p class="opp-section-label">Why invest</p>
-              <h2>Investment thesis</h2>
+              <p class="opp-section-label">{t.thesisLabel}</p>
+              <h2>{t.thesisTitle}</h2>
               <p>{opp.investmentThesis}</p>
             </div>
 
             <!-- Highlights -->
             <div class="opp-section" data-animate>
-              <p class="opp-section-label">Deal strengths</p>
-              <h2>Why this deal</h2>
+              <p class="opp-section-label">{t.highlightsLabel}</p>
+              <h2>{t.highlightsTitle}</h2>
               <ul class="opp-highlights">
                 {opp.highlights.map((h) => <li>{h}</li>)}
               </ul>
@@ -1053,8 +1217,8 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
 
             <!-- Use of funds -->
             <div class="opp-section" data-animate>
-              <p class="opp-section-label">Capital deployment</p>
-              <h2>Use of funds</h2>
+              <p class="opp-section-label">{t.useOfFundsLabel}</p>
+              <h2>{t.useOfFundsTitle}</h2>
               <div class="opp-breakdown">
                 {opp.useOfFunds.map((entry) => (
                   <div class="opp-breakdown-row">
@@ -1099,8 +1263,8 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
 
             <!-- Milestones -->
             <div class="opp-section" data-animate>
-              <p class="opp-section-label">Timeline</p>
-              <h2>Project milestones</h2>
+              <p class="opp-section-label">{t.milestonesLabel}</p>
+              <h2>{t.milestonesTitle}</h2>
               <div class="opp-milestones">
                 {opp.milestones.map((m) => (
                   <div class="opp-milestone">
@@ -1123,15 +1287,15 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
 
             <!-- Exit strategy -->
             <div class="opp-section" data-animate>
-              <p class="opp-section-label">Liquidity</p>
-              <h2>Exit strategy</h2>
+              <p class="opp-section-label">{t.exitLabel}</p>
+              <h2>{t.exitTitle}</h2>
               <p>{opp.exitStrategy}</p>
             </div>
 
             <!-- Regulatory note -->
             <div class="opp-section" data-animate>
               <p class="opp-reg-note">
-                <strong>Compliance &amp; structure.</strong> {opp.regulatoryNote}
+                <strong>{t.regNoteStrong}</strong> {opp.regulatoryNote}
               </p>
             </div>
 
@@ -1139,7 +1303,7 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
             <div class="opp-back-section" data-animate>
               <a class="opp-back-link" href={buildLocalizedPath("/opportunities", locale)}>
                 <svg viewBox="0 0 24 24"><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg>
-                Back to all opportunities
+                {t.backLink}
               </a>
             </div>
 
@@ -1151,19 +1315,19 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
             <!-- Deal terms card -->
             <div class="opp-sidebar-card" data-animate>
               <div class="opp-sidebar-card-header">
-                <h3>Deal terms</h3>
+                <h3>{t.dealTermsTitle}</h3>
               </div>
               <div class="opp-sidebar-card-body">
                 <div class="opp-detail-row">
-                  <span class="opp-detail-key">Suggested investment type</span>
-                  <span class="opp-detail-val is-green">{opp.structure}</span>
+                  <span class="opp-detail-key">{t.suggestedType}</span>
+                  <span class="opp-detail-val is-green">{t.structureLabels[opp.structure]}</span>
                 </div>
                 <div class="opp-detail-row">
-                  <span class="opp-detail-key">Headline return</span>
+                  <span class="opp-detail-key">{t.headlineReturn}</span>
                   <span class="opp-detail-val">{opp.headlineReturn}</span>
                 </div>
                 <div class="opp-detail-row">
-                  <span class="opp-detail-key">Hold period</span>
+                  <span class="opp-detail-key">{t.metricHoldPeriod}</span>
                   <span class="opp-detail-val">{opp.holdPeriod}</span>
                 </div>
               </div>
@@ -1191,15 +1355,15 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
             <!-- Capital raise card -->
             <div class="opp-sidebar-card" data-animate>
               <div class="opp-sidebar-card-header">
-                <h3>Capital raise</h3>
+                <h3>{t.capitalRaiseTitle}</h3>
               </div>
               <div class="opp-sidebar-card-body">
                 <div class="opp-detail-row">
-                  <span class="opp-detail-key">Project value</span>
+                  <span class="opp-detail-key">{t.metricProjectValue}</span>
                   <span class="opp-detail-val">{opp.totalProjectValue}</span>
                 </div>
                 <div class="opp-detail-row">
-                  <span class="opp-detail-key">Equity raise</span>
+                  <span class="opp-detail-key">{t.metricEquityRaise}</span>
                   <span class="opp-detail-val">{opp.equityRaise}</span>
                 </div>
                 {/* Committed row — hidden for now (easy to restore).
@@ -1209,11 +1373,11 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
                 </div>
                 */}
                 <div class="opp-detail-row">
-                  <span class="opp-detail-key">Min. investment</span>
+                  <span class="opp-detail-key">{t.minInvestment}</span>
                   <span class="opp-detail-val">{opp.minInvestment}</span>
                 </div>
                 <div class="opp-detail-row">
-                  <span class="opp-detail-key">Risk profile</span>
+                  <span class="opp-detail-key">{t.riskProfile}</span>
                   <span class="opp-detail-val">{opp.riskProfile}</span>
                 </div>
               </div>
@@ -1222,31 +1386,31 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
             <!-- Asset details card -->
             <div class="opp-sidebar-card" data-animate>
               <div class="opp-sidebar-card-header">
-                <h3>Asset details</h3>
+                <h3>{t.assetDetailsTitle}</h3>
               </div>
               <div class="opp-sidebar-card-body">
                 <div class="opp-detail-row">
-                  <span class="opp-detail-key">Location</span>
+                  <span class="opp-detail-key">{t.location}</span>
                   <span class="opp-detail-val">{opp.location}</span>
                 </div>
                 <div class="opp-detail-row">
-                  <span class="opp-detail-key">Sector</span>
+                  <span class="opp-detail-key">{t.sector}</span>
                   <span class="opp-detail-val">{opp.sector}</span>
                 </div>
                 <div class="opp-detail-row">
-                  <span class="opp-detail-key">Units</span>
+                  <span class="opp-detail-key">{t.units}</span>
                   <span class="opp-detail-val is-small">{opp.units}</span>
                 </div>
                 <div class="opp-detail-row">
-                  <span class="opp-detail-key">Gross area</span>
+                  <span class="opp-detail-key">{t.grossArea}</span>
                   <span class="opp-detail-val">{opp.sqm}</span>
                 </div>
                 <div class="opp-detail-row">
-                  <span class="opp-detail-key">Storeys</span>
+                  <span class="opp-detail-key">{t.storeys}</span>
                   <span class="opp-detail-val">{opp.floors}</span>
                 </div>
                 <div class="opp-detail-row">
-                  <span class="opp-detail-key">Planning</span>
+                  <span class="opp-detail-key">{t.planning}</span>
                   <span class="opp-detail-val is-small">{opp.planningStatus}</span>
                 </div>
               </div>
@@ -1254,10 +1418,10 @@ const locale = getLocaleFromUrl(Astro.url) ?? propLocale ?? "en";
 
             <!-- CTA card -->
             <div class="opp-cta-card" data-animate>
-              <h3>Request additional information</h3>
-              <p>Speak with our investment team to receive the full information memorandum, financial model and legal documentation for this opportunity.</p>
+              <h3>{t.ctaTitle}</h3>
+              <p>{t.ctaBody}</p>
               <a class="opp-cta-btn" href={buildLocalizedPath("/contact", locale)}>
-                Contact our team
+                {t.ctaButton}
                 <svg viewBox="0 0 24 24"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
               </a>
             </div>

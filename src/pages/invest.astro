@@ -8,6 +8,545 @@ import { buildLocalizedPath, getLocaleFromUrl } from "../lib/i18n";
 const locale = getLocaleFromUrl(Astro.url) ?? "en";
 const contactHref = buildLocalizedPath("/contact", locale);
 const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
+
+const oppLink = (label: string) =>
+  `<a href="${opportunitiesHref}" class="invest-explainer-link">${label}</a>`;
+
+const en = {
+  seo: {
+    title: "Invest with Equity Partners | Andorran Real Estate",
+    description:
+      "Three ways to invest in Andorran real estate with Equity Partners: Debt for contractual annual income, Equity for full project upside, or the most popular Debt + Equity structure blending both. Returns are set per project — see live figures on our Opportunities page.",
+  },
+  hero: {
+    eyebrow: "Three Ways to Invest",
+    title: "Choose how you participate in Andorran real estate",
+    introBefore:
+      "Choose between Debt, Equity, or our most popular Debt + Equity structure. Returns vary per project. See our ",
+    introLink: "live Opportunities",
+    introAfter: " for current figures.",
+  },
+  structures: {
+    eyebrow: "Investment structures",
+    title: "Pick the structure that fits your mandate",
+    intro:
+      "All three structures are available on every live opportunity. The right one for you depends on your appetite for risk, your target return and how long you can lock up capital.",
+    returnLabel: "Headline return",
+    returnSub: "Return varies per project · shared on your call",
+    cta: "Request Video Call",
+    debt: {
+      role: "Andorra Real Estate Fund",
+      title: "Debt",
+      subtitle: "Passive Investment · Lowest Risk",
+      tagline:
+        "You lend capital to the project and receive a contractual annual coupon. Your position sits senior in the capital stack and is secured against the underlying real estate, with no exposure to project upside or downside.",
+      returnValue: "Annual coupon",
+      features: [
+        "Predictable contractual payments, with no project performance exposure",
+        "Capital secured against the property, senior to equity in repayment priority",
+        "Fully passive, with no involvement once committed",
+        "Shorter typical hold, capital returns at project completion or refinancing",
+      ],
+    },
+    debtEquity: {
+      badge: "Most popular",
+      role: "Direct Project Financing",
+      title: "Debt + Equity",
+      subtitle: "Active Investment · Balanced Risk + Upside",
+      tagline:
+        "Part of your capital earns a contractual coupon, while the rest takes an ownership stake, so you get recurring income while the project runs and share in the upside at exit. You participate directly in the project's progress.",
+      returnValue: "Annual coupon + Equity upside",
+      features: [
+        "Recurring contractual income on the debt portion while the project develops",
+        "Equity profit share at exit on the equity portion",
+        "Active participation in the project you back, with a direct stake in its success",
+        "The structure most of our investors choose",
+      ],
+    },
+    equity: {
+      role: "Direct Project Financing",
+      title: "Equity",
+      subtitle: "Active Investment · Highest Upside",
+      tagline:
+        "Take a pure ownership stake in a single project and share fully in the profit at exit, with the highest return potential of the three structures and the longest typical hold. Less common than Debt + Equity, but available for investors comfortable with full project exposure.",
+      returnValue: "Equity profit share",
+      features: [
+        "Full participation in project profits, with uncapped upside",
+        "Direct ownership stake in the underlying real estate asset",
+        "Active participation in the project you back, with a direct stake in its success",
+        "Returns realised at project exit, with longer lock-up and no interim coupon",
+      ],
+    },
+  },
+  compare: {
+    eyebrow: "Side by side",
+    title: "Compare the three structures at a glance",
+    intro:
+      "A quick reference for the trade-offs across return, risk, position in the capital stack, and capital lock-up.",
+    noteBefore:
+      "Returns vary per project. The exact coupon, equity share and hold period are calibrated to each deal and shared on your call. For live opportunities and current figures, ",
+    noteLink: "see our Opportunities page",
+    noteAfter: ".",
+    cols: [
+      { role: "Andorra Real Estate Fund", title: "Debt" },
+      { role: "Direct Project Financing", title: "Debt + Equity" },
+      { role: "Direct Project Financing", title: "Equity" },
+    ],
+    rows: [
+      {
+        label: "Return mechanic",
+        cells: ["Annual coupon", "Coupon + equity profit share", "Equity profit share"],
+      },
+      {
+        label: "When you get paid",
+        cells: ["Throughout the project", "During the project + at exit", "At project exit"],
+      },
+      {
+        label: "Income profile",
+        cells: ["Predictable, contractual", "Coupon + exit profit", "Lump sum at exit"],
+      },
+      {
+        label: "Position in capital stack",
+        cells: ["Senior (secured)", "Senior + subordinated", "Subordinated (ownership)"],
+      },
+      {
+        label: "Risk profile",
+        cells: ["Lower", "Balanced", "Higher"],
+      },
+      {
+        label: "Upside potential",
+        cells: ["Capped at coupon", "Capped coupon + uncapped equity", "Uncapped"],
+      },
+      {
+        label: "Typical hold",
+        cells: ["Shorter", "Medium to long", "Longer"],
+      },
+      {
+        label: "Best suited to",
+        cells: ["Capital preservation", "Most investors (balanced profile)", "Return maximisation"],
+      },
+    ],
+  },
+  explainers: {
+    eyebrow: "Understanding the structures",
+    title: "How each structure actually works",
+    intro:
+      "A closer look at what you're investing in, how returns are generated, and where each structure sits on the risk spectrum.",
+    items: [
+      {
+        tag: "Structure 01",
+        title: "Debt",
+        returnLine: "Annual coupon · set per project",
+        paragraphs: [
+          `In a debt position you are <strong>lending capital</strong> to the project rather than owning a piece of it. In return you receive a contractual annual coupon, calibrated deal by deal and paid out at agreed intervals throughout the life of the investment. The exact coupon depends on the specific project — see our ${oppLink("live Opportunities")} for current figures.`,
+          "Your capital sits <strong>senior in the capital stack</strong>, which means in the event of an exit, refinancing, or wind-down, debt holders are repaid <em>before</em> equity holders. The loan is secured against the underlying Andorran property, providing real-asset collateral behind your return.",
+          "The trade-off is simple: you give up exposure to project upside in exchange for predictability and downside protection. Even if the project delivers exceptional returns, your return is capped at the agreed coupon. Equally, you are insulated from a material part of project execution risk.",
+          "Debt typically suits investors who want <strong>steady, contractual cash flow</strong>, want a defined exit horizon, and value capital preservation over outsized return.",
+        ],
+      },
+      {
+        tag: "Structure 02 · Most popular",
+        title: "Debt + Equity",
+        returnLine: "Coupon + Equity upside · set per project",
+        paragraphs: [
+          "A blended position — and the structure the <strong>majority of our investors choose</strong>. Your commitment is split between a debt tranche and an equity tranche, so you sit in <em>both</em> layers of the capital stack at once.",
+          `The debt portion pays an annual coupon — typically slightly below the pure-debt coupon, because you are also participating in the equity upside. The equity portion pays out as a share of project profit when the asset is sold or refinanced. The split between debt and equity, and the exact figures on both sides, are set per project — see our ${oppLink("live Opportunities")} for current figures.`,
+          "The result is a profile that <strong>balances downside protection with full upside participation</strong>: you receive contractual income while the project develops, and you share in the gain at exit. If the project under-performs on the equity side, the secured coupon still cushions the overall return.",
+          "Most investors land here because it captures the appeal of both structures without committing fully to either. It is the most common deployment we see across our investor base.",
+        ],
+      },
+      {
+        tag: "Structure 03",
+        title: "Equity",
+        returnLine: "Equity profit share at exit · set per project",
+        paragraphs: [
+          "In an equity position you take a <strong>direct ownership stake</strong> in the project entity that holds the underlying Andorran asset. You are a principal alongside Equity Partners, not a lender to us.",
+          `There is no coupon. Instead, returns are realised when the project is sold or refinanced — at which point you receive your pro-rata share of the profit. Target returns are set on a per-project basis and reflect the specific risk and lock-up profile of the deal. For the actual target on a specific opportunity, see our ${oppLink("live Opportunities")}.`,
+          "Equity sits <strong>subordinated to debt</strong> in the capital stack, meaning lenders are repaid first. In exchange, equity captures <em>all</em> of the upside above the debt obligations — uncapped. A project that out-performs delivers materially higher returns to equity than to debt.",
+          "Equity is for investors who can tolerate longer hold periods, no interim cash flow, and meaningful project risk, in exchange for the <strong>highest return potential</strong> of the three structures.",
+        ],
+      },
+    ],
+  },
+  cta: {
+    title: "Not sure which structure fits you?",
+    body:
+      "Book a 30-minute video call with our investment team. We will walk you through the live opportunities, explain how each structure would apply to your mandate, and answer any questions on returns, risk and timeline.",
+    button: "Request Video Call",
+  },
+};
+
+const copy: Record<"en" | "es" | "ca", typeof en> = {
+  en,
+  es: {
+    seo: {
+      title: "Invierta con Equity Partners | Inmobiliario en Andorra",
+      description:
+        "Tres formas de invertir en el sector inmobiliario andorrano con Equity Partners: Deuda para una renta anual contractual, Equity para participar plenamente en la plusvalía del proyecto, o la estructura más popular Deuda + Equity, que combina ambas. Las rentabilidades se fijan por proyecto: consulte las cifras vigentes en nuestra página de Oportunidades.",
+    },
+    hero: {
+      eyebrow: "Tres formas de invertir",
+      title: "Elija cómo participar en el sector inmobiliario andorrano",
+      introBefore:
+        "Elija entre Deuda, Equity o nuestra estructura más popular, Deuda + Equity. Las rentabilidades varían por proyecto. Consulte nuestras ",
+      introLink: "Oportunidades actuales",
+      introAfter: " para conocer las cifras vigentes.",
+    },
+    structures: {
+      eyebrow: "Estructuras de inversión",
+      title: "Elija la estructura que se ajusta a su mandato",
+      intro:
+        "Las tres estructuras están disponibles en todas las oportunidades activas. La más adecuada para usted depende de su apetito de riesgo, su rentabilidad objetivo y el tiempo durante el que puede inmovilizar el capital.",
+      returnLabel: "Rentabilidad principal",
+      returnSub: "La rentabilidad varía por proyecto · se comparte en su llamada",
+      cta: "Solicitar videollamada",
+      debt: {
+        role: "Fondo Inmobiliario de Andorra",
+        title: "Deuda",
+        subtitle: "Inversión pasiva · Riesgo más bajo",
+        tagline:
+          "Usted presta capital al proyecto y recibe un cupón anual contractual. Su posición es preferente dentro de la estructura de capital y está garantizada por el inmueble subyacente, sin exposición al beneficio o pérdida del proyecto.",
+        returnValue: "Cupón anual",
+        features: [
+          "Pagos contractuales predecibles, sin exposición al rendimiento del proyecto",
+          "Capital garantizado por la propiedad, preferente sobre la equity en prioridad de pago",
+          "Totalmente pasivo, sin participación una vez comprometido",
+          "Plazo de tenencia típico más corto; el capital se devuelve al finalizar o refinanciar el proyecto",
+        ],
+      },
+      debtEquity: {
+        badge: "Más popular",
+        role: "Financiación directa de proyecto",
+        title: "Deuda + Equity",
+        subtitle: "Inversión activa · Riesgo equilibrado + Plusvalía",
+        tagline:
+          "Parte de su capital genera un cupón contractual, mientras que el resto toma una participación en el proyecto, obteniendo así renta recurrente durante la ejecución y participando en la plusvalía en la salida. Usted participa directamente en el avance del proyecto.",
+        returnValue: "Cupón anual + Plusvalía de equity",
+        features: [
+          "Renta contractual recurrente sobre la parte de deuda durante el desarrollo del proyecto",
+          "Reparto de beneficios de equity en la salida sobre la parte de equity",
+          "Participación activa en el proyecto que respalda, con una participación directa en su éxito",
+          "La estructura que eligen la mayoría de nuestros inversores",
+        ],
+      },
+      equity: {
+        role: "Financiación directa de proyecto",
+        title: "Equity",
+        subtitle: "Inversión activa · Mayor potencial de plusvalía",
+        tagline:
+          "Toma una participación íntegra en un único proyecto y comparte plenamente en el beneficio en la salida, con el mayor potencial de rentabilidad de las tres estructuras y el plazo de tenencia típico más largo. Menos habitual que Deuda + Equity, pero disponible para inversores cómodos con la exposición total al proyecto.",
+        returnValue: "Reparto de beneficios de equity",
+        features: [
+          "Participación plena en los beneficios del proyecto, con plusvalía sin límite",
+          "Participación directa en la propiedad del activo inmobiliario subyacente",
+          "Participación activa en el proyecto que respalda, con una participación directa en su éxito",
+          "Rentabilidades materializadas en la salida del proyecto, con un periodo de inmovilización más largo y sin cupón intermedio",
+        ],
+      },
+    },
+    compare: {
+      eyebrow: "Comparativa",
+      title: "Compare las tres estructuras de un vistazo",
+      intro:
+        "Una referencia rápida de los equilibrios entre rentabilidad, riesgo, posición en la estructura de capital e inmovilización del capital.",
+      noteBefore:
+        "Las rentabilidades varían por proyecto. El cupón exacto, la participación de equity y el plazo de tenencia se calibran para cada operación y se comparten en su llamada. Para ver las oportunidades activas y las cifras vigentes, ",
+      noteLink: "consulte nuestra página de Oportunidades",
+      noteAfter: ".",
+      cols: [
+        { role: "Fondo Inmobiliario de Andorra", title: "Deuda" },
+        { role: "Financiación directa de proyecto", title: "Deuda + Equity" },
+        { role: "Financiación directa de proyecto", title: "Equity" },
+      ],
+      rows: [
+        {
+          label: "Mecánica de rentabilidad",
+          cells: [
+            "Cupón anual",
+            "Cupón + reparto de beneficios de equity",
+            "Reparto de beneficios de equity",
+          ],
+        },
+        {
+          label: "Cuándo cobra",
+          cells: [
+            "Durante todo el proyecto",
+            "Durante el proyecto + en la salida",
+            "En la salida del proyecto",
+          ],
+        },
+        {
+          label: "Perfil de renta",
+          cells: [
+            "Predecible, contractual",
+            "Cupón + beneficio en la salida",
+            "Pago único en la salida",
+          ],
+        },
+        {
+          label: "Posición en la estructura de capital",
+          cells: [
+            "Preferente (garantizada)",
+            "Preferente + subordinada",
+            "Subordinada (propiedad)",
+          ],
+        },
+        {
+          label: "Perfil de riesgo",
+          cells: ["Más bajo", "Equilibrado", "Más alto"],
+        },
+        {
+          label: "Potencial de plusvalía",
+          cells: ["Limitado al cupón", "Cupón limitado + equity sin límite", "Sin límite"],
+        },
+        {
+          label: "Plazo de tenencia típico",
+          cells: ["Más corto", "Medio a largo", "Más largo"],
+        },
+        {
+          label: "Más indicado para",
+          cells: [
+            "Preservación del capital",
+            "La mayoría de inversores (perfil equilibrado)",
+            "Maximización de la rentabilidad",
+          ],
+        },
+      ],
+    },
+    explainers: {
+      eyebrow: "Entender las estructuras",
+      title: "Cómo funciona realmente cada estructura",
+      intro:
+        "Una mirada más detallada a en qué invierte, cómo se generan las rentabilidades y dónde se sitúa cada estructura en el espectro de riesgo.",
+      items: [
+        {
+          tag: "Estructura 01",
+          title: "Deuda",
+          returnLine: "Cupón anual · se fija por proyecto",
+          paragraphs: [
+            `En una posición de deuda usted está <strong>prestando capital</strong> al proyecto, no adquiriendo una parte de él. A cambio recibe un cupón anual contractual, calibrado operación por operación y pagado en intervalos acordados a lo largo de la vida de la inversión. El cupón exacto depende del proyecto concreto: consulte nuestras ${oppLink("Oportunidades actuales")} para conocer las cifras vigentes.`,
+            "Su capital ocupa una <strong>posición preferente en la estructura de capital</strong>, lo que significa que, en caso de salida, refinanciación o liquidación, los titulares de deuda cobran <em>antes</em> que los titulares de equity. El préstamo está garantizado por el inmueble andorrano subyacente, aportando un colateral de activo real detrás de su rentabilidad.",
+            "La contrapartida es sencilla: renuncia a la exposición a la plusvalía del proyecto a cambio de previsibilidad y protección frente a pérdidas. Aunque el proyecto genere rentabilidades excepcionales, su rentabilidad queda limitada al cupón acordado. Del mismo modo, queda aislado de una parte sustancial del riesgo de ejecución del proyecto.",
+            "La deuda suele convenir a inversores que buscan un <strong>flujo de caja contractual y estable</strong>, quieren un horizonte de salida definido y valoran la preservación del capital por encima de una rentabilidad extraordinaria.",
+          ],
+        },
+        {
+          tag: "Estructura 02 · Más popular",
+          title: "Deuda + Equity",
+          returnLine: "Cupón + Plusvalía de equity · se fija por proyecto",
+          paragraphs: [
+            "Una posición combinada, y la estructura que <strong>elige la mayoría de nuestros inversores</strong>. Su compromiso se reparte entre un tramo de deuda y un tramo de equity, de modo que ocupa <em>ambas</em> capas de la estructura de capital a la vez.",
+            `La parte de deuda paga un cupón anual, normalmente algo inferior al cupón de deuda pura, porque también participa en la plusvalía de equity. La parte de equity se abona como una participación en el beneficio del proyecto cuando el activo se vende o se refinancia. El reparto entre deuda y equity, y las cifras exactas de ambas partes, se fijan por proyecto: consulte nuestras ${oppLink("Oportunidades actuales")} para conocer las cifras vigentes.`,
+            "El resultado es un perfil que <strong>equilibra la protección frente a pérdidas con la participación plena en la plusvalía</strong>: recibe una renta contractual mientras el proyecto se desarrolla y comparte la ganancia en la salida. Si el proyecto rinde por debajo de lo previsto en la parte de equity, el cupón garantizado sigue amortiguando la rentabilidad global.",
+            "La mayoría de los inversores se decantan por esta opción porque captura el atractivo de ambas estructuras sin comprometerse plenamente con ninguna. Es el despliegue más habitual entre nuestra base de inversores.",
+          ],
+        },
+        {
+          tag: "Estructura 03",
+          title: "Equity",
+          returnLine: "Reparto de beneficios de equity en la salida · se fija por proyecto",
+          paragraphs: [
+            "En una posición de equity usted toma una <strong>participación directa en la propiedad</strong> de la entidad de proyecto que posee el activo andorrano subyacente. Es un socio junto a Equity Partners, no un prestamista nuestro.",
+            `No hay cupón. Las rentabilidades se materializan cuando el proyecto se vende o se refinancia, momento en el que recibe su parte proporcional del beneficio. Las rentabilidades objetivo se fijan por proyecto y reflejan el perfil específico de riesgo e inmovilización de cada operación. Para conocer el objetivo concreto de una oportunidad determinada, consulte nuestras ${oppLink("Oportunidades actuales")}.`,
+            "El equity está <strong>subordinado a la deuda</strong> en la estructura de capital, lo que significa que los prestamistas cobran primero. A cambio, el equity captura <em>toda</em> la plusvalía por encima de las obligaciones de deuda, sin límite. Un proyecto que supera las expectativas genera rentabilidades sensiblemente superiores para el equity que para la deuda.",
+            "El equity está pensado para inversores que pueden tolerar plazos de tenencia más largos, la ausencia de flujo de caja intermedio y un riesgo de proyecto significativo, a cambio del <strong>mayor potencial de rentabilidad</strong> de las tres estructuras.",
+          ],
+        },
+      ],
+    },
+    cta: {
+      title: "¿No sabe qué estructura le encaja?",
+      body:
+        "Reserve una videollamada de 30 minutos con nuestro equipo de inversión. Le presentaremos las oportunidades activas, le explicaremos cómo se aplicaría cada estructura a su mandato y responderemos cualquier pregunta sobre rentabilidades, riesgo y calendario.",
+      button: "Solicitar videollamada",
+    },
+  },
+  ca: {
+    seo: {
+      title: "Inverteixi amb Equity Partners | Immobiliari a Andorra",
+      description:
+        "Tres maneres d'invertir en l'immobiliari andorrà amb Equity Partners: Deute per a una renda anual contractual, Equity per participar plenament en la plusvàlua del projecte, o l'estructura més popular Deute + Equity, que combina totes dues. Les rendibilitats es fixen per projecte: consulti les xifres vigents a la nostra pàgina d'Oportunitats.",
+    },
+    hero: {
+      eyebrow: "Tres maneres d'invertir",
+      title: "Trieu com participar en l'immobiliari andorrà",
+      introBefore:
+        "Trieu entre Deute, Equity o la nostra estructura més popular, Deute + Equity. Les rendibilitats varien segons el projecte. Consulteu les nostres ",
+      introLink: "Oportunitats actuals",
+      introAfter: " per conèixer les xifres vigents.",
+    },
+    structures: {
+      eyebrow: "Estructures d'inversió",
+      title: "Trieu l'estructura que s'ajusta al seu mandat",
+      intro:
+        "Les tres estructures estan disponibles en totes les oportunitats actives. La més adequada per a vostè depèn del seu apetit de risc, la seva rendibilitat objectiu i el temps durant el qual pot immobilitzar el capital.",
+      returnLabel: "Rendibilitat principal",
+      returnSub: "La rendibilitat varia segons el projecte · es comparteix a la trucada",
+      cta: "Sol·licitar videotrucada",
+      debt: {
+        role: "Fons Immobiliari d'Andorra",
+        title: "Deute",
+        subtitle: "Inversió passiva · Risc més baix",
+        tagline:
+          "Vostè presta capital al projecte i rep un cupó anual contractual. La seva posició és preferent dins de l'estructura de capital i està garantida per l'immoble subjacent, sense exposició al benefici o pèrdua del projecte.",
+        returnValue: "Cupó anual",
+        features: [
+          "Pagaments contractuals previsibles, sense exposició al rendiment del projecte",
+          "Capital garantit per l'immoble, preferent sobre l'equity en prioritat de pagament",
+          "Totalment passiu, sense participació un cop compromès",
+          "Termini de tinença típic més curt; el capital es retorna en finalitzar o refinançar el projecte",
+        ],
+      },
+      debtEquity: {
+        badge: "Més popular",
+        role: "Finançament directe de projecte",
+        title: "Deute + Equity",
+        subtitle: "Inversió activa · Risc equilibrat + Plusvàlua",
+        tagline:
+          "Una part del seu capital genera un cupó contractual, mentre que la resta pren una participació en el projecte, obtenint així una renda recurrent durant l'execució i participant en la plusvàlua a la sortida. Vostè participa directament en el progrés del projecte.",
+        returnValue: "Cupó anual + Plusvàlua d'equity",
+        features: [
+          "Renda contractual recurrent sobre la part de deute durant el desenvolupament del projecte",
+          "Repartiment de beneficis d'equity a la sortida sobre la part d'equity",
+          "Participació activa en el projecte que recolza, amb una participació directa en el seu èxit",
+          "L'estructura que trien la majoria dels nostres inversors",
+        ],
+      },
+      equity: {
+        role: "Finançament directe de projecte",
+        title: "Equity",
+        subtitle: "Inversió activa · Major potencial de plusvàlua",
+        tagline:
+          "Pren una participació íntegra en un únic projecte i comparteix plenament el benefici a la sortida, amb el major potencial de rendibilitat de les tres estructures i el termini de tinença típic més llarg. Menys habitual que Deute + Equity, però disponible per a inversors còmodes amb l'exposició total al projecte.",
+        returnValue: "Repartiment de beneficis d'equity",
+        features: [
+          "Participació plena en els beneficis del projecte, amb plusvàlua sense límit",
+          "Participació directa en la propietat de l'actiu immobiliari subjacent",
+          "Participació activa en el projecte que recolza, amb una participació directa en el seu èxit",
+          "Rendibilitats materialitzades a la sortida del projecte, amb un període d'immobilització més llarg i sense cupó intermedi",
+        ],
+      },
+    },
+    compare: {
+      eyebrow: "Comparativa",
+      title: "Compari les tres estructures d'un cop d'ull",
+      intro:
+        "Una referència ràpida dels equilibris entre rendibilitat, risc, posició en l'estructura de capital i immobilització del capital.",
+      noteBefore:
+        "Les rendibilitats varien segons el projecte. El cupó exacte, la participació d'equity i el termini de tinença es calibren per a cada operació i es comparteixen a la trucada. Per veure les oportunitats actives i les xifres vigents, ",
+      noteLink: "consulteu la nostra pàgina d'Oportunitats",
+      noteAfter: ".",
+      cols: [
+        { role: "Fons Immobiliari d'Andorra", title: "Deute" },
+        { role: "Finançament directe de projecte", title: "Deute + Equity" },
+        { role: "Finançament directe de projecte", title: "Equity" },
+      ],
+      rows: [
+        {
+          label: "Mecànica de rendibilitat",
+          cells: [
+            "Cupó anual",
+            "Cupó + repartiment de beneficis d'equity",
+            "Repartiment de beneficis d'equity",
+          ],
+        },
+        {
+          label: "Quan cobra",
+          cells: [
+            "Durant tot el projecte",
+            "Durant el projecte + a la sortida",
+            "A la sortida del projecte",
+          ],
+        },
+        {
+          label: "Perfil de renda",
+          cells: [
+            "Previsible, contractual",
+            "Cupó + benefici a la sortida",
+            "Pagament únic a la sortida",
+          ],
+        },
+        {
+          label: "Posició en l'estructura de capital",
+          cells: [
+            "Preferent (garantida)",
+            "Preferent + subordinada",
+            "Subordinada (propietat)",
+          ],
+        },
+        {
+          label: "Perfil de risc",
+          cells: ["Més baix", "Equilibrat", "Més alt"],
+        },
+        {
+          label: "Potencial de plusvàlua",
+          cells: ["Limitat al cupó", "Cupó limitat + equity sense límit", "Sense límit"],
+        },
+        {
+          label: "Termini de tinença típic",
+          cells: ["Més curt", "Mitjà a llarg", "Més llarg"],
+        },
+        {
+          label: "Més indicat per a",
+          cells: [
+            "Preservació del capital",
+            "La majoria d'inversors (perfil equilibrat)",
+            "Maximització de la rendibilitat",
+          ],
+        },
+      ],
+    },
+    explainers: {
+      eyebrow: "Entendre les estructures",
+      title: "Com funciona realment cada estructura",
+      intro:
+        "Una mirada més detallada a en què inverteix, com es generen les rendibilitats i on se situa cada estructura en l'espectre de risc.",
+      items: [
+        {
+          tag: "Estructura 01",
+          title: "Deute",
+          returnLine: "Cupó anual · es fixa per projecte",
+          paragraphs: [
+            `En una posició de deute vostè està <strong>prestant capital</strong> al projecte, no adquirint-ne una part. A canvi rep un cupó anual contractual, calibrat operació per operació i pagat en intervals acordats al llarg de la vida de la inversió. El cupó exacte depèn del projecte concret: consulteu les nostres ${oppLink("Oportunitats actuals")} per conèixer les xifres vigents.`,
+            "El seu capital ocupa una <strong>posició preferent en l'estructura de capital</strong>, la qual cosa significa que, en cas de sortida, refinançament o liquidació, els titulars de deute cobren <em>abans</em> que els titulars d'equity. El préstec està garantit per l'immoble andorrà subjacent, aportant un col·lateral d'actiu real darrere de la seva rendibilitat.",
+            "La contrapartida és senzilla: renuncia a l'exposició a la plusvàlua del projecte a canvi de previsibilitat i protecció davant de pèrdues. Encara que el projecte generi rendibilitats excepcionals, la seva rendibilitat queda limitada al cupó acordat. De la mateixa manera, queda aïllat d'una part substancial del risc d'execució del projecte.",
+            "El deute sol convenir a inversors que busquen un <strong>flux de caixa contractual i estable</strong>, volen un horitzó de sortida definit i valoren la preservació del capital per sobre d'una rendibilitat extraordinària.",
+          ],
+        },
+        {
+          tag: "Estructura 02 · Més popular",
+          title: "Deute + Equity",
+          returnLine: "Cupó + Plusvàlua d'equity · es fixa per projecte",
+          paragraphs: [
+            "Una posició combinada, i l'estructura que <strong>tria la majoria dels nostres inversors</strong>. El seu compromís es reparteix entre un tram de deute i un tram d'equity, de manera que ocupa <em>totes dues</em> capes de l'estructura de capital alhora.",
+            `La part de deute paga un cupó anual, normalment una mica inferior al cupó de deute pur, perquè també participa en la plusvàlua d'equity. La part d'equity s'abona com una participació en el benefici del projecte quan l'actiu es ven o es refinança. El repartiment entre deute i equity, i les xifres exactes de totes dues parts, es fixen per projecte: consulteu les nostres ${oppLink("Oportunitats actuals")} per conèixer les xifres vigents.`,
+            "El resultat és un perfil que <strong>equilibra la protecció davant de pèrdues amb la participació plena en la plusvàlua</strong>: rep una renda contractual mentre el projecte es desenvolupa i comparteix el guany a la sortida. Si el projecte rendeix per sota del previst en la part d'equity, el cupó garantit continua esmorteint la rendibilitat global.",
+            "La majoria dels inversors es decanten per aquesta opció perquè captura l'atractiu de totes dues estructures sense comprometre's plenament amb cap. És el desplegament més habitual entre la nostra base d'inversors.",
+          ],
+        },
+        {
+          tag: "Estructura 03",
+          title: "Equity",
+          returnLine: "Repartiment de beneficis d'equity a la sortida · es fixa per projecte",
+          paragraphs: [
+            "En una posició d'equity vostè pren una <strong>participació directa en la propietat</strong> de l'entitat de projecte que posseeix l'actiu andorrà subjacent. És un soci al costat d'Equity Partners, no un prestador nostre.",
+            `No hi ha cupó. Les rendibilitats es materialitzen quan el projecte es ven o es refinança, moment en què rep la seva part proporcional del benefici. Les rendibilitats objectiu es fixen per projecte i reflecteixen el perfil específic de risc i immobilització de cada operació. Per conèixer l'objectiu concret d'una oportunitat determinada, consulteu les nostres ${oppLink("Oportunitats actuals")}.`,
+            "L'equity està <strong>subordinat al deute</strong> en l'estructura de capital, la qual cosa significa que els prestadors cobren primer. A canvi, l'equity captura <em>tota</em> la plusvàlua per sobre de les obligacions de deute, sense límit. Un projecte que supera les expectatives genera rendibilitats sensiblement superiors per a l'equity que per al deute.",
+            "L'equity està pensat per a inversors que poden tolerar terminis de tinença més llargs, l'absència de flux de caixa intermedi i un risc de projecte significatiu, a canvi del <strong>major potencial de rendibilitat</strong> de les tres estructures.",
+          ],
+        },
+      ],
+    },
+    cta: {
+      title: "No sap quina estructura li encaixa?",
+      body:
+        "Reservi una videotrucada de 30 minuts amb el nostre equip d'inversió. Li presentarem les oportunitats actives, li explicarem com s'aplicaria cada estructura al seu mandat i respondrem qualsevol pregunta sobre rendibilitats, risc i calendari.",
+      button: "Sol·licitar videotrucada",
+    },
+  },
+};
+
+const t = copy[locale];
 ---
 
 <!doctype html>
@@ -16,8 +555,8 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <SEO
-      title="Invest with Equity Partners | Andorran Real Estate"
-      description="Three ways to invest in Andorran real estate with Equity Partners: Debt for contractual annual income, Equity for full project upside, or the most popular Debt + Equity structure blending both. Returns are set per project — see live figures on our Opportunities page."
+      title={t.seo.title}
+      description={t.seo.description}
       locale={locale}
       path={Astro.url.pathname}
     />
@@ -934,11 +1473,10 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
     <section class="invest-hero">
       <div class="container">
         <div class="invest-hero-inner" data-animate>
-          <p class="eyebrow">Three Ways to Invest</p>
-          <h1>Choose how you participate in Andorran real estate</h1>
+          <p class="eyebrow">{t.hero.eyebrow}</p>
+          <h1>{t.hero.title}</h1>
           <p>
-            Choose between Debt, Equity, or our most popular Debt + Equity structure. Returns vary per project. See our
-            <a href={opportunitiesHref} class="invest-hero-link">live Opportunities</a> for current figures.
+            {t.hero.introBefore}<a href={opportunitiesHref} class="invest-hero-link">{t.hero.introLink}</a>{t.hero.introAfter}
           </p>
         </div>
       </div>
@@ -948,159 +1486,101 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
     <section class="invest-section is-light" id="structures">
       <div class="container">
         <div class="invest-section-heading" data-animate>
-          <p class="eyebrow">Investment structures</p>
-          <h2>Pick the structure that fits your mandate</h2>
-          <p>
-            All three structures are available on every live opportunity.
-            The right one for you depends on your appetite for risk, your
-            target return and how long you can lock up capital.
-          </p>
+          <p class="eyebrow">{t.structures.eyebrow}</p>
+          <h2>{t.structures.title}</h2>
+          <p>{t.structures.intro}</p>
         </div>
 
         <div class="invest-grid" data-animate>
           <!-- DEBT -->
           <article class="invest-card">
-            <span class="invest-card-role">Andorra Real Estate Fund</span>
-            <h3>Debt</h3>
-            <p class="invest-card-subtitle">Passive Investment · Lowest Risk</p>
+            <span class="invest-card-role">{t.structures.debt.role}</span>
+            <h3>{t.structures.debt.title}</h3>
+            <p class="invest-card-subtitle">{t.structures.debt.subtitle}</p>
             <div class="invest-card-divider" aria-hidden="true"></div>
-            <p class="invest-card-tagline">
-              You lend capital to the project and receive a contractual annual coupon. Your position sits senior in the capital stack and is secured against the underlying real estate, with no exposure to project upside or downside.
-            </p>
+            <p class="invest-card-tagline">{t.structures.debt.tagline}</p>
             <div class="invest-card-returns">
               <span class="invest-card-returns-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               </span>
               <div>
-                <p class="invest-card-returns-label">Headline return</p>
-                <p class="invest-card-returns-value">Annual coupon</p>
-                <p class="invest-card-returns-sub">Return varies per project · shared on your call</p>
+                <p class="invest-card-returns-label">{t.structures.returnLabel}</p>
+                <p class="invest-card-returns-value">{t.structures.debt.returnValue}</p>
+                <p class="invest-card-returns-sub">{t.structures.returnSub}</p>
               </div>
             </div>
             <ul class="invest-card-features">
-              <li>
-                <span class="invest-card-check" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
-                </span>
-                <span>Predictable contractual payments, with no project performance exposure</span>
-              </li>
-              <li>
-                <span class="invest-card-check" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
-                </span>
-                <span>Capital secured against the property, senior to equity in repayment priority</span>
-              </li>
-              <li>
-                <span class="invest-card-check" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
-                </span>
-                <span>Fully passive, with no involvement once committed</span>
-              </li>
-              <li>
-                <span class="invest-card-check" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
-                </span>
-                <span>Shorter typical hold, capital returns at project completion or refinancing</span>
-              </li>
+              {t.structures.debt.features.map((feature) => (
+                <li>
+                  <span class="invest-card-check" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
+                  </span>
+                  <span>{feature}</span>
+                </li>
+              ))}
             </ul>
-            <a class="invest-card-cta" href={`${contactHref}#video-call`}>Request Video Call</a>
+            <a class="invest-card-cta" href={`${contactHref}#video-call`}>{t.structures.cta}</a>
           </article>
 
           <!-- DEBT + EQUITY (featured) -->
           <article class="invest-card is-featured">
-            <span class="invest-card-badge">Most popular</span>
-            <span class="invest-card-role">Direct Project Financing</span>
-            <h3>Debt + Equity</h3>
-            <p class="invest-card-subtitle">Active Investment · Balanced Risk + Upside</p>
+            <span class="invest-card-badge">{t.structures.debtEquity.badge}</span>
+            <span class="invest-card-role">{t.structures.debtEquity.role}</span>
+            <h3>{t.structures.debtEquity.title}</h3>
+            <p class="invest-card-subtitle">{t.structures.debtEquity.subtitle}</p>
             <div class="invest-card-divider" aria-hidden="true"></div>
-            <p class="invest-card-tagline">
-              Part of your capital earns a contractual coupon, while the rest takes an ownership stake, so you get recurring income while the project runs and share in the upside at exit. You participate directly in the project's progress.
-            </p>
+            <p class="invest-card-tagline">{t.structures.debtEquity.tagline}</p>
             <div class="invest-card-returns">
               <span class="invest-card-returns-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="M3 17 9 11l4 4 8-8"/><path d="M14 7h7v7"/></svg>
               </span>
               <div>
-                <p class="invest-card-returns-label">Headline return</p>
-                <p class="invest-card-returns-value">Annual coupon + Equity upside</p>
-                <p class="invest-card-returns-sub">Return varies per project · shared on your call</p>
+                <p class="invest-card-returns-label">{t.structures.returnLabel}</p>
+                <p class="invest-card-returns-value">{t.structures.debtEquity.returnValue}</p>
+                <p class="invest-card-returns-sub">{t.structures.returnSub}</p>
               </div>
             </div>
             <ul class="invest-card-features">
-              <li>
-                <span class="invest-card-check" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
-                </span>
-                <span>Recurring contractual income on the debt portion while the project develops</span>
-              </li>
-              <li>
-                <span class="invest-card-check" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
-                </span>
-                <span>Equity profit share at exit on the equity portion</span>
-              </li>
-              <li>
-                <span class="invest-card-check" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
-                </span>
-                <span>Active participation in the project you back, with a direct stake in its success</span>
-              </li>
-              <li>
-                <span class="invest-card-check" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
-                </span>
-                <span>The structure most of our investors choose</span>
-              </li>
+              {t.structures.debtEquity.features.map((feature) => (
+                <li>
+                  <span class="invest-card-check" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
+                  </span>
+                  <span>{feature}</span>
+                </li>
+              ))}
             </ul>
-            <a class="invest-card-cta" href={`${contactHref}#video-call`}>Request Video Call</a>
+            <a class="invest-card-cta" href={`${contactHref}#video-call`}>{t.structures.cta}</a>
           </article>
 
           <!-- EQUITY -->
           <article class="invest-card">
-            <span class="invest-card-role">Direct Project Financing</span>
-            <h3>Equity</h3>
-            <p class="invest-card-subtitle">Active Investment · Highest Upside</p>
+            <span class="invest-card-role">{t.structures.equity.role}</span>
+            <h3>{t.structures.equity.title}</h3>
+            <p class="invest-card-subtitle">{t.structures.equity.subtitle}</p>
             <div class="invest-card-divider" aria-hidden="true"></div>
-            <p class="invest-card-tagline">
-              Take a pure ownership stake in a single project and share fully in the profit at exit, with the highest return potential of the three structures and the longest typical hold. Less common than Debt + Equity, but available for investors comfortable with full project exposure.
-            </p>
+            <p class="invest-card-tagline">{t.structures.equity.tagline}</p>
             <div class="invest-card-returns">
               <span class="invest-card-returns-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><line x1="6" y1="20" x2="6" y2="16"/><line x1="12" y1="20" x2="12" y2="11"/><line x1="18" y1="20" x2="18" y2="6"/></svg>
               </span>
               <div>
-                <p class="invest-card-returns-label">Headline return</p>
-                <p class="invest-card-returns-value">Equity profit share</p>
-                <p class="invest-card-returns-sub">Return varies per project · shared on your call</p>
+                <p class="invest-card-returns-label">{t.structures.returnLabel}</p>
+                <p class="invest-card-returns-value">{t.structures.equity.returnValue}</p>
+                <p class="invest-card-returns-sub">{t.structures.returnSub}</p>
               </div>
             </div>
             <ul class="invest-card-features">
-              <li>
-                <span class="invest-card-check" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
-                </span>
-                <span>Full participation in project profits, with uncapped upside</span>
-              </li>
-              <li>
-                <span class="invest-card-check" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
-                </span>
-                <span>Direct ownership stake in the underlying real estate asset</span>
-              </li>
-              <li>
-                <span class="invest-card-check" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
-                </span>
-                <span>Active participation in the project you back, with a direct stake in its success</span>
-              </li>
-              <li>
-                <span class="invest-card-check" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
-                </span>
-                <span>Returns realised at project exit, with longer lock-up and no interim coupon</span>
-              </li>
+              {t.structures.equity.features.map((feature) => (
+                <li>
+                  <span class="invest-card-check" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
+                  </span>
+                  <span>{feature}</span>
+                </li>
+              ))}
             </ul>
-            <a class="invest-card-cta" href={`${contactHref}#video-call`}>Request Video Call</a>
+            <a class="invest-card-cta" href={`${contactHref}#video-call`}>{t.structures.cta}</a>
           </article>
         </div>
       </div>
@@ -1110,83 +1590,40 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
     <section class="invest-section is-white">
       <div class="container">
         <div class="invest-section-heading" data-animate>
-          <p class="eyebrow">Side by side</p>
-          <h2>Compare the three structures at a glance</h2>
-          <p>
-            A quick reference for the trade-offs across return,
-            risk, position in the capital stack, and capital lock-up.
-          </p>
+          <p class="eyebrow">{t.compare.eyebrow}</p>
+          <h2>{t.compare.title}</h2>
+          <p>{t.compare.intro}</p>
         </div>
 
         <div class="invest-compare-wrap" data-animate>
-          <p class="invest-compare-note">Returns vary per project. The exact coupon, equity share and hold period are calibrated to each deal and shared on your call. For live opportunities and current figures, <a href={opportunitiesHref} class="invest-compare-link">see our Opportunities page</a>.</p>
+          <p class="invest-compare-note">{t.compare.noteBefore}<a href={opportunitiesHref} class="invest-compare-link">{t.compare.noteLink}</a>{t.compare.noteAfter}</p>
           <table class="invest-compare">
             <thead>
               <tr>
                 <th></th>
                 <th>
-                  <span class="invest-compare-th-role">Andorra Real Estate Fund</span>
-                  <span class="invest-compare-th-title">Debt</span>
+                  <span class="invest-compare-th-role">{t.compare.cols[0].role}</span>
+                  <span class="invest-compare-th-title">{t.compare.cols[0].title}</span>
                 </th>
                 <th class="is-highlight">
-                  <span class="invest-compare-th-role">Direct Project Financing</span>
-                  <span class="invest-compare-th-title">Debt + Equity</span>
+                  <span class="invest-compare-th-role">{t.compare.cols[1].role}</span>
+                  <span class="invest-compare-th-title">{t.compare.cols[1].title}</span>
                 </th>
                 <th>
-                  <span class="invest-compare-th-role">Direct Project Financing</span>
-                  <span class="invest-compare-th-title">Equity</span>
+                  <span class="invest-compare-th-role">{t.compare.cols[2].role}</span>
+                  <span class="invest-compare-th-title">{t.compare.cols[2].title}</span>
                 </th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td class="invest-compare-row-label">Return mechanic</td>
-                <td>Annual coupon</td>
-                <td class="is-highlight">Coupon + equity profit share</td>
-                <td>Equity profit share</td>
-              </tr>
-              <tr>
-                <td class="invest-compare-row-label">When you get paid</td>
-                <td>Throughout the project</td>
-                <td class="is-highlight">During the project + at exit</td>
-                <td>At project exit</td>
-              </tr>
-              <tr>
-                <td class="invest-compare-row-label">Income profile</td>
-                <td>Predictable, contractual</td>
-                <td class="is-highlight">Coupon + exit profit</td>
-                <td>Lump sum at exit</td>
-              </tr>
-              <tr>
-                <td class="invest-compare-row-label">Position in capital stack</td>
-                <td>Senior (secured)</td>
-                <td class="is-highlight">Senior + subordinated</td>
-                <td>Subordinated (ownership)</td>
-              </tr>
-              <tr>
-                <td class="invest-compare-row-label">Risk profile</td>
-                <td>Lower</td>
-                <td class="is-highlight">Balanced</td>
-                <td>Higher</td>
-              </tr>
-              <tr>
-                <td class="invest-compare-row-label">Upside potential</td>
-                <td>Capped at coupon</td>
-                <td class="is-highlight">Capped coupon + uncapped equity</td>
-                <td>Uncapped</td>
-              </tr>
-              <tr>
-                <td class="invest-compare-row-label">Typical hold</td>
-                <td>Shorter</td>
-                <td class="is-highlight">Medium to long</td>
-                <td>Longer</td>
-              </tr>
-              <tr>
-                <td class="invest-compare-row-label">Best suited to</td>
-                <td>Capital preservation</td>
-                <td class="is-highlight">Most investors (balanced profile)</td>
-                <td>Return maximisation</td>
-              </tr>
+              {t.compare.rows.map((row) => (
+                <tr>
+                  <td class="invest-compare-row-label">{row.label}</td>
+                  <td>{row.cells[0]}</td>
+                  <td class="is-highlight">{row.cells[1]}</td>
+                  <td>{row.cells[2]}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
@@ -1197,160 +1634,33 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
     <section class="invest-section is-light">
       <div class="container">
         <div class="invest-section-heading" data-animate>
-          <p class="eyebrow">Understanding the structures</p>
-          <h2>How each structure actually works</h2>
-          <p>
-            A closer look at what you're investing in, how returns are
-            generated, and where each structure sits on the risk spectrum.
-          </p>
+          <p class="eyebrow">{t.explainers.eyebrow}</p>
+          <h2>{t.explainers.title}</h2>
+          <p>{t.explainers.intro}</p>
         </div>
 
         <div class="invest-explainer">
-
-          <!-- DEBT explainer -->
-          <details class="invest-explainer-block" data-animate>
-            <summary class="invest-explainer-summary">
-              <div class="invest-explainer-summary-text">
-                <span class="invest-explainer-tag">Structure 01</span>
-                <div class="invest-explainer-summary-row">
-                  <h3>Debt</h3>
-                  <span class="invest-explainer-return">Annual coupon · set per project</span>
+          {t.explainers.items.map((item) => (
+            <details class="invest-explainer-block" data-animate>
+              <summary class="invest-explainer-summary">
+                <div class="invest-explainer-summary-text">
+                  <span class="invest-explainer-tag">{item.tag}</span>
+                  <div class="invest-explainer-summary-row">
+                    <h3>{item.title}</h3>
+                    <span class="invest-explainer-return">{item.returnLine}</span>
+                  </div>
                 </div>
+                <span class="invest-explainer-chevron" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </span>
+              </summary>
+              <div class="invest-explainer-body">
+                {item.paragraphs.map((paragraph) => (
+                  <p set:html={paragraph} />
+                ))}
               </div>
-              <span class="invest-explainer-chevron" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-              </span>
-            </summary>
-            <div class="invest-explainer-body">
-              <p>
-                In a debt position you are <strong>lending capital</strong> to
-                the project rather than owning a piece of it. In return you
-                receive a contractual annual coupon, calibrated deal by
-                deal and paid out at agreed intervals throughout the life
-                of the investment. The exact coupon depends on the
-                specific project — see our
-                <a href={opportunitiesHref} class="invest-explainer-link">live Opportunities</a>
-                for current figures.
-              </p>
-              <p>
-                Your capital sits <strong>senior in the capital stack</strong>,
-                which means in the event of an exit, refinancing, or wind-down,
-                debt holders are repaid <em>before</em> equity holders. The
-                loan is secured against the underlying Andorran property,
-                providing real-asset collateral behind your return.
-              </p>
-              <p>
-                The trade-off is simple: you give up exposure to project
-                upside in exchange for predictability and downside protection.
-                Even if the project delivers exceptional returns, your return
-                is capped at the agreed coupon. Equally, you are insulated
-                from a material part of project execution risk.
-              </p>
-              <p>
-                Debt typically suits investors who want <strong>steady,
-                contractual cash flow</strong>, want a defined exit horizon,
-                and value capital preservation over outsized return.
-              </p>
-            </div>
-          </details>
-
-          <!-- DEBT + EQUITY explainer -->
-          <details class="invest-explainer-block" data-animate>
-            <summary class="invest-explainer-summary">
-              <div class="invest-explainer-summary-text">
-                <span class="invest-explainer-tag">Structure 02 · Most popular</span>
-                <div class="invest-explainer-summary-row">
-                  <h3>Debt + Equity</h3>
-                  <span class="invest-explainer-return">Coupon + Equity upside · set per project</span>
-                </div>
-              </div>
-              <span class="invest-explainer-chevron" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-              </span>
-            </summary>
-            <div class="invest-explainer-body">
-              <p>
-                A blended position — and the structure the
-                <strong>majority of our investors choose</strong>. Your
-                commitment is split between a debt tranche and an equity
-                tranche, so you sit in <em>both</em> layers of the capital
-                stack at once.
-              </p>
-              <p>
-                The debt portion pays an annual coupon — typically
-                slightly below the pure-debt coupon, because you are
-                also participating in the equity upside. The equity
-                portion pays out as a share of project profit when the
-                asset is sold or refinanced. The split between debt and
-                equity, and the exact figures on both sides, are set per
-                project — see our
-                <a href={opportunitiesHref} class="invest-explainer-link">live Opportunities</a>
-                for current figures.
-              </p>
-              <p>
-                The result is a profile that <strong>balances downside
-                protection with full upside participation</strong>: you
-                receive contractual income while the project develops,
-                and you share in the gain at exit. If the project
-                under-performs on the equity side, the secured coupon
-                still cushions the overall return.
-              </p>
-              <p>
-                Most investors land here because it captures the appeal of
-                both structures without committing fully to either. It is
-                the most common deployment we see across our investor
-                base.
-              </p>
-            </div>
-          </details>
-
-          <!-- EQUITY explainer -->
-          <details class="invest-explainer-block" data-animate>
-            <summary class="invest-explainer-summary">
-              <div class="invest-explainer-summary-text">
-                <span class="invest-explainer-tag">Structure 03</span>
-                <div class="invest-explainer-summary-row">
-                  <h3>Equity</h3>
-                  <span class="invest-explainer-return">Equity profit share at exit · set per project</span>
-                </div>
-              </div>
-              <span class="invest-explainer-chevron" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-              </span>
-            </summary>
-            <div class="invest-explainer-body">
-              <p>
-                In an equity position you take a <strong>direct ownership
-                stake</strong> in the project entity that holds the
-                underlying Andorran asset. You are a principal alongside
-                Equity Partners, not a lender to us.
-              </p>
-              <p>
-                There is no coupon. Instead, returns are realised when the
-                project is sold or refinanced — at which point you receive
-                your pro-rata share of the profit. Target returns are set
-                on a per-project basis and reflect the specific risk and
-                lock-up profile of the deal. For the actual target on a
-                specific opportunity, see our
-                <a href={opportunitiesHref} class="invest-explainer-link">live Opportunities</a>.
-              </p>
-              <p>
-                Equity sits <strong>subordinated to debt</strong> in the
-                capital stack, meaning lenders are repaid first. In
-                exchange, equity captures <em>all</em> of the upside above
-                the debt obligations — uncapped. A project that
-                out-performs delivers materially higher returns to equity
-                than to debt.
-              </p>
-              <p>
-                Equity is for investors who can tolerate longer hold
-                periods, no interim cash flow, and meaningful project
-                risk, in exchange for the <strong>highest return
-                potential</strong> of the three structures.
-              </p>
-            </div>
-          </details>
-
+            </details>
+          ))}
         </div>
       </div>
     </section>
@@ -1360,16 +1670,11 @@ const opportunitiesHref = buildLocalizedPath("/opportunities", locale);
       <div class="container">
         <div class="invest-cta-inner" data-animate>
           <div class="invest-cta-copy">
-            <h2>Not sure which structure fits you?</h2>
-            <p>
-              Book a 30-minute video call with our investment team. We
-              will walk you through the live opportunities, explain how
-              each structure would apply to your mandate, and answer any
-              questions on returns, risk and timeline.
-            </p>
+            <h2>{t.cta.title}</h2>
+            <p>{t.cta.body}</p>
           </div>
           <a class="invest-cta-btn" href={`${contactHref}#video-call`}>
-            Request Video Call
+            {t.cta.button}
             <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </a>
         </div>

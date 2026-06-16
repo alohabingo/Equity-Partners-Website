@@ -1,0 +1,407 @@
+---
+import { buildLocalizedPath, type Locale } from "../lib/i18n";
+import { getContentTranslations } from "../i18n/content";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+// Always use the homepage "Work with the best" content so this section is
+// identical wherever it appears.
+const wq = getContentTranslations(locale).home.whyEquity;
+const aria = getContentTranslations(locale).home.aria;
+
+const icons = [
+  '<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>',
+  '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>',
+  '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+];
+---
+
+<section class="we-section">
+  <div class="we-container" data-animate>
+    <div class="we-header">
+      <p class="we-eyebrow">{wq.eyebrow}</p>
+      <h2>{wq.title}</h2>
+      <p class="we-intro">{wq.intro}</p>
+    </div>
+    <div class="we-body">
+      <div class="we-media">
+        <img src="/Ordino%20Prestige.jpeg" alt={aria.whyEquityImage} loading="lazy" />
+      </div>
+      <div class="we-points" data-carousel="weq" data-carousel-item=".we-point">
+        {wq.points.map((point, i) => (
+          <article class="we-point">
+            <span class="we-point-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" set:html={icons[i]} />
+            </span>
+            <div class="we-point-copy">
+              <h3>{point.title}</h3>
+              <div class="we-point-divider" aria-hidden="true"></div>
+              <p>{point.body}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+    <div class="we-dots" data-carousel-dots="weq" aria-label={aria.carouselNav}>
+      {wq.points.map((point, index) => (
+        <button class:list={["we-dot", index === 0 && "is-active"]} type="button" aria-label={`${index + 1}`} data-carousel-dot></button>
+      ))}
+    </div>
+    <a class="we-cta" href={buildLocalizedPath("/about", locale)}>{wq.cta}</a>
+  </div>
+</section>
+
+<style>
+  .we-section {
+    position: relative;
+    padding: 5.5rem 0 4.5rem;
+    background: radial-gradient(circle at 10% -10%, #eef2f8 0, #f4f6fa 50%);
+    border-top: 1px solid #dbe1ea;
+    border-bottom: 1px solid #dbe1ea;
+    overflow: hidden;
+  }
+
+  .we-container {
+    position: relative;
+    z-index: 1;
+    width: min(1120px, 92vw);
+    margin: 0 auto;
+  }
+
+  .we-header { max-width: none; width: 100%; }
+
+  .we-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin: 0;
+    color: #3f9568;
+    font-size: 0.74rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .we-eyebrow::before {
+    content: "";
+    width: 32px;
+    height: 1px;
+    display: inline-block;
+    background: linear-gradient(90deg, transparent, #53b27f);
+  }
+
+  .we-header h2 {
+    color: #1f2835;
+    font-size: clamp(2rem, 4.4vw, 3.1rem);
+    font-weight: 700;
+    letter-spacing: -0.012em;
+    line-height: 1.05;
+    margin: 1rem 0 0;
+    white-space: nowrap;
+  }
+
+  .we-header h2::after {
+    content: "";
+    display: block;
+    width: 64px;
+    height: 3px;
+    background: linear-gradient(90deg, #53b27f, rgba(83, 178, 127, 0));
+    margin-top: 1.1rem;
+    border-radius: 2px;
+  }
+
+  .we-intro {
+    color: #5a667a;
+    max-width: none;
+    width: 100%;
+    margin-top: 1.2rem;
+    font-size: 1.02rem;
+    line-height: 1.6;
+  }
+
+  .we-body {
+    margin-top: 3rem;
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    gap: 1.4rem;
+    align-items: stretch;
+  }
+
+  .we-media {
+    min-height: 34rem;
+    border-radius: 1.2rem;
+    overflow: hidden;
+    border: 1px solid #dbe1ea;
+    background: #dde6f2;
+    box-shadow: 0 18px 40px rgba(15, 26, 42, 0.07);
+  }
+
+  .we-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .we-points { display: grid; gap: 1.1rem; }
+
+  .we-point {
+    position: relative;
+    background: #ffffff;
+    border: 1px solid #dbe1ea;
+    border-radius: 1.2rem;
+    padding: 1.7rem 1.7rem 1.6rem;
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    column-gap: 1.1rem;
+    overflow: hidden;
+    isolation: isolate;
+    box-shadow: 0 10px 30px rgba(15, 26, 42, 0.06);
+    transition: transform 360ms cubic-bezier(0.2, 0.65, 0.35, 1),
+      border-color 360ms ease, box-shadow 360ms ease;
+  }
+
+  .we-point::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 90% 0%, rgba(83, 178, 127, 0.14), transparent 60%);
+    opacity: 0;
+    transition: opacity 360ms ease;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  .we-point::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(83, 178, 127, 0.55), transparent);
+    opacity: 0;
+    transition: opacity 360ms ease;
+  }
+
+  .we-point:hover {
+    transform: translateY(-6px);
+    border-color: rgba(83, 178, 127, 0.42);
+    box-shadow: 0 26px 48px rgba(15, 26, 42, 0.12),
+      0 0 0 1px rgba(83, 178, 127, 0.16) inset;
+  }
+
+  .we-point:hover::before,
+  .we-point:hover::after { opacity: 1; }
+
+  .we-point-icon {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.85rem;
+    background: linear-gradient(135deg, #53b27f 0%, #3f9568 100%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 22px rgba(83, 178, 127, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    transition: transform 360ms cubic-bezier(0.2, 0.65, 0.35, 1),
+      box-shadow 360ms ease, background 360ms ease;
+  }
+
+  .we-point:hover .we-point-icon {
+    background: linear-gradient(135deg, #5fc48d 0%, #4aa775 100%);
+    transform: scale(1.05) rotate(-3deg);
+    box-shadow: 0 14px 28px rgba(83, 178, 127, 0.34),
+      inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  }
+
+  .we-point-icon svg { width: 1.4rem; height: 1.4rem; stroke: #ffffff; }
+
+  .we-point-copy { display: contents; }
+
+  .we-point-copy h3 {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    margin: 0;
+    color: #1f2835;
+    font-size: 1.15rem;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    line-height: 1.25;
+    position: relative;
+    z-index: 1;
+    max-width: 16rem;
+  }
+
+  .we-point-divider {
+    grid-column: 1 / 3;
+    grid-row: 2;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(83, 178, 127, 0.5), rgba(83, 178, 127, 0.05));
+    margin-top: 0.7rem;
+  }
+
+  .we-point-copy p {
+    grid-column: 1 / 3;
+    grid-row: 3;
+    margin: 0.75rem 0 0;
+    color: #5f7087;
+    font-size: 0.93rem;
+    line-height: 1.55;
+    position: relative;
+    z-index: 1;
+  }
+
+  .we-cta {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+    margin-top: 2.6rem;
+    color: #3f9568;
+    font-size: 0.78rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 0.85rem 1.4rem;
+    border: 1px solid rgba(83, 178, 127, 0.55);
+    border-radius: 0.55rem;
+    background: rgba(83, 178, 127, 0.08);
+    transition: background 220ms ease, border-color 220ms ease,
+      transform 220ms ease, color 220ms ease, box-shadow 220ms ease;
+  }
+
+  .we-cta:hover {
+    background: #53b27f;
+    border-color: #53b27f;
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px rgba(83, 178, 127, 0.28);
+  }
+
+  .we-dots { display: none; visibility: hidden; pointer-events: none; }
+
+  .we-section [data-animate] {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 600ms ease, transform 600ms ease;
+  }
+
+  .we-section [data-animate].is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  @media (max-width: 980px) {
+    .we-body { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 680px) {
+    .we-section { padding: 2.3rem 0 3.5rem; }
+    .we-header h2 { white-space: normal; }
+
+    .we-points {
+      display: flex;
+      gap: 0.85rem;
+      width: 100%;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 0.35rem;
+      scrollbar-width: none;
+    }
+
+    .we-points::-webkit-scrollbar { display: none; }
+
+    .we-point {
+      flex: 0 0 85%;
+      scroll-snap-align: center;
+      box-shadow: none;
+    }
+
+    .we-dots {
+      margin-top: 0.9rem;
+      display: flex;
+      visibility: visible;
+      pointer-events: auto;
+      justify-content: center;
+      gap: 0.45rem;
+    }
+
+    .we-dot {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 999px;
+      background: #cfe6d9;
+      border: 0;
+      padding: 0;
+      cursor: pointer;
+      transition: width 240ms ease, background-color 240ms ease;
+    }
+
+    .we-dot.is-active { width: 1.45rem; background: #53b27f; }
+  }
+</style>
+
+<script>
+  const reveal = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          reveal.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.08 }
+  );
+  document.querySelectorAll(".we-section [data-animate]").forEach((el) => reveal.observe(el));
+
+  document.querySelectorAll(".we-section [data-carousel]").forEach((grid) => {
+    const key = grid.getAttribute("data-carousel");
+    const itemSel = grid.getAttribute("data-carousel-item");
+    const dotsWrap = grid.closest(".we-section")?.querySelector(`[data-carousel-dots="${key}"]`);
+    const dots = dotsWrap ? Array.from(dotsWrap.querySelectorAll("[data-carousel-dot]")) : [];
+    if (!itemSel || dots.length === 0) return;
+
+    const syncDots = () => {
+      const items = Array.from(grid.querySelectorAll(itemSel));
+      if (!items.length) return;
+      const viewportCenter = grid.scrollLeft + grid.clientWidth / 2;
+      let activeIndex = 0;
+      let bestDistance = Infinity;
+      items.forEach((item, index) => {
+        const itemCenter = item.offsetLeft - grid.offsetLeft + item.offsetWidth / 2;
+        const distance = Math.abs(itemCenter - viewportCenter);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          activeIndex = index;
+        }
+      });
+      dots.forEach((dot, index) => dot.classList.toggle("is-active", index === activeIndex));
+    };
+
+    dots.forEach((dot, index) => {
+      dot.addEventListener("click", () => {
+        const item = grid.querySelectorAll(itemSel)[index];
+        if (!item) return;
+        const target = item.offsetLeft - grid.offsetLeft + item.offsetWidth / 2 - grid.clientWidth / 2;
+        grid.scrollTo({ left: Math.max(0, target), behavior: "smooth" });
+      });
+    });
+
+    grid.addEventListener("scroll", syncDots, { passive: true });
+    window.addEventListener("resize", syncDots);
+    syncDots();
+  });
+</script>

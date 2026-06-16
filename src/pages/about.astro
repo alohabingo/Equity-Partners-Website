@@ -3,6 +3,7 @@ import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import NewsletterSignup from "../components/NewsletterSignup.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import SEO from "../components/SEO.astro";
+import WhyEquitySection from "../components/WhyEquitySection.astro";
 import { buildLocalizedPath, getLocaleFromUrl } from "../lib/i18n";
 import { getContentTranslations } from "../i18n/content";
 import { getPageTitle } from "../i18n/ui";
@@ -1294,43 +1295,7 @@ const localizedTeamMembers = teamMembers.map((member, index) => ({
       </div>
     </section>
 
-    <section class="section why-equity">
-      <div class="container">
-        <div class="section-header">
-          <p class="eyebrow">{content.whyEquity.eyebrow}</p>
-          <h2>{content.whyEquity.title}</h2>
-          <p class="intro">{content.whyEquity.intro}</p>
-        </div>
-        <div class="why-equity-body">
-          <div class="why-equity-media">
-            <img src="/04c copy.jpg" alt="Equity Partners development and Andorra property view" loading="lazy" />
-          </div>
-          <div class="why-equity-points">
-            <article class="why-equity-point">
-              <span class="why-equity-point-icon" aria-hidden="true"><img src="/images/Icons/project%20development.png" alt="" /></span>
-              <div class="why-equity-point-copy">
-                <h3>{content.whyEquity.points[0].title}</h3>
-                <p>{content.whyEquity.points[0].body}</p>
-              </div>
-            </article>
-            <article class="why-equity-point">
-              <span class="why-equity-point-icon" aria-hidden="true"><img src="/images/Icons/local%20network.png" alt="" /></span>
-              <div class="why-equity-point-copy">
-                <h3>{content.whyEquity.points[1].title}</h3>
-                <p>{content.whyEquity.points[1].body}</p>
-              </div>
-            </article>
-            <article class="why-equity-point">
-              <span class="why-equity-point-icon" aria-hidden="true"><img src="/images/Icons/regulatory%20expertise.png" alt="" /></span>
-              <div class="why-equity-point-copy">
-                <h3>{content.whyEquity.points[2].title}</h3>
-                <p>{content.whyEquity.points[2].body}</p>
-              </div>
-            </article>
-          </div>
-        </div>
-      </div>
-    </section>
+    <WhyEquitySection locale={locale} />
 
     <section class="section team-variant-circles team-variant-circles-dark team-variant-cards" id="team">
       <div class="container">

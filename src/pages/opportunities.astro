@@ -5,12 +5,269 @@ import SiteFooter from "../components/SiteFooter.astro";
 import SEO from "../components/SEO.astro";
 import { buildLocalizedPath, getLocaleFromUrl } from "../lib/i18n";
 import {
-  opportunities,
+  opportunities as opportunitiesEn,
   opportunityStatusColour,
   riskProfileColour,
 } from "../data/opportunities";
+import { opportunities as opportunitiesEs } from "../data/opportunitiesEs";
+import { opportunities as opportunitiesCa } from "../data/opportunitiesCa";
 
 const locale = getLocaleFromUrl(Astro.url) ?? "en";
+
+const opportunitiesByLocale = {
+  en: opportunitiesEn,
+  es: opportunitiesEs,
+  ca: opportunitiesCa,
+};
+const opportunities = opportunitiesByLocale[locale];
+
+const copy = {
+  en: {
+    seoTitle: "Investment Opportunities | Equity Partners",
+    seoDescription:
+      "Live investment opportunities in Andorran real estate curated by Equity Partners. Review deal metrics, target returns, risk profile and timeline for every open raise.",
+    heroEyebrow: "Example opportunities",
+    heroTitle: "A snapshot of opportunities similar to what we offer",
+    heroIntroBefore:
+      "Five illustrative deals across different sectors, ticket sizes, and structures (Debt, Debt + Equity, Equity). Exact returns, ticket sizes and hold periods are calibrated per project and shared on a ",
+    heroIntroLink: "video call",
+    heroIntroAfter: ", where we match a project to your budget and mandate.",
+    statsOppsLabel: "Example opportunities",
+    statsMinLabel: "Lowest minimum entry",
+    statsHoldValue: "24–60 months",
+    statsHoldLabel: "Typical hold range",
+    statusShort: {
+      "Open for Investment": "Open",
+      "Closing Soon": "Closing Soon",
+      "Closed": "Closed",
+      "Waitlist": "Waitlist",
+      "Fully Subscribed": "Fully Subscribed",
+    } as Record<string, string>,
+    cardRequiredInvestment: "Required investment",
+    cardHeadlineReturn: "Headline return",
+    cardSharedOnRequest: "Shared on request",
+    cardBuildableArea: "Buildable area",
+    cardHoldPeriod: "Hold period",
+    cardView: "View opportunity",
+    cardRequestCall: "Request video call",
+    infoEyebrow: "Investment structures",
+    infoQuestion: "Which structure fits your mandate?",
+    infoBody:
+      "Every opportunity is open to Debt, Debt + Equity or Equity. The final call is always yours, tailored to your mandate.",
+    infoDebtName: "Debt",
+    infoDebtHint: "For predictable income, lowest risk. Annual coupon, no project upside.",
+    infoDebtEquityName: "Debt + Equity",
+    infoDebtEquityHint: "Most chosen. Recurring coupon plus equity profit share at exit.",
+    infoEquityName: "Equity",
+    infoEquityHint: "For highest return potential. Full profit share at exit, longest hold.",
+    infoCta: "Read about structures",
+    timelineEyebrow: "Timeline",
+    timelineTitle: "The Investment Roadmap",
+    timelineIntro:
+      "A streamlined onboarding process designed to move you from initial inquiry to active capital deployment.",
+    stepPrefix: "Step",
+    steps: [
+      {
+        title: "Contact our Team",
+        body: "Initial conversation to understand your profile and Andorra interest.",
+      },
+      {
+        title: "Consultation Call",
+        body: "Map timeline, returns, and the strategic route forward.",
+      },
+      {
+        title: "Select Opportunity",
+        body: "We present opportunities matched to your mandate.",
+      },
+      {
+        title: "KYC & Compliance",
+        body: "Onboarding and checks before capital commitment.",
+      },
+      {
+        title: "Capital Deployment",
+        body: "Capital is deployed and project execution begins.",
+      },
+    ],
+    timelineCta: "Contact our Team",
+    bannerEyebrow: "Live opportunities",
+    bannerTitle: "Ready to see live opportunities?",
+    bannerText:
+      "The opportunities on this page are illustrative. We share real, current deals on a private video call.",
+    bannerCta: "Request a video call",
+    bannerPanelTitle: "On the call, we'll",
+    bannerList: [
+      "Review your budget & mandate",
+      "Walk you through current deals",
+      "Match you to the right structure",
+    ],
+  },
+  es: {
+    seoTitle: "Oportunidades de inversión | Equity Partners",
+    seoDescription:
+      "Oportunidades de inversión en el sector inmobiliario andorrano seleccionadas por Equity Partners. Consulte las métricas, las rentabilidades objetivo, el perfil de riesgo y el calendario de cada captación abierta.",
+    heroEyebrow: "Oportunidades de ejemplo",
+    heroTitle: "Una muestra de oportunidades similares a las que ofrecemos",
+    heroIntroBefore:
+      "Cinco operaciones ilustrativas en distintos sectores, importes y estructuras (Deuda, Deuda + Equity, Equity). Las rentabilidades, los importes y los plazos de tenencia exactos se calibran por proyecto y se comparten en una ",
+    heroIntroLink: "videollamada",
+    heroIntroAfter: ", donde ajustamos el proyecto a su presupuesto y mandato.",
+    statsOppsLabel: "Oportunidades de ejemplo",
+    statsMinLabel: "Entrada mínima más baja",
+    statsHoldValue: "24–60 meses",
+    statsHoldLabel: "Rango de tenencia típico",
+    statusShort: {
+      "Open for Investment": "Abierta",
+      "Closing Soon": "Cierre próximo",
+      "Closed": "Cerrada",
+      "Waitlist": "Lista de espera",
+      "Fully Subscribed": "Totalmente suscrita",
+    } as Record<string, string>,
+    cardRequiredInvestment: "Inversión requerida",
+    cardHeadlineReturn: "Rentabilidad principal",
+    cardSharedOnRequest: "Se comparte bajo petición",
+    cardBuildableArea: "Superficie edificable",
+    cardHoldPeriod: "Plazo de tenencia",
+    cardView: "Ver oportunidad",
+    cardRequestCall: "Solicitar videollamada",
+    infoEyebrow: "Estructuras de inversión",
+    infoQuestion: "¿Qué estructura se ajusta a su mandato?",
+    infoBody:
+      "Todas las oportunidades están abiertas a Deuda, Deuda + Equity o Equity. La decisión final es siempre suya, adaptada a su mandato.",
+    infoDebtName: "Deuda",
+    infoDebtHint:
+      "Para una renta predecible, con el riesgo más bajo. Cupón anual, sin plusvalía del proyecto.",
+    infoDebtEquityName: "Deuda + Equity",
+    infoDebtEquityHint:
+      "La más elegida. Cupón recurrente más participación en los beneficios de equity en la salida.",
+    infoEquityName: "Equity",
+    infoEquityHint:
+      "Para el mayor potencial de rentabilidad. Participación íntegra en los beneficios en la salida, tenencia más larga.",
+    infoCta: "Conozca las estructuras",
+    timelineEyebrow: "Recorrido",
+    timelineTitle: "La hoja de ruta de la inversión",
+    timelineIntro:
+      "Un proceso de incorporación optimizado para guiarle desde el contacto inicial hasta el despliegue activo del capital.",
+    stepPrefix: "Paso",
+    steps: [
+      {
+        title: "Contactar con el equipo",
+        body: "Conversación inicial para entender su perfil y su interés por Andorra.",
+      },
+      {
+        title: "Llamada de consultoría",
+        body: "Calendario, rentabilidades y trazado de la ruta estratégica.",
+      },
+      {
+        title: "Seleccionar oportunidad",
+        body: "Le presentamos oportunidades acordes con su mandato.",
+      },
+      {
+        title: "KYC y Cumplimiento",
+        body: "Onboarding y verificaciones antes del compromiso de capital.",
+      },
+      {
+        title: "Despliegue de capital",
+        body: "Se despliega el capital y comienza la ejecución del proyecto.",
+      },
+    ],
+    timelineCta: "Contactar con el equipo",
+    bannerEyebrow: "Oportunidades actuales",
+    bannerTitle: "¿Quiere ver las oportunidades actuales?",
+    bannerText:
+      "Las oportunidades de esta página son ilustrativas. Las operaciones reales y vigentes las compartimos en una videollamada privada.",
+    bannerCta: "Solicitar una videollamada",
+    bannerPanelTitle: "En la llamada",
+    bannerList: [
+      "Revisaremos su presupuesto y mandato",
+      "Le presentaremos las operaciones vigentes",
+      "Le orientaremos hacia la estructura adecuada",
+    ],
+  },
+  ca: {
+    seoTitle: "Oportunitats d'inversió | Equity Partners",
+    seoDescription:
+      "Oportunitats d'inversió en el sector immobiliari andorrà seleccionades per Equity Partners. Consulti les mètriques, les rendibilitats objectiu, el perfil de risc i el calendari de cada captació oberta.",
+    heroEyebrow: "Oportunitats d'exemple",
+    heroTitle: "Una mostra d'oportunitats similars a les que oferim",
+    heroIntroBefore:
+      "Cinc operacions il·lustratives en diferents sectors, imports i estructures (Deute, Deute + Equity, Equity). Les rendibilitats, els imports i els terminis de tinença exactes es calibren per projecte i es comparteixen en una ",
+    heroIntroLink: "videotrucada",
+    heroIntroAfter: ", on ajustem el projecte al seu pressupost i mandat.",
+    statsOppsLabel: "Oportunitats d'exemple",
+    statsMinLabel: "Entrada mínima més baixa",
+    statsHoldValue: "24–60 mesos",
+    statsHoldLabel: "Rang de tinença típic",
+    statusShort: {
+      "Open for Investment": "Oberta",
+      "Closing Soon": "Tancament proper",
+      "Closed": "Tancada",
+      "Waitlist": "Llista d'espera",
+      "Fully Subscribed": "Totalment subscrita",
+    } as Record<string, string>,
+    cardRequiredInvestment: "Inversió requerida",
+    cardHeadlineReturn: "Rendibilitat principal",
+    cardSharedOnRequest: "Es comparteix sota petició",
+    cardBuildableArea: "Superfície edificable",
+    cardHoldPeriod: "Termini de tinença",
+    cardView: "Veure oportunitat",
+    cardRequestCall: "Sol·licitar videotrucada",
+    infoEyebrow: "Estructures d'inversió",
+    infoQuestion: "Quina estructura s'ajusta al seu mandat?",
+    infoBody:
+      "Totes les oportunitats estan obertes a Deute, Deute + Equity o Equity. La decisió final és sempre seva, adaptada al seu mandat.",
+    infoDebtName: "Deute",
+    infoDebtHint:
+      "Per a una renda previsible, amb el risc més baix. Cupó anual, sense plusvàlua del projecte.",
+    infoDebtEquityName: "Deute + Equity",
+    infoDebtEquityHint:
+      "La més escollida. Cupó recurrent més participació en els beneficis d'equity a la sortida.",
+    infoEquityName: "Equity",
+    infoEquityHint:
+      "Per al màxim potencial de rendibilitat. Participació íntegra en els beneficis a la sortida, tinença més llarga.",
+    infoCta: "Conegui les estructures",
+    timelineEyebrow: "Recorregut",
+    timelineTitle: "El full de ruta de la inversió",
+    timelineIntro:
+      "Un procés d'incorporació optimitzat per guiar-lo des del contacte inicial fins al desplegament actiu del capital.",
+    stepPrefix: "Pas",
+    steps: [
+      {
+        title: "Contacta amb l'equip",
+        body: "Conversa inicial per entendre el seu perfil i el seu interès per Andorra.",
+      },
+      {
+        title: "Trucada de consultoria",
+        body: "Calendari, rendibilitats i traçat de la ruta estratègica.",
+      },
+      {
+        title: "Seleccionar oportunitat",
+        body: "Li presentem oportunitats d'acord amb el seu mandat.",
+      },
+      {
+        title: "KYC i Compliment",
+        body: "Onboarding i verificacions abans del compromís de capital.",
+      },
+      {
+        title: "Desplegament de capital",
+        body: "Es desplega el capital i comença l'execució del projecte.",
+      },
+    ],
+    timelineCta: "Contacta amb l'equip",
+    bannerEyebrow: "Oportunitats actuals",
+    bannerTitle: "Vol veure les oportunitats actuals?",
+    bannerText:
+      "Les oportunitats d'aquesta pàgina són il·lustratives. Les operacions reals i vigents les compartim en una videotrucada privada.",
+    bannerCta: "Sol·licitar una videotrucada",
+    bannerPanelTitle: "A la trucada",
+    bannerList: [
+      "Revisarem el seu pressupost i mandat",
+      "Li presentarem les operacions vigents",
+      "L'orientarem cap a l'estructura adequada",
+    ],
+  },
+};
+
+const t = copy[locale];
 ---
 
 <!doctype html>
@@ -19,8 +276,8 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <SEO
-      title="Investment Opportunities | Equity Partners"
-      description="Live investment opportunities in Andorran real estate curated by Equity Partners. Review deal metrics, target returns, risk profile and timeline for every open raise."
+      title={t.seoTitle}
+      description={t.seoDescription}
       locale={locale}
       path={Astro.url.pathname}
     />
@@ -1323,10 +1580,10 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
     <section class="opps-hero">
       <div class="container">
         <div class="opps-hero-inner" data-animate>
-          <p class="eyebrow">Example opportunities</p>
-          <h1>A snapshot of opportunities similar to what we offer</h1>
+          <p class="eyebrow">{t.heroEyebrow}</p>
+          <h1>{t.heroTitle}</h1>
           <p>
-            Five illustrative deals across different sectors, ticket sizes, and structures (Debt, Debt + Equity, Equity). Exact returns, ticket sizes and hold periods are calibrated per project and shared on a <a href={`${buildLocalizedPath("/contact", locale)}#video-call`} class="opps-hero-link">video call</a>, where we match a project to your budget and mandate.
+            {t.heroIntroBefore}<a href={`${buildLocalizedPath("/contact", locale)}#video-call`} class="opps-hero-link">{t.heroIntroLink}</a>{t.heroIntroAfter}
           </p>
         </div>
       </div>
@@ -1338,15 +1595,15 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
         <div class="opps-stats-inner" data-animate>
           <div class="opps-stat">
             <span class="opps-stat-value">{opportunities.length}</span>
-            <span class="opps-stat-label">Example opportunities</span>
+            <span class="opps-stat-label">{t.statsOppsLabel}</span>
           </div>
           <div class="opps-stat">
             <span class="opps-stat-value">€500k</span>
-            <span class="opps-stat-label">Lowest minimum entry</span>
+            <span class="opps-stat-label">{t.statsMinLabel}</span>
           </div>
           <div class="opps-stat">
-            <span class="opps-stat-value">24–60 months</span>
-            <span class="opps-stat-label">Typical hold range</span>
+            <span class="opps-stat-value">{t.statsHoldValue}</span>
+            <span class="opps-stat-label">{t.statsHoldLabel}</span>
           </div>
         </div>
       </div>
@@ -1365,7 +1622,7 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
                     class="opp-card-chip"
                     style={`background: ${opportunityStatusColour[opp.status]}`}
                   >
-                    {opp.status === "Open for Investment" ? "Open" : opp.status}
+                    {t.statusShort[opp.status]}
                   </span>
                   <span
                     class="opp-card-chip"
@@ -1381,19 +1638,19 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
 
                 <div class="opp-card-metrics">
                   <div class="opp-card-metric">
-                    <span class="opp-card-metric-label">Required investment</span>
+                    <span class="opp-card-metric-label">{t.cardRequiredInvestment}</span>
                     <span class="opp-card-metric-value is-green">{opp.equityRaise}</span>
                   </div>
                   <div class="opp-card-metric">
-                    <span class="opp-card-metric-label">Headline return</span>
-                    <span class="opp-card-metric-value">Shared on request</span>
+                    <span class="opp-card-metric-label">{t.cardHeadlineReturn}</span>
+                    <span class="opp-card-metric-value">{t.cardSharedOnRequest}</span>
                   </div>
                   <div class="opp-card-metric">
-                    <span class="opp-card-metric-label">Buildable area</span>
+                    <span class="opp-card-metric-label">{t.cardBuildableArea}</span>
                     <span class="opp-card-metric-value">{opp.sqm}</span>
                   </div>
                   <div class="opp-card-metric">
-                    <span class="opp-card-metric-label">Hold period</span>
+                    <span class="opp-card-metric-label">{t.cardHoldPeriod}</span>
                     <span class="opp-card-metric-value">{opp.holdPeriod}</span>
                   </div>
                 </div>
@@ -1417,11 +1674,11 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
 
                 <div class="opp-card-ctas">
                   <a class="opp-card-cta" href={buildLocalizedPath(`/opportunities/${opp.slug}`, locale)}>
-                    View opportunity
+                    {t.cardView}
                     <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                   </a>
                   <a class="opp-card-cta is-secondary" href={`${buildLocalizedPath("/contact", locale)}#video-call`}>
-                    Request video call
+                    {t.cardRequestCall}
                   </a>
                 </div>
               </div>
@@ -1431,17 +1688,17 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
           <!-- 6th card — Investment structures callout (Variation B) -->
           <article class="opp-card-info">
             <div class="opp-card-info-inner">
-              <p class="info-eyebrow">Investment structures</p>
-              <h3 class="info-question">Which structure fits your mandate?</h3>
-              <p class="info-body">Every opportunity is open to Debt, Debt + Equity or Equity. The final call is always yours, tailored to your mandate.</p>
+              <p class="info-eyebrow">{t.infoEyebrow}</p>
+              <h3 class="info-question">{t.infoQuestion}</h3>
+              <p class="info-body">{t.infoBody}</p>
 
               <a class="info-option" href={`${buildLocalizedPath("/invest", locale)}#structures`}>
                 <span class="info-option-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                 </span>
                 <div>
-                  <p class="info-option-name">Debt</p>
-                  <p class="info-option-hint">For predictable income, lowest risk. Annual coupon, no project upside.</p>
+                  <p class="info-option-name">{t.infoDebtName}</p>
+                  <p class="info-option-hint">{t.infoDebtHint}</p>
                 </div>
               </a>
 
@@ -1450,8 +1707,8 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
                   <svg viewBox="0 0 24 24"><path d="M3 17 9 11l4 4 8-8"/><path d="M14 7h7v7"/></svg>
                 </span>
                 <div>
-                  <p class="info-option-name">Debt + Equity</p>
-                  <p class="info-option-hint">Most chosen. Recurring coupon plus equity profit share at exit.</p>
+                  <p class="info-option-name">{t.infoDebtEquityName}</p>
+                  <p class="info-option-hint">{t.infoDebtEquityHint}</p>
                 </div>
               </a>
 
@@ -1460,13 +1717,13 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
                   <svg viewBox="0 0 24 24"><line x1="6" y1="20" x2="6" y2="16"/><line x1="12" y1="20" x2="12" y2="11"/><line x1="18" y1="20" x2="18" y2="6"/></svg>
                 </span>
                 <div>
-                  <p class="info-option-name">Equity</p>
-                  <p class="info-option-hint">For highest return potential. Full profit share at exit, longest hold.</p>
+                  <p class="info-option-name">{t.infoEquityName}</p>
+                  <p class="info-option-hint">{t.infoEquityHint}</p>
                 </div>
               </a>
 
               <a href={buildLocalizedPath("/invest", locale)} class="info-cta">
-                Read about structures
+                {t.infoCta}
                 <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </a>
 
@@ -1480,54 +1737,54 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
     <section class="timeline-v2 is-spotlight">
       <div class="container" data-animate>
         <div class="section-header">
-          <p class="eyebrow">Timeline</p>
-          <h2>The Investment Roadmap</h2>
-          <p class="intro">A streamlined onboarding process designed to move you from initial inquiry to active capital deployment.</p>
+          <p class="eyebrow">{t.timelineEyebrow}</p>
+          <h2>{t.timelineTitle}</h2>
+          <p class="intro">{t.timelineIntro}</p>
         </div>
         <div class="timeline-v2-card">
           <div class="timeline-v2-col">
-            <span class="timeline-v2-step-num">Step 01</span>
+            <span class="timeline-v2-step-num">{t.stepPrefix} 01</span>
             <div class="timeline-v2-step-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M4 6.5h9a2.5 2.5 0 0 1 2.5 2.5v4A2.5 2.5 0 0 1 13 15.5H9l-3.5 2v-2H4A2.5 2.5 0 0 1 1.5 13V9A2.5 2.5 0 0 1 4 6.5Z"/><path d="M15 9h5a2.5 2.5 0 0 1 2.5 2.5v3A2.5 2.5 0 0 1 20 17h-1.5v2L15 17h-1"/></svg>
             </div>
-            <h3>Contact our Team</h3>
-            <p>Initial conversation to understand your profile and Andorra interest.</p>
+            <h3>{t.steps[0].title}</h3>
+            <p>{t.steps[0].body}</p>
           </div>
           <div class="timeline-v2-col">
-            <span class="timeline-v2-step-num">Step 02</span>
+            <span class="timeline-v2-step-num">{t.stepPrefix} 02</span>
             <div class="timeline-v2-step-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="13" height="13" rx="2.5"/><path d="m16 10 5-3v10l-5-3"/><circle cx="9.5" cy="10.5" r="2.25"/><path d="M6.5 15.5a3.25 3.25 0 0 1 6 0"/></svg>
             </div>
-            <h3>Consultation Call</h3>
-            <p>Map timeline, returns, and the strategic route forward.</p>
+            <h3>{t.steps[1].title}</h3>
+            <p>{t.steps[1].body}</p>
           </div>
           <div class="timeline-v2-col">
-            <span class="timeline-v2-step-num">Step 03</span>
+            <span class="timeline-v2-step-num">{t.stepPrefix} 03</span>
             <div class="timeline-v2-step-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M4 12h16"/></svg>
             </div>
-            <h3>Select Opportunity</h3>
-            <p>We present opportunities matched to your mandate.</p>
+            <h3>{t.steps[2].title}</h3>
+            <p>{t.steps[2].body}</p>
           </div>
           <div class="timeline-v2-col">
-            <span class="timeline-v2-step-num">Step 04</span>
+            <span class="timeline-v2-step-num">{t.stepPrefix} 04</span>
             <div class="timeline-v2-step-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
             </div>
-            <h3>KYC &amp; Compliance</h3>
-            <p>Onboarding and checks before capital commitment.</p>
+            <h3>{t.steps[3].title}</h3>
+            <p>{t.steps[3].body}</p>
           </div>
           <div class="timeline-v2-col">
-            <span class="timeline-v2-step-num">Step 05</span>
+            <span class="timeline-v2-step-num">{t.stepPrefix} 05</span>
             <div class="timeline-v2-step-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M4 16.5 10 10.5l3.5 3.5L20 7.5"/><path d="M14 7.5h6v6"/><path d="M5 19.5h14"/></svg>
             </div>
-            <h3>Capital Deployment</h3>
-            <p>Capital is deployed and project execution begins.</p>
+            <h3>{t.steps[4].title}</h3>
+            <p>{t.steps[4].body}</p>
           </div>
         </div>
         <div class="timeline-v2-cta">
-          <a class="button" href={`${buildLocalizedPath("/contact", locale)}#tab-investor`}>Contact our Team</a>
+          <a class="button" href={`${buildLocalizedPath("/contact", locale)}#tab-investor`}>{t.timelineCta}</a>
         </div>
       </div>
     </section>
@@ -1536,7 +1793,7 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
     <section class="opps-cta-banner">
       <div class="container">
         <div class="opps-cta-header" data-animate>
-          <p class="opps-cta-eyebrow">Live opportunities</p>
+          <p class="opps-cta-eyebrow">{t.bannerEyebrow}</p>
         </div>
 
         <div class="opps-cta-card" data-animate>
@@ -1546,31 +1803,25 @@ const locale = getLocaleFromUrl(Astro.url) ?? "en";
                 <span class="opps-cta-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
                 </span>
-                <h2>Ready to see live opportunities?</h2>
+                <h2>{t.bannerTitle}</h2>
               </div>
               <p class="opps-cta-text">
-                The opportunities on this page are illustrative. We share real, current deals on a private video call.
+                {t.bannerText}
               </p>
               <a class="opps-cta-btn" href={`${buildLocalizedPath("/contact", locale)}#video-call`}>
-                Request a video call
+                {t.bannerCta}
                 <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </a>
             </div>
             <div class="opps-cta-panel">
-              <p class="opps-cta-panel-title">On the call, we'll</p>
+              <p class="opps-cta-panel-title">{t.bannerPanelTitle}</p>
               <ul class="opps-cta-list">
-                <li>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
-                  <span>Review your budget &amp; mandate</span>
-                </li>
-                <li>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
-                  <span>Walk you through current deals</span>
-                </li>
-                <li>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
-                  <span>Match you to the right structure</span>
-                </li>
+                {t.bannerList.map((item) => (
+                  <li>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
+                    <span>{item}</span>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>

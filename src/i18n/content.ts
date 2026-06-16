@@ -672,7 +672,7 @@ export const contentTranslations: Record<
       team: {
         eyebrow: "Meet the team",
         title: "Core Equity Partners Team",
-        intro: "A darker variation of the same circular team layout to compare contrast and overall feel.",
+        intro: "The people behind Equity Partners — combining local Andorran expertise with international investment experience.",
         members: [
           {
             role: "CEO & Co-founder",
@@ -687,7 +687,7 @@ export const contentTranslations: Record<
           {
             role: "Technical Architect",
             description:
-              "With over 25 years of extensive expertise in real estate investment, land acquisition and strategic development. Carlos combines his deep knowledge of the Andorrean maket with a strong internatinoal outlook.",
+              "With over 25 years of extensive expertise in real estate investment, land acquisition and strategic development. Carlos combines his deep knowledge of the Andorran market with a strong international outlook.",
           },
           {
             role: "Partnerships & Sales",
@@ -695,7 +695,7 @@ export const contentTranslations: Record<
               "With a Master degree in Digital Business from the University of Amsterdam and 4 years of experience at Salesforce, Bing's international past and results-oriented mindset brings deep knowledge of digital acquisition.",
           },
           {
-            role: "Ditigal Marketing",
+            role: "Digital Marketing",
             description:
               "Directing our creative strategy, Tekke translates our institutional values into a world-class visual identity and seamless digital experience for our investors.",
           },
@@ -745,7 +745,7 @@ export const contentTranslations: Record<
         {
           role: "Luxury Real Estate",
           summary:
-            "As a leading international brokerage specializing in the premium segment, Engel & Völkers provides a team of local experts offers deep market insights and professional consultancy, ensuring every transaction is handled with the discretion and prestige that define the Andorran luxury market.",
+            "As a leading international brokerage specializing in the premium segment, Engel & Völkers provides a team of local experts offering deep market insights and professional consultancy, ensuring every transaction is handled with the discretion and prestige that define the Andorran luxury market.",
         },
         {
           role: "Financial Services",
@@ -755,7 +755,7 @@ export const contentTranslations: Record<
         {
           role: "High-End Modular Construction",
           summary:
-            "A pioneer in high-end industrialized construction, Prêt-à-porter delivers bespoke, energy-efficient homes in Andorra with unprecedented speed and fixed-cost certainty. They combine high-quality modern architectual design with sustainable practises.",
+            "A pioneer in high-end industrialized construction, Prêt-à-porter delivers bespoke, energy-efficient homes in Andorra with unprecedented speed and fixed-cost certainty. They combine high-quality modern architectural design with sustainable practices.",
         },
         {
           role: "Infrastructure & Construction",
@@ -836,7 +836,7 @@ export const contentTranslations: Record<
         kicker: "ANDORRA • INVERSIÓN • EXCELENCIA",
         title: "Su socio estratégico para inversiones inmobiliarias en Andorra.",
         subline:
-          "Equity Partners conecta capital inversor con una ejecución inmobiliaria disciplinada en Andorra.",
+          "Nuestro equipo de profesionales ofrece a los inversores internacionales una experiencia fluida de acceso al mercado inmobiliario de alta barrera de Andorra.",
         cta: "Contactar con el equipo",
         ctaSecondary: "Solicitar videollamada",
       },
@@ -1124,7 +1124,87 @@ export const contentTranslations: Record<
       intro:
         "Equity Partners está comprometida con los más altos estándares de protección de datos y transparencia. Esta política describe nuestras prácticas sobre la recopilación, uso y protección de los datos personales cuando visita nuestro sitio web, nos contacta o solicita información para inversores.",
       updated: "Última actualización: 31 de marzo de 2026",
-      sections: [],
+      sections: [
+        {
+          title: "Compromiso con la protección de datos",
+          body: [
+            "Esta política de privacidad está diseñada para reflejar los principios de transparencia, proporcionalidad y tratamiento lícito exigidos por las normativas de protección de datos aplicables, incluido el marco andorrano de protección de datos y, cuando corresponda, el Reglamento General de Protección de Datos de la UE.",
+          ],
+        },
+        {
+          title: "Responsable del tratamiento",
+          body: [
+            "La entidad responsable del tratamiento de sus datos personales es Equity Partners.",
+            "Si tiene cualquier pregunta relacionada con la privacidad o desea ejercer sus derechos, puede contactarnos en info@equitypartners.fund.",
+          ],
+        },
+        {
+          title: "Categorías de datos personales",
+          body: [
+            "Tratamos las siguientes categorías de datos personales según su interacción con nuestra plataforma:",
+          ],
+          bullets: [
+            "Datos de identidad y contacto, como su nombre, correo electrónico, número de teléfono y datos de su empresa.",
+            "Datos de consultas que envía a través de formularios de contacto, formularios de newsletter o solicitudes de inversores.",
+            "Información profesional y relacionada con su perfil inversor que comparte voluntariamente con nosotros.",
+            "Datos técnicos como la dirección IP, el tipo de navegador, información del dispositivo y patrones de uso recogidos mediante cookies.",
+          ],
+        },
+        {
+          title: "Cómo utilizamos los datos personales",
+          body: ["Podemos utilizar la información personal para:"],
+          bullets: [
+            "Responder a consultas y solicitudes de inversores.",
+            "Compartir actualizaciones relevantes, análisis de mercado o información sobre proyectos.",
+            "Mejorar el sitio web, su rendimiento y la experiencia de usuario.",
+            "Mantener registros internos y cumplir obligaciones legales, contables, de cumplimiento o de reporting.",
+          ],
+        },
+        {
+          title: "Base legal del tratamiento",
+          body: [
+            "Cuando corresponda, los datos personales podrán tratarse sobre la base del consentimiento, el interés legítimo, las medidas adoptadas a petición suya antes de una posible relación profesional o el cumplimiento de obligaciones legales.",
+          ],
+        },
+        {
+          title: "Conservación",
+          body: [
+            "Conservamos sus datos personales solo durante el tiempo necesario para cumplir los fines para los que fueron recogidos, incluidos los requisitos legales, contables o de reporting. Los datos de consultas se conservan normalmente hasta 5 años tras el fin de la relación profesional, salvo que la ley exija un plazo de conservación más largo.",
+          ],
+        },
+        {
+          title: "Sus derechos",
+          body: [
+            "En virtud de las leyes de privacidad aplicables, incluida la LQPD andorrana y el RGPD cuando corresponda, puede tener derecho a:",
+          ],
+          bullets: [
+            "Solicitar acceso a los datos personales que tenemos sobre usted.",
+            "Solicitar la rectificación de datos inexactos o incompletos.",
+            "Solicitar la supresión de datos cuando existan motivos legítimos.",
+            "Solicitar la limitación del tratamiento en determinadas circunstancias.",
+            "Oponerse a determinadas actividades de tratamiento.",
+            "Retirar el consentimiento cuando el tratamiento se base en el consentimiento.",
+          ],
+        },
+        {
+          title: "Medidas de seguridad",
+          body: [
+            "Hemos implementado medidas de seguridad sólidas para evitar que sus datos personales se pierdan, usen, alteren, divulguen o se acceda a ellos de forma accidental o no autorizada. El acceso a los datos personales está limitado a los empleados, contratistas o asesores que tienen una necesidad empresarial de conocerlos.",
+          ],
+        },
+        {
+          title: "Cookies y tecnologías relacionadas",
+          body: [
+            "Podemos utilizar cookies y tecnologías similares para entender el uso del sitio web, mejorar el rendimiento y favorecer la experiencia de usuario. A través de estas herramientas puede recogerse información técnica como la dirección IP, el tipo de navegador, información del dispositivo y patrones de uso.",
+          ],
+        },
+        {
+          title: "Contacto",
+          body: [
+            "Si tiene preguntas sobre esta política o sobre cómo se tratan sus datos, contacte con info@equitypartners.fund.",
+          ],
+        },
+      ],
       contactCta: "Contacto",
     },
     about: {
@@ -1151,7 +1231,7 @@ export const contentTranslations: Record<
         cta: "Sobre Equity Partners",
         points: [
           {
-            title: "Usted se mueve más rápido que el mercado",
+            title: "Nos movemos más rápido que el mercado",
             body:
               "Nuestro sourcing ocurre antes de que los activos lleguen a los listados públicos. Para cuando la mayoría de inversores conoce una oportunidad, nosotros ya la hemos evaluado.",
           },
@@ -1161,7 +1241,7 @@ export const contentTranslations: Record<
               "Entre los límites de inversión extranjera, la estructuración fiscal y los permisos urbanísticos, el margen de error es alto. Gestionamos el proceso de principio a fin para eliminarlo.",
           },
           {
-            title: "Solo aceptamos mandatos que podemos ejecutar",
+            title: "Solo ofrecemos oportunidades que podemos ejecutar",
             body:
               "No perseguimos volumen. Cada relación con inversores es selectiva, lo que nos permite comprometernos plenamente con cada oportunidad que representamos.",
           },
@@ -1170,7 +1250,7 @@ export const contentTranslations: Record<
       team: {
         eyebrow: "Conozca al equipo",
         title: "Equipo principal de Equity Partners",
-        intro: "Una variación más oscura del mismo diseño circular del equipo para comparar contraste y sensación general.",
+        intro: "Las personas detrás de Equity Partners: experiencia local andorrana combinada con experiencia internacional en inversión.",
         members: [
           {
             role: "CEO y cofundador",
@@ -1296,7 +1376,18 @@ export const contentTranslations: Record<
       intro:
         "Estos Términos de uso explican las reglas para acceder y utilizar el sitio web de Equity Partners, las limitaciones de la información presentada y las responsabilidades de los visitantes que interactúan con nuestro contenido, formularios de consulta y materiales.",
       updated: "Última actualización: 31 de marzo de 2026",
-      sections: [],
+      sections: [
+        { title: "Aceptación de estos términos", body: ["Al acceder o utilizar este sitio web, usted acepta quedar vinculado por estos Términos de uso. Si no está de acuerdo con estos términos, no debe utilizar este sitio web.", "Estos términos regulan su acceso y uso del sitio web y de los materiales proporcionados por Equity Partners."] },
+        { title: "Uso del sitio web", body: ["Usted se compromete a utilizar este sitio web únicamente con fines lícitos y de forma que no interfiera en su funcionamiento."], bullets: ["No utilice el sitio web con fines fraudulentos, engañosos o ilícitos.", "No intente interferir en el correcto funcionamiento del sitio web ni eludir ninguna medida de seguridad.", "No haga un mal uso de los formularios, herramientas automatizadas o contenidos del sitio de forma que pueda perjudicar la plataforma o a sus usuarios."] },
+        { title: "Contenido únicamente informativo", body: ["El contenido de este sitio web se proporciona únicamente con fines informativos generales. No constituye asesoramiento legal, fiscal, de inversión, de residencia ni financiero, y no debe utilizarse como sustituto de un asesoramiento profesional adaptado a sus circunstancias individuales.", "El mero uso de este sitio web, de cualquier calculadora, formulario de elegibilidad, guía o material informativo presentado a través de él no establece ninguna relación profesional-cliente."] },
+        { title: "Sin garantía de disponibilidad o exactitud", body: ["Procuramos mantener el sitio web actualizado y fiable, pero no garantizamos que toda la información sea siempre completa, exacta o esté al día. Las condiciones de mercado, la normativa y los detalles de los proyectos pueden cambiar sin previo aviso.", "Aunque nos esforzamos por mantener el sitio actualizado en cuestiones legales, regulatorias o de mercado en evolución, Equity Partners no ofrece ninguna garantía ni declaración sobre la integridad, exactitud o validez continuada del contenido del sitio web."] },
+        { title: "Propiedad intelectual", body: ["Salvo que se indique lo contrario, el diseño, la marca, los textos, los gráficos, la maquetación y demás contenidos de este sitio web son propiedad de Equity Partners o de sus licenciantes y no pueden copiarse, reproducirse ni redistribuirse sin autorización previa por escrito."] },
+        { title: "Enlaces de terceros", body: ["Este sitio web puede contener enlaces a sitios web o recursos de terceros. Estos enlaces se facilitan únicamente por comodidad. Equity Partners no es responsable del contenido, la disponibilidad ni las prácticas de privacidad de esos sitios externos."] },
+        { title: "Limitación de responsabilidad", body: ["En la máxima medida permitida por la ley aplicable, Equity Partners no será responsable de ninguna pérdida o daño derivado de o relacionado con el uso, o la imposibilidad de uso, de este sitio web o de la confianza depositada en cualquier material disponible a través de él.", "Esto incluye, en la medida permitida por la ley, daños directos, indirectos, incidentales, especiales o consecuentes, incluso cuando Equity Partners haya sido advertida de la posibilidad de tales daños."] },
+        { title: "Ley aplicable y jurisdicción", body: ["Estos Términos de uso se regirán por las leyes aplicables en el Principado de Andorra. Cualquier controversia derivada de o relacionada con estos términos quedará sometida a la jurisdicción exclusiva de los tribunales de Andorra."] },
+        { title: "Cambios en estos términos", body: ["Podemos actualizar estos Términos de uso periódicamente. El uso continuado del sitio web tras la publicación de cambios constituirá la aceptación de los términos revisados.", "Le recomendamos revisar esta página periódicamente para conocer la versión vigente en cada momento."] },
+        { title: "Contacto", body: ["Si tiene preguntas sobre estos Términos de uso, contacte con info@equitypartners.fund."] },
+      ],
       contactCta: "Contacto",
     },
     cookies: {
@@ -1305,17 +1396,24 @@ export const contentTranslations: Record<
       intro:
         "Esta Política de cookies explica cómo Equity Partners utiliza cookies y tecnologías similares cuando visita nuestro sitio web, por qué las utilizamos y qué opciones tiene respecto a su uso.",
       updated: "Última actualización: 31 de marzo de 2026",
-      sections: [],
+      sections: [
+        { title: "¿Qué son las cookies?", body: ["Las cookies son pequeños archivos de datos que se colocan en su ordenador o dispositivo móvil cuando visita un sitio web. Las cookies se utilizan ampliamente para hacer funcionar los sitios web, mejorar su rendimiento y proporcionar información analítica."] },
+        { title: "Por qué utilizamos cookies", body: ["Utilizamos cookies propias y de terceros por varios motivos. Algunas cookies son necesarias por razones técnicas para que el sitio web funcione correctamente, mientras que otras nos ayudan a entender el uso, mejorar el rendimiento y optimizar la experiencia de usuario."] },
+        { title: "Tipos de cookies que podemos utilizar", bullets: ["Cookies estrictamente necesarias para el funcionamiento básico del sitio.", "Cookies de rendimiento y analítica que nos ayudan a entender cómo se utiliza el sitio.", "Cookies de funcionalidad que recuerdan sus preferencias y mejoran su experiencia."] },
+        { title: "Sus opciones", body: ["Usted tiene derecho a decidir si acepta o rechaza las cookies. Puede hacerlo a través de cualquier banner de cookies o herramienta de preferencias que ofrezcamos, o ajustando directamente la configuración de su navegador.", "La mayoría de los navegadores permiten bloquear o eliminar cookies. El método exacto varía según el navegador y la versión."] },
+        { title: "Cambios en esta política", body: ["Podemos actualizar esta Política de cookies periódicamente para reflejar cambios en nuestras prácticas, tecnologías o requisitos legales. Revise esta página periódicamente para mantenerse informado."] },
+        { title: "Contacto", body: ["Si tiene preguntas sobre nuestro uso de cookies o tecnologías similares, contacte con info@equitypartners.fund."] },
+      ],
       contactCta: "Contacto",
     },
   },
   ca: {
     home: {
       hero: {
-        kicker: "ANDORRA • INVERSIÓ • EXCEL.LÈNCIA",
+        kicker: "ANDORRA • INVERSIÓ • EXCEL·LÈNCIA",
         title: "El seu soci estratègic per a inversions immobiliàries a Andorra.",
         subline:
-          "Equity Partners connecta capital inversor amb una execució immobiliària disciplinada a Andorra.",
+          "El nostre equip de professionals ofereix als inversors internacionals una experiència fluida d'accés al mercat immobiliari d'alta barrera d'Andorra.",
         cta: "Contacta amb l'equip",
         ctaSecondary: "Sol·licitar videotrucada",
       },
@@ -1377,7 +1475,7 @@ export const contentTranslations: Record<
           {
             title: "Confiança guanyada, no pressuposada",
             body:
-              "Dues dècades d'execució disciplinada al Principat, amb reportatges transparents i zero sorpreses per als inversors que representem.",
+              "Dues dècades d'execució disciplinada al Principat, amb informes transparents i zero sorpreses per als inversors que representem.",
           },
           {
             title: "Precisió per damunt del volum",
@@ -1603,7 +1701,87 @@ export const contentTranslations: Record<
       intro:
         "Equity Partners està compromesa amb els estàndards més alts de protecció de dades i transparència. Aquesta política descriu les nostres pràctiques sobre la recollida, ús i protecció de les dades personals quan visita el nostre lloc web, ens contacta o sol·licita informació per a inversors.",
       updated: "Darrera actualització: 31 de març de 2026",
-      sections: [],
+      sections: [
+        {
+          title: "Compromís amb la protecció de dades",
+          body: [
+            "Aquesta política de privacitat està dissenyada per reflectir els principis de transparència, proporcionalitat i tractament lícit exigits per les normatives de protecció de dades aplicables, inclòs el marc andorrà de protecció de dades i, quan correspongui, el Reglament General de Protecció de Dades de la UE.",
+          ],
+        },
+        {
+          title: "Responsable del tractament",
+          body: [
+            "L'entitat responsable del tractament de les seves dades personals és Equity Partners.",
+            "Si té qualsevol pregunta relacionada amb la privacitat o vol exercir els seus drets, pot contactar-nos a info@equitypartners.fund.",
+          ],
+        },
+        {
+          title: "Categories de dades personals",
+          body: [
+            "Tractem les categories següents de dades personals segons la seva interacció amb la nostra plataforma:",
+          ],
+          bullets: [
+            "Dades d'identitat i contacte, com el seu nom, correu electrònic, número de telèfon i dades de la seva empresa.",
+            "Dades de consultes que envia a través de formularis de contacte, formularis de newsletter o sol·licituds d'inversors.",
+            "Informació professional i relacionada amb el seu perfil inversor que comparteix voluntàriament amb nosaltres.",
+            "Dades tècniques com l'adreça IP, el tipus de navegador, informació del dispositiu i patrons d'ús recollits mitjançant cookies.",
+          ],
+        },
+        {
+          title: "Com utilitzem les dades personals",
+          body: ["Podem utilitzar la informació personal per a:"],
+          bullets: [
+            "Respondre a consultes i sol·licituds d'inversors.",
+            "Compartir actualitzacions rellevants, anàlisis de mercat o informació sobre projectes.",
+            "Millorar el lloc web, el seu rendiment i l'experiència d'usuari.",
+            "Mantenir registres interns i complir obligacions legals, comptables, de compliment o de reporting.",
+          ],
+        },
+        {
+          title: "Base legal del tractament",
+          body: [
+            "Quan correspongui, les dades personals es podran tractar sobre la base del consentiment, l'interès legítim, les mesures adoptades a petició seva abans d'una possible relació professional o el compliment d'obligacions legals.",
+          ],
+        },
+        {
+          title: "Conservació",
+          body: [
+            "Conservem les seves dades personals només durant el temps necessari per complir les finalitats per a les quals van ser recollides, inclosos els requisits legals, comptables o de reporting. Les dades de consultes es conserven normalment fins a 5 anys després de la fi de la relació professional, llevat que la llei exigeixi un termini de conservació més llarg.",
+          ],
+        },
+        {
+          title: "Els seus drets",
+          body: [
+            "En virtut de les lleis de privacitat aplicables, inclosa la LQPD andorrana i el RGPD quan correspongui, pot tenir dret a:",
+          ],
+          bullets: [
+            "Sol·licitar accés a les dades personals que tenim sobre vostè.",
+            "Sol·licitar la rectificació de dades inexactes o incompletes.",
+            "Sol·licitar la supressió de dades quan hi hagi motius legítims.",
+            "Sol·licitar la limitació del tractament en determinades circumstàncies.",
+            "Oposar-se a determinades activitats de tractament.",
+            "Retirar el consentiment quan el tractament es basi en el consentiment.",
+          ],
+        },
+        {
+          title: "Mesures de seguretat",
+          body: [
+            "Hem implementat mesures de seguretat sòlides per evitar que les seves dades personals es perdin, s'utilitzin, s'alterin, es divulguin o s'hi accedeixi de manera accidental o no autoritzada. L'accés a les dades personals està limitat als empleats, contractistes o assessors que tenen una necessitat empresarial de conèixer-les.",
+          ],
+        },
+        {
+          title: "Cookies i tecnologies relacionades",
+          body: [
+            "Podem utilitzar cookies i tecnologies similars per entendre l'ús del lloc web, millorar el rendiment i afavorir l'experiència d'usuari. A través d'aquestes eines es pot recollir informació tècnica com l'adreça IP, el tipus de navegador, informació del dispositiu i patrons d'ús.",
+          ],
+        },
+        {
+          title: "Contacte",
+          body: [
+            "Si té preguntes sobre aquesta política o sobre com es tracten les seves dades, contacti amb info@equitypartners.fund.",
+          ],
+        },
+      ],
       contactCta: "Contacte",
     },
     about: {
@@ -1630,7 +1808,7 @@ export const contentTranslations: Record<
         cta: "Sobre Equity Partners",
         points: [
           {
-            title: "Vostè es mou més ràpid que el mercat",
+            title: "Ens movem més ràpid que el mercat",
             body:
               "El nostre sourcing succeeix abans que els actius arribin als llistats públics. Quan la majoria d'inversors coneix una oportunitat, nosaltres ja l'hem avaluada.",
           },
@@ -1640,7 +1818,7 @@ export const contentTranslations: Record<
               "Entre els límits d'inversió estrangera, l'estructuració fiscal i els permisos urbanístics, el marge d'error és alt. Gestionem el procés de principi a fi per eliminar-lo.",
           },
           {
-            title: "Només acceptem mandats que podem executar",
+            title: "Només oferim oportunitats que podem executar",
             body:
               "No perseguim volum. Cada relació amb inversors és selectiva, la qual cosa ens permet comprometre'ns plenament amb cada oportunitat que representem.",
           },
@@ -1649,7 +1827,7 @@ export const contentTranslations: Record<
       team: {
         eyebrow: "Conegui l'equip",
         title: "Equip principal d'Equity Partners",
-        intro: "Una variació més fosca del mateix disseny circular de l'equip per comparar contrast i sensació general.",
+        intro: "Les persones darrere d'Equity Partners: experiència local andorrana combinada amb experiència internacional en inversió.",
         members: [
           {
             role: "CEO i cofundador",
@@ -1755,7 +1933,7 @@ export const contentTranslations: Record<
         eyebrow: "Últimes anàlisis",
         title: "Anàlisis sobre inversió i execució immobiliària a Andorra.",
         intro:
-          "Anàlisi estratègica, actualitzacions de projectes i intel.ligència de mercat pràctica per a inversors institucionals i privats.",
+          "Anàlisi estratègica, actualitzacions de projectes i intel·ligència de mercat pràctica per a inversors institucionals i privats.",
       },
       article: {
         breadcrumb: "Blog / Tornar a anàlisis",
@@ -1775,7 +1953,18 @@ export const contentTranslations: Record<
       intro:
         "Aquests Termes d'ús expliquen les regles per accedir i utilitzar el lloc web d'Equity Partners, les limitacions de la informació presentada i les responsabilitats dels visitants que interactuen amb el nostre contingut, formularis de consulta i materials.",
       updated: "Darrera actualització: 31 de març de 2026",
-      sections: [],
+      sections: [
+        { title: "Acceptació d'aquests termes", body: ["En accedir o utilitzar aquest lloc web, vostè accepta quedar vinculat per aquests Termes d'ús. Si no està d'acord amb aquests termes, no ha d'utilitzar aquest lloc web.", "Aquests termes regulen el seu accés i ús del lloc web i dels materials proporcionats per Equity Partners."] },
+        { title: "Ús del lloc web", body: ["Vostè es compromet a utilitzar aquest lloc web únicament amb finalitats lícites i de manera que no interfereixi en el seu funcionament."], bullets: ["No utilitzi el lloc web amb finalitats fraudulentes, enganyoses o il·lícites.", "No intenti interferir en el correcte funcionament del lloc web ni eludir cap mesura de seguretat.", "No faci un mal ús dels formularis, eines automatitzades o continguts del lloc de manera que pugui perjudicar la plataforma o els seus usuaris."] },
+        { title: "Contingut únicament informatiu", body: ["El contingut d'aquest lloc web es proporciona únicament amb finalitats informatives generals. No constitueix assessorament legal, fiscal, d'inversió, de residència ni financer, i no s'ha d'utilitzar com a substitut d'un assessorament professional adaptat a les seves circumstàncies individuals.", "El mer ús d'aquest lloc web, de qualsevol calculadora, formulari d'elegibilitat, guia o material informatiu presentat a través seu no estableix cap relació professional-client."] },
+        { title: "Sense garantia de disponibilitat o exactitud", body: ["Procurem mantenir el lloc web actualitzat i fiable, però no garantim que tota la informació sigui sempre completa, exacta o al dia. Les condicions de mercat, la normativa i els detalls dels projectes poden canviar sense avís previ.", "Tot i que ens esforcem per mantenir el lloc actualitzat en qüestions legals, regulatòries o de mercat en evolució, Equity Partners no ofereix cap garantia ni declaració sobre la integritat, exactitud o validesa continuada del contingut del lloc web."] },
+        { title: "Propietat intel·lectual", body: ["Llevat que s'indiqui el contrari, el disseny, la marca, els textos, els gràfics, la maquetació i altres continguts d'aquest lloc web són propietat d'Equity Partners o dels seus llicenciants i no es poden copiar, reproduir ni redistribuir sense autorització prèvia per escrit."] },
+        { title: "Enllaços de tercers", body: ["Aquest lloc web pot contenir enllaços a llocs web o recursos de tercers. Aquests enllaços es faciliten únicament per comoditat. Equity Partners no és responsable del contingut, la disponibilitat ni les pràctiques de privacitat d'aquests llocs externs."] },
+        { title: "Limitació de responsabilitat", body: ["En la màxima mesura permesa per la llei aplicable, Equity Partners no serà responsable de cap pèrdua o dany derivat de o relacionat amb l'ús, o la impossibilitat d'ús, d'aquest lloc web o de la confiança dipositada en qualsevol material disponible a través seu.", "Això inclou, en la mesura permesa per la llei, danys directes, indirectes, incidentals, especials o conseqüents, fins i tot quan Equity Partners hagi estat advertida de la possibilitat d'aquests danys."] },
+        { title: "Llei aplicable i jurisdicció", body: ["Aquests Termes d'ús es regiran per les lleis aplicables al Principat d'Andorra. Qualsevol controvèrsia derivada de o relacionada amb aquests termes quedarà sotmesa a la jurisdicció exclusiva dels tribunals d'Andorra."] },
+        { title: "Canvis en aquests termes", body: ["Podem actualitzar aquests Termes d'ús periòdicament. L'ús continuat del lloc web després de la publicació de canvis constituirà l'acceptació dels termes revisats.", "Li recomanem revisar aquesta pàgina periòdicament per conèixer la versió vigent en cada moment."] },
+        { title: "Contacte", body: ["Si té preguntes sobre aquests Termes d'ús, contacti amb info@equitypartners.fund."] },
+      ],
       contactCta: "Contacte",
     },
     cookies: {
@@ -1784,18 +1973,18 @@ export const contentTranslations: Record<
       intro:
         "Aquesta Política de cookies explica com Equity Partners utilitza cookies i tecnologies similars quan visita el nostre lloc web, per què les utilitzem i quines opcions té respecte al seu ús.",
       updated: "Darrera actualització: 31 de març de 2026",
-      sections: [],
+      sections: [
+        { title: "Què són les cookies?", body: ["Les cookies són petits arxius de dades que es col·loquen al seu ordinador o dispositiu mòbil quan visita un lloc web. Les cookies s'utilitzen àmpliament per fer funcionar els llocs web, millorar-ne el rendiment i proporcionar informació analítica."] },
+        { title: "Per què utilitzem cookies", body: ["Utilitzem cookies pròpies i de tercers per diversos motius. Algunes cookies són necessàries per raons tècniques perquè el lloc web funcioni correctament, mentre que d'altres ens ajuden a entendre l'ús, millorar el rendiment i optimitzar l'experiència d'usuari."] },
+        { title: "Tipus de cookies que podem utilitzar", bullets: ["Cookies estrictament necessàries per al funcionament bàsic del lloc.", "Cookies de rendiment i analítica que ens ajuden a entendre com s'utilitza el lloc.", "Cookies de funcionalitat que recorden les seves preferències i milloren la seva experiència."] },
+        { title: "Les seves opcions", body: ["Vostè té dret a decidir si accepta o rebutja les cookies. Pot fer-ho a través de qualsevol bàner de cookies o eina de preferències que oferim, o ajustant directament la configuració del seu navegador.", "La majoria dels navegadors permeten bloquejar o eliminar cookies. El mètode exacte varia segons el navegador i la versió."] },
+        { title: "Canvis en aquesta política", body: ["Podem actualitzar aquesta Política de cookies periòdicament per reflectir canvis en les nostres pràctiques, tecnologies o requisits legals. Revisi aquesta pàgina periòdicament per mantenir-se informat."] },
+        { title: "Contacte", body: ["Si té preguntes sobre el nostre ús de cookies o tecnologies similars, contacti amb info@equitypartners.fund."] },
+      ],
       contactCta: "Contacte",
     },
   },
 };
-
-contentTranslations.es.privacy.sections = contentTranslations.en.privacy.sections;
-contentTranslations.ca.privacy.sections = contentTranslations.en.privacy.sections;
-contentTranslations.es.terms.sections = contentTranslations.en.terms.sections;
-contentTranslations.ca.terms.sections = contentTranslations.en.terms.sections;
-contentTranslations.es.cookies.sections = contentTranslations.en.cookies.sections;
-contentTranslations.ca.cookies.sections = contentTranslations.en.cookies.sections;
 
 export function getContentTranslations(locale: Locale) {
   return contentTranslations[locale];

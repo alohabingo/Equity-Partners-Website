@@ -119,8 +119,8 @@ export const projects: Project[] = [
     floors: "6 storeys",
     image: "/Ordino%20Prestige.jpeg",
     gallery: [
-      "/ordino%20heights.jpg",
-      "/ordino%20heights%202.webp",
+      "/Ordino%20Prestige%20main.png",
+      "/Ordino%20Prestige.jpeg",
       "/Ordino%20AND%20IMG%20day%20snow.webp",
     ],
     description:

@@ -1,0 +1,15 @@
+---
+import Page from "../../opportunities/[slug].astro";
+import { opportunities } from "../../../data/opportunitiesEs";
+
+export function getStaticPaths() {
+  return opportunities.map((opp) => ({
+    params: { slug: opp.slug },
+    props: { opp },
+  }));
+}
+
+const { opp } = Astro.props;
+---
+
+<Page opp={opp} />

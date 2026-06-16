@@ -1,11 +1,12 @@
 ---
-import InnerSiteHeader from "../../components/InnerSiteHeader.astro";
-import NewsletterSignup from "../../components/NewsletterSignup.astro";
-import SiteFooter from "../../components/SiteFooter.astro";
-import SEO from "../../components/SEO.astro";
-import { buildLocalizedPath, getLocaleFromUrl } from "../../lib/i18n";
-import type { Locale } from "../../lib/i18n";
-import { projects, statusColour } from "../../data/projects";
+import InnerSiteHeader from "../../../components/InnerSiteHeader.astro";
+import NewsletterSignup from "../../../components/NewsletterSignup.astro";
+import SiteFooter from "../../../components/SiteFooter.astro";
+import SEO from "../../../components/SEO.astro";
+import { buildLocalizedPath, getLocaleFromUrl } from "../../../lib/i18n";
+import type { Locale } from "../../../lib/i18n";
+import { projects } from "../../../data/projectsCa";
+import { statusColour } from "../../../data/projects";
 
 export function getStaticPaths() {
   return projects.map((project) => ({
@@ -15,7 +16,7 @@ export function getStaticPaths() {
 }
 
 const { project } = Astro.props;
-const locale = getLocaleFromUrl(Astro.url) ?? "en";
+const locale = getLocaleFromUrl(Astro.url) ?? "ca";
 
 const copyByLocale = {
   en: {

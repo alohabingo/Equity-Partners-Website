@@ -4,9 +4,132 @@ import NewsletterSignup from "../components/NewsletterSignup.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import SEO from "../components/SEO.astro";
 import { buildLocalizedPath, getLocaleFromUrl } from "../lib/i18n";
-import { projects, statusColour } from "../data/projects";
+import type { Locale } from "../lib/i18n";
+import { projects as projectsEn, statusColour } from "../data/projects";
+import { projects as projectsEs } from "../data/projectsEs";
+import { projects as projectsCa } from "../data/projectsCa";
 
 const locale = getLocaleFromUrl(Astro.url) ?? "en";
+
+const projectsByLocale: Record<Locale, typeof projectsEn> = {
+  en: projectsEn,
+  es: projectsEs,
+  ca: projectsCa,
+};
+const projects = projectsByLocale[locale];
+
+const copyByLocale = {
+  en: {
+    seoTitle: "Projects | Equity Partners",
+    seoDescription:
+      "Explore Equity Partners' current real estate development projects in Andorra. View investment details, returns, timelines and project status.",
+    heroEyebrow: "Our Current Portfolio",
+    heroTitle: "Projects Under Development",
+    heroIntro:
+      "An overview of the active real estate developments Equity Partners is delivering across the Principality of Andorra.",
+    statActiveProjects: "Active projects",
+    statCombinedValue: "Combined project value",
+    statTotalArea: "Total area under development",
+    cardProjectValue: "Project value",
+    cardUnits: "Number of units",
+    cardTotalArea: "Total area",
+    cardCompletion: "Est. completion",
+    viewProject: "View project",
+    ctaEyebrow: "Property purchase",
+    ctaTitle: "Investment by property purchase",
+    ctaText:
+      "Property prices in Andorra's most sought-after areas appreciate around 8% a year — a strong long-term hold. Talk to our team to explore what's available.",
+    ctaBtn: "Contact our team",
+    panelTitle: "Our team can help with",
+    panelItems: [
+      "Current availability & pricing",
+      "The purchase process & timeline",
+      "Residency & tax considerations",
+    ],
+    statusLabels: {
+      "Under Construction": "Under Construction",
+      "Under development": "Under development",
+      "Pipeline": "Pipeline",
+      "Financing Open": "Financing Open",
+      "Completed": "Completed",
+    } as Record<string, string>,
+    numberLocale: "en-US",
+  },
+  es: {
+    seoTitle: "Proyectos | Equity Partners",
+    seoDescription:
+      "Descubra los proyectos de desarrollo inmobiliario que Equity Partners impulsa actualmente en Andorra. Consulte detalles de inversión, rentabilidades, plazos y estado de cada proyecto.",
+    heroEyebrow: "Nuestra cartera actual",
+    heroTitle: "Proyectos en desarrollo",
+    heroIntro:
+      "Una visión general de los desarrollos inmobiliarios activos que Equity Partners está ejecutando en el Principado de Andorra.",
+    statActiveProjects: "Proyectos activos",
+    statCombinedValue: "Valor conjunto de los proyectos",
+    statTotalArea: "Superficie total en desarrollo",
+    cardProjectValue: "Valor del proyecto",
+    cardUnits: "Número de unidades",
+    cardTotalArea: "Superficie total",
+    cardCompletion: "Finalización prevista",
+    viewProject: "Ver proyecto",
+    ctaEyebrow: "Compra de propiedad",
+    ctaTitle: "Inversión mediante compra de propiedad",
+    ctaText:
+      "Los precios de la vivienda en las zonas más cotizadas de Andorra se revalorizan en torno a un 8% anual: una sólida inversión a largo plazo. Hable con nuestro equipo para conocer la oferta disponible.",
+    ctaBtn: "Contactar con el equipo",
+    panelTitle: "Nuestro equipo puede ayudarle con",
+    panelItems: [
+      "Disponibilidad actual y precios",
+      "El proceso de compra y los plazos",
+      "Residencia y consideraciones fiscales",
+    ],
+    statusLabels: {
+      "Under Construction": "En construcción",
+      "Under development": "En desarrollo",
+      "Pipeline": "En cartera",
+      "Financing Open": "Financiación abierta",
+      "Completed": "Completado",
+    } as Record<string, string>,
+    numberLocale: "es-ES",
+  },
+  ca: {
+    seoTitle: "Projectes | Equity Partners",
+    seoDescription:
+      "Descobreixi els projectes de desenvolupament immobiliari que Equity Partners impulsa actualment a Andorra. Consulti detalls d'inversió, rendibilitats, terminis i estat de cada projecte.",
+    heroEyebrow: "La nostra cartera actual",
+    heroTitle: "Projectes en desenvolupament",
+    heroIntro:
+      "Una visió general dels desenvolupaments immobiliaris actius que Equity Partners està executant al Principat d'Andorra.",
+    statActiveProjects: "Projectes actius",
+    statCombinedValue: "Valor conjunt dels projectes",
+    statTotalArea: "Superfície total en desenvolupament",
+    cardProjectValue: "Valor del projecte",
+    cardUnits: "Nombre d'unitats",
+    cardTotalArea: "Superfície total",
+    cardCompletion: "Finalització prevista",
+    viewProject: "Veure projecte",
+    ctaEyebrow: "Compra de propietat",
+    ctaTitle: "Inversió mitjançant compra de propietat",
+    ctaText:
+      "Els preus de l'habitatge a les zones més cotitzades d'Andorra es revaloren al voltant d'un 8% anual: una sòlida inversió a llarg termini. Parli amb el nostre equip per conèixer l'oferta disponible.",
+    ctaBtn: "Contacta amb l'equip",
+    panelTitle: "El nostre equip pot ajudar-lo amb",
+    panelItems: [
+      "Disponibilitat actual i preus",
+      "El procés de compra i els terminis",
+      "Residència i consideracions fiscals",
+    ],
+    statusLabels: {
+      "Under Construction": "En construcció",
+      "Under development": "En desenvolupament",
+      "Pipeline": "En cartera",
+      "Financing Open": "Finançament obert",
+      "Completed": "Completat",
+    } as Record<string, string>,
+    numberLocale: "ca-ES",
+  },
+} satisfies Record<Locale, unknown>;
+
+const copy = copyByLocale[locale];
 
 // Sum the square metres of every project currently being built or developed,
 // so the stats strip stays accurate even as projects move through the pipeline.
@@ -17,7 +140,7 @@ const totalAreaUnderDevelopment = projects
     return sum + (Number.isNaN(num) ? 0 : num);
   }, 0);
 const totalAreaUnderDevelopmentLabel =
-  totalAreaUnderDevelopment.toLocaleString("en-US") + " m²";
+  totalAreaUnderDevelopment.toLocaleString(copy.numberLocale) + " m²";
 ---
 
 <!doctype html>
@@ -26,8 +149,8 @@ const totalAreaUnderDevelopmentLabel =
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <SEO
-      title="Projects | Equity Partners"
-      description="Explore Equity Partners' current real estate development projects in Andorra. View investment details, returns, timelines and project status."
+      title={copy.seoTitle}
+      description={copy.seoDescription}
       locale={locale}
       path={Astro.url.pathname}
     />
@@ -683,9 +806,9 @@ const totalAreaUnderDevelopmentLabel =
     <section class="projects-hero">
       <div class="container">
         <div class="projects-hero-inner" data-animate>
-          <p class="eyebrow">Our Current Portfolio</p>
-          <h1>Projects Under Development</h1>
-          <p>An overview of the active real estate developments Equity Partners is delivering across the Principality of Andorra.</p>
+          <p class="eyebrow">{copy.heroEyebrow}</p>
+          <h1>{copy.heroTitle}</h1>
+          <p>{copy.heroIntro}</p>
         </div>
       </div>
     </section>
@@ -696,15 +819,15 @@ const totalAreaUnderDevelopmentLabel =
         <div class="projects-stats-inner" data-animate>
           <div class="projects-stat">
             <span class="projects-stat-value">3</span>
-            <span class="projects-stat-label">Active projects</span>
+            <span class="projects-stat-label">{copy.statActiveProjects}</span>
           </div>
           <div class="projects-stat">
             <span class="projects-stat-value">€140M</span>
-            <span class="projects-stat-label">Combined project value</span>
+            <span class="projects-stat-label">{copy.statCombinedValue}</span>
           </div>
           <div class="projects-stat">
             <span class="projects-stat-value">{totalAreaUnderDevelopmentLabel}</span>
-            <span class="projects-stat-label">Total area under development</span>
+            <span class="projects-stat-label">{copy.statTotalArea}</span>
           </div>
         </div>
       </div>
@@ -722,7 +845,7 @@ const totalAreaUnderDevelopmentLabel =
                   class="project-card-v2-status"
                   style={`background: ${statusColour[project.status]}`}
                 >
-                  {project.status}
+                  {copy.statusLabels[project.status]}
                 </span>
               </div>
               <div class="project-card-v2-body">
@@ -732,25 +855,25 @@ const totalAreaUnderDevelopmentLabel =
                 <div class="project-card-v2-metrics">
                   <div class="project-card-v2-metric">
                     <span class="project-card-v2-metric-value is-green">{project.value}</span>
-                    <span class="project-card-v2-metric-label">Project value</span>
+                    <span class="project-card-v2-metric-label">{copy.cardProjectValue}</span>
                   </div>
                   <div class="project-card-v2-metric">
                     <span class="project-card-v2-metric-value">{project.units}</span>
-                    <span class="project-card-v2-metric-label">Number of units</span>
+                    <span class="project-card-v2-metric-label">{copy.cardUnits}</span>
                   </div>
                   <div class="project-card-v2-metric">
                     <span class="project-card-v2-metric-value">{project.sqm}</span>
-                    <span class="project-card-v2-metric-label">Total area</span>
+                    <span class="project-card-v2-metric-label">{copy.cardTotalArea}</span>
                   </div>
                   <div class="project-card-v2-metric">
                     <span class="project-card-v2-metric-value">{project.completionDate}</span>
-                    <span class="project-card-v2-metric-label">Est. completion</span>
+                    <span class="project-card-v2-metric-label">{copy.cardCompletion}</span>
                   </div>
                 </div>
                 <div class="project-card-v2-footer">
                   <span class="project-card-v2-sector">{project.sector}</span>
                   <span class="project-card-v2-link">
-                    View project
+                    {copy.viewProject}
                     <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                   </span>
                 </div>
@@ -765,7 +888,7 @@ const totalAreaUnderDevelopmentLabel =
     <section class="projects-cta-banner">
       <div class="container">
         <div class="projects-cta-header" data-animate>
-          <p class="projects-cta-eyebrow">Property purchase</p>
+          <p class="projects-cta-eyebrow">{copy.ctaEyebrow}</p>
         </div>
 
         <div class="projects-cta-card" data-animate>
@@ -775,31 +898,25 @@ const totalAreaUnderDevelopmentLabel =
                 <span class="projects-cta-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                 </span>
-                <h2>Investment by property purchase</h2>
+                <h2>{copy.ctaTitle}</h2>
               </div>
               <p class="projects-cta-text">
-                Property prices in Andorra's most sought-after areas appreciate around 8% a year — a strong long-term hold. Talk to our team to explore what's available.
+                {copy.ctaText}
               </p>
               <a class="projects-cta-btn" href={buildLocalizedPath("/contact", locale)}>
-                Contact our team
+                {copy.ctaBtn}
                 <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </a>
             </div>
             <div class="projects-cta-panel">
-              <p class="projects-cta-panel-title">Our team can help with</p>
+              <p class="projects-cta-panel-title">{copy.panelTitle}</p>
               <ul class="projects-cta-list">
-                <li>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
-                  <span>Current availability &amp; pricing</span>
-                </li>
-                <li>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
-                  <span>The purchase process &amp; timeline</span>
-                </li>
-                <li>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
-                  <span>Residency &amp; tax considerations</span>
-                </li>
+                {copy.panelItems.map((item) => (
+                  <li>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.7 12.2 2.1 2.2 4.5-5"/></svg>
+                    <span>{item}</span>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
