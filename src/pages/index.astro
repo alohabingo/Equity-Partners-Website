@@ -1,5 +1,7 @@
 ---
 import { blogPosts } from "../data/blogPosts";
+import { blogPosts as blogPostsEs } from "../data/blogPostsEs";
+import { blogPosts as blogPostsCa } from "../data/blogPostsCa";
 import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import NewsletterSignup from "../components/NewsletterSignup.astro";
 import SiteFooter from "../components/SiteFooter.astro";
@@ -64,9 +66,10 @@ const localPartners = [
 ];
 
 const localPartnersLoop = [...localPartners, ...localPartners, ...localPartners, ...localPartners];
-const homepageSuggestedPosts = blogPosts.slice(0, 3);
 const locale = getLocaleFromUrl(Astro.url);
 const content = getContentTranslations(locale).home;
+const blogPostsByLocale = { en: blogPosts, es: blogPostsEs, ca: blogPostsCa } as const;
+const homepageSuggestedPosts = blogPostsByLocale[locale].slice(0, 3);
 ---
 
 <html lang={locale}>
@@ -5446,7 +5449,7 @@ const content = getContentTranslations(locale).home;
             </div>
           ))}
         </div>
-        <a class="cta-link" href="/blog">{content.andorraAdvantage.cta}</a>
+        <a class="cta-link" href={buildLocalizedPath("/blog", locale)}>{content.andorraAdvantage.cta}</a>
       </div>
     </section>
 
@@ -5683,7 +5686,7 @@ const content = getContentTranslations(locale).home;
           <div class="home-suggested-grid" data-carousel="suggested" data-carousel-item=".home-suggested-card">
             {homepageSuggestedPosts.map((entry) => (
               <article class="home-suggested-card">
-                <a class="home-suggested-link" href={`/blog/${entry.slug}`}>
+                <a class="home-suggested-link" href={buildLocalizedPath(`/blog/${entry.slug}`, locale)}>
                   <img src={entry.image} alt={entry.title} loading="lazy" />
                   <div class="home-suggested-meta">
                     <div class="home-suggested-metrics">
@@ -5707,7 +5710,7 @@ const content = getContentTranslations(locale).home;
               ></button>
             ))}
           </div>
-          <a class="cta-link" href="/blog">{content.suggestedReads.ctaMore}</a>
+          <a class="cta-link" href={buildLocalizedPath("/blog", locale)}>{content.suggestedReads.ctaMore}</a>
         </div>
       </section>
     )}

@@ -23,6 +23,71 @@ Could you let me know a few times that work for your team?
 
 Thanks,`;
 const scheduleCallMailto = `mailto:info@equitypartners.fund?cc=${encodeURIComponent("bing@belugand.com")}&subject=${encodeURIComponent(scheduleCallSubject)}&body=${encodeURIComponent(scheduleCallBody)}`;
+
+// Localized copy for the contact-info card subtitle and the 1:1 video-call section.
+const vcCopy = {
+  en: {
+    msgPlaceholder: "Your message…",
+    cardSubtitle: "Reach out directly, our team typically responds within one business day.",
+    vcEyebrow: "1:1 Strategy Call",
+    vcHeading: "Book a 30-minute video call with our team",
+    vcIntro:
+      "Every investor's situation is different. Sit down with one of our partners for a focused, confidential conversation about your goals, budget, and timeline — and walk away with a tailored shortlist of opportunities matched to where you are today.",
+    vcBenefit1: "A private, no-obligation conversation with a senior partner",
+    vcBenefit2: "Personalised review of your investment goals, capacity, and horizon",
+    vcBenefit3: "A curated set of opportunities tailored to your profile",
+    vcButton: "Schedule Your Call",
+    vcNote: "30 minutes · Online · Free of charge",
+    liveConsult: "Live Consultation",
+    seniorAdvisor: "Senior Advisor",
+    you: "You",
+    investor: "Investor",
+    cardDetail1: "30 minutes · Tailored to your situation",
+    cardDetail2: "Online call · Join from anywhere",
+    cardDetail3: "No obligation · Pure exploratory conversation",
+  },
+  es: {
+    msgPlaceholder: "Su mensaje…",
+    cardSubtitle: "Contáctenos directamente; nuestro equipo suele responder en un día hábil.",
+    vcEyebrow: "Llamada estratégica 1:1",
+    vcHeading: "Reserve una videollamada de 30 minutos con nuestro equipo",
+    vcIntro:
+      "La situación de cada inversor es diferente. Siéntese con uno de nuestros socios para mantener una conversación enfocada y confidencial sobre sus objetivos, presupuesto y horizonte temporal, y llévese una lista personalizada de oportunidades adaptada a su momento actual.",
+    vcBenefit1: "Una conversación privada y sin compromiso con un socio sénior",
+    vcBenefit2: "Revisión personalizada de sus objetivos, capacidad y horizonte de inversión",
+    vcBenefit3: "Un conjunto de oportunidades adaptado a su perfil",
+    vcButton: "Reserve su llamada",
+    vcNote: "30 minutos · Online · Sin coste",
+    liveConsult: "Consulta en directo",
+    seniorAdvisor: "Asesor sénior",
+    you: "Usted",
+    investor: "Inversor",
+    cardDetail1: "30 minutos · Adaptado a su situación",
+    cardDetail2: "Llamada online · Conéctese desde cualquier lugar",
+    cardDetail3: "Sin compromiso · Conversación puramente exploratoria",
+  },
+  ca: {
+    msgPlaceholder: "El seu missatge…",
+    cardSubtitle: "Contacti'ns directament; el nostre equip sol respondre en un dia hàbil.",
+    vcEyebrow: "Trucada estratègica 1:1",
+    vcHeading: "Reservi una videotrucada de 30 minuts amb el nostre equip",
+    vcIntro:
+      "La situació de cada inversor és diferent. Reuneixi's amb un dels nostres socis per mantenir una conversa enfocada i confidencial sobre els seus objectius, pressupost i horitzó temporal, i obtingui una llista personalitzada d'oportunitats adaptada al seu moment actual.",
+    vcBenefit1: "Una conversa privada i sense compromís amb un soci sènior",
+    vcBenefit2: "Revisió personalitzada dels seus objectius, capacitat i horitzó d'inversió",
+    vcBenefit3: "Un conjunt d'oportunitats adaptat al seu perfil",
+    vcButton: "Reservi la seva trucada",
+    vcNote: "30 minuts · En línia · Sense cost",
+    liveConsult: "Consulta en directe",
+    seniorAdvisor: "Assessor sènior",
+    you: "Vostè",
+    investor: "Inversor",
+    cardDetail1: "30 minuts · Adaptat a la seva situació",
+    cardDetail2: "Trucada en línia · Connecti's des de qualsevol lloc",
+    cardDetail3: "Sense compromís · Conversa purament exploratòria",
+  },
+} as const;
+const vc = vcCopy[(locale ?? "en") as "en" | "es" | "ca"] ?? vcCopy.en;
 ---
 
 <html lang={locale}>
@@ -1345,8 +1410,8 @@ const scheduleCallMailto = `mailto:info@equitypartners.fund?cc=${encodeURICompon
                   <input class="input" type="text" name="last_name" placeholder={content.form.lastName} required />
                 </div>
                 <input class="input" type="email" name="email" placeholder={content.form.email} required />
-                <textarea class="textarea" name="message" placeholder="Your message…" required style="min-height: 110px;"></textarea>
-                <button class="submit" type="submit">Send Message</button>
+                <textarea class="textarea" name="message" placeholder={vc.msgPlaceholder} required style="min-height: 110px;"></textarea>
+                <button class="submit" type="submit">{content.form.submit}</button>
               </form>
             </div>
 
@@ -1392,7 +1457,7 @@ const scheduleCallMailto = `mailto:info@equitypartners.fund?cc=${encodeURICompon
             <div class="contact-info-header">
               <p class="eyebrow">{content.cardEyebrow}</p>
               <h3>Equity Partners</h3>
-              <p>Reach out directly, our team typically responds within one business day.</p>
+              <p>{vc.cardSubtitle}</p>
             </div>
 
             <div class="contact-info-body">
@@ -1445,70 +1510,65 @@ const scheduleCallMailto = `mailto:info@equitypartners.fund?cc=${encodeURICompon
       <div class="container">
         <div class="video-consult-wrap">
           <div class="video-consult-copy">
-            <p class="eyebrow">1:1 Strategy Call</p>
-            <h2>Book a 30-minute video call with our team</h2>
-            <p>
-              Every investor's situation is different. Sit down with one of our partners
-              for a focused, confidential conversation about your goals, budget, and
-              timeline — and walk away with a tailored shortlist of opportunities
-              matched to where you are today.
-            </p>
+            <p class="eyebrow">{vc.vcEyebrow}</p>
+            <h2>{vc.vcHeading}</h2>
+            <p>{vc.vcIntro}</p>
             <ul class="video-consult-benefits">
               <li>
                 <span class="video-consult-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                 </span>
-                A private, no-obligation conversation with a senior partner
+                {vc.vcBenefit1}
               </li>
               <li>
                 <span class="video-consult-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                 </span>
-                Personalised review of your investment goals, capacity, and horizon
+                {vc.vcBenefit2}
               </li>
               <li>
                 <span class="video-consult-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                 </span>
-                A curated set of opportunities tailored to your profile
+                {vc.vcBenefit3}
               </li>
             </ul>
             <div class="video-consult-cta-row">
               <a class="submit video-consult-cta" href={scheduleCallMailto}>
-                Schedule Your Call
+                {vc.vcButton}
               </a>
-              <span class="video-consult-note">30 minutes · Online · Free of charge</span>
+              <span class="video-consult-note">{vc.vcNote}</span>
             </div>
           </div>
 
           <div class="video-consult-card" aria-hidden="true">
             <div class="video-consult-card-header">
               <span class="video-consult-card-status"></span>
-              Equity Partners · Live Consultation
+              Equity Partners · {vc.liveConsult}
             </div>
             <div class="video-consult-card-frame">
               <div class="video-consult-avatar-row">
                 <span class="video-consult-avatar">EP</span>
                 <span class="video-consult-avatar-text">
                   <strong>Equity Partners</strong>
-                  <span>Senior Advisor</span>
+                  <span>{vc.seniorAdvisor}</span>
                 </span>
               </div>
               <div class="video-consult-avatar-row">
-                <span class="video-consult-avatar is-alt">You</span>
+                <span class="video-consult-avatar is-alt">{vc.you}</span>
                 <span class="video-consult-avatar-text">
-                  <strong>You</strong>
-                  <span>Investor</span>
+                  <strong>{vc.you}</strong>
+                  <span>{vc.investor}</span>
                 </span>
               </div>
               <div class="video-consult-card-divider"></div>
               <div class="video-consult-card-detail">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                <span>30 minutes · Tailored to your situation</span>
+                <span>{vc.cardDetail1}</span>
                 <svg viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2"/><polygon points="22 8 16 12 22 16 22 8"/></svg>
-                <span>Online call · Join from anywhere</span>
+                <span>{vc.cardDetail2}</span>
                 <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                <span>No obligation · Pure exploratory conversation</span>
+                <span>{vc.cardDetail3}</span>
               </div>
             </div>
           </div>
