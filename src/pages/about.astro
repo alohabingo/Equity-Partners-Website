@@ -457,14 +457,55 @@ const localizedTeamMembers = teamMembers.map((member, index) => ({
       }
 
       .journey-proof-metric {
-        background: #22324a;
-        border: 1px solid rgba(216, 227, 242, 0.1);
+        position: relative;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(212, 224, 241, 0.14);
         border-radius: 1.1rem;
         padding: 1.4rem 1.2rem;
         min-height: 10.5rem;
         display: flex;
         flex-direction: column;
         justify-content: center;
+        overflow: hidden;
+        isolation: isolate;
+        box-shadow: 0 18px 40px rgba(5, 12, 20, 0.22);
+        transition: transform 360ms cubic-bezier(0.2, 0.65, 0.35, 1),
+          border-color 360ms ease, box-shadow 360ms ease;
+      }
+
+      .journey-proof-metric::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 85% 0%, rgba(83, 178, 127, 0.22), transparent 60%);
+        opacity: 0;
+        transition: opacity 360ms ease;
+        z-index: -1;
+        pointer-events: none;
+      }
+
+      .journey-proof-metric::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(83, 178, 127, 0.55), transparent);
+        opacity: 0;
+        transition: opacity 360ms ease;
+      }
+
+      .journey-proof-metric:hover {
+        transform: translateY(-6px);
+        border-color: rgba(83, 178, 127, 0.42);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4),
+          0 0 0 1px rgba(83, 178, 127, 0.18) inset;
+      }
+
+      .journey-proof-metric:hover::before,
+      .journey-proof-metric:hover::after {
+        opacity: 1;
       }
 
       .journey-proof-metric-label {
