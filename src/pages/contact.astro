@@ -13,16 +13,42 @@ const locale = getLocaleFromUrl(Astro.url);
 const content = getContentTranslations(locale).contact;
 
 // Pre-filled mailto for the "Schedule Your Call" button — opens the
-// investor's default email client with a polite, ready-to-send request.
-const scheduleCallSubject = "Investor inquiry — Video call request";
-const scheduleCallBody = `Hi Equity Partners team,
+// investor's default email client with a polite, ready-to-send request,
+// localized to the active page language.
+const scheduleCallCopy = {
+  en: {
+    subject: "Investor inquiry — Video call request",
+    body: `Hi Equity Partners team,
 
 I'd like to schedule a 30-minute online call to learn more about your current investment opportunities and discuss whether they might suit my profile.
 
 Could you let me know a few times that work for your team?
 
-Thanks,`;
-const scheduleCallMailto = `mailto:info@equitypartners.fund?cc=${encodeURIComponent("bing@belugand.com")}&subject=${encodeURIComponent(scheduleCallSubject)}&body=${encodeURIComponent(scheduleCallBody)}`;
+Thanks,`,
+  },
+  es: {
+    subject: "Consulta de inversor — Solicitud de videollamada",
+    body: `Hola equipo de Equity Partners:
+
+Me gustaría programar una videollamada de 30 minutos para conocer mejor sus oportunidades de inversión actuales y valorar si encajan con mi perfil.
+
+¿Podrían indicarme algunas franjas horarias que les vengan bien?
+
+Gracias,`,
+  },
+  ca: {
+    subject: "Consulta d'inversor — Sol·licitud de videotrucada",
+    body: `Hola equip d'Equity Partners,
+
+M'agradaria programar una videotrucada de 30 minuts per conèixer millor les seves oportunitats d'inversió actuals i valorar si encaixen amb el meu perfil.
+
+Em podrien indicar algunes franges horàries que els vagin bé?
+
+Gràcies,`,
+  },
+} as const;
+const sc = scheduleCallCopy[(locale ?? "en") as "en" | "es" | "ca"] ?? scheduleCallCopy.en;
+const scheduleCallMailto = `mailto:info@equitypartners.fund?cc=${encodeURIComponent("bing@belugand.com")}&subject=${encodeURIComponent(sc.subject)}&body=${encodeURIComponent(sc.body)}`;
 
 // Localized copy for the contact-info card subtitle and the 1:1 video-call section.
 const vcCopy = {
