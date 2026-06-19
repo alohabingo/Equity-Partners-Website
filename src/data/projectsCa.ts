@@ -84,7 +84,7 @@ export const projects: Project[] = [
       "/Ordino%20Prestige%203.png",
     ],
     description:
-      "Ordino Prestige és un complex residencial premium de 24 apartaments situat a la parròquia d'Ordino, coneguda pel seu entorn natural excepcional, l'aire net i el seu atractiu creixent tant entre els residents andorrans com entre els qui s'hi traslladen des de l'estranger. El projecte ofereix apartaments de format mitjà i gran amb acabats d'alta especificació, aparcament subterrani i accés directe a la infraestructura d'esquí d'Ordino-Arcalís.",
+      "Ordino Prestige és un complex residencial premium de 50 apartaments situat a la parròquia d'Ordino, coneguda pel seu entorn natural excepcional, l'aire net i el seu atractiu creixent tant entre els residents andorrans com entre els qui s'hi traslladen des de l'estranger. El projecte ofereix apartaments de format mitjà i gran amb acabats d'alta especificació, aparcament subterrani i accés directe a la infraestructura d'esquí d'Ordino-Arcalís.",
     investmentCase:
       "Ordino experimenta una escassetat estructural d'habitatge de qualitat a mesura que creix la demanda de residents internacionals. El projecte es troba en fases avançades de planificació i el sòl ja està assegurat. L'escala relativament compacta del projecte permet un termini de lliurament més ràpid, cosa que ofereix als inversors un període de permanència més curt i un punt d'entrada mínim més baix que en desenvolupaments més grans.",
     highlights: [

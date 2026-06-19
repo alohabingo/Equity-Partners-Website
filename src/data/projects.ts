@@ -124,7 +124,7 @@ export const projects: Project[] = [
       "/Ordino%20Prestige%203.png",
     ],
     description:
-      "Ordino Prestige is a 24-unit premium residential apartment complex located in the parish of Ordino, known for its exceptional natural environment, clean air, and growing appeal among Andorran residents and international relocators alike. The project delivers mid-to-large format apartments with high-specification finishes, underground parking, and direct access to Ordino-Arcalís ski infrastructure.",
+      "Ordino Prestige is a 50-unit premium residential apartment complex located in the parish of Ordino, known for its exceptional natural environment, clean air, and growing appeal among Andorran residents and international relocators alike. The project delivers mid-to-large format apartments with high-specification finishes, underground parking, and direct access to Ordino-Arcalís ski infrastructure.",
     investmentCase:
       "Ordino is experiencing a structural undersupply of quality residential stock as demand from international residents grows. The project is in advanced planning stages with the land already secured. The relatively compact scale of the project enables a faster delivery timeline, giving investors a shorter hold period and lower minimum entry point than larger developments.",
     highlights: [
