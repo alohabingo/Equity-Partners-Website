@@ -27,6 +27,8 @@ const scheduleCallMailto = `mailto:info@equitypartners.fund?cc=${encodeURICompon
 // Localized copy for the contact-info card subtitle and the 1:1 video-call section.
 const vcCopy = {
   en: {
+    tabGeneral: "General Inquiry",
+    tabInvestor: "Investor Inquiry",
     msgPlaceholder: "Your message…",
     cardSubtitle: "Reach out directly, our team typically responds within one business day.",
     vcEyebrow: "1:1 Strategy Call",
@@ -47,6 +49,8 @@ const vcCopy = {
     cardDetail3: "No obligation · Pure exploratory conversation",
   },
   es: {
+    tabGeneral: "Consulta general",
+    tabInvestor: "Consulta de inversor",
     msgPlaceholder: "Su mensaje…",
     cardSubtitle: "Contáctenos directamente; nuestro equipo suele responder en un día hábil.",
     vcEyebrow: "Llamada estratégica 1:1",
@@ -67,6 +71,8 @@ const vcCopy = {
     cardDetail3: "Sin compromiso · Conversación puramente exploratoria",
   },
   ca: {
+    tabGeneral: "Consulta general",
+    tabInvestor: "Consulta d'inversor",
     msgPlaceholder: "El seu missatge…",
     cardSubtitle: "Contacti'ns directament; el nostre equip sol respondre en un dia hàbil.",
     vcEyebrow: "Trucada estratègica 1:1",
@@ -1386,7 +1392,7 @@ const vc = vcCopy[(locale ?? "en") as "en" | "es" | "ca"] ?? vcCopy.en;
                 type="button"
               >
                 <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                General Inquiry
+                {vc.tabGeneral}
               </button>
               <button
                 class="form-tab-btn"
@@ -1397,7 +1403,7 @@ const vc = vcCopy[(locale ?? "en") as "en" | "es" | "ca"] ?? vcCopy.en;
                 type="button"
               >
                 <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                Investor Inquiry
+                {vc.tabInvestor}
               </button>
             </div>
 
