@@ -134,7 +134,6 @@ const vc = vcCopy[(locale ?? "en") as "en" | "es" | "ca"] ?? vcCopy.en;
     />
     <link rel="icon" type="image/png" href="/EP%20favicon.png" />
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
 
       :root {
         --bg-paper: #f3f5f9;
@@ -1438,11 +1437,15 @@ const vc = vcCopy[(locale ?? "en") as "en" | "es" | "ca"] ?? vcCopy.en;
               <form class="contact-form" name="general-inquiry" data-netlify="true" method="post" action="#">
                 <input type="hidden" name="form-name" value="general-inquiry" />
                 <div class="field-row">
-                  <input class="input" type="text" name="first_name" placeholder={content.form.firstName} required />
-                  <input class="input" type="text" name="last_name" placeholder={content.form.lastName} required />
+                  <label class="sr-only" for="gi-first-name">{content.form.firstName}</label>
+                  <input class="input" type="text" id="gi-first-name" name="first_name" autocomplete="given-name" placeholder={content.form.firstName} required />
+                  <label class="sr-only" for="gi-last-name">{content.form.lastName}</label>
+                  <input class="input" type="text" id="gi-last-name" name="last_name" autocomplete="family-name" placeholder={content.form.lastName} required />
                 </div>
-                <input class="input" type="email" name="email" placeholder={content.form.email} required />
-                <textarea class="textarea" name="message" placeholder={vc.msgPlaceholder} required style="min-height: 110px;"></textarea>
+                <label class="sr-only" for="gi-email">{content.form.email}</label>
+                <input class="input" type="email" id="gi-email" name="email" autocomplete="email" placeholder={content.form.email} required />
+                <label class="sr-only" for="gi-message">{vc.msgPlaceholder}</label>
+                <textarea class="textarea" id="gi-message" name="message" placeholder={vc.msgPlaceholder} required style="min-height: 110px;"></textarea>
                 <button class="submit" type="submit">{content.form.submit}</button>
               </form>
             </div>
@@ -1452,32 +1455,40 @@ const vc = vcCopy[(locale ?? "en") as "en" | "es" | "ca"] ?? vcCopy.en;
               <form class="contact-form" name="investor-inquiry" data-netlify="true" method="post" action="#">
                 <input type="hidden" name="form-name" value="investor-inquiry" />
                 <div class="field-row">
-                  <input class="input" type="text" name="first_name" placeholder={content.form.firstName} required />
-                  <input class="input" type="text" name="last_name" placeholder={content.form.lastName} required />
+                  <label class="sr-only" for="inv-first-name">{content.form.firstName}</label>
+                  <input class="input" type="text" id="inv-first-name" name="first_name" autocomplete="given-name" placeholder={content.form.firstName} required />
+                  <label class="sr-only" for="inv-last-name">{content.form.lastName}</label>
+                  <input class="input" type="text" id="inv-last-name" name="last_name" autocomplete="family-name" placeholder={content.form.lastName} required />
                 </div>
                 <div class="field-row">
-                  <input class="input" type="email" name="email" placeholder={content.form.email} required />
-                  <input class="input" type="text" name="company" placeholder={content.form.company} />
+                  <label class="sr-only" for="inv-email">{content.form.email}</label>
+                  <input class="input" type="email" id="inv-email" name="email" autocomplete="email" placeholder={content.form.email} required />
+                  <label class="sr-only" for="inv-company">{content.form.company}</label>
+                  <input class="input" type="text" id="inv-company" name="company" autocomplete="organization" placeholder={content.form.company} />
                 </div>
-                <select class="input" name="investor_type" required>
+                <label class="sr-only" for="inv-investor-type">{content.form.investorType}</label>
+                <select class="input" id="inv-investor-type" name="investor_type" required>
                   <option value="" disabled selected>{content.form.investorType}</option>
                   {content.form.investorTypeOptions.map((option) => (
                     <option value={option}>{option}</option>
                   ))}
                 </select>
-                <select class="input" name="investment_timeline" required>
+                <label class="sr-only" for="inv-investment-timeline">{content.form.investmentTimeline}</label>
+                <select class="input" id="inv-investment-timeline" name="investment_timeline" required>
                   <option value="" disabled selected>{content.form.investmentTimeline}</option>
                   {content.form.investmentTimelineOptions.map((option) => (
                     <option value={option}>{option}</option>
                   ))}
                 </select>
-                <select class="input" name="investment_range" required>
+                <label class="sr-only" for="inv-investment-range">{content.form.investmentRange}</label>
+                <select class="input" id="inv-investment-range" name="investment_range" required>
                   <option value="" disabled selected>{content.form.investmentRange}</option>
                   {content.form.investmentRangeOptions.map((option) => (
                     <option value={option}>{option}</option>
                   ))}
                 </select>
-                <textarea class="textarea" name="message" placeholder={content.form.message}></textarea>
+                <label class="sr-only" for="inv-message">{content.form.message}</label>
+                <textarea class="textarea" id="inv-message" name="message" placeholder={content.form.message}></textarea>
                 <button class="submit" type="submit">{content.form.submit}</button>
               </form>
             </div>

@@ -34,14 +34,14 @@ const projects = [
     status: "Under Construction",
     value: "€50M",
     sector: "Luxury Residential",
-    image: "/04c%20copy.jpg",
+    image: "/04c-copy.webp",
   },
   {
     name: "Ordino Prestige",
     status: "Under development",
     value: "€35M",
     sector: "Luxury Residential",
-    image: "/Ordino%20Prestige.jpeg",
+    image: "/ordino-prestige.webp",
   },
   {
     name: "Funicamp Ski Residencies",
@@ -85,7 +85,6 @@ const homepageSuggestedPosts = blogPostsByLocale[locale].slice(0, 3);
     />
     <link rel="icon" type="image/png" href="/EP%20favicon.png" />
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
 
       :root {
         --bg-night: #06080c;
@@ -148,7 +147,7 @@ const homepageSuggestedPosts = blogPostsByLocale[locale].slice(0, 3);
             rgba(6, 8, 12, 0.18) 34%,
             rgba(6, 8, 12, 0.3) 100%
           ),
-          url("/hero-andorra-R2PtlkD-.jpg")
+          url("/hero-andorra-r2ptlkd.webp")
             center top / cover no-repeat;
         color: var(--text-light);
         display: flex;
@@ -1329,7 +1328,7 @@ const homepageSuggestedPosts = blogPostsByLocale[locale].slice(0, 3);
       .focus-f-body .focus-c-media.is-canillo {
         background:
           linear-gradient(180deg, rgba(9, 15, 25, 0.12), rgba(9, 15, 25, 0.18)),
-          url("/Andorra%20Canillo.jpg") center / cover no-repeat;
+          url("/andorra-canillo.webp") center / cover no-repeat;
       }
 
       .focus-section-f.is-concept-f {
@@ -1372,7 +1371,7 @@ const homepageSuggestedPosts = blogPostsByLocale[locale].slice(0, 3);
       }
 
       .focus-section-f.is-concept-f .focus-c-media.is-canillo {
-        background: url("/Andorra%20Canillo.jpg") center / cover no-repeat;
+        background: url("/andorra-canillo.webp") center / cover no-repeat;
       }
 
       .focus-section-f.is-concept-f .cta-link {
@@ -1743,7 +1742,7 @@ const homepageSuggestedPosts = blogPostsByLocale[locale].slice(0, 3);
         min-height: 220px;
         background:
           linear-gradient(rgba(7, 13, 22, 0.7), rgba(7, 13, 22, 0.7)),
-          url("/AND IMG night snow lights.jpeg") center / cover no-repeat fixed;
+          url("/and-img-night-snow-lights.webp") center / cover no-repeat fixed;
         background-color: #0f1a2a;
         overflow: hidden;
       }
@@ -3819,14 +3818,14 @@ const homepageSuggestedPosts = blogPostsByLocale[locale].slice(0, 3);
       }
 
       .wwo-card.is-featured .wwo-cta a {
-        background: #53b27f;
-        border-color: #53b27f;
+        background: #2e7d54;
+        border-color: #2e7d54;
         color: #ffffff;
       }
 
       .wwo-card.is-featured .wwo-cta a:hover {
-        background: #5fc189;
-        border-color: #5fc189;
+        background: #266946;
+        border-color: #266946;
       }
 
       .wwo-cta-arrow {
@@ -5377,7 +5376,7 @@ const homepageSuggestedPosts = blogPostsByLocale[locale].slice(0, 3);
         </div>
         <div class="why-equity-home-body">
           <div class="why-equity-home-media">
-            <img src="/Ordino%20Prestige.jpeg" alt={content.aria.whyEquityImage} loading="lazy" />
+            <img src="/ordino-prestige.webp" alt={content.aria.whyEquityImage} loading="lazy" />
           </div>
           <div class="why-equity-home-points" data-carousel="whyEquity" data-carousel-item=".why-equity-home-point">
             <article class="why-equity-home-point">
@@ -5443,7 +5442,7 @@ const homepageSuggestedPosts = blogPostsByLocale[locale].slice(0, 3);
           {content.andorraAdvantage.items.map((item, index) => (
             <div class="andorra-adv-v2-item">
               <span class="andorra-adv-v2-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-              <p class="andorra-adv-v2-num"><img class="andorra-adv-v2-flag" src="/images/Icons/flag-round-250.png" alt="Andorra" />{item.label}</p>
+              <p class="andorra-adv-v2-num"><img class="andorra-adv-v2-flag" loading="lazy" src="/images/Icons/flag-round-250.png" alt="Andorra" />{item.label}</p>
               <h3>{item.title}</h3>
               <p>{item.body}</p>
             </div>
@@ -5618,8 +5617,10 @@ const homepageSuggestedPosts = blogPostsByLocale[locale].slice(0, 3);
         <div class="leaders">
           <div class="leaders-image">
             <img
-              src="/01_stone%20copy%202.jpg"
+              src="/01-stone-copy-2.webp"
               alt="Equity Partners"
+              loading="lazy"
+              decoding="async"
             />
           </div>
           <div class="leaders-copy">
@@ -5648,7 +5649,7 @@ const homepageSuggestedPosts = blogPostsByLocale[locale].slice(0, 3);
                 href={buildLocalizedPath("/projects", locale)}
                 aria-label={`${content.aria.projectCardLabel} — ${project.name}`}
               >
-                <img src={project.image} alt={project.name} />
+                <img src={project.image} alt={project.name} loading="lazy" decoding="async" />
                 <span class="project-card-view-pill" aria-hidden="true">{content.featuredDevelopments.viewLabel}</span>
                 <div class="project-meta">
                   <h3>{project.name}</h3>

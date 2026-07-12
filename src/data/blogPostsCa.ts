@@ -24,7 +24,7 @@ export const blogPosts: BlogPost[] = [
     slug: "can-foreigners-still-buy-property-in-andorra-2026",
     title: "Poden els estrangers comprar propietats a Andorra avui?",
     category: "Regulació",
-    date: "Apr 2026",
+    date: "Abr 2026",
     excerpt:
       "Una guia pràctica per a inversors sobre les regles d'adquisició d'Andorra posteriors al 2025, què poden comprar encara els estrangers i on hi ha oportunitats reals.",
     image:
@@ -112,7 +112,7 @@ export const blogPosts: BlogPost[] = [
     slug: "andorra-real-estate-investment-2026-serious-investors",
     title: "Inversió immobiliària a Andorra el 2026: Guia per als inversors",
     category: "Actualització del mercat",
-    date: "Mar 2026",
+    date: "Març 2026",
     excerpt:
       "Una guia actualitzada per a inversors sobre el mercat immobiliari d'Andorra el 2026: regulació, preus, restriccions a la inversió estrangera i on el capital disciplinat encara pot trobar oportunitats.",
     image:
@@ -221,7 +221,7 @@ export const blogPosts: BlogPost[] = [
     slug: "andorra-passive-residency",
     title: "Residència passiva a Andorra: una residència per inversió",
     category: "Regulació",
-    date: "Mar 2026",
+    date: "Març 2026",
     excerpt:
       "Què cal per accedir-hi el 2026, per què el marc està canviant i per què Andorra continua sent un lloc tan atractiu per viure-hi i invertir-hi.",
     image:
@@ -336,7 +336,7 @@ export const blogPosts: BlogPost[] = [
     slug: "andorra-property-tax-for-foreign-investors",
     title: "Impostos sobre la propietat a Andorra per a inversors estrangers",
     category: "Impostos",
-    date: "Feb 2026",
+    date: "Febr 2026",
     excerpt:
       "Què signifiquen les regles el 2026, on han canviat els costos i com una estructuració més sòlida pot protegir el valor a llarg termini.",
     image:
@@ -430,7 +430,7 @@ export const blogPosts: BlogPost[] = [
     slug: "andorra-real-estate-market-2026",
     title: "Mercat immobiliari d'Andorra: Preus, demanda i estadístiques",
     category: "Actualització del mercat",
-    date: "Feb 2026",
+    date: "Febr 2026",
     excerpt:
       "Una lectura pràctica sobre els preus, l'activitat de transaccions i la demanda dels residents en el mercat immobiliari en evolució d'Andorra.",
     image:
@@ -537,7 +537,7 @@ export const blogPosts: BlogPost[] = [
     slug: "best-areas-to-invest-in-andorra-property",
     title: "Millors àrees per invertir en propietats a Andorra",
     category: "Guia d'ubicació",
-    date: "Jan 2026",
+    date: "Gen 2026",
     excerpt:
       "Una guia pràctica sobre on el valor, l'escassetat i el posicionament a llarg termini són més forts a les principals parròquies d'Andorra.",
     image:

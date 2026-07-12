@@ -41,8 +41,8 @@ export const opportunities: Opportunity[] = [
     image: "/Andorra-la-Vella.webp",
     gallery: [
       "/Andorra-la-Vella.webp",
-      "/hero-andorra-R2PtlkD-.jpg",
-      "/04c%20copy.jpg",
+      "/hero-andorra-r2ptlkd.webp",
+      "/04c-copy.webp",
     ],
 
     description:
@@ -221,11 +221,11 @@ export const opportunities: Opportunity[] = [
     floors: "14 plantes (dues torres)",
     completionDate: "Q4 2029",
 
-    image: "/AND%20IMG%20night%20snow%20lights.jpeg",
+    image: "/and-img-night-snow-lights.webp",
     gallery: [
-      "/AND%20IMG%20night%20snow%20lights.jpeg",
-      "/hero-andorra-R2PtlkD-.jpg",
-      "/04c%20copy.jpg",
+      "/and-img-night-snow-lights.webp",
+      "/hero-andorra-r2ptlkd.webp",
+      "/04c-copy.webp",
     ],
 
     description:
@@ -316,11 +316,11 @@ export const opportunities: Opportunity[] = [
     floors: "6 plantes",
     completionDate: "Q3 2027",
 
-    image: "/Andorra%20Canillo.jpg",
+    image: "/andorra-canillo.webp",
     gallery: [
-      "/Andorra%20Canillo.jpg",
+      "/andorra-canillo.webp",
       "/funicamp%20ski.jpg",
-      "/04c%20copy.jpg",
+      "/04c-copy.webp",
     ],
 
     description:
@@ -410,11 +410,11 @@ export const opportunities: Opportunity[] = [
     floors: "5 plantes",
     completionDate: "Q2 2028",
 
-    image: "/01_stone%20copy.jpg",
+    image: "/01-stone-copy.webp",
     gallery: [
-      "/01_stone%20copy.jpg",
-      "/01_stone%20copy%202.jpg",
-      "/AND%20IMG%20night%20snow%20lights.jpeg",
+      "/01-stone-copy.webp",
+      "/01-stone-copy-2.webp",
+      "/and-img-night-snow-lights.webp",
     ],
 
     description:

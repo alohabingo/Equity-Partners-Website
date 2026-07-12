@@ -206,12 +206,6 @@ const t = copy[locale];
       ]}
     />
     <link rel="icon" type="image/png" href="/EP favicon.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
     <style>
       *, *::before, *::after { box-sizing: border-box; }
 
@@ -1107,7 +1101,7 @@ const t = copy[locale];
     <!-- Hero -->
     <section class="opp-hero">
       <div class="opp-hero-image">
-        <img src={opp.image} alt={opp.name} />
+        <img src={opp.image} alt={opp.name} fetchpriority="high" />
       </div>
       <div class="opp-hero-overlay"></div>
       <div class="opp-hero-content">

@@ -61,11 +61,11 @@ export const projects: Project[] = [
     sqm: "12,400 m²",
     parking: "TBC",
     floors: "3–4 storeys per villa",
-    image: "/04c%20copy.jpg",
+    image: "/04c-copy.webp",
     gallery: [
-      "/images/projects/Nanta%20Alta/01_stone%20copy.jpg",
-      "/images/projects/Nanta%20Alta/02_stone%20copy.jpg",
-      "/images/projects/Nanta%20Alta/I01%20copy.jpg",
+      "/images/projects/Nanta%20Alta/01-stone-copy.webp",
+      "/images/projects/Nanta Alta/02-stone-copy.webp",
+      "/images/projects/Nanta Alta/i01-copy.webp",
     ],
     description:
       "Nanta Alta is a boutique development of 25 luxury villas set across a prime hillside site in Encamp, one of Andorra's most sought-after residential parishes. Each villa combines contemporary alpine architecture with high-performance energy standards, generous interiors, and panoramic mountain views. The development is designed for international buyers seeking premium mountain living and the residency opportunities that come with Andorran ownership.",
@@ -117,11 +117,11 @@ export const projects: Project[] = [
     sqm: "6,800 m²",
     parking: "TBC",
     floors: "6 storeys",
-    image: "/Ordino%20Prestige%201.png",
+    image: "/ordino-prestige-1.webp",
     gallery: [
-      "/Ordino%20Prestige%201.png",
-      "/Ordino%20Prestige%202.png",
-      "/Ordino%20Prestige%203.png",
+      "/ordino-prestige-1.webp",
+      "/ordino-prestige-2.webp",
+      "/ordino-prestige-3.webp",
     ],
     description:
       "Ordino Prestige is a 50-unit premium residential apartment complex located in the parish of Ordino, known for its exceptional natural environment, clean air, and growing appeal among Andorran residents and international relocators alike. The project delivers mid-to-large format apartments with high-specification finishes, underground parking, and direct access to Ordino-Arcalís ski infrastructure.",
@@ -175,7 +175,7 @@ export const projects: Project[] = [
     image: "/funicamp%20ski.jpg",
     gallery: [
       "/funicamp%20ski.jpg",
-      "/Andorra%20Canillo.jpg",
+      "/andorra-canillo.webp",
       "/Andorra-la-Vella.webp",
     ],
     description:

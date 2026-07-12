@@ -175,9 +175,6 @@ const partnerSlug = (name: string): string =>
       ]}
     />
     <link rel="icon" type="image/png" href="/EP favicon.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <style>
       *, *::before, *::after { box-sizing: border-box; }
 
@@ -963,7 +960,7 @@ const partnerSlug = (name: string): string =>
     <!-- Hero -->
     <section class="project-hero">
       <div class="project-hero-image">
-        <img src={project.image} alt={project.name} />
+        <img src={project.image} alt={project.name} fetchpriority="high" />
       </div>
       <div class="project-hero-overlay"></div>
       <div class="project-hero-content">

@@ -24,7 +24,7 @@ export const blogPosts: BlogPost[] = [
     slug: "can-foreigners-still-buy-property-in-andorra-2026",
     title: "¿Pueden los extranjeros comprar propiedades en Andorra hoy?",
     category: "Regulación",
-    date: "Apr 2026",
+    date: "Abr 2026",
     excerpt:
       "Una guía práctica para inversores sobre las nuevas reglas de adquisición de Andorra post-2025, qué pueden comprar aún los extranjeros y dónde persisten las verdaderas oportunidades.",
     image:
@@ -537,7 +537,7 @@ export const blogPosts: BlogPost[] = [
     slug: "best-areas-to-invest-in-andorra-property",
     title: "Mejores áreas para invertir en propiedades de Andorra",
     category: "Guía de ubicación",
-    date: "Jan 2026",
+    date: "Ene 2026",
     excerpt:
       "Una guía práctica sobre dónde el valor, la escasez y el posicionamiento a largo plazo son más fuertes en las principales parroquias de Andorra.",
     image:

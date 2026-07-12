@@ -4,9 +4,14 @@ import NewsletterSignup from "../../components/NewsletterSignup.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
 import SEO from "../../components/SEO.astro";
 import { blogPosts } from "../../data/blogPosts";
+import { blogPosts as blogPostsEs } from "../../data/blogPostsEs";
+import { blogPosts as blogPostsCa } from "../../data/blogPostsCa";
 import { buildLocalizedPath, getLocaleFromUrl } from "../../lib/i18n";
 import { getContentTranslations } from "../../i18n/content";
 
+// English route. The /es/ and /ca/ routes are thin wrappers
+// (src/pages/{es,ca}/blog/[slug].astro) that render this page as a
+// component, passing the localized `post` from blogPostsEs/blogPostsCa.
 export function getStaticPaths() {
   return blogPosts.map((post) => ({
     params: { slug: post.slug },
@@ -16,6 +21,8 @@ export function getStaticPaths() {
 
 const { post } = Astro.props;
 const locale = getLocaleFromUrl(Astro.url);
+const postsByLocale = { en: blogPosts, es: blogPostsEs, ca: blogPostsCa } as const;
+const localePosts = postsByLocale[locale] ?? blogPosts;
 const content = getContentTranslations(locale).blog;
 const stopWords = new Set([
   "and",
@@ -50,7 +57,7 @@ const tokenize = (value: string) =>
 
 const postKeywords = new Set([...tokenize(post.title), ...tokenize(post.excerpt)]);
 
-const suggestedPosts = blogPosts
+const suggestedPosts = localePosts
   .filter((entry) => entry.slug !== post.slug)
   .map((entry) => {
     const entryKeywords = new Set([...tokenize(entry.title), ...tokenize(entry.excerpt)]);
@@ -76,7 +83,9 @@ const monthMap: Record<string, string> = {
   Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06",
   Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12",
 };
-const dateMatch = post.date.match(/([A-Za-z]{3})\s+(\d{4})/);
+// Parse the canonical English date (ES/CA dates use localized month names).
+const canonicalDate = (blogPosts.find((p) => p.slug === post.slug) ?? post).date;
+const dateMatch = canonicalDate.match(/([A-Za-z]{3})\s+(\d{4})/);
 const datePublished =
   dateMatch && monthMap[dateMatch[1]] ? `${dateMatch[2]}-${monthMap[dateMatch[1]]}` : undefined;
 
@@ -120,7 +129,6 @@ const articleSchema = {
     />
     <link rel="icon" type="image/png" href="/EP%20favicon.png" />
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap");
 
       :root {
         --bg-paper: #f3f5f9;

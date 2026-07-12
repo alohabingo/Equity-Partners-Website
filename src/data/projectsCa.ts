@@ -21,11 +21,11 @@ export const projects: Project[] = [
     sqm: "12,400 m²",
     parking: "Per confirmar",
     floors: "3–4 plantes per habitatge",
-    image: "/04c%20copy.jpg",
+    image: "/04c-copy.webp",
     gallery: [
-      "/images/projects/Nanta%20Alta/01_stone%20copy.jpg",
-      "/images/projects/Nanta%20Alta/02_stone%20copy.jpg",
-      "/images/projects/Nanta%20Alta/I01%20copy.jpg",
+      "/images/projects/Nanta%20Alta/01-stone-copy.webp",
+      "/images/projects/Nanta Alta/02-stone-copy.webp",
+      "/images/projects/Nanta Alta/i01-copy.webp",
     ],
     description:
       "Nanta Alta és un desenvolupament boutique de 25 habitatges de luxe situat en una parcel·la privilegiada al vessant d'Encamp, una de les parròquies residencials més sol·licitades d'Andorra. Cada habitatge combina arquitectura alpina contemporània amb alts estàndards d'eficiència energètica, interiors generosos i vistes panoràmiques a la muntanya. El desenvolupament està concebut per a compradors internacionals que busquen una vida de muntanya premium i les oportunitats de residència que comporta la propietat a Andorra.",
@@ -77,11 +77,11 @@ export const projects: Project[] = [
     sqm: "6,800 m²",
     parking: "Per confirmar",
     floors: "6 plantes",
-    image: "/Ordino%20Prestige%201.png",
+    image: "/ordino-prestige-1.webp",
     gallery: [
-      "/Ordino%20Prestige%201.png",
-      "/Ordino%20Prestige%202.png",
-      "/Ordino%20Prestige%203.png",
+      "/ordino-prestige-1.webp",
+      "/ordino-prestige-2.webp",
+      "/ordino-prestige-3.webp",
     ],
     description:
       "Ordino Prestige és un complex residencial premium de 50 apartaments situat a la parròquia d'Ordino, coneguda pel seu entorn natural excepcional, l'aire net i el seu atractiu creixent tant entre els residents andorrans com entre els qui s'hi traslladen des de l'estranger. El projecte ofereix apartaments de format mitjà i gran amb acabats d'alta especificació, aparcament subterrani i accés directe a la infraestructura d'esquí d'Ordino-Arcalís.",
@@ -135,7 +135,7 @@ export const projects: Project[] = [
     image: "/funicamp%20ski.jpg",
     gallery: [
       "/funicamp%20ski.jpg",
-      "/Andorra%20Canillo.jpg",
+      "/andorra-canillo.webp",
       "/Andorra-la-Vella.webp",
     ],
     description:

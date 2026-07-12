@@ -1069,7 +1069,7 @@ export const contentTranslations: Record<
       },
     },
     newsletter: {
-      eyebrow: "Newsletter",
+      eyebrow: "Boletín",
       title: "Manténgase informado sobre oportunidades en Andorra.",
       emailLabel: "Correo electrónico",
       emailPlaceholder: "Introduzca su correo",
@@ -1646,7 +1646,7 @@ export const contentTranslations: Record<
       },
     },
     newsletter: {
-      eyebrow: "Newsletter",
+      eyebrow: "Butlletí",
       title: "Mantingui's informat sobre oportunitats a Andorra.",
       emailLabel: "Correu electrònic",
       emailPlaceholder: "Introdueixi el seu correu",
