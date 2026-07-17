@@ -10,228 +10,647 @@ const denied = Astro.url.searchParams.get("denied") === "1";
 
 const supabase = supabaseServer(Astro.cookies, Astro.request);
 
-// Metrics — every query tolerates empty tables / restricted roles.
-async function count(table: string, filter?: (q: any) => any): Promise<number | null> {
-  try {
-    let q: any = supabase.from(table).select("*", { count: "exact", head: true });
-    if (filter) q = filter(q);
-    const { count: c, error } = await q;
-    return error ? null : (c ?? 0);
-  } catch {
-    return null;
-  }
+const now = Date.now();
+const DAY = 24 * 3600 * 1000;
+const iso = (t: number) => new Date(t).toISOString();
+
+/* ============================================================
+   DATA — every block tolerates empty tables and restricted roles
+   ============================================================ */
+
+// ---- Inquiries (super only) ----
+type InquiryRow = { id: string; type: string; status: string; created_at: string };
+let inquiries: InquiryRow[] = [];
+if (isSuper) {
+  const { data } = await supabase
+    .from("inquiries")
+    .select("id, type, status, created_at")
+    .order("created_at", { ascending: false })
+    .limit(2000);
+  inquiries = data ?? [];
 }
 
-const weekAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+const inThisWeek = inquiries.filter((i) => new Date(i.created_at).getTime() > now - 7 * DAY).length;
+const inLastWeek = inquiries.filter((i) => {
+  const t = new Date(i.created_at).getTime();
+  return t <= now - 7 * DAY && t > now - 14 * DAY;
+}).length;
 
-const [activeProjects, weeklyInquiries, publishedPosts] = await Promise.all([
-  count("portfolio_items", (q) => q.eq("status", "published")),
-  isSuper ? count("inquiries", (q) => q.gte("created_at", weekAgo)) : Promise.resolve(null),
-  count("posts", (q) => q.eq("status", "published")),
-]);
-
-// Subscriber count via security-definer function (works for editors too)
-let subscriberCount: number | null = null;
-try {
-  const { data, error } = await supabase.rpc("subscriber_count");
-  if (!error) subscriberCount = data ?? 0;
-} catch { /* not configured yet */ }
-
-// Lead pipeline summary + recent leads (super admins only)
-type StageRow = { status: string };
-let pipeline: Record<string, number> = {};
-let recentLeads: Array<{ id: string; name: string; email: string; type: string; created_at: string }> = [];
-if (isSuper) {
-  const { data } = await supabase.from("inquiries").select("status");
-  for (const row of (data ?? []) as StageRow[]) {
-    pipeline[row.status] = (pipeline[row.status] ?? 0) + 1;
+// Weekly buckets, last 10 weeks, split investor vs other
+const WEEKS = 10;
+const weekLabels: string[] = [];
+const weekInvestor: number[] = new Array(WEEKS).fill(0);
+const weekOther: number[] = new Array(WEEKS).fill(0);
+const weekFmt = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short" });
+for (let w = WEEKS - 1; w >= 0; w--) {
+  weekLabels.push(weekFmt.format(new Date(now - w * 7 * DAY)));
+}
+for (const inq of inquiries) {
+  const age = now - new Date(inq.created_at).getTime();
+  const bucket = Math.floor(age / (7 * DAY));
+  if (bucket >= 0 && bucket < WEEKS) {
+    const idx = WEEKS - 1 - bucket;
+    if (inq.type === "investor") weekInvestor[idx] += 1;
+    else weekOther[idx] += 1;
   }
-  const { data: recent } = await supabase
+}
+const weeklyTotals = weekInvestor.map((v, i) => v + weekOther[i]);
+
+// Pipeline
+const pipeline: Record<string, number> = {};
+for (const i of inquiries) pipeline[i.status] = (pipeline[i.status] ?? 0) + 1;
+const stages = [
+  { key: "new", label: "New", color: "#53b27f" },
+  { key: "in_progress", label: "In progress", color: "#c4943a" },
+  { key: "partnered", label: "Partnered", color: "#5f4a86" },
+  { key: "closed", label: "Closed", color: "#93a3b8" },
+];
+const pipelineMax = Math.max(1, ...stages.map((s) => pipeline[s.key] ?? 0));
+
+// Latest leads
+type LeadRow = { id: string; name: string; email: string; type: string; status: string; created_at: string };
+let recentLeads: LeadRow[] = [];
+if (isSuper) {
+  const { data } = await supabase
     .from("inquiries")
-    .select("id, name, email, type, created_at")
+    .select("id, name, email, type, status, created_at")
     .order("created_at", { ascending: false })
     .limit(5);
-  recentLeads = recent ?? [];
+  recentLeads = (data ?? []) as LeadRow[];
 }
 
-// Blog performance — views in the last 30 days (visible to editors too)
-const monthAgo = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
-let totalViews30d: number | null = null;
-let topPosts: Array<{ title: string; views: number }> = [];
+// ---- Subscribers ----
+let subscriberCount: number | null = null;
+let subsThisMonth = 0;
+let growthLabels: string[] = [];
+let growthData: number[] = [];
+if (isSuper) {
+  const { data } = await supabase
+    .from("subscribers")
+    .select("created_at")
+    .order("created_at", { ascending: true })
+    .limit(5000);
+  const rows = data ?? [];
+  subscriberCount = rows.length;
+  subsThisMonth = rows.filter((r) => new Date(r.created_at).getTime() > now - 30 * DAY).length;
+  // Cumulative count at the end of each of the last 6 months
+  const monthFmt = new Intl.DateTimeFormat("en-GB", { month: "short" });
+  for (let m = 5; m >= 0; m--) {
+    const end = new Date(new Date(now).getFullYear(), new Date(now).getMonth() - m + 1, 1).getTime();
+    growthLabels.push(monthFmt.format(new Date(end - DAY)));
+    growthData.push(rows.filter((r) => new Date(r.created_at).getTime() < end).length);
+  }
+} else {
+  try {
+    const { data, error } = await supabase.rpc("subscriber_count");
+    if (!error) subscriberCount = data ?? 0;
+  } catch { /* ignore */ }
+}
+
+// ---- Blog views (staff) ----
+let views30: { post_id: string; viewed_at: string }[] = [];
+let viewsPrev30 = 0;
 try {
-  const { data: views, error } = await supabase
+  const { data } = await supabase
     .from("post_views")
-    .select("post_id")
-    .gte("viewed_at", monthAgo)
-    .limit(10000);
-  if (!error && views) {
-    totalViews30d = views.length;
-    const byPost = new Map<string, number>();
-    for (const v of views) byPost.set(v.post_id, (byPost.get(v.post_id) ?? 0) + 1);
-    const top = [...byPost.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
-    if (top.length > 0) {
-      const { data: titles } = await supabase
-        .from("posts")
-        .select("id, title, locale")
-        .in("id", top.map(([id]) => id));
-      topPosts = top.map(([id, views]) => {
-        const p = (titles ?? []).find((t) => t.id === id);
-        return { title: p ? `${p.title} (${p.locale.toUpperCase()})` : "Unknown post", views };
+    .select("post_id, viewed_at")
+    .gte("viewed_at", iso(now - 30 * DAY))
+    .limit(20000);
+  views30 = data ?? [];
+  const { count } = await supabase
+    .from("post_views")
+    .select("*", { count: "exact", head: true })
+    .gte("viewed_at", iso(now - 60 * DAY))
+    .lt("viewed_at", iso(now - 30 * DAY));
+  viewsPrev30 = count ?? 0;
+} catch { /* analytics optional */ }
+
+const totalViews30 = views30.length;
+const viewsTrendPct = viewsPrev30 > 0 ? Math.round(((totalViews30 - viewsPrev30) / viewsPrev30) * 100) : null;
+
+// Top posts
+const byPost = new Map<string, number>();
+for (const v of views30) byPost.set(v.post_id, (byPost.get(v.post_id) ?? 0) + 1);
+const topIds = [...byPost.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+let topPosts: Array<{ title: string; views: number }> = [];
+
+// ---- Posts (titles, drafts, translation coverage) ----
+type PostRow = { id: string; slug: string; locale: string; title: string; status: string; updated_at: string; published_at: string | null };
+const { data: allPosts } = await supabase
+  .from("posts")
+  .select("id, slug, locale, title, status, updated_at, published_at")
+  .limit(1000);
+const posts = (allPosts ?? []) as PostRow[];
+const publishedPosts = posts.filter((p) => p.status === "published").length;
+
+topPosts = topIds.map(([id, views]) => {
+  const p = posts.find((x) => x.id === id);
+  return { title: p ? `${p.title} (${p.locale.toUpperCase()})` : "Unknown post", views };
+});
+const topMax = Math.max(1, ...topPosts.map((t) => t.views));
+
+// Content health: translation coverage + stale drafts
+const LOCALES = ["en", "es", "ca"];
+const bySlug = new Map<string, Set<string>>();
+for (const p of posts.filter((x) => x.status === "published")) {
+  if (!bySlug.has(p.slug)) bySlug.set(p.slug, new Set());
+  bySlug.get(p.slug)!.add(p.locale);
+}
+const missingTranslations = [...bySlug.entries()].filter(([, s]) => s.size < LOCALES.length).length;
+const staleDrafts = posts.filter(
+  (p) => p.status === "draft" && new Date(p.updated_at).getTime() < now - 7 * DAY
+).length;
+
+// Portfolio translation coverage
+let portfolioMissing = 0;
+try {
+  const { data: items } = await supabase
+    .from("portfolio_items")
+    .select("kind, slug, locale, status")
+    .eq("status", "published")
+    .limit(500);
+  const byKey = new Map<string, Set<string>>();
+  for (const it of items ?? []) {
+    const key = `${it.kind}:${it.slug}`;
+    if (!byKey.has(key)) byKey.set(key, new Set());
+    byKey.get(key)!.add(it.locale);
+  }
+  portfolioMissing = [...byKey.values()].filter((s) => s.size < LOCALES.length).length;
+} catch { /* ignore */ }
+
+// ---- Document links (super only) ----
+let docOpens7 = 0;
+let topDocLabel: string | null = null;
+let expiringLinks = 0;
+if (isSuper) {
+  try {
+    const { data: dviews } = await supabase
+      .from("document_link_views")
+      .select("viewed_at, document_links(label, documents(title))")
+      .gte("viewed_at", iso(now - 7 * DAY))
+      .limit(2000);
+    docOpens7 = (dviews ?? []).length;
+    const counts = new Map<string, number>();
+    for (const v of (dviews ?? []) as any[]) {
+      const title = v.document_links?.documents?.title ?? null;
+      if (title) counts.set(title, (counts.get(title) ?? 0) + 1);
+    }
+    const top = [...counts.entries()].sort((a, b) => b[1] - a[1])[0];
+    topDocLabel = top ? top[0] : null;
+
+    const { count: expCount } = await supabase
+      .from("document_links")
+      .select("*", { count: "exact", head: true })
+      .eq("revoked", false)
+      .gte("expires_at", iso(now))
+      .lte("expires_at", iso(now + 3 * DAY));
+    expiringLinks = expCount ?? 0;
+  } catch { /* vault optional */ }
+}
+
+// ---- Activity feed (super only, merged from all sources) ----
+type FeedEvent = { kind: "lead" | "mail-in" | "mail-out" | "sub" | "post" | "doc"; text: string; sub: string; at: number };
+let feed: FeedEvent[] = [];
+if (isSuper) {
+  const TYPE_LABELS: Record<string, string> = {
+    investor: "Investor inquiry", founder_pitch: "Founder pitch", general: "General inquiry", video_call: "Video call request",
+  };
+  for (const i of inquiries.slice(0, 10)) {
+    const lead = recentLeads.find((l) => l.id === i.id);
+    feed.push({
+      kind: "lead",
+      text: `${TYPE_LABELS[i.type] ?? "Inquiry"}${lead ? ` from ${lead.name}` : ""}`,
+      sub: lead?.email ?? "",
+      at: new Date(i.created_at).getTime(),
+    });
+  }
+  try {
+    const { data: msgs } = await supabase
+      .from("inquiry_messages")
+      .select("direction, subject, from_email, to_email, sent_at")
+      .order("sent_at", { ascending: false })
+      .limit(8);
+    for (const m of msgs ?? []) {
+      feed.push({
+        kind: m.direction === "inbound" ? "mail-in" : "mail-out",
+        text: m.direction === "inbound" ? `Email received from ${m.from_email}` : `Reply sent to ${m.to_email}`,
+        sub: m.subject ?? "",
+        at: new Date(m.sent_at).getTime(),
       });
     }
+  } catch { /* ignore */ }
+  try {
+    const { data: subs } = await supabase
+      .from("subscribers")
+      .select("email, source, created_at")
+      .order("created_at", { ascending: false })
+      .limit(6);
+    for (const s of subs ?? []) {
+      feed.push({ kind: "sub", text: "New newsletter subscriber", sub: `${s.email} · via ${s.source}`, at: new Date(s.created_at).getTime() });
+    }
+  } catch { /* ignore */ }
+  for (const p of posts.filter((x) => x.status === "published" && x.published_at)) {
+    const t = new Date(p.published_at!).getTime();
+    if (t > now - 14 * DAY) {
+      feed.push({ kind: "post", text: `Published: “${p.title}”`, sub: p.locale.toUpperCase(), at: t });
+    }
   }
-} catch { /* dashboard tolerates missing analytics */ }
+  try {
+    const { data: dv } = await supabase
+      .from("document_link_views")
+      .select("viewed_at, document_links(label, documents(title))")
+      .order("viewed_at", { ascending: false })
+      .limit(5);
+    for (const v of (dv ?? []) as any[]) {
+      const title = v.document_links?.documents?.title ?? "Document";
+      feed.push({ kind: "doc", text: `“${title}” opened via share link`, sub: v.document_links?.label ?? "", at: new Date(v.viewed_at).getTime() });
+    }
+  } catch { /* ignore */ }
 
-const recentFmt = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
-const stages: Array<{ key: string; label: string }> = [
-  { key: "new", label: "New" },
-  { key: "in_progress", label: "In Progress" },
-  { key: "closed", label: "Closed" },
-  { key: "partnered", label: "Partnered" },
-];
+  feed = feed.sort((a, b) => b.at - a.at).slice(0, 8);
+}
 
-const fmt = (n: number | null) => (n === null ? "—" : String(n));
+// ---- formatting helpers ----
+const timeFmt = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit" });
+const shortFmt = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short" });
+const feedTime = (t: number) => (now - t < DAY ? timeFmt.format(new Date(t)) : shortFmt.format(new Date(t)));
+const relTime = (t: string) => {
+  const mins = Math.round((now - new Date(t).getTime()) / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  if (mins < 60 * 24) return `${Math.round(mins / 60)}h ago`;
+  return `${Math.round(mins / (60 * 24))}d ago`;
+};
+
+// Sparkline points from a numeric series → "x,y x,y …" for a 74×26 viewBox
+function spark(series: number[]): { line: string; area: string } {
+  if (series.length < 2) return { line: "", area: "" };
+  const max = Math.max(1, ...series);
+  const pts = series.map((v, i) => {
+    const x = (i / (series.length - 1)) * 74;
+    const y = 24 - (v / max) * 20;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  return { line: pts.join(" "), area: `0,26 ${pts.join(" ")} 74,26` };
+}
+const inquirySpark = spark(weeklyTotals.slice(-8));
+const subSpark = spark(growthData);
+
+// Blog views sparkline: 30 days → 8 buckets of ~4 days
+const viewBuckets = new Array(8).fill(0);
+for (const v of views30) {
+  const age = now - new Date(v.viewed_at).getTime();
+  const b = Math.min(7, Math.floor(age / (3.75 * DAY)));
+  viewBuckets[7 - b] += 1;
+}
+const viewSpark = spark(viewBuckets);
+
+const TYPE_PILL: Record<string, { label: string; cls: string }> = {
+  investor: { label: "Investor", cls: "investor" },
+  founder_pitch: { label: "Founder", cls: "video" },
+  general: { label: "General", cls: "general" },
+  video_call: { label: "Video call", cls: "video" },
+};
+const STATUS_CHIP: Record<string, { label: string; cls: string }> = {
+  new: { label: "New", cls: "new" },
+  in_progress: { label: "In progress", cls: "progress" },
+  closed: { label: "Closed", cls: "closed" },
+  partnered: { label: "Partnered", cls: "partnered" },
+};
+
+const hour = new Date(now).getHours();
+const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+const todayFmt = new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
+
+const healthItems: Array<{ level: "warn" | "alert"; text: string; href: string; cta: string }> = [];
+if (missingTranslations > 0) healthItems.push({ level: "warn", text: `${missingTranslations} blog post${missingTranslations > 1 ? "s" : ""} missing a translation`, href: "/admin/blog", cta: "Fix →" });
+if (portfolioMissing > 0) healthItems.push({ level: "warn", text: `${portfolioMissing} portfolio item${portfolioMissing > 1 ? "s" : ""} missing a translation`, href: "/admin/portfolio", cta: "Fix →" });
+if (staleDrafts > 0) healthItems.push({ level: "warn", text: `${staleDrafts} draft${staleDrafts > 1 ? "s" : ""} untouched for 7+ days`, href: "/admin/blog", cta: "Review →" });
+if (isSuper && expiringLinks > 0) healthItems.push({ level: "alert", text: `${expiringLinks} share link${expiringLinks > 1 ? "s" : ""} expiring within 3 days`, href: "/admin/vault", cta: "Extend →" });
 ---
 
 <AdminLayout title="Dashboard" active="dashboard">
-  <div class="page-head">
-    <h1>Dashboard</h1>
-    <p>Welcome back, {user.fullName.split(" ")[0]}.</p>
+  <div class="topbar">
+    <div class="greeting">
+      <h1>{greeting}, {user.fullName.split(" ")[0]} 👋</h1>
+      <p>{todayFmt.format(new Date(now))} · Here's how Equity Partners is doing.</p>
+    </div>
   </div>
 
   {denied && <p class="denied">That section requires Super Admin access.</p>}
 
-  <section class="cards">
-    <article class="card">
-      <p class="metric">{fmt(activeProjects)}</p>
-      <p class="label">Active portfolio projects</p>
+  <section class="metrics">
+    {isSuper && (
+      <article class="metric">
+        <p class="m-label">Inquiries this week</p>
+        <p class="m-value">{inThisWeek}</p>
+        <p class="m-trend">
+          {inThisWeek >= inLastWeek
+            ? <span class="up">▲ +{inThisWeek - inLastWeek}</span>
+            : <span class="down">▼ {inThisWeek - inLastWeek}</span>} vs last week
+        </p>
+        {inquirySpark.line && (
+          <svg class="spark" viewBox="0 0 74 26" preserveAspectRatio="none">
+            <polygon points={inquirySpark.area} /><polyline points={inquirySpark.line} />
+          </svg>
+        )}
+      </article>
+    )}
+    <article class="metric">
+      <p class="m-label">Subscribers</p>
+      <p class="m-value">{subscriberCount ?? "—"}</p>
+      <p class="m-trend">{isSuper ? <><span class="up">▲ +{subsThisMonth}</span> last 30 days</> : "newsletter list"}</p>
+      {isSuper && subSpark.line && (
+        <svg class="spark" viewBox="0 0 74 26" preserveAspectRatio="none">
+          <polygon points={subSpark.area} /><polyline points={subSpark.line} />
+        </svg>
+      )}
     </article>
-    <article class="card">
-      <p class="metric">{fmt(weeklyInquiries)}</p>
-      <p class="label">Inquiries this week</p>
+    <article class="metric">
+      <p class="m-label">Blog views · 30d</p>
+      <p class="m-value">{totalViews30.toLocaleString("en-GB")}</p>
+      <p class="m-trend">
+        {viewsTrendPct === null ? "collecting data…" :
+          viewsTrendPct >= 0
+            ? <><span class="up">▲ {viewsTrendPct}%</span> vs previous 30d</>
+            : <><span class="down">▼ {Math.abs(viewsTrendPct)}%</span> vs previous 30d</>}
+      </p>
+      {viewSpark.line && (
+        <svg class="spark" viewBox="0 0 74 26" preserveAspectRatio="none">
+          <polygon points={viewSpark.area} /><polyline points={viewSpark.line} />
+        </svg>
+      )}
     </article>
-    <article class="card">
-      <p class="metric">{fmt(subscriberCount)}</p>
-      <p class="label">Newsletter subscribers</p>
-    </article>
-    <article class="card">
-      <p class="metric">{fmt(publishedPosts)}</p>
-      <p class="label">Published articles</p>
-    </article>
-    <article class="card">
-      <p class="metric">{fmt(totalViews30d)}</p>
-      <p class="label">Blog views (30 days)</p>
-    </article>
+    {isSuper ? (
+      <article class="metric">
+        <p class="m-label">Doc link opens · 7d</p>
+        <p class="m-value">{docOpens7}</p>
+        <p class="m-trend">{topDocLabel ? `most opened: ${topDocLabel}` : "no opens this week"}</p>
+      </article>
+    ) : (
+      <article class="metric">
+        <p class="m-label">Published articles</p>
+        <p class="m-value">{publishedPosts}</p>
+        <p class="m-trend">across all languages</p>
+      </article>
+    )}
   </section>
 
-  {topPosts.length > 0 && (
-    <section class="panel-block">
-      <h2>Top articles — last 30 days</h2>
-      <ol class="top-posts">
-        {topPosts.map((p) => (
-          <li><span class="views">{p.views}</span> {p.title}</li>
-        ))}
-      </ol>
-    </section>
-  )}
+  <div class="grid">
+    <div class="stack">
+      {isSuper && (
+        <section class="panel">
+          <h2>Inquiries per week <a class="link" href="/admin/leads">Open leads →</a></h2>
+          <div class="chart-wrap"><canvas id="inquiriesChart"></canvas></div>
+        </section>
+      )}
 
-  {isSuper && recentLeads.length > 0 && (
-    <section class="panel-block">
-      <h2>Latest inquiries</h2>
-      <ul class="recent-leads">
-        {recentLeads.map((l) => (
-          <li>
-            <a href={`/admin/leads/${l.id}`}>{l.name}</a>
-            <span class="lead-meta">{l.type} · {l.email} · {recentFmt.format(new Date(l.created_at))}</span>
-          </li>
-        ))}
-      </ul>
-    </section>
-  )}
+      {isSuper && (
+        <section class="panel">
+          <h2>Subscriber growth <a class="link" href="/admin/subscribers">Manage →</a></h2>
+          <div class="chart-wrap"><canvas id="subsChart"></canvas></div>
+        </section>
+      )}
+
+      {isSuper && (
+        <section class="panel">
+          <h2>Latest inquiries <a class="link" href="/admin/leads">All leads →</a></h2>
+          {recentLeads.length === 0 ? (
+            <p class="empty">No inquiries yet.</p>
+          ) : (
+            <table class="leads">
+              {recentLeads.map((l) => (
+                <tr>
+                  <td>
+                    <a class="l-name" href={`/admin/leads/${l.id}`}>{l.name}</a><br />
+                    <span class="l-meta">{l.email}</span>
+                  </td>
+                  <td><span class={`pill ${TYPE_PILL[l.type]?.cls ?? "general"}`}>{TYPE_PILL[l.type]?.label ?? l.type}</span></td>
+                  <td><span class={`status-chip ${STATUS_CHIP[l.status]?.cls ?? "new"}`}>{STATUS_CHIP[l.status]?.label ?? l.status}</span></td>
+                  <td class="l-meta">{relTime(l.created_at)}</td>
+                </tr>
+              ))}
+            </table>
+          )}
+        </section>
+      )}
+    </div>
+
+    <div class="stack">
+      {isSuper && (
+        <section class="panel">
+          <h2>Lead pipeline</h2>
+          <div class="funnel">
+            {stages.map((s) => (
+              <div class="f-row">
+                <span class="f-label">{s.label}</span>
+                <div class="f-bar-track">
+                  <div class="f-bar" style={`width:${Math.round(((pipeline[s.key] ?? 0) / pipelineMax) * 100)}%; background:${s.color};`}></div>
+                </div>
+                <span class="f-count">{pipeline[s.key] ?? 0}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {isSuper && feed.length > 0 && (
+        <section class="panel">
+          <h2>Activity</h2>
+          <div class="feed">
+            {feed.map((e) => (
+              <div class="ev">
+                <span class={`ev-icon ev-${e.kind}`}>
+                  {e.kind === "lead" && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/></svg>}
+                  {(e.kind === "mail-in" || e.kind === "mail-out") && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="m4 7 8 6 8-6"/></svg>}
+                  {e.kind === "sub" && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>}
+                  {e.kind === "post" && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>}
+                  {e.kind === "doc" && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>}
+                </span>
+                <p class="ev-text">{e.text}{e.sub && <span class="sub">{e.sub}</span>}</p>
+                <span class="ev-time">{feedTime(e.at)}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section class="panel">
+        <h2>Top articles · 30d <a class="link" href="/admin/blog">Blog →</a></h2>
+        {topPosts.length === 0 ? (
+          <p class="empty">No article views recorded yet.</p>
+        ) : (
+          <div class="arts">
+            {topPosts.map((p) => (
+              <div class="art">
+                <span class="a-title">{p.title}</span>
+                <span class="a-views">{p.views}</span>
+                <div class="a-bar"><div class="a-fill" style={`width:${Math.round((p.views / topMax) * 100)}%`}></div></div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section class="panel">
+        <h2>Content health</h2>
+        <div class="health">
+          {healthItems.map((h) => (
+            <div class="h-item">
+              <span class="h-dot" style={`background:${h.level === "alert" ? "#a33d3d" : "#c4943a"}`}></span>
+              {h.text}
+              <a class="fix" href={h.href}>{h.cta}</a>
+            </div>
+          ))}
+          {healthItems.length === 0 && <p class="ok-note">✓ All content healthy — translations complete, no stale drafts.</p>}
+        </div>
+      </section>
+    </div>
+  </div>
 
   {isSuper && (
-    <section class="pipeline">
-      <h2>Lead pipeline</h2>
-      <div class="stages">
-        {stages.map((s) => (
-          <article class="stage">
-            <p class="stage-count">{pipeline[s.key] ?? 0}</p>
-            <p class="stage-label">{s.label}</p>
-          </article>
-        ))}
-      </div>
-    </section>
+    <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+  )}
+  {isSuper && (
+    <script is:inline define:vars={{ weekLabels, weekInvestor, weekOther, growthLabels, growthData }}>
+      Chart.defaults.font.family = "'Montserrat', sans-serif";
+      Chart.defaults.font.size = 10.5;
+      Chart.defaults.color = "#5c6f88";
+      const grid = "rgba(22, 40, 62, 0.07)";
+      const scales = {
+        x: { grid: { display: false }, border: { display: false } },
+        y: { grid: { color: grid }, border: { display: false }, ticks: { maxTicksLimit: 5, precision: 0 } },
+      };
+      new Chart(document.getElementById("inquiriesChart"), {
+        type: "bar",
+        data: {
+          labels: weekLabels,
+          datasets: [
+            { label: "Investor", data: weekInvestor, backgroundColor: "#53b27f", borderRadius: 4, stack: "s" },
+            { label: "Other", data: weekOther, backgroundColor: "rgba(90,125,170,0.65)", borderRadius: 4, stack: "s" },
+          ],
+        },
+        options: {
+          maintainAspectRatio: false, responsive: true,
+          plugins: { legend: { position: "bottom", labels: { boxWidth: 10, boxHeight: 10 } } },
+          scales,
+        },
+      });
+      new Chart(document.getElementById("subsChart"), {
+        type: "line",
+        data: {
+          labels: growthLabels,
+          datasets: [{
+            data: growthData, borderColor: "#53b27f", borderWidth: 2.5,
+            pointRadius: 0, tension: 0.35, fill: true, backgroundColor: "rgba(83,178,127,0.12)",
+          }],
+        },
+        options: {
+          maintainAspectRatio: false, responsive: true,
+          plugins: { legend: { display: false } },
+          scales,
+        },
+      });
+    </script>
   )}
 
   <style>
+    .topbar { display: flex; justify-content: space-between; align-items: flex-start; }
+    .greeting h1 { font-size: 1.45rem; font-weight: 800; letter-spacing: -0.015em; }
+    .greeting p { margin-top: 0.25rem; color: #5c6f88; font-size: 0.85rem; }
     .denied {
-      margin-top: 1.2rem;
-      padding: 0.7rem 1rem;
-      border-radius: 8px;
-      background: rgba(203, 76, 76, 0.1);
-      border: 1px solid rgba(203, 76, 76, 0.35);
-      color: #a33d3d;
-      font-size: 0.88rem;
+      margin-top: 1.2rem; padding: 0.7rem 1rem; border-radius: 8px;
+      background: rgba(203, 76, 76, 0.1); border: 1px solid rgba(203, 76, 76, 0.35);
+      color: #a33d3d; font-size: 0.88rem;
     }
-    .cards {
-      margin-top: 1.8rem;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-    }
-    .card {
-      background: #ffffff;
-      border: 1px solid #e2e8f1;
-      border-radius: 12px;
-      padding: 1.3rem 1.4rem;
-      box-shadow: 0 4px 14px rgba(22, 40, 62, 0.05);
+    .empty { margin-top: 0.8rem; color: #7a8ba1; font-size: 0.85rem; }
+
+    .metrics {
+      margin-top: 1.5rem;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.9rem;
     }
     .metric {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #16283e;
-      letter-spacing: -0.02em;
+      background: #ffffff; border: 1px solid #e2e8f1; border-radius: 14px;
+      padding: 1.05rem 1.15rem; box-shadow: 0 8px 28px rgba(22, 40, 62, 0.07);
+      position: relative; overflow: hidden;
     }
-    .label {
-      margin-top: 0.3rem;
-      font-size: 0.78rem;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      color: #5c6f88;
+    .m-label {
+      font-size: 0.66rem; font-weight: 700; letter-spacing: 0.09em;
+      text-transform: uppercase; color: #5c6f88;
     }
-    .pipeline { margin-top: 2.4rem; }
-    .pipeline h2 { font-size: 1.05rem; font-weight: 700; }
-    .stages {
-      margin-top: 1rem;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 1rem;
+    .m-value { margin-top: 0.5rem; font-size: 1.85rem; font-weight: 800; letter-spacing: -0.02em; color: #16283e; }
+    .m-trend { margin-top: 0.3rem; font-size: 0.72rem; font-weight: 600; color: #93a3b8; }
+    .m-trend .up { color: #2e7d54; }
+    .m-trend .down { color: #a33d3d; }
+    .spark { position: absolute; right: 0.6rem; bottom: 0.55rem; width: 74px; height: 26px; opacity: 0.9; }
+    .spark polyline { fill: none; stroke: #53b27f; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .spark polygon { fill: rgba(83, 178, 127, 0.13); stroke: none; }
+
+    .grid { margin-top: 1.1rem; display: grid; grid-template-columns: 1.55fr 1fr; gap: 0.9rem; align-items: start; }
+    .stack { display: grid; gap: 0.9rem; }
+    .panel {
+      background: #ffffff; border: 1px solid #e2e8f1; border-radius: 14px;
+      padding: 1.15rem 1.3rem; box-shadow: 0 8px 28px rgba(22, 40, 62, 0.07);
     }
-    .stage {
-      background: #ffffff;
-      border: 1px solid #e2e8f1;
-      border-left: 4px solid #53b27f;
-      border-radius: 10px;
-      padding: 1rem 1.2rem;
+    .panel h2 {
+      font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+      color: #5c6f88; display: flex; justify-content: space-between; align-items: center;
     }
-    .stage-count { font-size: 1.4rem; font-weight: 700; }
-    .stage-label { font-size: 0.78rem; color: #5c6f88; font-weight: 600; }
-    .panel-block {
-      margin-top: 2.2rem; background: #ffffff; border: 1px solid #e2e8f1;
-      border-radius: 12px; padding: 1.3rem 1.5rem;
+    .panel h2 .link { font-size: 0.7rem; font-weight: 700; color: #2e7d54; text-decoration: none; letter-spacing: 0.02em; text-transform: none; }
+    .chart-wrap { margin-top: 0.9rem; height: 210px; }
+
+    .funnel { margin-top: 1rem; display: grid; gap: 0.5rem; }
+    .f-row { display: grid; grid-template-columns: 88px 1fr 34px; gap: 0.7rem; align-items: center; }
+    .f-label { font-size: 0.74rem; font-weight: 700; color: #5c6f88; }
+    .f-bar-track { height: 22px; border-radius: 6px; background: rgba(22, 40, 62, 0.07); overflow: hidden; }
+    .f-bar { height: 100%; border-radius: 6px; }
+    .f-count { font-size: 0.82rem; font-weight: 800; text-align: right; color: #16283e; }
+
+    .feed { margin-top: 0.9rem; display: grid; }
+    .ev { display: grid; grid-template-columns: 30px 1fr auto; gap: 0.75rem; padding: 0.55rem 0; align-items: start; border-bottom: 1px solid #eef2f7; }
+    .ev:last-child { border-bottom: 0; }
+    .ev-icon { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; margin-top: 0.1rem; }
+    .ev-icon :global(svg) { width: 14px; height: 14px; }
+    .ev-lead { background: rgba(83, 178, 127, 0.13); color: #2e7d54; }
+    .ev-mail-in, .ev-mail-out { background: rgba(90, 125, 170, 0.13); color: #3d5a80; }
+    .ev-sub { background: rgba(140, 110, 190, 0.13); color: #5f4a86; }
+    .ev-post { background: rgba(196, 148, 58, 0.14); color: #8a6420; }
+    .ev-doc { background: rgba(203, 76, 76, 0.1); color: #a33d3d; }
+    .ev-text { font-size: 0.82rem; line-height: 1.45; color: #16283e; margin: 0; }
+    .ev-text .sub { display: block; color: #93a3b8; font-size: 0.72rem; margin-top: 0.1rem; overflow-wrap: anywhere; }
+    .ev-time { font-size: 0.68rem; color: #93a3b8; white-space: nowrap; margin-top: 0.2rem; }
+
+    .leads { margin-top: 0.6rem; width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .leads td { padding: 0.55rem 0.4rem; border-bottom: 1px solid #eef2f7; vertical-align: middle; }
+    .leads tr:last-child td { border-bottom: 0; }
+    .l-name { font-weight: 700; color: #16283e; text-decoration: none; }
+    .l-name:hover { color: #2e7d54; }
+    .l-meta { color: #93a3b8; font-size: 0.72rem; }
+    .pill { font-size: 0.64rem; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 999px; white-space: nowrap; }
+    .pill.investor { background: rgba(83, 178, 127, 0.13); color: #2e7d54; }
+    .pill.general { background: rgba(90, 125, 170, 0.13); color: #3d5a80; }
+    .pill.video { background: rgba(140, 110, 190, 0.13); color: #5f4a86; }
+    .status-chip { font-size: 0.64rem; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 999px; white-space: nowrap; }
+    .status-chip.new { background: rgba(83, 178, 127, 0.13); color: #2e7d54; }
+    .status-chip.progress { background: rgba(196, 148, 58, 0.14); color: #8a6420; }
+    .status-chip.partnered { background: rgba(140, 110, 190, 0.13); color: #5f4a86; }
+    .status-chip.closed { background: rgba(122, 139, 161, 0.14); color: #5c6f88; }
+
+    .arts { margin-top: 0.9rem; display: grid; gap: 0.55rem; }
+    .art { display: grid; grid-template-columns: 1fr auto; gap: 0.6rem; align-items: center; }
+    .a-title { font-size: 0.8rem; font-weight: 600; color: #16283e; }
+    .a-views { font-size: 0.78rem; font-weight: 800; color: #2e7d54; }
+    .a-bar { grid-column: 1 / -1; height: 5px; border-radius: 4px; background: rgba(22, 40, 62, 0.07); overflow: hidden; }
+    .a-fill { height: 100%; background: linear-gradient(90deg, #53b27f, rgba(83, 178, 127, 0.4)); border-radius: 4px; }
+
+    .health { margin-top: 0.9rem; display: grid; gap: 0.5rem; }
+    .h-item {
+      display: flex; gap: 0.6rem; align-items: center; font-size: 0.8rem; color: #16283e;
+      padding: 0.55rem 0.7rem; border-radius: 9px; border: 1px dashed #e2e8f1;
     }
-    .panel-block h2 { font-size: 1rem; font-weight: 700; }
-    .top-posts { margin: 0.9rem 0 0; padding-left: 0; list-style: none; display: grid; gap: 0.55rem; }
-    .top-posts li { font-size: 0.88rem; color: #3d4b61; }
-    .views {
-      display: inline-block; min-width: 2.6rem; text-align: center;
-      font-weight: 700; color: #2e7d54; background: rgba(83, 178, 127, 0.12);
-      border-radius: 6px; padding: 0.15rem 0.4rem; margin-right: 0.6rem;
-    }
-    .recent-leads { margin: 0.9rem 0 0; padding: 0; list-style: none; display: grid; gap: 0.6rem; }
-    .recent-leads a { font-weight: 600; color: #16283e; text-decoration: none; }
-    .recent-leads a:hover { color: #2e7d54; }
-    .lead-meta { display: block; font-size: 0.76rem; color: #7a8ba1; margin-top: 0.1rem; }
+    .h-dot { width: 8px; height: 8px; border-radius: 999px; flex: none; }
+    .fix { margin-left: auto; font-size: 0.7rem; font-weight: 700; color: #2e7d54; text-decoration: none; white-space: nowrap; }
+    .ok-note { font-size: 0.78rem; color: #93a3b8; padding: 0.4rem 0.2rem; }
+
+    @media (max-width: 1020px) { .grid { grid-template-columns: 1fr; } }
   </style>
 </AdminLayout>
