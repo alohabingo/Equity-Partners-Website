@@ -1,0 +1,237 @@
+---
+export const prerender = false;
+
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { supabaseServer } from "../../lib/supabase";
+
+const user = Astro.locals.user!;
+const isSuper = user.role === "super_admin";
+const denied = Astro.url.searchParams.get("denied") === "1";
+
+const supabase = supabaseServer(Astro.cookies, Astro.request);
+
+// Metrics — every query tolerates empty tables / restricted roles.
+async function count(table: string, filter?: (q: any) => any): Promise<number | null> {
+  try {
+    let q: any = supabase.from(table).select("*", { count: "exact", head: true });
+    if (filter) q = filter(q);
+    const { count: c, error } = await q;
+    return error ? null : (c ?? 0);
+  } catch {
+    return null;
+  }
+}
+
+const weekAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+
+const [activeProjects, weeklyInquiries, publishedPosts] = await Promise.all([
+  count("portfolio_items", (q) => q.eq("status", "published")),
+  isSuper ? count("inquiries", (q) => q.gte("created_at", weekAgo)) : Promise.resolve(null),
+  count("posts", (q) => q.eq("status", "published")),
+]);
+
+// Subscriber count via security-definer function (works for editors too)
+let subscriberCount: number | null = null;
+try {
+  const { data, error } = await supabase.rpc("subscriber_count");
+  if (!error) subscriberCount = data ?? 0;
+} catch { /* not configured yet */ }
+
+// Lead pipeline summary + recent leads (super admins only)
+type StageRow = { status: string };
+let pipeline: Record<string, number> = {};
+let recentLeads: Array<{ id: string; name: string; email: string; type: string; created_at: string }> = [];
+if (isSuper) {
+  const { data } = await supabase.from("inquiries").select("status");
+  for (const row of (data ?? []) as StageRow[]) {
+    pipeline[row.status] = (pipeline[row.status] ?? 0) + 1;
+  }
+  const { data: recent } = await supabase
+    .from("inquiries")
+    .select("id, name, email, type, created_at")
+    .order("created_at", { ascending: false })
+    .limit(5);
+  recentLeads = recent ?? [];
+}
+
+// Blog performance — views in the last 30 days (visible to editors too)
+const monthAgo = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
+let totalViews30d: number | null = null;
+let topPosts: Array<{ title: string; views: number }> = [];
+try {
+  const { data: views, error } = await supabase
+    .from("post_views")
+    .select("post_id")
+    .gte("viewed_at", monthAgo)
+    .limit(10000);
+  if (!error && views) {
+    totalViews30d = views.length;
+    const byPost = new Map<string, number>();
+    for (const v of views) byPost.set(v.post_id, (byPost.get(v.post_id) ?? 0) + 1);
+    const top = [...byPost.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+    if (top.length > 0) {
+      const { data: titles } = await supabase
+        .from("posts")
+        .select("id, title, locale")
+        .in("id", top.map(([id]) => id));
+      topPosts = top.map(([id, views]) => {
+        const p = (titles ?? []).find((t) => t.id === id);
+        return { title: p ? `${p.title} (${p.locale.toUpperCase()})` : "Unknown post", views };
+      });
+    }
+  }
+} catch { /* dashboard tolerates missing analytics */ }
+
+const recentFmt = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+const stages: Array<{ key: string; label: string }> = [
+  { key: "new", label: "New" },
+  { key: "in_progress", label: "In Progress" },
+  { key: "closed", label: "Closed" },
+  { key: "partnered", label: "Partnered" },
+];
+
+const fmt = (n: number | null) => (n === null ? "—" : String(n));
+---
+
+<AdminLayout title="Dashboard" active="dashboard">
+  <div class="page-head">
+    <h1>Dashboard</h1>
+    <p>Welcome back, {user.fullName.split(" ")[0]}.</p>
+  </div>
+
+  {denied && <p class="denied">That section requires Super Admin access.</p>}
+
+  <section class="cards">
+    <article class="card">
+      <p class="metric">{fmt(activeProjects)}</p>
+      <p class="label">Active portfolio projects</p>
+    </article>
+    <article class="card">
+      <p class="metric">{fmt(weeklyInquiries)}</p>
+      <p class="label">Inquiries this week</p>
+    </article>
+    <article class="card">
+      <p class="metric">{fmt(subscriberCount)}</p>
+      <p class="label">Newsletter subscribers</p>
+    </article>
+    <article class="card">
+      <p class="metric">{fmt(publishedPosts)}</p>
+      <p class="label">Published articles</p>
+    </article>
+    <article class="card">
+      <p class="metric">{fmt(totalViews30d)}</p>
+      <p class="label">Blog views (30 days)</p>
+    </article>
+  </section>
+
+  {topPosts.length > 0 && (
+    <section class="panel-block">
+      <h2>Top articles — last 30 days</h2>
+      <ol class="top-posts">
+        {topPosts.map((p) => (
+          <li><span class="views">{p.views}</span> {p.title}</li>
+        ))}
+      </ol>
+    </section>
+  )}
+
+  {isSuper && recentLeads.length > 0 && (
+    <section class="panel-block">
+      <h2>Latest inquiries</h2>
+      <ul class="recent-leads">
+        {recentLeads.map((l) => (
+          <li>
+            <a href={`/admin/leads/${l.id}`}>{l.name}</a>
+            <span class="lead-meta">{l.type} · {l.email} · {recentFmt.format(new Date(l.created_at))}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  {isSuper && (
+    <section class="pipeline">
+      <h2>Lead pipeline</h2>
+      <div class="stages">
+        {stages.map((s) => (
+          <article class="stage">
+            <p class="stage-count">{pipeline[s.key] ?? 0}</p>
+            <p class="stage-label">{s.label}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <style>
+    .denied {
+      margin-top: 1.2rem;
+      padding: 0.7rem 1rem;
+      border-radius: 8px;
+      background: rgba(203, 76, 76, 0.1);
+      border: 1px solid rgba(203, 76, 76, 0.35);
+      color: #a33d3d;
+      font-size: 0.88rem;
+    }
+    .cards {
+      margin-top: 1.8rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e8f1;
+      border-radius: 12px;
+      padding: 1.3rem 1.4rem;
+      box-shadow: 0 4px 14px rgba(22, 40, 62, 0.05);
+    }
+    .metric {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #16283e;
+      letter-spacing: -0.02em;
+    }
+    .label {
+      margin-top: 0.3rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #5c6f88;
+    }
+    .pipeline { margin-top: 2.4rem; }
+    .pipeline h2 { font-size: 1.05rem; font-weight: 700; }
+    .stages {
+      margin-top: 1rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+    .stage {
+      background: #ffffff;
+      border: 1px solid #e2e8f1;
+      border-left: 4px solid #53b27f;
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+    }
+    .stage-count { font-size: 1.4rem; font-weight: 700; }
+    .stage-label { font-size: 0.78rem; color: #5c6f88; font-weight: 600; }
+    .panel-block {
+      margin-top: 2.2rem; background: #ffffff; border: 1px solid #e2e8f1;
+      border-radius: 12px; padding: 1.3rem 1.5rem;
+    }
+    .panel-block h2 { font-size: 1rem; font-weight: 700; }
+    .top-posts { margin: 0.9rem 0 0; padding-left: 0; list-style: none; display: grid; gap: 0.55rem; }
+    .top-posts li { font-size: 0.88rem; color: #3d4b61; }
+    .views {
+      display: inline-block; min-width: 2.6rem; text-align: center;
+      font-weight: 700; color: #2e7d54; background: rgba(83, 178, 127, 0.12);
+      border-radius: 6px; padding: 0.15rem 0.4rem; margin-right: 0.6rem;
+    }
+    .recent-leads { margin: 0.9rem 0 0; padding: 0; list-style: none; display: grid; gap: 0.6rem; }
+    .recent-leads a { font-weight: 600; color: #16283e; text-decoration: none; }
+    .recent-leads a:hover { color: #2e7d54; }
+    .lead-meta { display: block; font-size: 0.76rem; color: #7a8ba1; margin-top: 0.1rem; }
+  </style>
+</AdminLayout>

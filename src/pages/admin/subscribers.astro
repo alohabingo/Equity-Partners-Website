@@ -1,0 +1,214 @@
+---
+export const prerender = false;
+
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { supabaseServer } from "../../lib/supabase";
+import { getEsp } from "../../lib/esp";
+
+const supabase = supabaseServer(Astro.cookies, Astro.request);
+const statusFilter = Astro.url.searchParams.get("status") ?? "all";
+
+let query = supabase
+  .from("subscribers")
+  .select("id, email, name, locale, status, source, esp_synced_at, created_at")
+  .order("created_at", { ascending: false })
+  .limit(500);
+if (statusFilter !== "all") query = query.eq("status", statusFilter);
+
+const { data: subs } = await query;
+const { count: totalActive } = await supabase
+  .from("subscribers")
+  .select("*", { count: "exact", head: true })
+  .eq("status", "subscribed");
+
+const esp = getEsp();
+const dateFmt = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+---
+
+<AdminLayout title="Subscribers" active="subscribers">
+  <div class="page-head">
+    <h1>Newsletter subscribers</h1>
+    <p>
+      {totalActive ?? 0} active · ESP:
+      {esp ? <strong>{esp.name}</strong> : <span class="esp-off">database only (no ESP configured)</span>}
+    </p>
+  </div>
+
+  <div class="toolbar">
+    <div class="filter-group">
+      {["all", "subscribed", "unsubscribed"].map((s) => (
+        <a
+          class={statusFilter === s ? "chip active" : "chip"}
+          href={s === "all" ? "/admin/subscribers" : `/admin/subscribers?status=${s}`}
+        >{s === "all" ? "All" : s[0].toUpperCase() + s.slice(1)}</a>
+      ))}
+    </div>
+    <a class="export" href="/api/admin/subscribers.csv" download>Export CSV</a>
+  </div>
+
+  <form class="add-form" method="post" action="/api/admin/subscriber-actions">
+    <input type="hidden" name="action" value="add" />
+    <input class="in" type="email" name="email" placeholder="email@example.com" required />
+    <input class="in" type="text" name="name" placeholder="Name (optional)" />
+    <select class="in" name="locale">
+      <option value="en">EN</option>
+      <option value="es">ES</option>
+      <option value="ca">CA</option>
+    </select>
+    <button class="add-btn" type="submit">Add subscriber</button>
+  </form>
+
+  {(!subs || subs.length === 0) ? (
+    <p class="empty">No subscribers yet{statusFilter !== "all" ? " for this filter" : ""}.</p>
+  ) : (
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Since</th>
+            <th>Email</th>
+            <th>Lang</th>
+            <th>Source</th>
+            <th>ESP sync</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {subs.map((s) => (
+            <tr>
+              <td class="muted">{dateFmt.format(new Date(s.created_at))}</td>
+              <td>
+                <strong>{s.email}</strong>
+                {s.name && <span class="muted block">{s.name}</span>}
+              </td>
+              <td class="muted">{s.locale.toUpperCase()}</td>
+              <td class="muted">{s.source}</td>
+              <td>
+                {s.esp_synced_at
+                  ? <span class="sync ok">synced</span>
+                  : esp
+                    ? <form class="inline" method="post" action="/api/admin/subscriber-actions" data-sub-action>
+                        <input type="hidden" name="action" value="resync" />
+                        <input type="hidden" name="id" value={s.id} />
+                        <button class="link-btn" type="submit">retry sync</button>
+                      </form>
+                    : <span class="sync off">—</span>}
+              </td>
+              <td>
+                <span class={`status ${s.status === "subscribed" ? "on" : "off"}`}>{s.status}</span>
+              </td>
+              <td>
+                <form class="inline" method="post" action="/api/admin/subscriber-actions" data-sub-action>
+                  <input type="hidden" name="action" value="toggle" />
+                  <input type="hidden" name="id" value={s.id} />
+                  <button class="link-btn" type="submit">
+                    {s.status === "subscribed" ? "unsubscribe" : "re-subscribe"}
+                  </button>
+                </form>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+
+  <style>
+    .page-head p strong { color: #2e7d54; }
+    .esp-off { color: #8a6420; }
+    .toolbar {
+      margin-top: 1.6rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .filter-group { display: flex; gap: 0.4rem; }
+    .chip {
+      font-size: 0.76rem; font-weight: 600; color: #46586f; text-decoration: none;
+      padding: 0.35rem 0.75rem; border-radius: 999px;
+      border: 1px solid #d5deea; background: #ffffff;
+    }
+    .chip:hover { border-color: #53b27f; color: #2e7d54; }
+    .chip.active { background: #16283e; border-color: #16283e; color: #ffffff; }
+    .export {
+      font-size: 0.8rem; font-weight: 700; color: #2e7d54; text-decoration: none;
+      padding: 0.45rem 0.9rem; border: 1px solid #53b27f; border-radius: 8px;
+      transition: background-color 150ms ease, color 150ms ease;
+    }
+    .export:hover { background: #53b27f; color: #ffffff; }
+    .add-form {
+      margin-top: 1.1rem;
+      display: flex; gap: 0.5rem; flex-wrap: wrap;
+      background: #ffffff; border: 1px solid #e2e8f1; border-radius: 12px;
+      padding: 0.9rem 1rem;
+    }
+    .in {
+      font: inherit; font-size: 0.86rem;
+      padding: 0.5rem 0.7rem; border: 1px solid #d5deea; border-radius: 8px;
+      background: #fbfcfe;
+    }
+    .in:focus { outline: none; border-color: #53b27f; }
+    .add-btn {
+      font: inherit; font-size: 0.8rem; font-weight: 700;
+      background: #53b27f; color: #ffffff; border: 0; border-radius: 8px;
+      padding: 0.5rem 1rem; cursor: pointer;
+    }
+    .add-btn:hover { filter: brightness(1.07); }
+    .empty { margin-top: 2rem; color: #5c6f88; font-size: 0.92rem; }
+    .table-wrap {
+      margin-top: 1.2rem; background: #ffffff;
+      border: 1px solid #e2e8f1; border-radius: 12px; overflow-x: auto;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    th {
+      text-align: left; font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase; color: #5c6f88;
+      padding: 0.85rem 1rem; border-bottom: 1px solid #e2e8f1;
+    }
+    td { padding: 0.75rem 1rem; border-bottom: 1px solid #eef2f7; vertical-align: middle; }
+    tr:last-child td { border-bottom: 0; }
+    .muted { color: #7a8ba1; font-size: 0.78rem; }
+    .block { display: block; }
+    .status {
+      font-size: 0.72rem; font-weight: 700; padding: 0.22rem 0.6rem; border-radius: 999px;
+    }
+    .status.on { background: rgba(83, 178, 127, 0.14); color: #2e7d54; }
+    .status.off { background: rgba(122, 139, 161, 0.14); color: #5c6f88; }
+    .sync.ok { color: #2e7d54; font-size: 0.78rem; font-weight: 600; }
+    .sync.off { color: #a9b6c6; }
+    .inline { display: inline; }
+    .link-btn {
+      font: inherit; font-size: 0.78rem; font-weight: 600;
+      color: #3d5a80; background: none; border: 0; padding: 0;
+      cursor: pointer; text-decoration: underline;
+    }
+    .link-btn:hover { color: #16283e; }
+  </style>
+
+  <script>
+    // Submit row actions via fetch, then refresh the list.
+    document.querySelectorAll("form[data-sub-action]").forEach((form) => {
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const btn = form.querySelector("button");
+        if (btn) btn.disabled = true;
+        try {
+          const res = await fetch(form.getAttribute("action") || "", {
+            method: "POST",
+            body: new FormData(form as HTMLFormElement),
+            headers: { Accept: "application/json" },
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) throw new Error(data.error || "failed");
+          window.location.reload();
+        } catch (e) {
+          alert("Action failed: " + (e instanceof Error ? e.message : "unknown error"));
+          if (btn) btn.disabled = false;
+        }
+      });
+    });
+  </script>
+</AdminLayout>

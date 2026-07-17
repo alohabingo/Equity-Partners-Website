@@ -11,8 +11,12 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/netlify": "^6.6.5",
     "@astrojs/sitemap": "^3.7.2",
     "@fontsource/montserrat": "^5.2.8",
-    "astro": "latest"
+    "@supabase/ssr": "^0.12.3",
+    "@supabase/supabase-js": "^2.110.6",
+    "astro": "latest",
+    "marked": "^16.4.2"
   }
 }

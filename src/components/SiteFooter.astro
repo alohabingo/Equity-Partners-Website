@@ -85,6 +85,7 @@ const t = getUiTranslations(locale);
           <a href={buildLocalizedPath("/privacy-policy", locale)}>{t.footer.privacyPolicy}</a>
           <a href={buildLocalizedPath("/terms-of-use", locale)}>{t.footer.termsOfUse}</a>
           <a href={buildLocalizedPath("/cookie-policy", locale)}>{t.footer.cookies}</a>
+          <a class="footer-login" href="/admin/login">{t.footer.login}</a>
         </div>
         <div class="footer-social">
           <a
@@ -372,6 +373,18 @@ const t = getUiTranslations(locale);
 
     .footer-legal {
       justify-content: flex-start;
+    }
+
+    .footer-login {
+      display: none;
+    }
+
+    .footer-legal a:nth-last-child(2)::after {
+      display: none;
+    }
+
+    .footer-legal a:nth-last-child(2) {
+      padding-right: 0;
     }
   }
 </style>

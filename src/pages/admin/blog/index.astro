@@ -1,0 +1,110 @@
+---
+export const prerender = false;
+
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { supabaseServer } from "../../../lib/supabase";
+
+const supabase = supabaseServer(Astro.cookies, Astro.request);
+const localeFilter = Astro.url.searchParams.get("locale") ?? "all";
+
+let query = supabase
+  .from("posts")
+  .select("id, slug, locale, title, category, status, published_at, updated_at")
+  .order("updated_at", { ascending: false })
+  .limit(300);
+if (localeFilter !== "all") query = query.eq("locale", localeFilter);
+
+const { data: posts } = await query;
+const dateFmt = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+---
+
+<AdminLayout title="Blog" active="blog">
+  <div class="page-head head-row">
+    <div>
+      <h1>Blog</h1>
+      <p>Write, edit and publish articles — changes go live immediately.</p>
+    </div>
+    <a class="new-btn" href="/admin/blog/new">+ New post</a>
+  </div>
+
+  <div class="filter-group">
+    {["all", "en", "es", "ca"].map((l) => (
+      <a
+        class={localeFilter === l ? "chip active" : "chip"}
+        href={l === "all" ? "/admin/blog" : `/admin/blog?locale=${l}`}
+      >{l === "all" ? "All languages" : l.toUpperCase()}</a>
+    ))}
+  </div>
+
+  {(!posts || posts.length === 0) ? (
+    <p class="empty">No posts yet. Run the blog import SQL, or create your first post.</p>
+  ) : (
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Title</th><th>Lang</th><th>Category</th><th>Status</th><th>Published</th><th></th></tr>
+        </thead>
+        <tbody>
+          {posts.map((p) => (
+            <tr>
+              <td>
+                <a class="title-link" href={`/admin/blog/${p.id}`}>{p.title}</a>
+                <span class="muted block">/{p.locale === "en" ? "" : p.locale + "/"}blog/{p.slug}</span>
+              </td>
+              <td class="muted">{p.locale.toUpperCase()}</td>
+              <td class="muted">{p.category ?? "—"}</td>
+              <td><span class={`status is-${p.status}`}>{p.status}</span></td>
+              <td class="muted">{p.published_at ? dateFmt.format(new Date(p.published_at)) : "—"}</td>
+              <td>
+                {p.status === "published" && (
+                  <a
+                    class="view-link"
+                    href={`${p.locale === "en" ? "" : "/" + p.locale}/blog/${p.slug}`}
+                    target="_blank"
+                  >View ↗</a>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+
+  <style>
+    .head-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+    .new-btn {
+      font-size: 0.82rem; font-weight: 700; color: #ffffff; text-decoration: none;
+      background: #53b27f; border-radius: 8px; padding: 0.6rem 1.1rem;
+    }
+    .new-btn:hover { filter: brightness(1.07); }
+    .filter-group { margin-top: 1.4rem; display: flex; gap: 0.4rem; }
+    .chip {
+      font-size: 0.76rem; font-weight: 600; color: #46586f; text-decoration: none;
+      padding: 0.35rem 0.75rem; border-radius: 999px; border: 1px solid #d5deea; background: #ffffff;
+    }
+    .chip.active { background: #16283e; border-color: #16283e; color: #ffffff; }
+    .empty { margin-top: 2rem; color: #5c6f88; font-size: 0.92rem; }
+    .table-wrap {
+      margin-top: 1.2rem; background: #ffffff; border: 1px solid #e2e8f1;
+      border-radius: 12px; overflow-x: auto;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    th {
+      text-align: left; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #5c6f88; padding: 0.85rem 1rem; border-bottom: 1px solid #e2e8f1;
+    }
+    td { padding: 0.8rem 1rem; border-bottom: 1px solid #eef2f7; vertical-align: middle; }
+    tr:last-child td { border-bottom: 0; }
+    .muted { color: #7a8ba1; font-size: 0.76rem; }
+    .block { display: block; }
+    .title-link { color: #16283e; font-weight: 600; text-decoration: none; }
+    .title-link:hover { color: #2e7d54; }
+    .status { font-size: 0.7rem; font-weight: 700; padding: 0.22rem 0.6rem; border-radius: 999px; }
+    .status.is-published { background: rgba(83, 178, 127, 0.14); color: #2e7d54; }
+    .status.is-draft { background: rgba(196, 148, 58, 0.16); color: #8a6420; }
+    .status.is-archived { background: rgba(122, 139, 161, 0.14); color: #5c6f88; }
+    .view-link { font-size: 0.78rem; font-weight: 600; color: #3d5a80; text-decoration: none; }
+    .view-link:hover { text-decoration: underline; }
+  </style>
+</AdminLayout>

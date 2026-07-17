@@ -1,0 +1,103 @@
+---
+export const prerender = false;
+
+/**
+ * Public share-link redemption.
+ * Validates the token (expiry, view limit, revocation), logs the access,
+ * then serves the file through a short-lived signed URL. The vault bucket
+ * is private — this route is the ONLY way in without an admin session.
+ */
+import { supabaseAdmin, isSupabaseConfigured } from "../../lib/supabase";
+
+const { token } = Astro.params;
+
+let state: "ok" | "invalid" | "expired" = "invalid";
+let signedUrl = "";
+let title = "";
+
+if (isSupabaseConfigured() && token && /^[a-f0-9]{24,64}$/.test(token)) {
+  const db = supabaseAdmin();
+  const { data: link } = await db
+    .from("document_links")
+    .select("id, expires_at, max_views, view_count, revoked, documents ( id, title, storage_path )")
+    .eq("token", token)
+    .single();
+
+  if (link && link.documents) {
+    const doc = Array.isArray(link.documents) ? link.documents[0] : link.documents;
+    const expired =
+      link.revoked ||
+      new Date(link.expires_at).getTime() < Date.now() ||
+      (link.max_views !== null && link.view_count >= link.max_views);
+
+    if (expired) {
+      state = "expired";
+    } else {
+      const { data: signed } = await db.storage
+        .from("vault")
+        .createSignedUrl(doc.storage_path, 120, { download: false });
+
+      if (signed?.signedUrl) {
+        state = "ok";
+        signedUrl = signed.signedUrl;
+        title = doc.title;
+
+        // Log the view + bump the counter (best effort).
+        await db.from("document_link_views").insert({
+          link_id: link.id,
+          ip_address: Astro.request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+          user_agent: Astro.request.headers.get("user-agent")?.slice(0, 500) ?? null,
+        });
+        await db
+          .from("document_links")
+          .update({ view_count: link.view_count + 1 })
+          .eq("id", link.id);
+      }
+    }
+  }
+}
+
+if (state === "ok") return Astro.redirect(signedUrl);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Document link | Equity Partners</title>
+    <style>
+      body {
+        min-height: 100vh; margin: 0; display: grid; place-items: center;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        background: radial-gradient(1100px 700px at 20% -10%, #17304f 0%, #0b1626 55%, #070f1b 100%);
+        color: #e9eef7; padding: 1.5rem; text-align: center;
+      }
+      .card {
+        max-width: 420px; background: rgba(13, 25, 43, 0.85);
+        border: 1px solid rgba(193, 206, 227, 0.14); border-radius: 14px; padding: 2.4rem 2.2rem;
+      }
+      .brand { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: #53b27f; margin: 0; }
+      h1 { font-size: 1.3rem; margin: 0.7rem 0 0; }
+      p { color: #9fb0c9; font-size: 0.92rem; line-height: 1.6; margin: 0.8rem 0 0; }
+      a { color: #53b27f; }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <p class="brand">Equity Partners</p>
+      {state === "expired" ? (
+        <>
+          <h1>This link has expired</h1>
+          <p>The document link you followed is no longer active. Please contact your Equity Partners representative for a fresh link.</p>
+        </>
+      ) : (
+        <>
+          <h1>Link not found</h1>
+          <p>This document link is invalid. Check the URL, or contact <a href="mailto:info@equitypartner.fund">info@equitypartner.fund</a>.</p>
+        </>
+      )}
+    </main>
+  </body>
+</html>

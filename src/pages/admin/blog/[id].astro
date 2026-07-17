@@ -1,0 +1,240 @@
+---
+export const prerender = false;
+
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { supabaseServer } from "../../../lib/supabase";
+
+const { id } = Astro.params;
+const isNew = id === "new";
+const saved = Astro.url.searchParams.get("saved") === "1";
+
+const supabase = supabaseServer(Astro.cookies, Astro.request);
+
+let post: any = {
+  id: "",
+  title: "",
+  slug: "",
+  locale: Astro.url.searchParams.get("locale") ?? "en",
+  status: "draft",
+  excerpt: "",
+  body: "",
+  cover_image: "",
+  category: "",
+  read_time: "",
+  sources: [],
+  meta_title: "",
+  meta_description: "",
+  og_image: "",
+  published_at: null,
+};
+
+if (!isNew) {
+  const { data } = await supabase.from("posts").select("*").eq("id", id).single();
+  if (!data) return Astro.redirect("/admin/blog");
+  post = data;
+}
+
+const sourcesText = ((post.sources ?? []) as { label: string; href: string }[])
+  .map((s) => `${s.label} | ${s.href}`)
+  .join("\n");
+
+const publishedAtLocal = post.published_at
+  ? new Date(post.published_at).toISOString().slice(0, 16)
+  : "";
+---
+
+<AdminLayout title={isNew ? "New post" : `Edit — ${post.title}`} active="blog">
+  <a class="back" href="/admin/blog">← All posts</a>
+  <div class="page-head">
+    <h1>{isNew ? "New post" : "Edit post"}</h1>
+    {saved && <p class="saved-note">Saved ✓</p>}
+  </div>
+
+  <form class="editor" method="post" action="/api/admin/posts" data-editor>
+    <input type="hidden" name="action" value="save" />
+    {!isNew && <input type="hidden" name="id" value={post.id} />}
+
+    <div class="main-col">
+      <label class="field">
+        <span>Title</span>
+        <input class="in" type="text" name="title" value={post.title} required />
+      </label>
+
+      <label class="field">
+        <span>Excerpt <em>(card + hero subtitle)</em></span>
+        <textarea class="in" name="excerpt" rows="2">{post.excerpt}</textarea>
+      </label>
+
+      <label class="field">
+        <span>Body — Markdown <em>(## for section headings, | tables | supported)</em></span>
+        <textarea class="in body" name="body" rows="24">{post.body}</textarea>
+      </label>
+
+      <label class="field">
+        <span>Sources <em>(one per line: Label | https://url — shown in the article sidebar)</em></span>
+        <textarea class="in" name="sources" rows="3">{sourcesText}</textarea>
+      </label>
+
+      <fieldset class="seo">
+        <legend>SEO</legend>
+        <label class="field">
+          <span>Meta title <em>(empty = "Post title | Equity Partners")</em></span>
+          <input class="in" type="text" name="meta_title" value={post.meta_title ?? ""} />
+        </label>
+        <label class="field">
+          <span>Meta description <em>(empty = excerpt)</em></span>
+          <textarea class="in" name="meta_description" rows="2">{post.meta_description ?? ""}</textarea>
+        </label>
+        <label class="field">
+          <span>Social sharing image URL <em>(empty = cover image)</em></span>
+          <div class="upload-row">
+            <input class="in grow" type="text" name="og_image" value={post.og_image ?? ""} data-upload-target="og" />
+            <label class="upload-btn">Upload<input type="file" accept="image/*" data-upload="og" hidden /></label>
+          </div>
+        </label>
+      </fieldset>
+    </div>
+
+    <aside class="side-col">
+      <div class="panel">
+        <label class="field">
+          <span>Status</span>
+          <select class="in" name="status">
+            <option value="draft" selected={post.status === "draft"}>Draft</option>
+            <option value="published" selected={post.status === "published"}>Published</option>
+            <option value="archived" selected={post.status === "archived"}>Archived</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Language</span>
+          <select class="in" name="locale">
+            <option value="en" selected={post.locale === "en"}>English</option>
+            <option value="es" selected={post.locale === "es"}>Español</option>
+            <option value="ca" selected={post.locale === "ca"}>Català</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>URL slug <em>(empty = from title)</em></span>
+          <input class="in" type="text" name="slug" value={post.slug} />
+        </label>
+        <label class="field">
+          <span>Category</span>
+          <input class="in" type="text" name="category" value={post.category ?? ""} placeholder="Regulation, Market, …" />
+        </label>
+        <label class="field">
+          <span>Read time <em>(empty = auto)</em></span>
+          <input class="in" type="text" name="read_time" value={post.read_time ?? ""} placeholder="5 min read" />
+        </label>
+        <label class="field">
+          <span>Publish date <em>(empty = now, on publish)</em></span>
+          <input class="in" type="datetime-local" name="published_at" value={publishedAtLocal} />
+        </label>
+      </div>
+
+      <div class="panel">
+        <label class="field">
+          <span>Cover image</span>
+          <div class="upload-row">
+            <input class="in grow" type="text" name="cover_image" value={post.cover_image ?? ""} data-upload-target="cover" />
+            <label class="upload-btn">Upload<input type="file" accept="image/*" data-upload="cover" hidden /></label>
+          </div>
+        </label>
+        {post.cover_image && <img class="thumb" src={post.cover_image} alt="cover" data-thumb="cover" />}
+        {!post.cover_image && <img class="thumb hidden" src="" alt="cover" data-thumb="cover" />}
+      </div>
+
+      <button class="save" type="submit">Save</button>
+      <p class="upload-status" data-upload-status></p>
+
+      {!isNew && (
+        <button class="delete" type="submit" name="action" value="delete" formnovalidate
+          onclick="return confirm('Delete this post permanently?')">Delete post</button>
+      )}
+    </aside>
+  </form>
+
+  <style>
+    .back { display: inline-block; margin-top: 0.4rem; font-size: 0.82rem; font-weight: 600; color: #2e7d54; text-decoration: none; }
+    .saved-note { color: #2e7d54; font-weight: 700; font-size: 0.85rem; margin-top: 0.3rem; }
+    .editor {
+      margin-top: 1.4rem;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 1.2rem;
+      align-items: start;
+    }
+    .main-col, .panel {
+      background: #ffffff; border: 1px solid #e2e8f1; border-radius: 12px; padding: 1.2rem 1.4rem;
+    }
+    .side-col { display: grid; gap: 1rem; }
+    .field { display: grid; gap: 0.35rem; margin-bottom: 1rem; }
+    .field:last-child { margin-bottom: 0; }
+    .field span {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: #46586f;
+    }
+    .field em { font-weight: 400; text-transform: none; letter-spacing: 0; color: #8a99ad; }
+    .in {
+      font: inherit; font-size: 0.9rem; color: #16283e;
+      padding: 0.55rem 0.7rem; border: 1px solid #d5deea; border-radius: 8px; background: #fbfcfe;
+      width: 100%;
+    }
+    .in:focus { outline: none; border-color: #53b27f; }
+    .in.body { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.84rem; line-height: 1.6; }
+    .seo { border: 1px dashed #d5deea; border-radius: 10px; padding: 1rem; margin-top: 0.4rem; }
+    .seo legend {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #5c6f88; padding: 0 0.4rem;
+    }
+    .upload-row { display: flex; gap: 0.5rem; }
+    .grow { flex: 1; }
+    .upload-btn {
+      display: inline-flex; align-items: center; font-size: 0.76rem; font-weight: 700;
+      color: #3d5a80; border: 1px solid #d5deea; border-radius: 8px; padding: 0 0.8rem;
+      cursor: pointer; background: #f4f7fb; white-space: nowrap;
+    }
+    .upload-btn:hover { border-color: #53b27f; color: #2e7d54; }
+    .thumb { margin-top: 0.6rem; width: 100%; border-radius: 8px; border: 1px solid #e2e8f1; }
+    .thumb.hidden { display: none; }
+    .save {
+      font: inherit; font-size: 0.9rem; font-weight: 700; color: #ffffff;
+      background: #53b27f; border: 0; border-radius: 10px; padding: 0.8rem; cursor: pointer;
+    }
+    .save:hover { filter: brightness(1.07); }
+    .delete {
+      font: inherit; font-size: 0.78rem; font-weight: 600; color: #a33d3d;
+      background: none; border: 1px solid rgba(203, 76, 76, 0.4); border-radius: 8px;
+      padding: 0.5rem; cursor: pointer;
+    }
+    .delete:hover { background: rgba(203, 76, 76, 0.08); }
+    .upload-status { font-size: 0.78rem; color: #5c6f88; min-height: 1em; margin: 0; }
+    @media (max-width: 900px) { .editor { grid-template-columns: 1fr; } }
+  </style>
+
+  <script>
+    // Image uploads → /api/admin/upload, fills the matching URL input.
+    const statusEl = document.querySelector("[data-upload-status]") as HTMLElement;
+    document.querySelectorAll<HTMLInputElement>("input[data-upload]").forEach((input) => {
+      input.addEventListener("change", async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        const key = input.dataset.upload;
+        statusEl.textContent = "Uploading image…";
+        const fd = new FormData();
+        fd.append("file", file);
+        try {
+          const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+          const data = await res.json();
+          if (!res.ok || !data.ok) throw new Error(data.error || "upload failed");
+          const target = document.querySelector<HTMLInputElement>(`input[data-upload-target="${key}"]`);
+          if (target) target.value = data.url;
+          const thumb = document.querySelector<HTMLImageElement>(`img[data-thumb="${key}"]`);
+          if (thumb) { thumb.src = data.url; thumb.classList.remove("hidden"); }
+          statusEl.textContent = "Image uploaded ✓";
+        } catch (e) {
+          statusEl.textContent = "Upload failed: " + (e instanceof Error ? e.message : "unknown");
+        }
+      });
+    });
+  </script>
+</AdminLayout>

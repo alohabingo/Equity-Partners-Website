@@ -5,24 +5,30 @@ import SiteFooter from "../../components/SiteFooter.astro";
 import SEO from "../../components/SEO.astro";
 import { buildLocalizedPath, getLocaleFromUrl } from "../../lib/i18n";
 import {
-  opportunities,
   opportunityStatusColour,
   riskProfileColour,
+  type Opportunity,
 } from "../../data/opportunities";
-import type { GetStaticPaths } from "astro";
+import { supabaseServer } from "../../lib/supabase";
 
-// English route. The /es/ and /ca/ routes are thin wrappers
-// (src/pages/{es,ca}/opportunities/[slug].astro) that render this page as a
-// component, passing the localized `opp` from opportunitiesEs/opportunitiesCa.
-export const getStaticPaths: GetStaticPaths = () => {
-  return opportunities.map((opp) => ({
-    params: { slug: opp.slug },
-    props: { opp },
-  }));
-};
+export const prerender = false;
 
-const { opp } = Astro.props;
 const locale = getLocaleFromUrl(Astro.url) ?? "en";
+const { slug } = Astro.params;
+
+const supabase = supabaseServer(Astro.cookies, Astro.request);
+const { data: row } = await supabase
+  .from("portfolio_items")
+  .select("slug, name, data")
+  .eq("kind", "opportunity")
+  .eq("slug", slug)
+  .eq("locale", locale)
+  .eq("status", "published")
+  .single();
+
+if (!row) return Astro.redirect(buildLocalizedPath("/opportunities", locale));
+
+const opp = { slug: row.slug, name: row.name, ...(row.data as object) } as Opportunity;
 
 const copy = {
   en: {

@@ -1,7 +1,5 @@
 ---
-import { blogPosts } from "../data/blogPosts";
-import { blogPosts as blogPostsEs } from "../data/blogPostsEs";
-import { blogPosts as blogPostsCa } from "../data/blogPostsCa";
+import { createClient } from "@supabase/supabase-js";
 import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import NewsletterSignup from "../components/NewsletterSignup.astro";
 import SiteFooter from "../components/SiteFooter.astro";
@@ -68,8 +66,40 @@ const localPartners = [
 const localPartnersLoop = [...localPartners, ...localPartners, ...localPartners, ...localPartners];
 const locale = getLocaleFromUrl(Astro.url);
 const content = getContentTranslations(locale).home;
-const blogPostsByLocale = { en: blogPosts, es: blogPostsEs, ca: blogPostsCa } as const;
-const homepageSuggestedPosts = blogPostsByLocale[locale].slice(0, 3);
+// Latest 3 published posts, fetched at BUILD time (homepage stays static —
+// new posts appear here on the next deploy; blog pages themselves are live).
+type SuggestedPost = { slug: string; title: string; excerpt: string; category: string; image: string; date: string };
+let homepageSuggestedPosts: SuggestedPost[] = [];
+try {
+  if (import.meta.env.PUBLIC_SUPABASE_URL && import.meta.env.PUBLIC_SUPABASE_ANON_KEY) {
+    const supabase = createClient(
+      import.meta.env.PUBLIC_SUPABASE_URL,
+      import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+      { auth: { persistSession: false } }
+    );
+    const { data } = await supabase
+      .from("posts")
+      .select("slug, title, excerpt, category, cover_image, published_at")
+      .eq("locale", locale)
+      .eq("status", "published")
+      .order("published_at", { ascending: false })
+      .limit(3);
+    const dateFmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : locale, {
+      month: "short",
+      year: "numeric",
+    });
+    homepageSuggestedPosts = (data ?? []).map((r) => ({
+      slug: r.slug,
+      title: r.title,
+      excerpt: r.excerpt ?? "",
+      category: r.category ?? "",
+      image: r.cover_image ?? "",
+      date: r.published_at ? dateFmt.format(new Date(r.published_at)) : "",
+    }));
+  }
+} catch {
+  homepageSuggestedPosts = [];
+}
 ---
 
 <html lang={locale}>

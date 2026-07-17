@@ -1,0 +1,130 @@
+---
+export const prerender = false;
+
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { supabaseServer } from "../../../lib/supabase";
+
+const supabase = supabaseServer(Astro.cookies, Astro.request);
+const kindFilter = Astro.url.searchParams.get("kind") ?? "all";
+const localeFilter = Astro.url.searchParams.get("locale") ?? "all";
+
+let query = supabase
+  .from("portfolio_items")
+  .select("id, kind, slug, locale, status, sort_order, name, updated_at")
+  .order("kind")
+  .order("sort_order");
+if (kindFilter !== "all") query = query.eq("kind", kindFilter);
+if (localeFilter !== "all") query = query.eq("locale", localeFilter);
+
+const { data: items } = await query;
+
+const href = (kind: string, locale: string) => {
+  const p = new URLSearchParams();
+  if (kind !== "all") p.set("kind", kind);
+  if (locale !== "all") p.set("locale", locale);
+  const q = p.toString();
+  return q ? `/admin/portfolio?${q}` : "/admin/portfolio";
+};
+const publicPath = (i: { kind: string; locale: string; slug: string }) =>
+  `${i.locale === "en" ? "" : "/" + i.locale}/${i.kind === "project" ? "projects" : "opportunities"}/${i.slug}`;
+---
+
+<AdminLayout title="Portfolio" active="portfolio">
+  <div class="page-head head-row">
+    <div>
+      <h1>Portfolio</h1>
+      <p>Investment opportunities and development projects — live on save.</p>
+    </div>
+    <div class="new-btns">
+      <a class="new-btn" href="/admin/portfolio/new?kind=opportunity">+ New opportunity</a>
+      <a class="new-btn alt" href="/admin/portfolio/new?kind=project">+ New project</a>
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="filter-group">
+      {[["all", "All"], ["opportunity", "Opportunities"], ["project", "Projects"]].map(([k, label]) => (
+        <a class={kindFilter === k ? "chip active" : "chip"} href={href(k, localeFilter)}>{label}</a>
+      ))}
+    </div>
+    <div class="filter-group">
+      {["all", "en", "es", "ca"].map((l) => (
+        <a class={localeFilter === l ? "chip active" : "chip"} href={href(kindFilter, l)}>
+          {l === "all" ? "All languages" : l.toUpperCase()}
+        </a>
+      ))}
+    </div>
+  </div>
+
+  {(!items || items.length === 0) ? (
+    <p class="empty">Nothing here yet — run the portfolio import SQL or create an item.</p>
+  ) : (
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Kind</th><th>Lang</th><th>Order</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+          {items.map((i) => (
+            <tr>
+              <td>
+                <a class="title-link" href={`/admin/portfolio/${i.id}`}>{i.name}</a>
+                <span class="muted block">{publicPath(i)}</span>
+              </td>
+              <td><span class={`kind is-${i.kind}`}>{i.kind}</span></td>
+              <td class="muted">{i.locale.toUpperCase()}</td>
+              <td class="muted">{i.sort_order}</td>
+              <td><span class={`status is-${i.status}`}>{i.status}</span></td>
+              <td>
+                {i.status === "published" && (
+                  <a class="view-link" href={publicPath(i)} target="_blank">View ↗</a>
+                )}
+                <a class="view-link" href={`/admin/portfolio/new?kind=${i.kind}&from=${i.id}`}>Duplicate</a>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+
+  <style>
+    .head-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+    .new-btns { display: flex; gap: 0.5rem; }
+    .new-btn {
+      font-size: 0.8rem; font-weight: 700; color: #ffffff; text-decoration: none;
+      background: #53b27f; border-radius: 8px; padding: 0.6rem 1rem;
+    }
+    .new-btn.alt { background: #16283e; }
+    .new-btn:hover { filter: brightness(1.1); }
+    .filters { margin-top: 1.4rem; display: grid; gap: 0.5rem; }
+    .filter-group { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .chip {
+      font-size: 0.76rem; font-weight: 600; color: #46586f; text-decoration: none;
+      padding: 0.35rem 0.75rem; border-radius: 999px; border: 1px solid #d5deea; background: #ffffff;
+    }
+    .chip.active { background: #16283e; border-color: #16283e; color: #ffffff; }
+    .empty { margin-top: 2rem; color: #5c6f88; font-size: 0.92rem; }
+    .table-wrap { margin-top: 1.2rem; background: #ffffff; border: 1px solid #e2e8f1; border-radius: 12px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    th {
+      text-align: left; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #5c6f88; padding: 0.85rem 1rem; border-bottom: 1px solid #e2e8f1;
+    }
+    td { padding: 0.8rem 1rem; border-bottom: 1px solid #eef2f7; vertical-align: middle; }
+    tr:last-child td { border-bottom: 0; }
+    .muted { color: #7a8ba1; font-size: 0.76rem; }
+    .block { display: block; }
+    .title-link { color: #16283e; font-weight: 600; text-decoration: none; }
+    .title-link:hover { color: #2e7d54; }
+    .kind { font-size: 0.7rem; font-weight: 700; padding: 0.22rem 0.6rem; border-radius: 999px; }
+    .kind.is-opportunity { background: rgba(83, 178, 127, 0.14); color: #2e7d54; }
+    .kind.is-project { background: rgba(90, 125, 170, 0.14); color: #3d5a80; }
+    .status { font-size: 0.7rem; font-weight: 700; padding: 0.22rem 0.6rem; border-radius: 999px; }
+    .status.is-published { background: rgba(83, 178, 127, 0.14); color: #2e7d54; }
+    .status.is-draft { background: rgba(196, 148, 58, 0.16); color: #8a6420; }
+    .status.is-archived { background: rgba(122, 139, 161, 0.14); color: #5c6f88; }
+    .view-link { font-size: 0.78rem; font-weight: 600; color: #3d5a80; text-decoration: none; margin-right: 0.7rem; }
+    .view-link:hover { text-decoration: underline; }
+  </style>
+</AdminLayout>

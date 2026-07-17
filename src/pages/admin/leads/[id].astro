@@ -1,0 +1,270 @@
+---
+export const prerender = false;
+
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { supabaseServer } from "../../../lib/supabase";
+import { isZohoConfigured } from "../../../lib/zoho";
+
+const supabase = supabaseServer(Astro.cookies, Astro.request);
+const { id } = Astro.params;
+
+const { data: lead } = await supabase
+  .from("inquiries")
+  .select("*")
+  .eq("id", id)
+  .single();
+
+if (!lead) return Astro.redirect("/admin/leads");
+
+const { data: thread } = await supabase
+  .from("inquiry_messages")
+  .select("id, direction, subject, body_html, from_email, to_email, sent_at")
+  .eq("inquiry_id", id)
+  .order("sent_at", { ascending: true });
+
+const zohoReady = isZohoConfigured();
+const sentNotice = Astro.url.searchParams.get("sent") === "1";
+const syncedNotice = Astro.url.searchParams.get("synced");
+const syncError = Astro.url.searchParams.get("syncerror");
+const threadFmt = new Intl.DateTimeFormat("en-GB", {
+  day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+});
+const defaultSubject = `Re: your inquiry — Equity Partners`;
+
+const STATUSES = [
+  { key: "new", label: "New" },
+  { key: "in_progress", label: "In Progress" },
+  { key: "closed", label: "Closed" },
+  { key: "partnered", label: "Partnered" },
+];
+const TYPE_LABELS: Record<string, string> = {
+  investor: "Investor",
+  founder_pitch: "Founder Pitch",
+  general: "General",
+  video_call: "Video Call",
+};
+const DETAIL_LABELS: Record<string, string> = {
+  investor_type: "Investor type",
+  investment_timeline: "Investment timeline",
+  investment_range: "Investment range",
+};
+
+const dateFmt = new Intl.DateTimeFormat("en-GB", {
+  weekday: "short", day: "2-digit", month: "long", year: "numeric",
+  hour: "2-digit", minute: "2-digit",
+});
+const details = Object.entries((lead.details ?? {}) as Record<string, string>);
+---
+
+<AdminLayout title={`Lead — ${lead.name}`} active="leads">
+  <a class="back" href="/admin/leads">← All leads</a>
+
+  <div class="head">
+    <div>
+      <h1>{lead.name}</h1>
+      <p class="meta">
+        {TYPE_LABELS[lead.type] ?? lead.type} · {lead.locale.toUpperCase()} ·
+        received {dateFmt.format(new Date(lead.created_at))}
+        {lead.source_page && ` · via ${lead.source_page}`}
+      </p>
+    </div>
+    <form method="post" action="/api/admin/lead-status" data-status-form>
+      <input type="hidden" name="id" value={lead.id} />
+      <input type="hidden" name="back_to" value={`/admin/leads/${lead.id}`} />
+      <select name="status" class="status-select">
+        {STATUSES.map((s) => (
+          <option value={s.key} selected={lead.status === s.key}>{s.label}</option>
+        ))}
+      </select>
+      <noscript><button type="submit">Save</button></noscript>
+    </form>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Contact</h2>
+      <dl>
+        <dt>Email</dt>
+        <dd><a href={`mailto:${lead.email}`}>{lead.email}</a></dd>
+        {lead.phone && <><dt>Phone</dt><dd>{lead.phone}</dd></>}
+        {lead.company && <><dt>Company</dt><dd>{lead.company}</dd></>}
+      </dl>
+    </section>
+
+    {details.length > 0 && (
+      <section class="card">
+        <h2>Investment profile</h2>
+        <dl>
+          {details.map(([key, value]) => (
+            <>
+              <dt>{DETAIL_LABELS[key] ?? key}</dt>
+              <dd>{value}</dd>
+            </>
+          ))}
+        </dl>
+      </section>
+    )}
+
+    <section class="card span">
+      <h2>Message</h2>
+      <p class="message">{lead.message || "(no message provided)"}</p>
+    </section>
+  </div>
+
+  <section class="thread">
+    <div class="thread-head">
+      <h2>Email thread</h2>
+      <form method="post" action="/api/admin/zoho-sync">
+        <button class="sync-btn" type="submit" disabled={!zohoReady}>Sync inbox now</button>
+      </form>
+    </div>
+
+    {sentNotice && <p class="notice ok">Reply sent ✓</p>}
+    {syncedNotice !== null && <p class="notice ok">Inbox synced — {syncedNotice} new message{syncedNotice === "1" ? "" : "s"}.</p>}
+    {syncError && <p class="notice err">Sync failed: {syncError}</p>}
+    {!zohoReady && (
+      <p class="hint">Zoho Mail isn't configured yet — follow <strong>zoho-setup-guide.md</strong> to enable replying from the portal and automatic inbox sync. Until then, use the mailto link above.</p>
+    )}
+
+    {(thread ?? []).length === 0 ? (
+      zohoReady && <p class="hint">No emails linked to this lead yet. Incoming mail from {lead.email} attaches here automatically (synced every 10 minutes in production).</p>
+    ) : (
+      <div class="messages">
+        {(thread ?? []).map((m) => (
+          <article class={`msg ${m.direction}`}>
+            <header>
+              <span class="who">{m.direction === "inbound" ? lead.name : "Equity Partners"}</span>
+              <span class="when">{threadFmt.format(new Date(m.sent_at))}</span>
+            </header>
+            {m.subject && <p class="subj">{m.subject}</p>}
+            <div class="msg-body" set:html={m.body_html} />
+          </article>
+        ))}
+      </div>
+    )}
+
+    {zohoReady && (
+      <form class="reply" method="post" action="/api/admin/lead-reply">
+        <input type="hidden" name="inquiry_id" value={lead.id} />
+        <label class="rfield">
+          <span>Subject</span>
+          <input class="rin" type="text" name="subject" value={defaultSubject} required />
+        </label>
+        <label class="rfield">
+          <span>Reply to {lead.email}</span>
+          <textarea class="rin" name="message" rows="6" required placeholder={`Dear ${lead.name.split(" ")[0]},`}></textarea>
+        </label>
+        <button class="send" type="submit">Send reply via Zoho Mail</button>
+      </form>
+    )}
+  </section>
+
+  <style>
+    .back { display: inline-block; margin-top: 0.4rem; font-size: 0.82rem; font-weight: 600; color: #2e7d54; text-decoration: none; }
+    .back:hover { text-decoration: underline; }
+    .head {
+      margin-top: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    h1 { font-size: 1.45rem; letter-spacing: -0.01em; }
+    .meta { margin-top: 0.35rem; color: #5c6f88; font-size: 0.85rem; }
+    .status-select {
+      font: inherit; font-size: 0.85rem; font-weight: 600;
+      padding: 0.45rem 0.7rem; border-radius: 8px;
+      border: 1px solid #d5deea; background: #ffffff; cursor: pointer;
+    }
+    .grid {
+      margin-top: 1.6rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e8f1;
+      border-radius: 12px;
+      padding: 1.2rem 1.4rem;
+    }
+    .card.span { grid-column: 1 / -1; }
+    .card h2 {
+      font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase; color: #5c6f88;
+    }
+    dl { margin: 0.8rem 0 0; display: grid; grid-template-columns: auto 1fr; gap: 0.45rem 1.2rem; font-size: 0.9rem; }
+    dt { color: #7a8ba1; }
+    dd { margin: 0; font-weight: 600; }
+    dd a { color: #2e7d54; }
+    .message { margin-top: 0.8rem; font-size: 0.95rem; line-height: 1.65; white-space: pre-wrap; }
+    .hint { margin-top: 1rem; font-size: 0.8rem; color: #7a8ba1; }
+    .thread { margin-top: 1.8rem; }
+    .thread-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+    .thread-head h2 { font-size: 1.05rem; }
+    .sync-btn {
+      font: inherit; font-size: 0.76rem; font-weight: 700; color: #3d5a80;
+      background: #ffffff; border: 1px solid #d5deea; border-radius: 8px;
+      padding: 0.45rem 0.85rem; cursor: pointer;
+    }
+    .sync-btn:hover:not([disabled]) { border-color: #53b27f; color: #2e7d54; }
+    .sync-btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+    .notice { margin-top: 0.8rem; padding: 0.6rem 0.9rem; border-radius: 8px; font-size: 0.85rem; }
+    .notice.ok { background: rgba(83, 178, 127, 0.12); border: 1px solid rgba(83, 178, 127, 0.4); color: #2e7d54; }
+    .notice.err { background: rgba(203, 76, 76, 0.1); border: 1px solid rgba(203, 76, 76, 0.35); color: #a33d3d; }
+    .messages { margin-top: 1rem; display: grid; gap: 0.8rem; }
+    .msg {
+      background: #ffffff; border: 1px solid #e2e8f1; border-radius: 12px;
+      padding: 1rem 1.2rem; max-width: 85%;
+    }
+    .msg.outbound { justify-self: end; background: #f0f9f4; border-color: rgba(83, 178, 127, 0.35); }
+    .msg header { display: flex; justify-content: space-between; gap: 1rem; }
+    .msg .who { font-size: 0.78rem; font-weight: 700; color: #16283e; }
+    .msg .when { font-size: 0.72rem; color: #7a8ba1; }
+    .msg .subj { margin-top: 0.3rem; font-size: 0.8rem; font-weight: 600; color: #46586f; }
+    .msg-body { margin-top: 0.5rem; font-size: 0.88rem; line-height: 1.6; color: #3d4b61; overflow-wrap: break-word; }
+    .reply {
+      margin-top: 1.4rem; background: #ffffff; border: 1px solid #e2e8f1;
+      border-radius: 12px; padding: 1.2rem 1.4rem; display: grid; gap: 0.9rem;
+    }
+    .rfield { display: grid; gap: 0.35rem; }
+    .rfield span {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: #46586f;
+    }
+    .rin {
+      font: inherit; font-size: 0.9rem; padding: 0.55rem 0.7rem;
+      border: 1px solid #d5deea; border-radius: 8px; background: #fbfcfe; width: 100%;
+    }
+    .rin:focus { outline: none; border-color: #53b27f; }
+    .send {
+      font: inherit; font-size: 0.85rem; font-weight: 700; color: #ffffff;
+      background: #53b27f; border: 0; border-radius: 8px; padding: 0.7rem 1.2rem;
+      cursor: pointer; justify-self: start;
+    }
+    .send:hover { filter: brightness(1.07); }
+  </style>
+
+  <script>
+    document.querySelectorAll("form[data-status-form]").forEach((form) => {
+      const select = form.querySelector("select");
+      if (!select) return;
+      select.addEventListener("change", async () => {
+        select.disabled = true;
+        try {
+          const res = await fetch(form.getAttribute("action") || "", {
+            method: "POST",
+            body: new FormData(form as HTMLFormElement),
+            headers: { Accept: "application/json" },
+          });
+          if (!res.ok) throw new Error();
+        } catch {
+          alert("Could not update status — are you still signed in?");
+        } finally {
+          select.disabled = false;
+        }
+      });
+    });
+  </script>
+</AdminLayout>

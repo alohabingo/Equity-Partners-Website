@@ -1,0 +1,221 @@
+---
+export const prerender = false;
+
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { supabaseServer } from "../../../lib/supabase";
+
+const { id } = Astro.params;
+const isNew = id === "new";
+const saved = Astro.url.searchParams.get("saved") === "1";
+const supabase = supabaseServer(Astro.cookies, Astro.request);
+
+let item: any = {
+  id: "",
+  kind: Astro.url.searchParams.get("kind") === "opportunity" ? "opportunity" : "project",
+  slug: "",
+  locale: "en",
+  status: "draft",
+  sort_order: 0,
+  name: "",
+  data: {},
+};
+
+if (!isNew) {
+  const { data } = await supabase.from("portfolio_items").select("*").eq("id", id).single();
+  if (!data) return Astro.redirect("/admin/portfolio");
+  item = data;
+} else {
+  // Seed the field structure: either duplicate an existing item (?from=id —
+  // handy for translations) or blank-copy the shape of the newest EN item.
+  const fromId = Astro.url.searchParams.get("from");
+  if (fromId) {
+    const { data: src } = await supabase.from("portfolio_items").select("*").eq("id", fromId).single();
+    if (src) {
+      item.kind = src.kind;
+      item.data = src.data;
+      item.name = src.name;
+      item.sort_order = src.sort_order;
+    }
+  } else {
+    const { data: tpl } = await supabase
+      .from("portfolio_items")
+      .select("data")
+      .eq("kind", item.kind)
+      .eq("locale", "en")
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .single();
+    if (tpl) {
+      const blank = (v: unknown): unknown =>
+        typeof v === "string" ? "" :
+        typeof v === "number" ? 0 :
+        typeof v === "boolean" ? false :
+        Array.isArray(v) ? [] : v;
+      item.data = Object.fromEntries(Object.entries(tpl.data as object).map(([k, v]) => [k, blank(v)]));
+    }
+  }
+}
+
+// ---- field classification for the dynamic editor ----
+type FieldType = "text" | "textarea" | "number" | "lines" | "milestones" | "capitalStack" | "useOfFunds" | "partners" | "json";
+
+const OBJECT_ARRAY_TYPES: Record<string, FieldType> = {
+  milestones: "milestones",
+  capitalStack: "capitalStack",
+  useOfFunds: "useOfFunds",
+  partners: "partners",
+};
+
+function classify(key: string, value: unknown): FieldType {
+  if (typeof value === "number") return "number";
+  if (Array.isArray(value)) {
+    if (OBJECT_ARRAY_TYPES[key]) return OBJECT_ARRAY_TYPES[key];
+    if (value.every((v) => typeof v === "string")) return "lines";
+    return "json";
+  }
+  if (typeof value === "string") {
+    return value.length > 90 || value.includes("\n") ? "textarea" : "text";
+  }
+  return "json";
+}
+
+function serialize(type: FieldType, value: any): string {
+  switch (type) {
+    case "lines": return (value as string[]).join("\n");
+    case "milestones": return (value as any[]).map((m) => `${m.label} | ${m.date} | ${m.done ? "done" : "pending"}`).join("\n");
+    case "capitalStack": return (value as any[]).map((c) => `${c.label} | ${c.percentage}${c.note ? " | " + c.note : ""}`).join("\n");
+    case "useOfFunds": return (value as any[]).map((u) => `${u.label} | ${u.percentage}`).join("\n");
+    case "partners": return (value as any[]).map((p) => `${p.name} | ${p.logo}`).join("\n");
+    case "json": return JSON.stringify(value, null, 2);
+    default: return String(value ?? "");
+  }
+}
+
+const FORMAT_HINTS: Record<string, string> = {
+  milestones: "one per line: Label | Apr 2026 | done-or-pending",
+  capitalStack: "one per line: Label | percentage | note (optional)",
+  useOfFunds: "one per line: Label | percentage",
+  partners: "one per line: Name | /images/partners/logo.png",
+  gallery: "one image URL per line",
+  highlights: "one per line",
+};
+
+const humanize = (key: string) =>
+  key.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase());
+
+const fields = Object.entries(item.data as Record<string, unknown>).map(([key, value]) => {
+  const type = classify(key, value);
+  return {
+    key,
+    type,
+    label: humanize(key),
+    hint: FORMAT_HINTS[key] ?? (type === "json" ? "JSON — edit carefully" : ""),
+    value: serialize(type, value),
+    rows: type === "textarea" ? 4 : type === "json" ? 6 : Math.max(2, String(serialize(type, value)).split("\n").length + 1),
+  };
+});
+
+const meta = JSON.stringify(Object.fromEntries(fields.map((f) => [f.key, f.type === "text" || f.type === "textarea" ? "text" : f.type])));
+---
+
+<AdminLayout title={isNew ? `New ${item.kind}` : `Edit — ${item.name}`} active="portfolio">
+  <a class="back" href="/admin/portfolio">← All portfolio items</a>
+  <div class="page-head">
+    <h1>{isNew ? `New ${item.kind}` : item.name}</h1>
+    {saved && <p class="saved-note">Saved ✓</p>}
+  </div>
+
+  <form class="editor" method="post" action="/api/admin/portfolio">
+    <input type="hidden" name="action" value="save" />
+    <input type="hidden" name="kind" value={item.kind} />
+    <input type="hidden" name="__meta" value={meta} />
+    {!isNew && <input type="hidden" name="id" value={item.id} />}
+
+    <div class="main-col">
+      <label class="field">
+        <span>Name</span>
+        <input class="in" type="text" name="name" value={item.name} required />
+      </label>
+
+      {fields.map((f) => (
+        <label class="field">
+          <span>{f.label} {f.hint && <em>({f.hint})</em>}</span>
+          {f.type === "text" ? (
+            <input class="in" type="text" name={`data.${f.key}`} value={f.value} />
+          ) : f.type === "number" ? (
+            <input class="in" type="number" step="any" name={`data.${f.key}`} value={f.value} />
+          ) : (
+            <textarea class={`in ${f.type === "json" ? "mono" : ""}`} name={`data.${f.key}`} rows={f.rows}>{f.value}</textarea>
+          )}
+        </label>
+      ))}
+    </div>
+
+    <aside class="side-col">
+      <div class="panel">
+        <p class="kind-line">Kind: <strong>{item.kind}</strong></p>
+        <label class="field">
+          <span>Status</span>
+          <select class="in" name="status">
+            <option value="draft" selected={item.status === "draft"}>Draft</option>
+            <option value="published" selected={item.status === "published"}>Published</option>
+            <option value="archived" selected={item.status === "archived"}>Archived</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Language</span>
+          <select class="in" name="locale">
+            <option value="en" selected={item.locale === "en"}>English</option>
+            <option value="es" selected={item.locale === "es"}>Español</option>
+            <option value="ca" selected={item.locale === "ca"}>Català</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>URL slug <em>(keep identical across languages)</em></span>
+          <input class="in" type="text" name="slug" value={item.slug} />
+        </label>
+        <label class="field">
+          <span>Sort order <em>(lower = first)</em></span>
+          <input class="in" type="number" name="sort_order" value={item.sort_order} />
+        </label>
+      </div>
+
+      <button class="save" type="submit">Save</button>
+
+      {!isNew && (
+        <button class="delete" type="submit" name="action" value="delete" formnovalidate
+          onclick="return confirm('Delete this item permanently?')">Delete item</button>
+      )}
+    </aside>
+  </form>
+
+  <style>
+    .back { display: inline-block; margin-top: 0.4rem; font-size: 0.82rem; font-weight: 600; color: #2e7d54; text-decoration: none; }
+    .saved-note { color: #2e7d54; font-weight: 700; font-size: 0.85rem; margin-top: 0.3rem; }
+    .editor { margin-top: 1.4rem; display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 1.2rem; align-items: start; }
+    .main-col, .panel { background: #ffffff; border: 1px solid #e2e8f1; border-radius: 12px; padding: 1.2rem 1.4rem; }
+    .side-col { display: grid; gap: 1rem; position: sticky; top: 1rem; }
+    .kind-line { font-size: 0.85rem; color: #46586f; margin-bottom: 1rem; }
+    .field { display: grid; gap: 0.35rem; margin-bottom: 1rem; }
+    .field:last-child { margin-bottom: 0; }
+    .field span { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #46586f; }
+    .field em { font-weight: 400; text-transform: none; letter-spacing: 0; color: #8a99ad; }
+    .in {
+      font: inherit; font-size: 0.9rem; color: #16283e; width: 100%;
+      padding: 0.55rem 0.7rem; border: 1px solid #d5deea; border-radius: 8px; background: #fbfcfe;
+    }
+    .in:focus { outline: none; border-color: #53b27f; }
+    .in.mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.8rem; }
+    .save {
+      font: inherit; font-size: 0.9rem; font-weight: 700; color: #ffffff;
+      background: #53b27f; border: 0; border-radius: 10px; padding: 0.8rem; cursor: pointer;
+    }
+    .save:hover { filter: brightness(1.07); }
+    .delete {
+      font: inherit; font-size: 0.78rem; font-weight: 600; color: #a33d3d;
+      background: none; border: 1px solid rgba(203, 76, 76, 0.4); border-radius: 8px;
+      padding: 0.5rem; cursor: pointer;
+    }
+    @media (max-width: 900px) { .editor { grid-template-columns: 1fr; } .side-col { position: static; } }
+  </style>
+</AdminLayout>

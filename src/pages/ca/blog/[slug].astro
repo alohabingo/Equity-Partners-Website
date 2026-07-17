@@ -1,15 +1,7 @@
 ---
+export const prerender = false;
+
 import Page from "../../blog/[slug].astro";
-import { blogPosts } from "../../../data/blogPostsCa";
-
-export function getStaticPaths() {
-  return blogPosts.map((post) => ({
-    params: { slug: post.slug },
-    props: { post },
-  }));
-}
-
-const { post } = Astro.props;
 ---
 
-<Page post={post} />
+<Page />

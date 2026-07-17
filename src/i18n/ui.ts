@@ -36,6 +36,7 @@ type Dictionary = {
     privacyPolicy: string;
     termsOfUse: string;
     cookies: string;
+    login: string;
   };
   pageTitles: Record<PageTitleKey, string>;
 };
@@ -66,6 +67,7 @@ export const uiTranslations: Record<Locale, Dictionary> = {
       privacyPolicy: "Privacy Policy",
       termsOfUse: "Terms of Use",
       cookies: "Cookies",
+      login: "Login",
     },
     pageTitles: {
       home: "Equity Partners | Andorra Property Group",
@@ -104,6 +106,7 @@ export const uiTranslations: Record<Locale, Dictionary> = {
       privacyPolicy: "Política de privacidad",
       termsOfUse: "Términos de uso",
       cookies: "Cookies",
+      login: "Iniciar sesión",
     },
     pageTitles: {
       home: "Equity Partners | Grupo inmobiliario en Andorra",
@@ -142,6 +145,7 @@ export const uiTranslations: Record<Locale, Dictionary> = {
       privacyPolicy: "Política de privacitat",
       termsOfUse: "Termes d'ús",
       cookies: "Cookies",
+      login: "Inicia sessió",
     },
     pageTitles: {
       home: "Equity Partners | Grup immobiliari d'Andorra",

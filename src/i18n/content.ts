@@ -151,6 +151,9 @@ type ContactContent = {
     investmentRangeOptions: string[];
     message: string;
     submit: string;
+    sending: string;
+    success: string;
+    error: string;
   };
   cardEyebrow: string;
   officeLabel: string;
@@ -535,6 +538,9 @@ export const contentTranslations: Record<
         ],
         message: "Is there anything else you would like to share with us?",
         submit: "Send Enquiry",
+        sending: "Sending…",
+        success: "Thank you — your message has been received. Our team will get back to you shortly.",
+        error: "Something went wrong sending your message. Please try again, or email us directly.",
       },
       cardEyebrow: "Contact Us",
       officeLabel: "Come By Our Office",
@@ -834,7 +840,7 @@ export const contentTranslations: Record<
     home: {
       hero: {
         kicker: "ANDORRA • INVERSIÓN • EXCELENCIA",
-        title: "Su socio estratégico para inversiones inmobiliarias en Andorra.",
+        title: "Su socio estratégico para invertir en inmuebles en Andorra.",
         subline:
           "Nuestro equipo de profesionales ofrece a los inversores internacionales una experiencia fluida de acceso al mercado inmobiliario de alta barrera de Andorra.",
         cta: "Contactar con el equipo",
@@ -1114,6 +1120,9 @@ export const contentTranslations: Record<
         ],
         message: "¿Hay algo más que quisiera compartir con nosotros?",
         submit: "Enviar consulta",
+        sending: "Enviando…",
+        success: "Gracias — hemos recibido su mensaje. Nuestro equipo le responderá en breve.",
+        error: "Ha ocurrido un error al enviar su mensaje. Inténtelo de nuevo o escríbanos directamente.",
       },
       cardEyebrow: "Contacto",
       officeLabel: "Visite nuestra oficina",
@@ -1411,7 +1420,7 @@ export const contentTranslations: Record<
     home: {
       hero: {
         kicker: "ANDORRA • INVERSIÓ • EXCEL·LÈNCIA",
-        title: "El seu soci estratègic per a inversions immobiliàries a Andorra.",
+        title: "El seu soci estratègic per invertir en immobles a Andorra.",
         subline:
           "El nostre equip de professionals ofereix als inversors internacionals una experiència fluida d'accés al mercat immobiliari d'alta barrera d'Andorra.",
         cta: "Contacta amb l'equip",
@@ -1691,6 +1700,9 @@ export const contentTranslations: Record<
         ],
         message: "Hi ha alguna cosa més que vulgui compartir amb nosaltres?",
         submit: "Enviar consulta",
+        sending: "Enviant…",
+        success: "Gràcies — hem rebut el seu missatge. El nostre equip li respondrà aviat.",
+        error: "S'ha produït un error en enviar el missatge. Torni-ho a provar o escrigui'ns directament.",
       },
       cardEyebrow: "Contacte",
       officeLabel: "Visiti la nostra oficina",

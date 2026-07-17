@@ -1,93 +1,101 @@
 ---
+export const prerender = false;
+
 import InnerSiteHeader from "../../components/InnerSiteHeader.astro";
 import NewsletterSignup from "../../components/NewsletterSignup.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
 import SEO from "../../components/SEO.astro";
-import { blogPosts } from "../../data/blogPosts";
-import { blogPosts as blogPostsEs } from "../../data/blogPostsEs";
-import { blogPosts as blogPostsCa } from "../../data/blogPostsCa";
 import { buildLocalizedPath, getLocaleFromUrl } from "../../lib/i18n";
 import { getContentTranslations } from "../../i18n/content";
+import { supabaseServer, supabaseAdmin } from "../../lib/supabase";
+import { marked } from "marked";
 
-// English route. The /es/ and /ca/ routes are thin wrappers
-// (src/pages/{es,ca}/blog/[slug].astro) that render this page as a
-// component, passing the localized `post` from blogPostsEs/blogPostsCa.
-export function getStaticPaths() {
-  return blogPosts.map((post) => ({
-    params: { slug: post.slug },
-    props: { post },
-  }));
-}
-
-const { post } = Astro.props;
 const locale = getLocaleFromUrl(Astro.url);
-const postsByLocale = { en: blogPosts, es: blogPostsEs, ca: blogPostsCa } as const;
-const localePosts = postsByLocale[locale] ?? blogPosts;
 const content = getContentTranslations(locale).blog;
-const stopWords = new Set([
-  "and",
-  "the",
-  "for",
-  "with",
-  "what",
-  "into",
-  "from",
-  "that",
-  "this",
-  "still",
-  "your",
-  "will",
-  "have",
-  "more",
-  "than",
-  "when",
-  "where",
-  "best",
-  "today",
-  "guide",
-  "prices",
-]);
+const { slug } = Astro.params;
 
-const tokenize = (value: string) =>
-  value
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, " ")
-    .split(/\s+/)
-    .filter((word) => word.length > 2 && !stopWords.has(word));
+const supabase = supabaseServer(Astro.cookies, Astro.request);
+const { data: row } = await supabase
+  .from("posts")
+  .select("*")
+  .eq("slug", slug)
+  .eq("locale", locale)
+  .eq("status", "published")
+  .single();
 
-const postKeywords = new Set([...tokenize(post.title), ...tokenize(post.excerpt)]);
+if (!row) return Astro.redirect(buildLocalizedPath("/blog", locale));
 
-const suggestedPosts = localePosts
-  .filter((entry) => entry.slug !== post.slug)
-  .map((entry) => {
-    const entryKeywords = new Set([...tokenize(entry.title), ...tokenize(entry.excerpt)]);
-    let sharedKeywordScore = 0;
+// Lightweight view tracking (dashboard analytics). Fire-and-forget; skips
+// obvious bots and never blocks or breaks the page.
+try {
+  const ua = Astro.request.headers.get("user-agent") ?? "";
+  if (import.meta.env.SUPABASE_SERVICE_ROLE_KEY && !/bot|crawler|spider|preview|lighthouse/i.test(ua)) {
+    supabaseAdmin()
+      .from("post_views")
+      .insert({ post_id: row.id, referrer: Astro.request.headers.get("referer")?.slice(0, 500) ?? null })
+      .then(() => {});
+  }
+} catch { /* analytics must never break the article */ }
 
-    for (const keyword of entryKeywords) {
-      if (postKeywords.has(keyword)) sharedKeywordScore += 1;
-    }
+const dateFmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : locale, {
+  month: "short",
+  year: "numeric",
+});
 
-    const categoryScore = entry.category === post.category ? 4 : 0;
+// Estimate read time when the editor left it blank (≈200 words/min).
+const autoReadTime = () => {
+  const words = (row.body ?? "").split(/\s+/).length;
+  const mins = Math.max(1, Math.round(words / 200));
+  return locale === "en" ? `${mins} min read` : locale === "es" ? `${mins} min de lectura` : `${mins} min de lectura`;
+};
 
-    return {
-      entry,
-      score: categoryScore + sharedKeywordScore,
-    };
-  })
-  .sort((a, b) => b.score - a.score || a.entry.title.localeCompare(b.entry.title))
+const post = {
+  slug: row.slug,
+  title: row.title,
+  excerpt: row.excerpt ?? "",
+  category: row.category ?? "",
+  image: row.cover_image ?? "",
+  date: row.published_at ? dateFmt.format(new Date(row.published_at)) : "",
+  readTime: row.read_time || autoReadTime(),
+  sources: (row.sources ?? []) as { label: string; href: string }[],
+};
+
+const bodyHtml = marked.parse(row.body ?? "", { gfm: true, breaks: false }) as string;
+
+// Suggested reads: same category first, then most recent.
+const { data: otherRows } = await supabase
+  .from("posts")
+  .select("slug, title, excerpt, category, cover_image, published_at")
+  .eq("locale", locale)
+  .eq("status", "published")
+  .neq("slug", row.slug)
+  .order("published_at", { ascending: false })
+  .limit(12);
+
+const suggestedPosts = (otherRows ?? [])
+  .map((entry) => ({
+    entry: {
+      slug: entry.slug,
+      title: entry.title,
+      excerpt: entry.excerpt ?? "",
+      category: entry.category ?? "",
+      image: entry.cover_image ?? "",
+      date: entry.published_at ? dateFmt.format(new Date(entry.published_at)) : "",
+    },
+    score: entry.category === row.category ? 1 : 0,
+  }))
+  .sort((a, b) => b.score - a.score)
   .slice(0, 3)
   .map(({ entry }) => entry);
 
 const siteUrl = (Astro.site?.toString() ?? "https://equitypartners.fund/").replace(/\/$/, "");
-const monthMap: Record<string, string> = {
-  Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06",
-  Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12",
-};
-// Parse the canonical English date (ES/CA dates use localized month names).
-const canonicalDate = (blogPosts.find((p) => p.slug === post.slug) ?? post).date;
-const dateMatch = canonicalDate.match(/([A-Za-z]{3})\s+(\d{4})/);
-const datePublished =
-  dateMatch && monthMap[dateMatch[1]] ? `${dateMatch[2]}-${monthMap[dateMatch[1]]}` : undefined;
+const datePublished = row.published_at
+  ? new Date(row.published_at).toISOString().slice(0, 7)
+  : undefined;
+
+const seoTitle = row.meta_title || `${post.title} | Equity Partners`;
+const seoDescription = row.meta_description || post.excerpt;
+const seoImage = row.og_image || post.image;
 
 const articleSchema = {
   "@context": "https://schema.org",
@@ -114,11 +122,11 @@ const articleSchema = {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <SEO
-      title={`${post.title} | Equity Partners`}
-      description={post.excerpt}
+      title={seoTitle}
+      description={seoDescription}
       locale={locale}
       path={Astro.url.pathname}
-      image={post.image}
+      image={seoImage}
       type="article"
       breadcrumb={[
         { name: "Home", path: "/" },
@@ -773,6 +781,92 @@ const articleSchema = {
         }
       }
     </style>
+    <style is:global>
+      /* Rendered markdown from the CMS (mirrors the old section design) */
+      .md-body h2 {
+        font-size: clamp(1.28rem, 2.2vw, 1.72rem);
+        line-height: 1.2;
+        color: #22324a;
+        margin: 0 0 0.7rem;
+      }
+      .md-body h2:not(:first-child) {
+        margin-top: 2rem;
+      }
+      .md-body h3 {
+        font-size: 1.1rem;
+        color: #22324a;
+        margin: 1.4rem 0 0.5rem;
+      }
+      .md-body p {
+        margin: 0;
+        color: #3d4b61;
+      }
+      .md-body p + p {
+        margin-top: 0.85rem;
+      }
+      .md-body a {
+        color: #2e7d54;
+      }
+      .md-body ul,
+      .md-body ol {
+        margin: 0.85rem 0 0;
+        padding-left: 1.3rem;
+        color: #3d4b61;
+      }
+      .md-body li + li {
+        margin-top: 0.35rem;
+      }
+      .md-body img {
+        max-width: 100%;
+        border-radius: 0.7rem;
+        margin-top: 1rem;
+      }
+      .md-body blockquote {
+        margin: 1rem 0 0;
+        padding: 0.6rem 1rem;
+        border-left: 3px solid #53b27f;
+        background: #f5f8fd;
+        color: #3d4b61;
+      }
+      .md-body table {
+        width: 100%;
+        margin-top: 1.25rem;
+        border: 1px solid #d8e0ec;
+        border-radius: 0.95rem;
+        border-collapse: separate;
+        border-spacing: 0;
+        overflow: hidden;
+        background: #ffffff;
+        font-size: 0.9rem;
+      }
+      .md-body thead th {
+        background: #f5f8fd;
+        color: #6b7c93;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        text-align: left;
+        padding: 0.9rem 1rem;
+      }
+      .md-body tbody td {
+        padding: 0.9rem 1rem;
+        border-top: 1px solid #e1e7f0;
+        color: #637389;
+        line-height: 1.45;
+        vertical-align: top;
+      }
+      .md-body tbody td:first-child {
+        color: #24344c;
+        font-weight: 600;
+        font-size: 0.98rem;
+      }
+      @media (max-width: 680px) {
+        .md-body table {
+          display: block;
+          overflow-x: auto;
+        }
+      }
+    </style>
   </head>
   <body style={`--hero-image: url('${post.image}')`}>
     <InnerSiteHeader active="blog" menuToggleId="mobile-menu-toggle-blog-article" locale={locale} currentPath={Astro.url.pathname} />
@@ -795,38 +889,7 @@ const articleSchema = {
           </header>
 
           <div class="article-body">
-            <div class="article-content">
-              {
-                post.sections.map((section) => (
-                  <section class="article-section">
-                    <h2>{section.heading}</h2>
-                    {section.paragraphs.map((paragraph) => (<p>{paragraph}</p>))}
-                    {section.table && (
-                      <div class="article-table-wrap">
-                        <div class="article-table-row">
-                          {section.table.headers.map((header) => (
-                            <p class="article-table-head">{header}</p>
-                          ))}
-                        </div>
-                        {section.table.rows.map((row) => (
-                          <div class="article-table-row">
-                            {row.map((cell, index) => (
-                              index === 0 ? (
-                                <p class="article-table-cell-primary">{cell}</p>
-                              ) : index === row.length - 1 && row.length > 2 ? (
-                                <p class="article-table-cell"><span class="article-table-badge">{cell}</span></p>
-                              ) : (
-                                <p class="article-table-cell">{cell}</p>
-                              )
-                            ))}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </section>
-                ))
-              }
-            </div>
+            <div class="article-content md-body" set:html={bodyHtml} />
 
             <aside class="article-aside">
               <p class="aside-kicker">{content.article.asideKicker}</p>

@@ -5,17 +5,27 @@ import SiteFooter from "../../components/SiteFooter.astro";
 import SEO from "../../components/SEO.astro";
 import { buildLocalizedPath, getLocaleFromUrl } from "../../lib/i18n";
 import type { Locale } from "../../lib/i18n";
-import { projects, statusColour } from "../../data/projects";
+import { statusColour, type Project } from "../../data/projects";
+import { supabaseServer } from "../../lib/supabase";
 
-export function getStaticPaths() {
-  return projects.map((project) => ({
-    params: { slug: project.slug },
-    props: { project },
-  }));
-}
+export const prerender = false;
 
-const { project } = Astro.props;
 const locale = getLocaleFromUrl(Astro.url) ?? "en";
+const { slug } = Astro.params;
+
+const supabase = supabaseServer(Astro.cookies, Astro.request);
+const { data: row } = await supabase
+  .from("portfolio_items")
+  .select("slug, name, data")
+  .eq("kind", "project")
+  .eq("slug", slug)
+  .eq("locale", locale)
+  .eq("status", "published")
+  .single();
+
+if (!row) return Astro.redirect(buildLocalizedPath("/projects", locale));
+
+const project = { slug: row.slug, name: row.name, ...(row.data as object) } as Project;
 
 const copyByLocale = {
   en: {

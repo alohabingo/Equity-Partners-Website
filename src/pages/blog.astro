@@ -1,7 +1,6 @@
 ---
-import { blogPosts } from "../data/blogPosts";
-import { blogPosts as blogPostsEs } from "../data/blogPostsEs";
-import { blogPosts as blogPostsCa } from "../data/blogPostsCa";
+export const prerender = false;
+
 import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import NewsletterSignup from "../components/NewsletterSignup.astro";
 import SiteFooter from "../components/SiteFooter.astro";
@@ -9,10 +8,32 @@ import SEO from "../components/SEO.astro";
 import { buildLocalizedPath, getLocaleFromUrl } from "../lib/i18n";
 import { getContentTranslations } from "../i18n/content";
 import { getPageTitle } from "../i18n/ui";
+import { supabaseServer } from "../lib/supabase";
 
 const locale = getLocaleFromUrl(Astro.url);
-const posts = locale === "es" ? blogPostsEs : locale === "ca" ? blogPostsCa : blogPosts;
 const content = getContentTranslations(locale).blog;
+
+// Published posts for this locale, straight from the CMS.
+const supabase = supabaseServer(Astro.cookies, Astro.request);
+const { data: rows } = await supabase
+  .from("posts")
+  .select("slug, title, excerpt, category, cover_image, published_at")
+  .eq("locale", locale)
+  .eq("status", "published")
+  .order("published_at", { ascending: false });
+
+const dateFmt = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : locale, {
+  month: "short",
+  year: "numeric",
+});
+const posts = (rows ?? []).map((r) => ({
+  slug: r.slug,
+  title: r.title,
+  excerpt: r.excerpt ?? "",
+  category: r.category ?? "",
+  image: r.cover_image ?? "",
+  date: r.published_at ? dateFmt.format(new Date(r.published_at)) : "",
+}));
 ---
 
 <html lang={locale}>

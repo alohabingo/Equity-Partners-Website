@@ -1,0 +1,147 @@
+---
+import "@fontsource/montserrat/400.css";
+import "@fontsource/montserrat/600.css";
+import "@fontsource/montserrat/700.css";
+
+interface Props {
+  title: string;
+  active?: string;
+}
+const { title, active = "" } = Astro.props;
+const user = Astro.locals.user;
+const isSuper = user?.role === "super_admin";
+
+const nav = [
+  { key: "dashboard", label: "Dashboard", href: "/admin", superOnly: false },
+  { key: "leads", label: "Leads", href: "/admin/leads", superOnly: true },
+  { key: "blog", label: "Blog", href: "/admin/blog", superOnly: false },
+  { key: "portfolio", label: "Portfolio", href: "/admin/portfolio", superOnly: false },
+  { key: "subscribers", label: "Subscribers", href: "/admin/subscribers", superOnly: true },
+  { key: "vault", label: "Document Vault", href: "/admin/vault", superOnly: true },
+  { key: "users", label: "Users", href: "/admin/users", superOnly: true },
+];
+const visibleNav = nav.filter((n) => isSuper || !n.superOnly);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{title} | EP Admin</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; }
+      body {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 232px 1fr;
+        font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+        background: #f2f5f9;
+        color: #16283e;
+      }
+      /* ---- Sidebar ---- */
+      aside {
+        background: linear-gradient(180deg, #0f2036 0%, #0a1727 100%);
+        color: #dbe5f3;
+        display: flex;
+        flex-direction: column;
+        padding: 1.6rem 1rem;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+      }
+      .brand {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #53b27f;
+        padding: 0 0.7rem;
+      }
+      .brand-sub {
+        font-size: 1.05rem;
+        font-weight: 700;
+        padding: 0.25rem 0.7rem 0;
+        color: #ffffff;
+      }
+      nav { margin-top: 2rem; display: grid; gap: 0.25rem; }
+      nav a {
+        display: block;
+        padding: 0.6rem 0.7rem;
+        border-radius: 8px;
+        color: #c1cee3;
+        text-decoration: none;
+        font-size: 0.86rem;
+        font-weight: 600;
+        transition: background-color 160ms ease, color 160ms ease;
+      }
+      nav a:hover { background: rgba(83, 178, 127, 0.12); color: #ffffff; }
+      nav a.active { background: #53b27f; color: #071018; }
+      .side-footer {
+        margin-top: auto;
+        padding: 0.9rem 0.7rem 0;
+        border-top: 1px solid rgba(193, 206, 227, 0.14);
+      }
+      .who { font-size: 0.82rem; font-weight: 600; color: #ffffff; word-break: break-word; }
+      .role-badge {
+        display: inline-block;
+        margin-top: 0.35rem;
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 0.22rem 0.5rem;
+        border-radius: 999px;
+        background: rgba(83, 178, 127, 0.16);
+        border: 1px solid rgba(83, 178, 127, 0.45);
+        color: #7dd3a6;
+      }
+      .signout {
+        margin-top: 0.9rem;
+      }
+      .signout button {
+        font: inherit;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #9fb0c9;
+        background: none;
+        border: 1px solid rgba(193, 206, 227, 0.25);
+        border-radius: 8px;
+        padding: 0.45rem 0.85rem;
+        cursor: pointer;
+        transition: color 160ms ease, border-color 160ms ease;
+      }
+      .signout button:hover { color: #ffffff; border-color: #ffffff; }
+      /* ---- Main ---- */
+      .main { padding: 2rem 2.4rem; max-width: 1200px; width: 100%; }
+      .page-head h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; }
+      .page-head p { margin-top: 0.3rem; color: #5c6f88; font-size: 0.9rem; }
+      @media (max-width: 860px) {
+        body { grid-template-columns: 1fr; }
+        aside { position: static; height: auto; }
+      }
+    </style>
+  </head>
+  <body>
+    <aside>
+      <p class="brand">Equity Partners</p>
+      <p class="brand-sub">Command Center</p>
+      <nav>
+        {visibleNav.map((item) => (
+          <a href={item.href} class={active === item.key ? "active" : ""}>{item.label}</a>
+        ))}
+      </nav>
+      <div class="side-footer">
+        <p class="who">{user?.fullName}</p>
+        <span class="role-badge">{isSuper ? "Super Admin" : "Content Editor"}</span>
+        <form class="signout" method="post" action="/api/auth/signout">
+          <button type="submit">Sign out</button>
+        </form>
+      </div>
+    </aside>
+    <div class="main">
+      <slot />
+    </div>
+  </body>
+</html>

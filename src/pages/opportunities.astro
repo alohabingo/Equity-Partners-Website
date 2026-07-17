@@ -5,21 +5,26 @@ import SiteFooter from "../components/SiteFooter.astro";
 import SEO from "../components/SEO.astro";
 import { buildLocalizedPath, getLocaleFromUrl } from "../lib/i18n";
 import {
-  opportunities as opportunitiesEn,
   opportunityStatusColour,
   riskProfileColour,
+  type Opportunity,
 } from "../data/opportunities";
-import { opportunities as opportunitiesEs } from "../data/opportunitiesEs";
-import { opportunities as opportunitiesCa } from "../data/opportunitiesCa";
+import { supabaseServer } from "../lib/supabase";
+
+export const prerender = false;
 
 const locale = getLocaleFromUrl(Astro.url) ?? "en";
 
-const opportunitiesByLocale = {
-  en: opportunitiesEn,
-  es: opportunitiesEs,
-  ca: opportunitiesCa,
-};
-const opportunities = opportunitiesByLocale[locale];
+const supabase = supabaseServer(Astro.cookies, Astro.request);
+const { data: rows } = await supabase
+  .from("portfolio_items")
+  .select("slug, name, data")
+  .eq("kind", "opportunity")
+  .eq("locale", locale)
+  .eq("status", "published")
+  .order("sort_order", { ascending: true });
+
+const opportunities = (rows ?? []).map((r) => ({ slug: r.slug, name: r.name, ...(r.data as object) })) as Opportunity[];
 
 const copy = {
   en: {

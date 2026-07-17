@@ -5,18 +5,23 @@ import SiteFooter from "../components/SiteFooter.astro";
 import SEO from "../components/SEO.astro";
 import { buildLocalizedPath, getLocaleFromUrl } from "../lib/i18n";
 import type { Locale } from "../lib/i18n";
-import { projects as projectsEn, statusColour } from "../data/projects";
-import { projects as projectsEs } from "../data/projectsEs";
-import { projects as projectsCa } from "../data/projectsCa";
+import { statusColour, type Project } from "../data/projects";
+import { supabaseServer } from "../lib/supabase";
+
+export const prerender = false;
 
 const locale = getLocaleFromUrl(Astro.url) ?? "en";
 
-const projectsByLocale: Record<Locale, typeof projectsEn> = {
-  en: projectsEn,
-  es: projectsEs,
-  ca: projectsCa,
-};
-const projects = projectsByLocale[locale];
+const supabase = supabaseServer(Astro.cookies, Astro.request);
+const { data: rows } = await supabase
+  .from("portfolio_items")
+  .select("slug, name, data")
+  .eq("kind", "project")
+  .eq("locale", locale)
+  .eq("status", "published")
+  .order("sort_order", { ascending: true });
+
+const projects = (rows ?? []).map((r) => ({ slug: r.slug, name: r.name, ...(r.data as object) })) as Project[];
 
 const copyByLocale = {
   en: {

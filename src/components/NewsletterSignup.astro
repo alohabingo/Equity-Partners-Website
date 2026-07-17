@@ -26,6 +26,7 @@ const newsletterFormName = "newsletter-signup";
           class="newsletter-form"
           id={newsletterFormId}
           novalidate
+          data-locale={locale}
           data-msg-id={newsletterMessageId}
           data-validation-error={content.validationError}
           data-submitting={content.submitting}
@@ -71,24 +72,23 @@ const newsletterFormName = "newsletter-signup";
       if (message) { message.textContent = form.dataset.submitting; message.dataset.state = "pending"; }
 
       try {
-        var response = await fetch(
-          "https://api.hsforms.com/submissions/v3/integration/submit/147782273/a116bad8-2680-4003-9b71-2361e9997673",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              fields: [{ name: "email", value: emailValue }],
-              context: { pageUri: window.location.href, pageName: document.title },
-            }),
-          }
-        );
+        var response = await fetch("/api/newsletter", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: emailValue,
+            locale: form.dataset.locale || "en",
+            source_page: window.location.pathname,
+          }),
+        });
 
-        if (!response.ok) throw new Error("status " + response.status);
+        var data = await response.json();
+        if (!response.ok || !data.ok) throw new Error("status " + response.status);
 
         form.reset();
         if (message) { message.textContent = form.dataset.success; message.dataset.state = "success"; }
       } catch (err) {
-        console.error("HubSpot submission error:", err);
+        console.error("Newsletter subscription error:", err);
         if (message) { message.textContent = form.dataset.error; message.dataset.state = "error"; }
       } finally {
         if (submitButton) submitButton.removeAttribute("disabled");

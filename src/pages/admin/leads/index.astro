@@ -1,0 +1,206 @@
+---
+export const prerender = false;
+
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { supabaseServer } from "../../../lib/supabase";
+
+const supabase = supabaseServer(Astro.cookies, Astro.request);
+
+const TYPES = [
+  { key: "all", label: "All" },
+  { key: "investor", label: "Investor" },
+  { key: "founder_pitch", label: "Founder Pitch" },
+  { key: "general", label: "General" },
+  { key: "video_call", label: "Video Call" },
+];
+const STATUSES = [
+  { key: "new", label: "New" },
+  { key: "in_progress", label: "In Progress" },
+  { key: "closed", label: "Closed" },
+  { key: "partnered", label: "Partnered" },
+];
+
+const typeFilter = Astro.url.searchParams.get("type") ?? "all";
+const statusFilter = Astro.url.searchParams.get("status") ?? "all";
+
+let query = supabase
+  .from("inquiries")
+  .select("id, type, status, name, email, company, locale, created_at")
+  .order("created_at", { ascending: false })
+  .limit(200);
+if (typeFilter !== "all") query = query.eq("type", typeFilter);
+if (statusFilter !== "all") query = query.eq("status", statusFilter);
+
+const { data: leads } = await query;
+
+const typeLabel = (t: string) => TYPES.find((x) => x.key === t)?.label ?? t;
+const dateFmt = new Intl.DateTimeFormat("en-GB", {
+  day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+});
+
+const filterHref = (type: string, status: string) => {
+  const p = new URLSearchParams();
+  if (type !== "all") p.set("type", type);
+  if (status !== "all") p.set("status", status);
+  const q = p.toString();
+  return q ? `/admin/leads?${q}` : "/admin/leads";
+};
+---
+
+<AdminLayout title="Leads" active="leads">
+  <div class="page-head">
+    <h1>Leads</h1>
+    <p>Inquiries from the website contact forms, newest first.</p>
+  </div>
+
+  <div class="filters">
+    <div class="filter-group">
+      {TYPES.map((t) => (
+        <a class={typeFilter === t.key ? "chip active" : "chip"} href={filterHref(t.key, statusFilter)}>{t.label}</a>
+      ))}
+    </div>
+    <div class="filter-group">
+      <a class={statusFilter === "all" ? "chip active" : "chip"} href={filterHref(typeFilter, "all")}>Any status</a>
+      {STATUSES.map((s) => (
+        <a class={statusFilter === s.key ? "chip active" : "chip"} href={filterHref(typeFilter, s.key)}>{s.label}</a>
+      ))}
+    </div>
+  </div>
+
+  {(!leads || leads.length === 0) ? (
+    <p class="empty">No inquiries match this filter yet.</p>
+  ) : (
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Received</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Lang</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {leads.map((lead) => (
+            <tr>
+              <td class="muted">{dateFmt.format(new Date(lead.created_at))}</td>
+              <td>
+                <strong>{lead.name}</strong>
+                <span class="muted email">{lead.email}</span>
+              </td>
+              <td><span class={`type-badge type-${lead.type}`}>{typeLabel(lead.type)}</span></td>
+              <td class="muted">{lead.locale.toUpperCase()}</td>
+              <td>
+                <form method="post" action="/api/admin/lead-status" data-status-form>
+                  <input type="hidden" name="id" value={lead.id} />
+                  <input type="hidden" name="back_to" value={Astro.url.pathname + Astro.url.search} />
+                  <select name="status" class={`status-select is-${lead.status}`}>
+                    {STATUSES.map((s) => (
+                      <option value={s.key} selected={lead.status === s.key}>{s.label}</option>
+                    ))}
+                  </select>
+                  <noscript><button type="submit">Save</button></noscript>
+                </form>
+              </td>
+              <td><a class="open-link" href={`/admin/leads/${lead.id}`}>Open →</a></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+
+  <style>
+    .filters { margin-top: 1.6rem; display: grid; gap: 0.55rem; }
+    .filter-group { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .chip {
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: #46586f;
+      text-decoration: none;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid #d5deea;
+      background: #ffffff;
+      transition: border-color 150ms ease, color 150ms ease;
+    }
+    .chip:hover { border-color: #53b27f; color: #2e7d54; }
+    .chip.active { background: #16283e; border-color: #16283e; color: #ffffff; }
+    .empty { margin-top: 2rem; color: #5c6f88; font-size: 0.92rem; }
+    .table-wrap {
+      margin-top: 1.4rem;
+      background: #ffffff;
+      border: 1px solid #e2e8f1;
+      border-radius: 12px;
+      overflow-x: auto;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    th {
+      text-align: left;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #5c6f88;
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid #e2e8f1;
+    }
+    td { padding: 0.8rem 1rem; border-bottom: 1px solid #eef2f7; vertical-align: middle; }
+    tr:last-child td { border-bottom: 0; }
+    .muted { color: #7a8ba1; font-size: 0.78rem; }
+    .email { display: block; }
+    .type-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .type-investor { background: rgba(83, 178, 127, 0.14); color: #2e7d54; }
+    .type-general { background: rgba(90, 125, 170, 0.14); color: #3d5a80; }
+    .type-founder_pitch { background: rgba(196, 148, 58, 0.16); color: #8a6420; }
+    .type-video_call { background: rgba(140, 110, 190, 0.14); color: #5f4a86; }
+    .status-select {
+      font: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.3rem 0.5rem;
+      border-radius: 7px;
+      border: 1px solid #d5deea;
+      background: #ffffff;
+      cursor: pointer;
+    }
+    .status-select.is-new { border-color: #53b27f; color: #2e7d54; }
+    .status-select.is-in_progress { border-color: #c4943a; color: #8a6420; }
+    .status-select.is-partnered { border-color: #5f4a86; color: #5f4a86; }
+    .status-select.is-closed { color: #7a8ba1; }
+    .open-link { font-size: 0.8rem; font-weight: 600; color: #2e7d54; text-decoration: none; }
+    .open-link:hover { text-decoration: underline; }
+  </style>
+
+  <script>
+    // Auto-save status on change
+    document.querySelectorAll("form[data-status-form]").forEach((form) => {
+      const select = form.querySelector("select");
+      if (!select) return;
+      select.addEventListener("change", async () => {
+        select.disabled = true;
+        try {
+          const res = await fetch(form.getAttribute("action") || "", {
+            method: "POST",
+            body: new FormData(form as HTMLFormElement),
+            headers: { Accept: "application/json" },
+          });
+          if (!res.ok) throw new Error();
+          select.className = `status-select is-${select.value}`;
+        } catch {
+          alert("Could not update status — are you still signed in?");
+        } finally {
+          select.disabled = false;
+        }
+      });
+    });
+  </script>
+</AdminLayout>

@@ -3,3 +3,11 @@ dist/
 .astro/
 .DS_Store
 *.DS_Store
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Netlify
+.netlify/
