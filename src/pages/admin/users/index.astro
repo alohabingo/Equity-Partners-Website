@@ -1,0 +1,165 @@
+---
+export const prerender = false;
+
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { supabaseServer, supabaseAdmin } from "../../../lib/supabase";
+
+const me = Astro.locals.user!;
+const supabase = supabaseServer(Astro.cookies, Astro.request);
+
+// Profiles (roles) + auth emails, joined in memory.
+const { data: profiles } = await supabase
+  .from("profiles")
+  .select("id, full_name, role, created_at")
+  .order("created_at", { ascending: true });
+
+let emailById = new Map<string, { email: string; lastSignIn: string | null }>();
+try {
+  const { data } = await supabaseAdmin().auth.admin.listUsers({ perPage: 200 });
+  for (const u of data?.users ?? []) {
+    emailById.set(u.id, { email: u.email ?? "—", lastSignIn: u.last_sign_in_at ?? null });
+  }
+} catch { /* page still renders without emails */ }
+
+const dateFmt = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+
+const q = Astro.url.searchParams;
+const notice =
+  q.get("created") ? "User created ✓" :
+  q.get("updated") ? "Role updated ✓" :
+  q.get("removed") ? "User removed ✓" : null;
+const errorMessages: Record<string, string> = {
+  invalid_fields: "Please fill in a valid email and full name.",
+  weak_password: "Password must be at least 12 characters.",
+  email_exists: "A user with that email already exists.",
+  create_failed: "Could not create the user — try again.",
+  own_role: "You can't change your own role.",
+  own_account: "You can't remove your own account.",
+};
+const error = q.get("error") ? (errorMessages[q.get("error")!] ?? "Something went wrong.") : null;
+---
+
+<AdminLayout title="Users" active="users">
+  <div class="page-head">
+    <h1>Team</h1>
+    <p>Who can access this portal, and what they're allowed to touch.</p>
+  </div>
+
+  {notice && <p class="notice ok">{notice}</p>}
+  {error && <p class="notice err">{error}</p>}
+
+  <div class="roles-hint">
+    <p><strong>Super Admin</strong> — everything: leads, emails, subscribers, vault, users, CMS.</p>
+    <p><strong>Content Editor</strong> — blog and portfolio CMS only.</p>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Email</th><th>Last sign-in</th><th>Role</th><th></th></tr>
+      </thead>
+      <tbody>
+        {(profiles ?? []).map((p) => {
+          const auth = emailById.get(p.id);
+          const isMe = p.id === me.id;
+          return (
+            <tr>
+              <td><strong>{p.full_name}</strong>{isMe && <span class="you">you</span>}</td>
+              <td class="muted">{auth?.email ?? "—"}</td>
+              <td class="muted">{auth?.lastSignIn ? dateFmt.format(new Date(auth.lastSignIn)) : "never"}</td>
+              <td>
+                {isMe ? (
+                  <span class="role-pill">{p.role === "super_admin" ? "Super Admin" : "Content Editor"}</span>
+                ) : (
+                  <form class="inline" method="post" action="/api/admin/users" data-role-form>
+                    <input type="hidden" name="action" value="set_role" />
+                    <input type="hidden" name="id" value={p.id} />
+                    <select class="in" name="role" onchange="this.form.submit()">
+                      <option value="super_admin" selected={p.role === "super_admin"}>Super Admin</option>
+                      <option value="content_editor" selected={p.role === "content_editor"}>Content Editor</option>
+                    </select>
+                  </form>
+                )}
+              </td>
+              <td>
+                {!isMe && (
+                  <form class="inline" method="post" action="/api/admin/users"
+                    onsubmit={`return confirm('Remove ${p.full_name}? They will no longer be able to sign in.')`}>
+                    <input type="hidden" name="action" value="remove" />
+                    <input type="hidden" name="id" value={p.id} />
+                    <button class="link-btn danger" type="submit">Remove</button>
+                  </form>
+                )}
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+
+  <section class="add-panel">
+    <h2>Add team member</h2>
+    <form class="add-form" method="post" action="/api/admin/users">
+      <input type="hidden" name="action" value="create" />
+      <input class="in" type="text" name="full_name" placeholder="Full name" required />
+      <input class="in" type="email" name="email" placeholder="email@equitypartners.fund" required />
+      <input class="in" type="text" name="password" placeholder="Password (12+ chars)" minlength="12" required />
+      <select class="in" name="role">
+        <option value="content_editor">Content Editor</option>
+        <option value="super_admin">Super Admin</option>
+      </select>
+      <button class="btn" type="submit">Create user</button>
+    </form>
+    <p class="hint">Share the password with them securely (e.g. a password manager). They can't reset it themselves yet — password resets still happen via the Supabase dashboard.</p>
+  </section>
+
+  <style>
+    .notice { margin-top: 1.2rem; padding: 0.65rem 0.9rem; border-radius: 8px; font-size: 0.85rem; }
+    .notice.ok { background: rgba(83, 178, 127, 0.12); border: 1px solid rgba(83, 178, 127, 0.4); color: #2e7d54; }
+    .notice.err { background: rgba(203, 76, 76, 0.1); border: 1px solid rgba(203, 76, 76, 0.35); color: #a33d3d; }
+    .roles-hint {
+      margin-top: 1.3rem; background: #ffffff; border: 1px solid #e2e8f1;
+      border-radius: 12px; padding: 0.9rem 1.1rem; display: grid; gap: 0.3rem;
+    }
+    .roles-hint p { font-size: 0.82rem; color: #46586f; }
+    .table-wrap { margin-top: 1.2rem; background: #ffffff; border: 1px solid #e2e8f1; border-radius: 12px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    th {
+      text-align: left; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #5c6f88; padding: 0.85rem 1rem; border-bottom: 1px solid #e2e8f1;
+    }
+    td { padding: 0.8rem 1rem; border-bottom: 1px solid #eef2f7; vertical-align: middle; }
+    tr:last-child td { border-bottom: 0; }
+    .muted { color: #7a8ba1; font-size: 0.8rem; }
+    .you {
+      margin-left: 0.5rem; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #2e7d54; background: rgba(83, 178, 127, 0.14);
+      border-radius: 999px; padding: 0.15rem 0.5rem;
+    }
+    .role-pill {
+      font-size: 0.76rem; font-weight: 700; color: #46586f;
+      border: 1px solid #d5deea; border-radius: 8px; padding: 0.35rem 0.6rem; display: inline-block;
+    }
+    .inline { display: inline; }
+    .in {
+      font: inherit; font-size: 0.84rem; padding: 0.45rem 0.6rem;
+      border: 1px solid #d5deea; border-radius: 8px; background: #fbfcfe;
+    }
+    .in:focus { outline: none; border-color: #53b27f; }
+    .link-btn { font: inherit; font-size: 0.78rem; font-weight: 600; background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+    .link-btn.danger { color: #a33d3d; }
+    .add-panel {
+      margin-top: 1.6rem; background: #ffffff; border: 1px solid #e2e8f1;
+      border-radius: 12px; padding: 1.2rem 1.4rem;
+    }
+    .add-panel h2 { font-size: 1rem; }
+    .add-form { margin-top: 0.9rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .btn {
+      font: inherit; font-size: 0.8rem; font-weight: 700; color: #ffffff;
+      background: #53b27f; border: 0; border-radius: 8px; padding: 0.5rem 1rem; cursor: pointer;
+    }
+    .btn:hover { filter: brightness(1.07); }
+    .hint { margin-top: 0.8rem; font-size: 0.78rem; color: #7a8ba1; }
+  </style>
+</AdminLayout>

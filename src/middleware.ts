@@ -14,6 +14,7 @@ const SUPER_ONLY = [
   "/api/admin/subscriber-actions",
   "/api/admin/subscribers.csv",
   "/api/admin/vault",
+  "/api/admin/users",
 ];
 
 export const onRequest = defineMiddleware(async (context, next) => {
