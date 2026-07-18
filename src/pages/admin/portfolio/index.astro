@@ -5,22 +5,21 @@ import AdminLayout from "../../../layouts/AdminLayout.astro";
 import { supabaseServer } from "../../../lib/supabase";
 
 const supabase = supabaseServer(Astro.cookies, Astro.request);
-const kindFilter = Astro.url.searchParams.get("kind") ?? "all";
+const kindFilter = Astro.url.searchParams.get("kind") === "opportunity" ? "opportunity" : "project";
 const localeFilter = Astro.url.searchParams.get("locale") ?? "all";
 
 let query = supabase
   .from("portfolio_items")
   .select("id, kind, slug, locale, status, sort_order, name, updated_at")
-  .order("kind")
+  .eq("kind", kindFilter)
   .order("sort_order");
-if (kindFilter !== "all") query = query.eq("kind", kindFilter);
 if (localeFilter !== "all") query = query.eq("locale", localeFilter);
 
 const { data: items } = await query;
 
 const href = (kind: string, locale: string) => {
   const p = new URLSearchParams();
-  if (kind !== "all") p.set("kind", kind);
+  if (kind === "opportunity") p.set("kind", kind);
   if (locale !== "all") p.set("locale", locale);
   const q = p.toString();
   return q ? `/admin/portfolio?${q}` : "/admin/portfolio";
@@ -43,7 +42,7 @@ const publicPath = (i: { kind: string; locale: string; slug: string }) =>
 
   <div class="filters">
     <div class="filter-group">
-      {[["all", "All"], ["opportunity", "Opportunities"], ["project", "Projects"]].map(([k, label]) => (
+      {[["project", "Projects"], ["opportunity", "Opportunities"]].map(([k, label]) => (
         <a class={kindFilter === k ? "chip active" : "chip"} href={href(k, localeFilter)}>{label}</a>
       ))}
     </div>
