@@ -338,10 +338,13 @@ if (isSuper && expiringLinks > 0) healthItems.push({ level: "alert", text: `${ex
 
   {denied && <p class="denied">That section requires Super Admin access.</p>}
 
-  <section class="metrics">
+  <section class="strip">
     {isSuper && (
-      <article class="metric">
-        <p class="m-label">Inquiries this week</p>
+      <article class="cell">
+        <p class="m-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          Inquiries this week
+        </p>
         <p class="m-value">{inThisWeek}</p>
         <p class="m-trend">
           {inThisWeek >= inLastWeek
@@ -355,8 +358,11 @@ if (isSuper && expiringLinks > 0) healthItems.push({ level: "alert", text: `${ex
         )}
       </article>
     )}
-    <article class="metric">
-      <p class="m-label">Subscribers</p>
+    <article class="cell">
+      <p class="m-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="m4 7 8 6 8-6"/></svg>
+        Subscribers
+      </p>
       <p class="m-value">{subscriberCount ?? "—"}</p>
       <p class="m-trend">{isSuper ? <><span class="up">▲ +{subsThisMonth}</span> last 30 days</> : "newsletter list"}</p>
       {isSuper && subSpark.line && (
@@ -365,8 +371,11 @@ if (isSuper && expiringLinks > 0) healthItems.push({ level: "alert", text: `${ex
         </svg>
       )}
     </article>
-    <article class="metric">
-      <p class="m-label">Blog views · 30d</p>
+    <article class="cell">
+      <p class="m-label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        Blog views · 30d
+      </p>
       <p class="m-value">{totalViews30.toLocaleString("en-GB")}</p>
       <p class="m-trend">
         {viewsTrendPct === null ? "collecting data…" :
@@ -381,14 +390,20 @@ if (isSuper && expiringLinks > 0) healthItems.push({ level: "alert", text: `${ex
       )}
     </article>
     {isSuper ? (
-      <article class="metric">
-        <p class="m-label">Doc link opens · 7d</p>
+      <article class="cell">
+        <p class="m-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Doc link opens · 7d
+        </p>
         <p class="m-value">{docOpens7}</p>
         <p class="m-trend">{topDocLabel ? `most opened: ${topDocLabel}` : "no opens this week"}</p>
       </article>
     ) : (
-      <article class="metric">
-        <p class="m-label">Published articles</p>
+      <article class="cell">
+        <p class="m-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          Published articles
+        </p>
         <p class="m-value">{publishedPosts}</p>
         <p class="m-trend">across all languages</p>
       </article>
@@ -581,21 +596,47 @@ if (isSuper && expiringLinks > 0) healthItems.push({ level: "alert", text: `${ex
     }
     .empty { margin-top: 0.8rem; color: #7a8ba1; font-size: 0.85rem; }
 
-    .metrics {
+    /* One connected strip of metrics, with the website's green hover treatment */
+    .strip {
       margin-top: 1.5rem;
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.9rem;
+      background: #ffffff;
+      border: 1px solid #d7deea;
+      border-radius: 1.2rem;
+      box-shadow: 0 10px 30px rgba(15, 26, 42, 0.06);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      overflow: hidden;
+      isolation: isolate;
     }
-    .metric {
-      background: #ffffff; border: 1px solid #e2e8f1; border-radius: 14px;
-      padding: 1.05rem 1.15rem; box-shadow: 0 8px 28px rgba(22, 40, 62, 0.07);
-      position: relative; overflow: hidden;
+    .cell {
+      position: relative;
+      padding: 1.25rem 1.4rem 1.15rem;
+      transition: background-color 360ms ease, box-shadow 360ms ease;
     }
+    .cell + .cell { border-left: 1px solid #eef2f7; }
+    .cell::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; top: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(83, 178, 127, 0.55), transparent);
+      opacity: 0;
+      transition: opacity 360ms ease;
+    }
+    .cell:hover {
+      background: rgba(83, 178, 127, 0.055);
+      box-shadow: 0 0 0 1px rgba(83, 178, 127, 0.16) inset;
+    }
+    .cell:hover::after { opacity: 1; }
     .m-label {
+      display: flex; align-items: center; gap: 0.5rem;
       font-size: 0.66rem; font-weight: 700; letter-spacing: 0.09em;
       text-transform: uppercase; color: #5c6f88;
     }
-    .m-value { margin-top: 0.5rem; font-size: 1.85rem; font-weight: 800; letter-spacing: -0.02em; color: #16283e; }
-    .m-trend { margin-top: 0.3rem; font-size: 0.72rem; font-weight: 600; color: #93a3b8; }
+    .m-label svg { width: 15px; height: 15px; color: #2e7d54; flex: none; transition: transform 360ms ease; }
+    .cell:hover .m-label svg { transform: translateY(-2px); }
+    .m-value { margin-top: 0.55rem; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; color: #16283e; line-height: 1; }
+    .m-trend { margin-top: 0.4rem; font-size: 0.7rem; font-weight: 600; color: #93a3b8; }
     .m-trend .up { color: #2e7d54; }
     .m-trend .down { color: #a33d3d; }
     .spark { position: absolute; right: 0.6rem; bottom: 0.55rem; width: 74px; height: 26px; opacity: 0.9; }
