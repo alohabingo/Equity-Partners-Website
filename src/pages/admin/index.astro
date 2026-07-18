@@ -507,11 +507,24 @@ if (isSuper && expiringLinks > 0) healthItems.push({ level: "alert", text: `${ex
     </div>
   </div>
 
-  {isSuper && (
-    <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
-  )}
-  {isSuper && (
-    <script is:inline define:vars={{ weekLabels, weekInvestor, weekOther, growthLabels, growthData }}>
+  <script is:inline define:vars={{ weekLabels, weekInvestor, weekOther, growthLabels, growthData }}>
+    // Charts only exist for super admins; bail out quietly otherwise.
+    (function init(attempt) {
+      const inquiriesEl = document.getElementById("inquiriesChart");
+      const subsEl = document.getElementById("subsChart");
+      if (!inquiriesEl && !subsEl) return;
+      if (typeof Chart === "undefined") {
+        if (attempt === 0) {
+          const s = document.createElement("script");
+          s.src = "https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js";
+          s.onload = () => init(1);
+          document.head.appendChild(s);
+        } else if (attempt < 40) {
+          setTimeout(() => init(attempt + 1), 150);
+        }
+        return;
+      }
+
       Chart.defaults.font.family = "'Montserrat', sans-serif";
       Chart.defaults.font.size = 10.5;
       Chart.defaults.color = "#5c6f88";
@@ -520,38 +533,42 @@ if (isSuper && expiringLinks > 0) healthItems.push({ level: "alert", text: `${ex
         x: { grid: { display: false }, border: { display: false } },
         y: { grid: { color: grid }, border: { display: false }, ticks: { maxTicksLimit: 5, precision: 0 } },
       };
-      new Chart(document.getElementById("inquiriesChart"), {
-        type: "bar",
-        data: {
-          labels: weekLabels,
-          datasets: [
-            { label: "Investor", data: weekInvestor, backgroundColor: "#53b27f", borderRadius: 4, stack: "s" },
-            { label: "Other", data: weekOther, backgroundColor: "rgba(90,125,170,0.65)", borderRadius: 4, stack: "s" },
-          ],
-        },
-        options: {
-          maintainAspectRatio: false, responsive: true,
-          plugins: { legend: { position: "bottom", labels: { boxWidth: 10, boxHeight: 10 } } },
-          scales,
-        },
-      });
-      new Chart(document.getElementById("subsChart"), {
-        type: "line",
-        data: {
-          labels: growthLabels,
-          datasets: [{
-            data: growthData, borderColor: "#53b27f", borderWidth: 2.5,
-            pointRadius: 0, tension: 0.35, fill: true, backgroundColor: "rgba(83,178,127,0.12)",
-          }],
-        },
-        options: {
-          maintainAspectRatio: false, responsive: true,
-          plugins: { legend: { display: false } },
-          scales,
-        },
-      });
-    </script>
-  )}
+      if (inquiriesEl) {
+        new Chart(inquiriesEl, {
+          type: "bar",
+          data: {
+            labels: weekLabels,
+            datasets: [
+              { label: "Investor", data: weekInvestor, backgroundColor: "#53b27f", borderRadius: 4, stack: "s" },
+              { label: "Other", data: weekOther, backgroundColor: "rgba(90,125,170,0.65)", borderRadius: 4, stack: "s" },
+            ],
+          },
+          options: {
+            maintainAspectRatio: false, responsive: true,
+            plugins: { legend: { position: "bottom", labels: { boxWidth: 10, boxHeight: 10 } } },
+            scales,
+          },
+        });
+      }
+      if (subsEl) {
+        new Chart(subsEl, {
+          type: "line",
+          data: {
+            labels: growthLabels,
+            datasets: [{
+              data: growthData, borderColor: "#53b27f", borderWidth: 2.5,
+              pointRadius: 0, tension: 0.35, fill: true, backgroundColor: "rgba(83,178,127,0.12)",
+            }],
+          },
+          options: {
+            maintainAspectRatio: false, responsive: true,
+            plugins: { legend: { display: false } },
+            scales,
+          },
+        });
+      }
+    })(0);
+  </script>
 
   <style>
     .topbar { display: flex; justify-content: space-between; align-items: flex-start; }
