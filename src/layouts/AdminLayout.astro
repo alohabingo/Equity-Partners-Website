@@ -56,19 +56,22 @@ const visibleNav = nav.filter((n) => isSuper || !n.superOnly);
         top: 0;
         height: 100vh;
       }
-      .brand {
-        font-size: 0.68rem;
-        font-weight: 700;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-        color: #53b27f;
-        padding: 0 0.7rem;
+      .brand-logo {
+        display: block;
+        width: 100%;
+        height: 64px;
+        /* the source PNG has generous empty padding — crop to the artwork */
+        object-fit: cover;
+        object-position: 50% 51%;
       }
       .brand-sub {
-        font-size: 1.05rem;
+        font-size: 0.72rem;
         font-weight: 700;
-        padding: 0.25rem 0.7rem 0;
-        color: #ffffff;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        text-align: center;
+        padding: 0.35rem 0.7rem 0;
+        color: #53b27f;
       }
       nav { margin-top: 2rem; display: grid; gap: 0.25rem; }
       nav a {
@@ -130,7 +133,7 @@ const visibleNav = nav.filter((n) => isSuper || !n.superOnly);
   </head>
   <body>
     <aside>
-      <p class="brand">Equity Partners</p>
+      <img class="brand-logo" src="/images/branding/equity-partners-logo-light.png" alt="Equity Partners" />
       <p class="brand-sub">Command Center</p>
       <nav>
         {visibleNav.map((item) => (
