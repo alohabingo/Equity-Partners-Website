@@ -58,11 +58,10 @@ const visibleNav = nav.filter((n) => isSuper || !n.superOnly);
       }
       .brand-logo {
         display: block;
-        width: 100%;
-        height: 64px;
-        /* the source PNG has generous empty padding — crop to the artwork */
-        object-fit: cover;
-        object-position: 50% 51%;
+        width: 74px;
+        height: 74px;
+        margin: 0 auto;
+        object-fit: contain;
       }
       .brand-sub {
         font-size: 0.72rem;
@@ -133,7 +132,7 @@ const visibleNav = nav.filter((n) => isSuper || !n.superOnly);
   </head>
   <body>
     <aside>
-      <img class="brand-logo" src="/images/branding/equity-partners-logo-light.png" alt="Equity Partners" />
+      <img class="brand-logo" src="/EP%20favicon.png" alt="Equity Partners" />
       <p class="brand-sub">Command Center</p>
       <nav>
         {visibleNav.map((item) => (
