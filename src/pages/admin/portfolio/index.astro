@@ -41,9 +41,9 @@ const publicPath = (i: { kind: string; locale: string; slug: string }) =>
   </div>
 
   <div class="filters">
-    <div class="filter-group">
+    <div class="seg">
       {[["project", "Projects"], ["opportunity", "Opportunities"]].map(([k, label]) => (
-        <a class={kindFilter === k ? "chip active" : "chip"} href={href(k, localeFilter)}>{label}</a>
+        <a class={kindFilter === k ? "seg-btn active" : "seg-btn"} href={href(k, localeFilter)}>{label}</a>
       ))}
     </div>
     <div class="filter-group">
@@ -96,8 +96,27 @@ const publicPath = (i: { kind: string; locale: string; slug: string }) =>
     }
     .new-btn.alt { background: #16283e; }
     .new-btn:hover { filter: brightness(1.1); }
-    .filters { margin-top: 1.4rem; display: grid; gap: 0.5rem; }
+    .filters { margin-top: 1.4rem; display: grid; gap: 0.6rem; justify-items: start; }
     .filter-group { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .seg {
+      display: inline-flex;
+      background: #ffffff;
+      border: 1px solid #d5deea;
+      border-radius: 999px;
+      padding: 0.25rem;
+      gap: 0.2rem;
+    }
+    .seg-btn {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #46586f;
+      text-decoration: none;
+      padding: 0.4rem 1.1rem;
+      border-radius: 999px;
+      transition: background-color 200ms ease, color 200ms ease;
+    }
+    .seg-btn:hover:not(.active) { color: #2e7d54; }
+    .seg-btn.active { background: #16283e; color: #ffffff; }
     .chip {
       font-size: 0.76rem; font-weight: 600; color: #46586f; text-decoration: none;
       padding: 0.35rem 0.75rem; border-radius: 999px; border: 1px solid #d5deea; background: #ffffff;
