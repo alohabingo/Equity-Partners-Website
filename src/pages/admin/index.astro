@@ -596,24 +596,24 @@ if (isSuper && expiringLinks > 0) healthItems.push({ level: "alert", text: `${ex
     }
     .empty { margin-top: 0.8rem; color: #7a8ba1; font-size: 0.85rem; }
 
-    /* One connected strip of metrics, with the website's green hover treatment */
+    /* Four separate metric cards with the website's green hover treatment */
     .strip {
       margin-top: 1.5rem;
-      background: #ffffff;
-      border: 1px solid #d7deea;
-      border-radius: 1.2rem;
-      box-shadow: 0 10px 30px rgba(15, 26, 42, 0.06);
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      overflow: hidden;
-      isolation: isolate;
+      gap: 0.9rem;
     }
     .cell {
       position: relative;
       padding: 1.25rem 1.4rem 1.15rem;
-      transition: background-color 360ms ease, box-shadow 360ms ease;
+      background: #ffffff;
+      border: 1px solid #d7deea;
+      border-radius: 0.9rem;
+      box-shadow: 0 10px 30px rgba(15, 26, 42, 0.06);
+      overflow: hidden;
+      isolation: isolate;
+      transition: background-color 360ms ease, border-color 360ms ease, box-shadow 360ms ease;
     }
-    .cell + .cell { border-left: 1px solid #eef2f7; }
     .cell::after {
       content: "";
       position: absolute;
@@ -625,7 +625,8 @@ if (isSuper && expiringLinks > 0) healthItems.push({ level: "alert", text: `${ex
     }
     .cell:hover {
       background: rgba(83, 178, 127, 0.055);
-      box-shadow: 0 0 0 1px rgba(83, 178, 127, 0.16) inset;
+      border-color: rgba(83, 178, 127, 0.42);
+      box-shadow: 0 14px 30px rgba(15, 26, 42, 0.1), 0 0 0 1px rgba(83, 178, 127, 0.16) inset;
     }
     .cell:hover::after { opacity: 1; }
     .m-label {
