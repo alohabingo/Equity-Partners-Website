@@ -623,12 +623,22 @@ if (isSuper && expiringLinks > 0) healthItems.push({ level: "alert", text: `${ex
       opacity: 0;
       transition: opacity 360ms ease;
     }
+    /* Green glow that fades down from the top of the card on hover */
+    .cell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% -20%, rgba(83, 178, 127, 0.18), transparent 70%);
+      opacity: 0;
+      transition: opacity 360ms ease;
+      z-index: -1;
+    }
     .cell:hover {
-      background: rgba(83, 178, 127, 0.055);
       border-color: rgba(83, 178, 127, 0.42);
       box-shadow: 0 14px 30px rgba(15, 26, 42, 0.1), 0 0 0 1px rgba(83, 178, 127, 0.16) inset;
     }
     .cell:hover::after { opacity: 1; }
+    .cell:hover::before { opacity: 1; }
     .m-label {
       display: flex; align-items: center; gap: 0.5rem;
       font-size: 0.66rem; font-weight: 700; letter-spacing: 0.09em;
