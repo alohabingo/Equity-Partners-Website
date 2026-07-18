@@ -58,9 +58,10 @@ const visibleNav = nav.filter((n) => isSuper || !n.superOnly);
       }
       .brand-logo {
         display: block;
-        width: 100%;
+        /* bleed to the sidebar edges for more presence */
+        width: calc(100% + 1.4rem);
+        margin: 0 -0.7rem;
         height: auto;
-        padding: 0 0.3rem;
       }
       .brand-sub {
         font-size: 0.72rem;
@@ -68,7 +69,8 @@ const visibleNav = nav.filter((n) => isSuper || !n.superOnly);
         letter-spacing: 0.18em;
         text-transform: uppercase;
         text-align: center;
-        padding: 0.35rem 0.7rem 0;
+        margin-top: 1.1rem;
+        padding: 0 0.7rem;
         color: #53b27f;
       }
       nav { margin-top: 2rem; display: grid; gap: 0.25rem; }
