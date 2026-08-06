@@ -113,10 +113,50 @@ const LOCALES = [
     }
     .drawer-head h2 { font-size: 1rem; font-weight: 700; }
     .close-btn {
-      font: inherit; font-size: 1.3rem; line-height: 1; color: #9fb0c9;
-      background: none; border: 0; cursor: pointer; padding: 0.1rem 0.3rem;
+      width: 38px; height: 38px; flex: none;
+      display: grid; place-items: center;
+      color: #c1cee3; background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(193, 206, 227, 0.22); border-radius: 999px;
+      cursor: pointer; padding: 0;
+      transition: background-color 260ms ease, border-color 260ms ease,
+        color 260ms ease, transform 380ms cubic-bezier(0.34, 1.4, 0.5, 1);
     }
-    .close-btn:hover { color: #ffffff; }
+    .close-btn svg { width: 18px; height: 18px; }
+    .close-btn:hover {
+      color: #ffffff;
+      background: rgba(83, 178, 127, 0.28);
+      border-color: rgba(83, 178, 127, 0.7);
+      transform: rotate(90deg) scale(1.08);
+    }
+    .close-btn:active { transform: rotate(90deg) scale(0.94); }
+
+    /* ---------- Language accordions ---------- */
+    .loc-acc {
+      margin-top: 0.8rem; border: 1px solid #e2e8f1; border-radius: 10px;
+      background: #fbfcfe; overflow: hidden;
+    }
+    .loc-acc summary {
+      list-style: none; cursor: pointer;
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.7rem 0.9rem;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #46586f;
+      transition: background-color 200ms ease, color 200ms ease;
+    }
+    .loc-acc summary::-webkit-details-marker { display: none; }
+    .loc-acc summary:hover { background: rgba(83, 178, 127, 0.07); color: #2e7d54; }
+    .loc-acc .chev { width: 14px; height: 14px; flex: none; transition: transform 260ms ease; }
+    .loc-acc[open] .chev { transform: rotate(90deg); }
+    .loc-acc[open] summary { border-bottom: 1px solid #eef2f7; }
+    .acc-flag {
+      margin-left: auto; font-size: 0.62rem; font-weight: 700;
+      padding: 0.18rem 0.45rem; border-radius: 6px;
+      background: rgba(122, 139, 161, 0.14); color: #7a8ba1;
+    }
+    .acc-flag.filled { background: rgba(83, 178, 127, 0.14); color: #2e7d54; }
+    .acc-body { padding: 0.2rem 0.9rem 0.9rem; }
+    .loc-acc[open] .acc-body { animation: accIn 240ms ease; }
+    @keyframes accIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
     .drawer-body { padding: 1.2rem 1.4rem 1.5rem; overflow-y: auto; flex: 1; }
     .drawer-foot {
       padding: 0.9rem 1.4rem; border-top: 1px solid #eef2f7; background: #fbfcfe;
@@ -212,7 +252,9 @@ const LOCALES = [
   <aside class="drawer" id="drawer" aria-hidden="true">
     <div class="drawer-head">
       <h2 id="drawer-title">Edit team member</h2>
-      <button class="close-btn" type="button" id="drawer-close" aria-label="Close">×</button>
+      <button class="close-btn" type="button" id="drawer-close" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
     </div>
     <form method="post" action="/api/admin/team" id="member-form" style="display:contents;">
       <input type="hidden" name="action" value="save" />
@@ -248,18 +290,36 @@ const LOCALES = [
           </select>
         </label>
 
-        {LOCALES.map((loc) => (
-          <fieldset class="loc-block">
-            <legend>{loc.label}</legend>
-            <label class="field">
-              <span>Role</span>
-              <input class="in" type="text" name={`role_${loc.key}`} id={`f-role-${loc.key}`} />
-            </label>
-            <label class="field">
-              <span>Bio</span>
-              <textarea class="in" name={`bio_${loc.key}`} id={`f-bio-${loc.key}`} rows="4"></textarea>
-            </label>
-          </fieldset>
+        <fieldset class="loc-block">
+          <legend>English</legend>
+          <label class="field">
+            <span>Role</span>
+            <input class="in" type="text" name="role_en" id="f-role-en" />
+          </label>
+          <label class="field">
+            <span>Bio</span>
+            <textarea class="in" name="bio_en" id="f-bio-en" rows="4"></textarea>
+          </label>
+        </fieldset>
+
+        {LOCALES.filter((l) => l.key !== "en").map((loc) => (
+          <details class="loc-acc" data-acc={loc.key}>
+            <summary>
+              <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              <span class="acc-title">{loc.label}</span>
+              <span class="acc-flag" data-flag={loc.key}></span>
+            </summary>
+            <div class="acc-body">
+              <label class="field">
+                <span>Role</span>
+                <input class="in" type="text" name={`role_${loc.key}`} id={`f-role-${loc.key}`} />
+              </label>
+              <label class="field">
+                <span>Bio</span>
+                <textarea class="in" name={`bio_${loc.key}`} id={`f-bio-${loc.key}`} rows="4"></textarea>
+              </label>
+            </div>
+          </details>
         ))}
       </div>
       <div class="drawer-foot">
@@ -298,6 +358,15 @@ const LOCALES = [
         $(`f-role-${loc}`).value = t[loc]?.role ?? "";
         ($(`f-bio-${loc}`) as unknown as HTMLTextAreaElement).value = t[loc]?.description ?? "";
       }
+      // Translation accordions start closed; flag shows whether copy exists.
+      document.querySelectorAll<HTMLDetailsElement>(".loc-acc").forEach((acc) => {
+        acc.open = false;
+        const loc = acc.dataset.acc!;
+        const flag = acc.querySelector<HTMLElement>(".acc-flag")!;
+        const filled = Boolean(t[loc]?.role || t[loc]?.description);
+        flag.textContent = filled ? "translated" : "empty";
+        flag.classList.toggle("filled", filled);
+      });
       del.style.display = m ? "block" : "none";
       del.onclick = (e) => {
         if (!confirm(`Remove ${m?.name} from the team page?`)) e.preventDefault();
