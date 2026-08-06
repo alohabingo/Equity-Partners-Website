@@ -168,11 +168,18 @@ const LOCALES = [
       border: 3px solid rgba(83, 178, 127, 0.25); background: #eef2f7;
     }
     .upload-btn {
-      display: inline-block; font-size: 0.76rem; font-weight: 700; color: #3d5a80;
+      font: inherit; display: inline-block; font-size: 0.76rem; font-weight: 700; color: #3d5a80;
       border: 1px solid #d5deea; border-radius: 8px; padding: 0.45rem 0.9rem; cursor: pointer; background: #f4f7fb;
     }
     .upload-btn:hover { border-color: #53b27f; color: #2e7d54; }
-    .upload-status { font-size: 0.74rem; color: #5c6f88; margin-top: 0.35rem; min-height: 1em; }
+    .upload-hint { font-size: 0.68rem; color: #93a3b8; margin-top: 0.3rem; }
+    .upload-status { font-size: 0.74rem; color: #5c6f88; margin-top: 0.25rem; min-height: 1em; }
+    .upload-status.err { color: #a33d3d; font-weight: 600; }
+    .upload-status.ok { color: #2e7d54; font-weight: 600; }
+    .photo-row.dragover {
+      outline: 2px dashed rgba(83, 178, 127, 0.6); outline-offset: 6px; border-radius: 12px;
+      background: rgba(83, 178, 127, 0.05);
+    }
     .field { display: grid; gap: 0.35rem; margin-top: 0.9rem; }
     .field span { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #46586f; }
     .field em { font-weight: 400; text-transform: none; letter-spacing: 0; color: #93a3b8; }
@@ -260,13 +267,17 @@ const LOCALES = [
       <input type="hidden" name="action" value="save" />
       <input type="hidden" name="id" id="f-id" />
       <div class="drawer-body">
-        <div class="photo-row">
+        <div class="photo-row" id="f-dropzone">
           <img class="photo-preview" id="f-preview" src="" alt="" />
           <div>
-            <label class="upload-btn">
-              Upload photo
-              <input type="file" accept="image/*" id="f-photo-input" hidden />
-            </label>
+            <button class="upload-btn" type="button" id="f-photo-btn">Choose photo…</button>
+            <input
+              type="file"
+              id="f-photo-input"
+              accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,.png,.jpg,.jpeg,.webp,.gif,.svg"
+              style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;"
+            />
+            <p class="upload-hint">JPG, PNG, WebP or GIF · max 8 MB · or drop a file here</p>
             <p class="upload-status" id="f-upload-status"></p>
           </div>
         </div>
@@ -371,7 +382,9 @@ const LOCALES = [
       del.onclick = (e) => {
         if (!confirm(`Remove ${m?.name} from the team page?`)) e.preventDefault();
       };
-      document.getElementById("f-upload-status")!.textContent = "";
+      const st = document.getElementById("f-upload-status")!;
+      st.textContent = "";
+      st.className = "upload-status";
       drawer.classList.add("open");
       backdrop.classList.add("open");
       drawer.setAttribute("aria-hidden", "false");
@@ -398,25 +411,66 @@ const LOCALES = [
     backdrop.addEventListener("click", close);
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
 
-    // Photo upload
+    // ---------- Photo upload (button, drag & drop) ----------
     const photoInput = document.getElementById("f-photo-input") as HTMLInputElement;
-    photoInput?.addEventListener("change", async () => {
-      const file = photoInput.files?.[0];
+    const photoBtn = document.getElementById("f-photo-btn");
+    const dropzone = document.getElementById("f-dropzone")!;
+    const status = () => document.getElementById("f-upload-status")!;
+
+    function setStatus(msg: string, kind: "" | "ok" | "err" = "") {
+      const el = status();
+      el.textContent = msg;
+      el.className = "upload-status" + (kind ? " " + kind : "");
+    }
+
+    const ERRORS: Record<string, string> = {
+      bad_type: "That file type isn't supported. Please use JPG, PNG, WebP or GIF (iPhone .HEIC photos need exporting as JPG first).",
+      too_large: "That image is over 8 MB — please use a smaller file.",
+      no_file: "No file was received. Please try again.",
+    };
+
+    async function uploadFile(file: File) {
       if (!file) return;
-      const status = document.getElementById("f-upload-status")!;
-      status.textContent = "Uploading…";
+      if (file.size > 8 * 1024 * 1024) return setStatus(ERRORS.too_large, "err");
+      setStatus(`Uploading ${file.name}…`);
       const fd = new FormData();
       fd.append("file", file);
       try {
         const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-        const data = await res.json();
-        if (!res.ok || !data.ok) throw new Error(data.error || "upload failed");
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error(ERRORS[data.error] || data.error || `upload failed (${res.status})`);
         $("f-photo-url").value = data.url;
         (document.getElementById("f-preview") as HTMLImageElement).src = data.url;
-        status.textContent = "Photo uploaded ✓";
+        setStatus("Photo uploaded ✓ — remember to Save", "ok");
       } catch (err) {
-        status.textContent = "Upload failed: " + (err instanceof Error ? err.message : "unknown");
+        setStatus(err instanceof Error ? err.message : "Upload failed", "err");
       }
+    }
+
+    photoBtn?.addEventListener("click", () => {
+      photoInput.value = ""; // allow re-picking the same file
+      photoInput.click();
+    });
+    photoInput?.addEventListener("change", () => {
+      const file = photoInput.files?.[0];
+      if (file) uploadFile(file);
+    });
+
+    ["dragenter", "dragover"].forEach((ev) =>
+      dropzone.addEventListener(ev, (e) => {
+        e.preventDefault();
+        dropzone.classList.add("dragover");
+      })
+    );
+    ["dragleave", "drop"].forEach((ev) =>
+      dropzone.addEventListener(ev, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("dragover");
+      })
+    );
+    dropzone.addEventListener("drop", (e) => {
+      const file = (e as DragEvent).dataTransfer?.files?.[0];
+      if (file) uploadFile(file);
     });
   </script>
 </AdminLayout>
