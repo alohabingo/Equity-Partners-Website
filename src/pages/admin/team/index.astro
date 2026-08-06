@@ -171,8 +171,14 @@ const LOCALES = [
       font: inherit; display: inline-block; font-size: 0.76rem; font-weight: 700; color: #3d5a80;
       border: 1px solid #d5deea; border-radius: 8px; padding: 0.45rem 0.9rem; cursor: pointer; background: #f4f7fb;
     }
-    .upload-btn:hover { border-color: #53b27f; color: #2e7d54; }
-    .upload-hint { font-size: 0.68rem; color: #93a3b8; margin-top: 0.3rem; }
+    .upload-wrap:hover .upload-btn { border-color: #53b27f; color: #2e7d54; }
+    /* The real file input sits invisibly on top of the button, so the click
+       lands directly on it — browsers only open the picker for genuine clicks. */
+    .upload-wrap { position: relative; display: inline-block; }
+    .file-overlay {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      opacity: 0; cursor: pointer; font-size: 0;
+    }
     .upload-status { font-size: 0.74rem; color: #5c6f88; margin-top: 0.25rem; min-height: 1em; }
     .upload-status.err { color: #a33d3d; font-weight: 600; }
     .upload-status.ok { color: #2e7d54; font-weight: 600; }
@@ -270,14 +276,16 @@ const LOCALES = [
         <div class="photo-row" id="f-dropzone">
           <img class="photo-preview" id="f-preview" src="" alt="" />
           <div>
-            <button class="upload-btn" type="button" id="f-photo-btn">Choose photo…</button>
-            <input
-              type="file"
-              id="f-photo-input"
-              accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,.png,.jpg,.jpeg,.webp,.gif,.svg"
-              style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;"
-            />
-            <p class="upload-hint">JPG, PNG, WebP or GIF · max 8 MB · or drop a file here</p>
+            <span class="upload-wrap">
+              <span class="upload-btn" id="f-photo-btn">Choose photo…</span>
+              <input
+                class="file-overlay"
+                type="file"
+                id="f-photo-input"
+                accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,.png,.jpg,.jpeg,.webp,.gif,.svg"
+                title="Choose a photo"
+              />
+            </span>
             <p class="upload-status" id="f-upload-status"></p>
           </div>
         </div>
@@ -413,7 +421,6 @@ const LOCALES = [
 
     // ---------- Photo upload (button, drag & drop) ----------
     const photoInput = document.getElementById("f-photo-input") as HTMLInputElement;
-    const photoBtn = document.getElementById("f-photo-btn");
     const dropzone = document.getElementById("f-dropzone")!;
     const status = () => document.getElementById("f-upload-status")!;
 
@@ -447,10 +454,6 @@ const LOCALES = [
       }
     }
 
-    photoBtn?.addEventListener("click", () => {
-      photoInput.value = ""; // allow re-picking the same file
-      photoInput.click();
-    });
     photoInput?.addEventListener("change", () => {
       const file = photoInput.files?.[0];
       if (file) uploadFile(file);
