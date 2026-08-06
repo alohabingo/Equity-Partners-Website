@@ -64,9 +64,16 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     };
   }
 
+  // Accept a bare handle or a full URL for LinkedIn.
+  let linkedin = get("linkedin_url").trim();
+  if (linkedin && !/^https?:\/\//i.test(linkedin)) {
+    linkedin = `https://www.linkedin.com/in/${linkedin.replace(/^\/+|^in\//gi, "")}`;
+  }
+
   const payload: Record<string, unknown> = {
     name,
     photo_url: get("photo_url").trim() || null,
+    linkedin_url: linkedin || null,
     status,
     translations,
     updated_at: new Date().toISOString(),
