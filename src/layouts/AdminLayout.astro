@@ -16,11 +16,24 @@ const nav = [
   { key: "leads", label: "Leads", href: "/admin/leads", superOnly: true },
   { key: "blog", label: "Blog", href: "/admin/blog", superOnly: false },
   { key: "portfolio", label: "Portfolio", href: "/admin/portfolio", superOnly: false },
+  { key: "team", label: "Team", href: "/admin/team", superOnly: false },
   { key: "subscribers", label: "Subscribers", href: "/admin/subscribers", superOnly: true },
   { key: "vault", label: "Document Vault", href: "/admin/vault", superOnly: true },
   { key: "users", label: "Users", href: "/admin/users", superOnly: true },
 ];
 const visibleNav = nav.filter((n) => isSuper || !n.superOnly);
+
+const S = 'width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+const NAV_ICONS: Record<string, string> = {
+  dashboard: `<svg viewBox="0 0 24 24" ${S}><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>`,
+  leads: `<svg viewBox="0 0 24 24" ${S}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  blog: `<svg viewBox="0 0 24 24" ${S}><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`,
+  portfolio: `<svg viewBox="0 0 24 24" ${S}><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>`,
+  team: `<svg viewBox="0 0 24 24" ${S}><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="4.5" cy="10.5" r="2"/><circle cx="19.5" cy="10.5" r="2"/></svg>`,
+  subscribers: `<svg viewBox="0 0 24 24" ${S}><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>`,
+  vault: `<svg viewBox="0 0 24 24" ${S}><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+  users: `<svg viewBox="0 0 24 24" ${S}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+};
 ---
 
 <!doctype html>
@@ -72,19 +85,65 @@ const visibleNav = nav.filter((n) => isSuper || !n.superOnly);
         padding: 0 0.7rem;
         color: #53b27f;
       }
-      nav { margin-top: 2rem; display: grid; gap: 0.25rem; }
+      nav { margin-top: 1.6rem; display: grid; gap: 0.25rem; }
       nav a {
-        display: block;
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
         padding: 0.6rem 0.7rem;
         border-radius: 8px;
         color: #c1cee3;
         text-decoration: none;
         font-size: 0.86rem;
         font-weight: 600;
+        white-space: nowrap;
         transition: background-color 160ms ease, color 160ms ease;
       }
+      nav a svg { width: 17px; height: 17px; flex: none; }
       nav a:hover { background: rgba(83, 178, 127, 0.12); color: #ffffff; }
       nav a.active { background: #53b27f; color: #071018; }
+
+      /* ---- Collapse toggle ---- */
+      .collapse-btn {
+        margin-top: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        width: 100%;
+        font: inherit;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #9fb0c9;
+        background: none;
+        border: 1px solid rgba(193, 206, 227, 0.18);
+        border-radius: 8px;
+        padding: 0.42rem 0.5rem;
+        cursor: pointer;
+        transition: color 160ms ease, border-color 160ms ease;
+      }
+      .collapse-btn:hover { color: #ffffff; border-color: rgba(193, 206, 227, 0.5); }
+      .collapse-btn svg { width: 14px; height: 14px; transition: transform 260ms ease; }
+
+      /* ---- Collapsed state (icons only) ---- */
+      body.is-collapsed { grid-template-columns: 74px 1fr; }
+      body.is-collapsed aside { padding-left: 0.6rem; padding-right: 0.6rem; }
+      body.is-collapsed .brand-logo,
+      body.is-collapsed .brand-sub,
+      body.is-collapsed nav a .nav-text,
+      body.is-collapsed .who,
+      body.is-collapsed .role-badge,
+      body.is-collapsed .collapse-btn .nav-text,
+      body.is-collapsed .signout .btn-text { display: none; }
+      body.is-collapsed .brand-mark { display: block; }
+      body.is-collapsed nav a { justify-content: center; padding: 0.65rem 0; }
+      body.is-collapsed .side-footer { padding: 0.9rem 0 0; text-align: center; }
+      body.is-collapsed .signout button { width: 100%; padding: 0.45rem 0; }
+      body.is-collapsed .collapse-btn svg { transform: rotate(180deg); }
+      .brand-mark { display: none; width: 40px; height: 40px; margin: 0.2rem auto 0; }
+      body { transition: grid-template-columns 240ms ease; }
       .side-footer {
         margin-top: auto;
         padding: 0.9rem 0.7rem 0;
@@ -133,22 +192,46 @@ const visibleNav = nav.filter((n) => isSuper || !n.superOnly);
   <body>
     <aside>
       <img class="brand-logo" src="/ep-logo-wordmark-transparent.png" alt="Equity Partners — Andorra Property Group" />
+      <img class="brand-mark" src="/EP%20favicon.png" alt="Equity Partners" />
       <p class="brand-sub">Command Center</p>
       <nav>
         {visibleNav.map((item) => (
-          <a href={item.href} class={active === item.key ? "active" : ""}>{item.label}</a>
+          <a href={item.href} class={active === item.key ? "active" : ""} title={item.label}>
+            <Fragment set:html={NAV_ICONS[item.key] ?? ""} />
+            <span class="nav-text">{item.label}</span>
+          </a>
         ))}
       </nav>
+      <button class="collapse-btn" type="button" id="sidebar-toggle" aria-label="Collapse menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        <span class="nav-text">Collapse</span>
+      </button>
       <div class="side-footer">
         <p class="who">{user?.fullName}</p>
         <span class="role-badge">{isSuper ? "Super Admin" : "Content Editor"}</span>
         <form class="signout" method="post" action="/api/auth/signout">
-          <button type="submit">Sign out</button>
+          <button type="submit" title="Sign out">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+            <span class="btn-text">&nbsp;Sign out</span>
+          </button>
         </form>
       </div>
     </aside>
     <div class="main">
       <slot />
     </div>
+
+    <script is:inline>
+      (function () {
+        const KEY = "ep-admin-sidebar-collapsed";
+        const body = document.body;
+        if (localStorage.getItem(KEY) === "1") body.classList.add("is-collapsed");
+        const btn = document.getElementById("sidebar-toggle");
+        btn?.addEventListener("click", () => {
+          body.classList.toggle("is-collapsed");
+          localStorage.setItem(KEY, body.classList.contains("is-collapsed") ? "1" : "0");
+        });
+      })();
+    </script>
   </body>
 </html>

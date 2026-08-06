@@ -1,4 +1,7 @@
 ---
+export const prerender = false;
+
+import { supabaseServer } from "../lib/supabase";
 import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import NewsletterSignup from "../components/NewsletterSignup.astro";
 import SiteFooter from "../components/SiteFooter.astro";
@@ -13,51 +16,28 @@ const aboutLogoStrip = [
   { name: "DATA", logo: "/images/partners/DATA LOGO.png" },
   { name: "MoraBanc", logo: "/images/partners/mora bank.png" },
 ];
-const teamMembers = [
-  {
-    name: "Bernardus Voorham",
-    role: "",
-    image: "/images/Team/bing-sr-ep.webp",
-    description: "",
-  },
-  {
-    name: "Oriol Giro",
-    role: "",
-    image: "/images/Team/Oriol Giro EP.jpg",
-    description: "",
-  },
-  {
-    name: "Carlos Ayete",
-    role: "",
-    image: "/images/Team/Calors EP.jpg",
-    description: "",
-  },
-  {
-    name: "Bing Jr",
-    role: "",
-    image: "/images/Team/bing-jr-ep.webp",
-    description: "",
-  },
-  {
-    name: "Tekke Voorham",
-    role: "",
-    image: "/images/Team/tekke-ep.webp",
-    description: "",
-  },
-  {
-    name: "Laia Bertran",
-    role: "",
-    image: "/images/Team/laia-ep.webp?v=20260330",
-    description: "",
-  },
-];
 const locale = getLocaleFromUrl(Astro.url);
 const content = getContentTranslations(locale).about;
-const localizedTeamMembers = teamMembers.map((member, index) => ({
-  ...member,
-  role: content.team.members[index]?.role ?? member.role,
-  description: content.team.members[index]?.description ?? member.description,
-}));
+
+// Team members come from the CMS (portal → Team). Falls back to the
+// translation file's copy if the database is unavailable.
+const supabase = supabaseServer(Astro.cookies, Astro.request);
+const { data: teamRows } = await supabase
+  .from("team_members")
+  .select("name, photo_url, translations")
+  .eq("status", "published")
+  .order("sort_order");
+
+const localizedTeamMembers = (teamRows ?? []).map((m) => {
+  const t = (m.translations ?? {}) as Record<string, { role?: string; description?: string }>;
+  const loc = t[locale] ?? t.en ?? {};
+  return {
+    name: m.name,
+    image: m.photo_url ?? "",
+    role: loc.role ?? "",
+    description: loc.description ?? "",
+  };
+});
 ---
 
 <html lang={locale}>
