@@ -225,6 +225,19 @@ const NAV_ICONS: Record<string, string> = {
         background-attachment: fixed;
       }
 
+      /* Page content arrives through <slot/>, so it never picks up this
+         layout's *scoped* `* { box-sizing: border-box }`. Without a global
+         reset every `width: 100%` input is content-box and overflows its
+         column by its own padding + border (~1.5rem) — which swallowed the
+         grid gap and pushed fields past the card's right padding. */
+      *, *::before, *::after { box-sizing: border-box; }
+
+      /* Belt and braces: nothing in a form may exceed its container. */
+      .main input,
+      .main select,
+      .main textarea { max-width: 100%; }
+      .main textarea { resize: vertical; }
+
       /* Smooth cross-document navigation: the sidebar stays put while the
          page content cross-fades. Browsers without support just navigate. */
       @view-transition { navigation: auto; }
