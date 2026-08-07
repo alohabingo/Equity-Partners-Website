@@ -43,6 +43,14 @@ const NAV_ICONS: Record<string, string> = {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
     <title>{title} | EP Admin</title>
+    <script is:inline>
+      // Runs before paint so a collapsed sidebar never flashes open on navigation.
+      try {
+        if (localStorage.getItem("ep-admin-sidebar-collapsed") === "1") {
+          document.documentElement.classList.add("is-collapsed");
+        }
+      } catch (e) {}
+    </script>
     <style>
       * { box-sizing: border-box; margin: 0; }
       body {
@@ -128,22 +136,31 @@ const NAV_ICONS: Record<string, string> = {
       .collapse-btn svg { width: 14px; height: 14px; transition: transform 260ms ease; }
 
       /* ---- Collapsed state (icons only) ---- */
-      body.is-collapsed { grid-template-columns: 74px 1fr; }
-      body.is-collapsed aside { padding-left: 0.6rem; padding-right: 0.6rem; }
-      body.is-collapsed .brand-logo,
-      body.is-collapsed .brand-sub,
-      body.is-collapsed nav a .nav-text,
-      body.is-collapsed .who,
-      body.is-collapsed .role-badge,
-      body.is-collapsed .collapse-btn .nav-text,
-      body.is-collapsed .signout .btn-text { display: none; }
-      body.is-collapsed .brand-mark { display: block; }
-      body.is-collapsed nav a { justify-content: center; padding: 0.65rem 0; }
-      body.is-collapsed .side-footer { padding: 0.9rem 0 0; text-align: center; }
-      body.is-collapsed .signout button { width: 100%; padding: 0.45rem 0; }
-      body.is-collapsed .collapse-btn svg { transform: rotate(180deg); }
+      .is-collapsed body { grid-template-columns: 74px 1fr; }
+      .is-collapsed body aside { padding-left: 0.6rem; padding-right: 0.6rem; }
+      .is-collapsed body .brand-logo,
+      .is-collapsed body .brand-sub,
+      .is-collapsed body nav a .nav-text,
+      .is-collapsed body .who,
+      .is-collapsed body .role-badge,
+      .is-collapsed body .collapse-btn .nav-text,
+      .is-collapsed body .signout .btn-text { display: none; }
+      .is-collapsed body .brand-mark { display: block; }
+      .is-collapsed body nav a { justify-content: center; padding: 0.65rem 0; }
+      .is-collapsed body .side-footer { padding: 0.9rem 0 0; text-align: center; }
+      .is-collapsed body .signout button { width: 100%; padding: 0.45rem 0; }
+      .is-collapsed body .collapse-btn svg { transform: rotate(180deg); }
       .brand-mark { display: none; width: 40px; height: 40px; margin: 0.2rem auto 0; }
+      /* Animate only on user toggle, never on page load. */
       body { transition: grid-template-columns 240ms ease; }
+      html:not(.ready) body { transition: none; }
+      /* Soften page-to-page navigation */
+      .main { animation: pageIn 160ms ease-out; }
+      @keyframes pageIn { from { opacity: 0; } to { opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) {
+        .main { animation: none; }
+        body { transition: none; }
+      }
       .side-footer {
         margin-top: auto;
         padding: 0.9rem 0.7rem 0;
@@ -231,12 +248,12 @@ const NAV_ICONS: Record<string, string> = {
     <script is:inline>
       (function () {
         const KEY = "ep-admin-sidebar-collapsed";
-        const body = document.body;
-        if (localStorage.getItem(KEY) === "1") body.classList.add("is-collapsed");
+        const root = document.documentElement;
         const btn = document.getElementById("sidebar-toggle");
+        requestAnimationFrame(() => root.classList.add("ready"));
         btn?.addEventListener("click", () => {
-          body.classList.toggle("is-collapsed");
-          localStorage.setItem(KEY, body.classList.contains("is-collapsed") ? "1" : "0");
+          root.classList.toggle("is-collapsed");
+          localStorage.setItem(KEY, root.classList.contains("is-collapsed") ? "1" : "0");
         });
       })();
     </script>
