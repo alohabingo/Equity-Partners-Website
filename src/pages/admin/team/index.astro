@@ -92,14 +92,40 @@ const LOCALES = [
     .mini { font: inherit; font-size: 0.72rem; font-weight: 700; color: #3d5a80; background: none; border: 0; padding: 0; cursor: pointer; }
     .mini:hover { text-decoration: underline; }
     .mini.danger { color: #a33d3d; }
-    .arrows { display: inline-flex; gap: 0.2rem; }
-    .arrow {
-      font: inherit; font-size: 0.7rem; line-height: 1; color: #5c6f88;
-      background: #f4f7fb; border: 1px solid #d5deea; border-radius: 6px;
-      padding: 0.25rem 0.4rem; cursor: pointer;
-    }
-    .arrow:hover:not([disabled]) { border-color: #53b27f; color: #2e7d54; }
     .inline { display: inline; }
+
+    /* ---------- Drag to reorder ---------- */
+    .drag-hint {
+      display: inline-flex; align-items: center; gap: 0.25rem;
+      font-size: 0.64rem; font-weight: 600; letter-spacing: 0.03em;
+      color: #a9b6c6; cursor: grab; user-select: none;
+      transition: color 200ms ease;
+    }
+    .drag-hint svg { width: 13px; height: 13px; }
+    .mcard:hover .drag-hint, .pcard:hover .drag-hint { color: #5c6f88; }
+    .mcard, .pcard { cursor: grab; }
+    .mcard:active, .pcard:active { cursor: grabbing; }
+    .mcard.dragging, .pcard.dragging {
+      opacity: 0.45;
+      transform: scale(0.98);
+      border-color: rgba(83, 178, 127, 0.6);
+      box-shadow: 0 18px 40px rgba(15, 26, 42, 0.18);
+    }
+    .cards.is-sorting .mcard:not(.dragging),
+    .pcards.is-sorting .pcard:not(.dragging) {
+      transition: transform 220ms cubic-bezier(0.2, 0.7, 0.3, 1);
+    }
+    .cards.is-sorting .mcard:hover, .pcards.is-sorting .pcard:hover { transform: none; }
+    .sort-saving {
+      position: fixed; right: 1.4rem; bottom: 1.4rem; z-index: 60;
+      font-size: 0.76rem; font-weight: 700; color: #ffffff;
+      background: rgba(22, 40, 62, 0.92); border-radius: 999px;
+      padding: 0.5rem 1rem; box-shadow: 0 10px 26px rgba(9, 17, 28, 0.28);
+      opacity: 0; transform: translateY(8px); pointer-events: none;
+      transition: opacity 220ms ease, transform 220ms ease;
+    }
+    .sort-saving.show { opacity: 1; transform: none; }
+    .sort-saving.err { background: rgba(163, 61, 61, 0.95); }
 
     /* ---------- Slide-over drawer ---------- */
     .backdrop {
@@ -346,9 +372,9 @@ const LOCALES = [
   {error && <p class="notice err">{error}</p>}
 
   <section class="view" id="view-partners" hidden={view !== "partners"}>
-    <div class="pcards">
+    <div class="pcards" id="partner-list">
       {partners.map((p, i) => (
-        <article class="pcard" data-open-partner={p.id} title={`Edit ${p.name}`}>
+        <article class="pcard" draggable="true" data-id={p.id} data-open-partner={p.id} title={`Edit ${p.name}`}>
           <span class={p.status === "published" ? "status-pill live" : "status-pill hidden"}>
             {p.status === "published" ? "visible" : "hidden"}
           </span>
@@ -368,21 +394,11 @@ const LOCALES = [
               {p.website_url && (
                 <a class="p-site" href={p.website_url} target="_blank" rel="noreferrer">Website ↗</a>
               )}
-              <span class="arrows">
-                <form class="inline" method="post" action="/api/admin/partners">
-                  <input type="hidden" name="action" value="move" />
-                  <input type="hidden" name="id" value={p.id} />
-                  <input type="hidden" name="dir" value="up" />
-                  <button class="arrow" type="submit" disabled={i === 0} title="Move up">↑</button>
-                </form>
-                <form class="inline" method="post" action="/api/admin/partners">
-                  <input type="hidden" name="action" value="move" />
-                  <input type="hidden" name="id" value={p.id} />
-                  <input type="hidden" name="dir" value="down" />
-                  <button class="arrow" type="submit" disabled={i === partners.length - 1} title="Move down">↓</button>
-                </form>
-              </span>
-              <button class="mini" type="button" data-open-partner={p.id}>Edit</button>
+              <span class="drag-hint" title="Drag to reorder">
+              <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>
+              drag to reorder
+            </span>
+            <button class="mini" type="button" data-open-partner={p.id}>Edit</button>
             </div>
           </div>
         </article>
@@ -392,9 +408,9 @@ const LOCALES = [
   </section>
 
   <section class="view" id="view-team" hidden={view === "partners"}>
-  <div class="cards">
+  <div class="cards" id="team-grid">
     {list.map((m, i) => (
-      <article class="mcard" data-open={m.id} title={`Edit ${m.name}`}>
+      <article class="mcard" draggable="true" data-id={m.id} data-open={m.id} title={`Edit ${m.name}`}>
         {m.status !== "published" && <span class="draft-tag">draft</span>}
         {m.photo_url
           ? <img class="avatar" src={m.photo_url} alt={m.name} loading="lazy" />
@@ -413,21 +429,11 @@ const LOCALES = [
           )}
         </span>
         <div class="m-foot">
-          <span class="arrows">
-            <form class="inline" method="post" action="/api/admin/team">
-              <input type="hidden" name="action" value="move" />
-              <input type="hidden" name="id" value={m.id} />
-              <input type="hidden" name="dir" value="up" />
-              <button class="arrow" type="submit" disabled={i === 0} title="Move up">↑</button>
-            </form>
-            <form class="inline" method="post" action="/api/admin/team">
-              <input type="hidden" name="action" value="move" />
-              <input type="hidden" name="id" value={m.id} />
-              <input type="hidden" name="dir" value="down" />
-              <button class="arrow" type="submit" disabled={i === list.length - 1} title="Move down">↓</button>
-            </form>
-          </span>
-          <button class="mini" type="button" data-open={m.id}>Edit</button>
+          <span class="drag-hint" title="Drag to reorder">
+              <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>
+              drag to reorder
+            </span>
+            <button class="mini" type="button" data-open={m.id}>Edit</button>
         </div>
       </article>
     ))}
@@ -619,6 +625,82 @@ const LOCALES = [
   <script type="application/json" id="partner-data" set:html={JSON.stringify(partners)}></script>
 
   <script>
+    // ---------- Drag & drop reordering ----------
+    (() => {
+      const toast = document.createElement("div");
+      toast.className = "sort-saving";
+      document.body.appendChild(toast);
+      let toastTimer: number | undefined;
+      function flash(msg: string, isError = false) {
+        toast.textContent = msg;
+        toast.classList.toggle("err", isError);
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => toast.classList.remove("show"), isError ? 4000 : 1400);
+      }
+
+      function makeSortable(container: HTMLElement | null, endpoint: string, cardSel: string, horizontal: boolean) {
+        if (!container) return;
+        let dragging: HTMLElement | null = null;
+        let originalOrder: string[] = [];
+
+        container.addEventListener("dragstart", (e) => {
+          (window as any).__epDragging = true;
+          const card = (e.target as HTMLElement).closest(cardSel) as HTMLElement | null;
+          if (!card) return;
+          dragging = card;
+          originalOrder = [...container.querySelectorAll<HTMLElement>(cardSel)].map((c) => c.dataset.id!);
+          container.classList.add("is-sorting");
+          // let the browser paint the card before dimming it
+          setTimeout(() => card.classList.add("dragging"), 0);
+          e.dataTransfer!.effectAllowed = "move";
+          e.dataTransfer!.setData("text/plain", card.dataset.id || "");
+        });
+
+        container.addEventListener("dragover", (e) => {
+          if (!dragging) return;
+          e.preventDefault();
+          const over = (e.target as HTMLElement).closest(cardSel) as HTMLElement | null;
+          if (!over || over === dragging) return;
+          const box = over.getBoundingClientRect();
+          const before = horizontal
+            ? (e as DragEvent).clientX < box.left + box.width / 2
+            : (e as DragEvent).clientY < box.top + box.height / 2;
+          container.insertBefore(dragging, before ? over : over.nextSibling);
+        });
+
+        container.addEventListener("dragend", async () => {
+          setTimeout(() => { (window as any).__epDragging = false; }, 60);
+          if (!dragging) return;
+          dragging.classList.remove("dragging");
+          container.classList.remove("is-sorting");
+          dragging = null;
+
+          const ids = [...container.querySelectorAll<HTMLElement>(cardSel)].map((c) => c.dataset.id!);
+          if (ids.join(",") === originalOrder.join(",")) return; // nothing moved
+
+          flash("Saving order…");
+          try {
+            const fd = new FormData();
+            fd.append("action", "reorder");
+            fd.append("ids", ids.join(","));
+            const res = await fetch(endpoint, { method: "POST", body: fd, headers: { Accept: "application/json" } });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.ok) throw new Error(data.error || "failed");
+            flash("Order saved ✓");
+          } catch (err) {
+            flash("Could not save the new order — refresh and try again.", true);
+          }
+        });
+
+        // a plain click still opens the editor; suppress it right after a drag
+        container.addEventListener("drop", (e) => e.preventDefault());
+      }
+
+      makeSortable(document.getElementById("team-grid"), "/api/admin/team", ".mcard", true);
+      makeSortable(document.getElementById("partner-list"), "/api/admin/partners", ".pcard", false);
+    })();
+
     // Tidy the URL after a save/remove redirect (no banner is shown).
     (() => {
       const p = new URLSearchParams(location.search);
@@ -753,7 +835,7 @@ const LOCALES = [
 
     document.querySelectorAll("[data-open]").forEach((el) => {
       el.addEventListener("click", (e) => {
-        // don't hijack the reorder arrows
+        if ((window as any).__epDragging) return;   // just finished a drag
         if ((e.target as HTMLElement).closest("form.inline")) return;
         e.preventDefault();
         open(el.getAttribute("data-open"));
@@ -873,6 +955,7 @@ const LOCALES = [
 
     document.querySelectorAll("[data-open-partner]").forEach((el) => {
       el.addEventListener("click", (e) => {
+        if ((window as any).__epDragging) return;   // just finished a drag
         if ((e.target as HTMLElement).closest("form.inline")) return;
         e.preventDefault();
         openPartner(el.getAttribute("data-open-partner"));

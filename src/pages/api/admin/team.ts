@@ -30,6 +30,16 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     return redirect("/admin/team?removed=1");
   }
 
+  if (action === "reorder") {
+    const ids = get("ids").split(",").map((s) => s.trim()).filter(Boolean);
+    if (ids.length === 0) return json({ ok: false, error: "no_ids" }, 422);
+    for (let i = 0; i < ids.length; i++) {
+      const { error } = await supabase.from("team_members").update({ sort_order: i }).eq("id", ids[i]);
+      if (error) return json({ ok: false, error: error.message }, 403);
+    }
+    return json({ ok: true });
+  }
+
   if (action === "move") {
     const id = get("id");
     const dir = get("dir");
