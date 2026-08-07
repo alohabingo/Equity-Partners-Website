@@ -126,9 +126,9 @@ const LOCALES = [
     /* ---------- Hidden items group ---------- */
     .hidden-group {
       margin-top: 1.8rem;
-      border: 1px dashed #d5deea;
+      border: 1px solid #d7deea;
       border-radius: 12px;
-      background: rgba(255, 255, 255, 0.55);
+      background: #ffffff;
       overflow: hidden;
     }
     .hidden-group summary {
@@ -314,56 +314,61 @@ const LOCALES = [
     .seg-btn.active { color: #ffffff; }
     .seg-btn .count { opacity: 0.6; font-weight: 600; margin-left: 0.3rem; font-size: 0.85em; }
 
-    /* ---------- Partner cards (mirrors the public Partners page) ---------- */
-    .pcards { margin-top: 1.4rem; display: grid; gap: 1rem; }
+    /* ---------- Partner cards: same spec as the public Partners page ---------- */
+    .pcards { margin-top: 1.4rem; display: grid; gap: 1.4rem; }
     .pcard {
-      position: relative; cursor: pointer;
-      background: #ffffff; border: 1px solid #d7deea; border-radius: 1.2rem;
-      padding: 1.4rem 1.7rem;
-      display: grid; grid-template-columns: 260px 1fr; gap: 1.8rem; align-items: center;
+      position: relative; cursor: grab;
+      background: #ffffff;
+      border: 1px solid #dbe1ea;
+      border-radius: 1.2rem;
+      padding: 1.9rem 2rem;
+      min-height: 260px;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 1.8rem;
+      align-items: center;
+      overflow: hidden;
+      isolation: isolate;
       box-shadow: 0 10px 30px rgba(15, 26, 42, 0.06);
-      overflow: hidden; isolation: isolate;
-      transition: border-color 360ms ease, box-shadow 360ms ease, transform 360ms cubic-bezier(0.2, 0.65, 0.35, 1);
+      transition: transform 360ms cubic-bezier(0.2, 0.65, 0.35, 1),
+        border-color 360ms ease, box-shadow 360ms ease;
     }
-    .pcard::after {
-      content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px;
-      background: linear-gradient(90deg, transparent, rgba(83, 178, 127, 0.55), transparent);
-      opacity: 0; transition: opacity 360ms ease;
+    .pcard:hover {
+      transform: translateY(-6px);
+      border-color: rgba(83, 178, 127, 0.42);
+      box-shadow: 0 26px 48px rgba(15, 26, 42, 0.12),
+        0 0 0 1px rgba(83, 178, 127, 0.16) inset;
     }
-    .pcard:hover { transform: translateY(-4px); border-color: rgba(83, 178, 127, 0.42); box-shadow: 0 20px 40px rgba(15, 26, 42, 0.1); }
-    .pcard:hover::after { opacity: 1; }
     .logo-box {
-      height: 100%; min-height: 92px;
+      height: 100%;
       display: flex; align-items: center; justify-content: center;
-      padding-right: 1.6rem; border-right: 1px solid #e2e8f1;
+      padding-right: 1.4rem;
+      border-right: 1px solid #dbe1ea;
     }
-    .logo-box img { max-height: 76px; max-width: 190px; object-fit: contain; }
-    .logo-box .no-logo { color: #93a3b8; font-size: 0.72rem; }
-    .p-body { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; }
-    .p-name { font-size: 1.05rem; font-weight: 700; color: #16283e; }
+    .logo-box img { max-height: 82px; max-width: 220px; width: auto; height: auto; }
+    .logo-box .no-logo { color: #93a3b8; font-size: 0.8rem; }
+    .p-body { padding-left: 0.2rem; min-width: 0; }
+    .p-name { font-size: 1.35rem; font-weight: 700; color: #1f2835; line-height: 1.25; }
     .p-role {
-      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.09em;
-      text-transform: uppercase; color: #2e7d54;
+      margin-top: 0.25rem; color: #33445c;
+      font-size: 0.78rem; letter-spacing: 0.11em; text-transform: uppercase;
     }
-    .p-summary {
-      font-size: 0.83rem; color: #5c6f88; line-height: 1.6;
-      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
-    }
-    .p-foot {
-      margin-top: 0.4rem; display: flex; align-items: center; gap: 0.9rem;
-    }
-    .p-site { font-size: 0.72rem; color: #3d5a80; text-decoration: none; }
+    .p-summary { margin-top: 0.7rem; color: #5a667a; font-size: 1rem; line-height: 1.5; max-width: 68ch; }
+    .p-foot { margin-top: 1.1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .p-site { font-size: 0.76rem; font-weight: 600; color: #3d5a80; text-decoration: none; }
     .p-site:hover { text-decoration: underline; }
     .status-pill {
-      position: absolute; top: 0.9rem; right: 1rem;
+      position: absolute; top: 1.1rem; right: 1.2rem;
       font-size: 0.58rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
       padding: 0.2rem 0.5rem; border-radius: 999px;
     }
     .status-pill.live { background: rgba(83, 178, 127, 0.15); color: #2e7d54; }
     .status-pill.hidden { background: rgba(196, 148, 58, 0.9); color: #ffffff; }
-    @media (max-width: 820px) {
-      .pcard { grid-template-columns: 1fr; }
-      .logo-box { border-right: 0; border-bottom: 1px solid #e2e8f1; padding: 0 0 1rem; }
+    @media (max-width: 980px) {
+      .pcard { grid-template-columns: 1fr; min-height: 0; padding: 1.4rem 1.5rem; }
+      .logo-box { border-right: 0; border-bottom: 1px solid #dbe1ea; padding: 0 0 1.2rem; }
+      .p-name { font-size: 1.18rem; }
+      .p-summary { font-size: 0.94rem; line-height: 1.55; }
     }
 
     /* ---------- Smooth view switching ---------- */
@@ -582,17 +587,23 @@ const LOCALES = [
           </select>
         </label>
 
-        <fieldset class="loc-block">
-          <legend>English</legend>
-          <label class="field">
-            <span>Role</span>
-            <input class="in" type="text" name="role_en" id="f-role-en" />
-          </label>
-          <label class="field">
-            <span>Bio</span>
-            <textarea class="in" name="bio_en" id="f-bio-en" rows="4"></textarea>
-          </label>
-        </fieldset>
+        <details class="loc-acc" data-acc="en" open>
+          <summary>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            <span class="acc-title">English</span>
+            <span class="acc-flag"></span>
+          </summary>
+          <div class="acc-body">
+            <label class="field">
+              <span>Role</span>
+              <input class="in" type="text" name="role_en" id="f-role-en" />
+            </label>
+            <label class="field">
+              <span>Bio</span>
+              <textarea class="in" name="bio_en" id="f-bio-en" rows="4"></textarea>
+            </label>
+          </div>
+        </details>
 
         {LOCALES.filter((l) => l.key !== "en").map((loc) => (
           <details class="loc-acc" data-acc={loc.key}>
@@ -672,17 +683,23 @@ const LOCALES = [
           </select>
         </label>
 
-        <fieldset class="loc-block">
-          <legend>English</legend>
-          <label class="field">
-            <span>Role</span>
-            <input class="in" type="text" name="role_en" id="p-role-en" />
-          </label>
-          <label class="field">
-            <span>Summary</span>
-            <textarea class="in" name="summary_en" id="p-summary-en" rows="4"></textarea>
-          </label>
-        </fieldset>
+        <details class="loc-acc" data-pacc="en" open>
+          <summary>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            <span class="acc-title">English</span>
+            <span class="acc-flag"></span>
+          </summary>
+          <div class="acc-body">
+            <label class="field">
+              <span>Role</span>
+              <input class="in" type="text" name="role_en" id="p-role-en" />
+            </label>
+            <label class="field">
+              <span>Summary</span>
+              <textarea class="in" name="summary_en" id="p-summary-en" rows="4"></textarea>
+            </label>
+          </div>
+        </details>
 
         {LOCALES.filter((l) => l.key !== "en").map((loc) => (
           <details class="loc-acc" data-pacc={loc.key}>
@@ -910,10 +927,10 @@ const LOCALES = [
         $(`f-role-${loc}`).value = t[loc]?.role ?? "";
         ($(`f-bio-${loc}`) as unknown as HTMLTextAreaElement).value = t[loc]?.description ?? "";
       }
-      // Translation accordions start closed; flag shows whether copy exists.
-      document.querySelectorAll<HTMLDetailsElement>(".loc-acc").forEach((acc) => {
-        acc.open = false;
+      // English opens by default; ES/CA start closed. Flags show whether copy exists.
+      document.querySelectorAll<HTMLDetailsElement>("[data-acc]").forEach((acc) => {
         const loc = acc.dataset.acc!;
+        acc.open = loc === "en";
         const flag = acc.querySelector<HTMLElement>(".acc-flag")!;
         const filled = Boolean(t[loc]?.role || t[loc]?.description);
         flag.textContent = filled ? "translated" : "empty";
@@ -1032,8 +1049,8 @@ const LOCALES = [
         ($(`p-summary-${loc}`) as unknown as HTMLTextAreaElement).value = t[loc]?.summary ?? "";
       }
       document.querySelectorAll<HTMLDetailsElement>("[data-pacc]").forEach((acc) => {
-        acc.open = false;
         const loc = acc.dataset.pacc!;
+        acc.open = loc === "en";
         const flag = acc.querySelector<HTMLElement>(".acc-flag")!;
         const filled = Boolean(t[loc]?.role || t[loc]?.summary);
         flag.textContent = filled ? "translated" : "empty";
