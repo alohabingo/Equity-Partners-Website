@@ -138,7 +138,7 @@ const STAGES: Array<{ key: Stage; label: string }> = [
     .empty[hidden] { display: none; }
 
     /* Card filtering transition */
-    .pcard { transition: opacity 260ms ease, transform 260ms ease; }
+    .pcard { transition: opacity 260ms ease, transform 260ms ease; cursor: pointer; }
     .pcard.is-hidden { display: none; }
     .cards.swapping .pcard { opacity: 0; transform: translateY(6px); }
 
@@ -198,8 +198,8 @@ const STAGES: Array<{ key: Stage; label: string }> = [
     .fund-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #53b27f, rgba(83, 178, 127, 0.55)); }
     .fund-label { font-size: 0.68rem; font-weight: 700; color: #2e7d54; }
     .pcard-foot {
-      margin-top: auto; padding-top: 0.55rem; border-top: 1px solid #eef2f7;
-      display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;
+      margin-top: auto; padding-top: 0.6rem; border-top: 1px solid #eef2f7;
+      display: flex; align-items: center; gap: 0.5rem;
     }
     .langs { display: inline-flex; gap: 0.25rem; }
     .lang {
@@ -252,6 +252,8 @@ const STAGES: Array<{ key: Stage; label: string }> = [
         class:list={["pcard", { "is-hidden": c.kind !== kindFilter || c.stage !== stageFilter }]}
         data-card-kind={c.kind}
         data-card-stage={c.stage}
+        data-href={`/admin/portfolio/${c.id}`}
+        title={`Edit ${c.name}`}
       >
           <a class="pcard-media" href={`/admin/portfolio/${c.id}`}>
             {c.image
@@ -289,10 +291,7 @@ const STAGES: Array<{ key: Stage; label: string }> = [
                     : <a class="lang missing" href={`/admin/portfolio/new?kind=${c.kind}&from=${c.id}`} title={`Missing ${v.locale.toUpperCase()} — duplicate to translate`}>{v.locale.toUpperCase()}</a>
                 )}
               </span>
-              <span class="actions">
-                {c.published && <a class="mini-link" href={publicPath(c)} target="_blank">View ↗</a>}
-                <a class="mini-link" href={`/admin/portfolio/new?kind=${c.kind}&from=${c.id}`}>Duplicate</a>
-              </span>
+
             </div>
           </div>
       </article>
@@ -382,6 +381,14 @@ const STAGES: Array<{ key: Stage; label: string }> = [
         kind = p.get("kind") === "opportunity" ? "opportunity" : "project";
         stage = ["prospective", "current", "past"].includes(p.get("stage")) ? p.get("stage") : "current";
         apply(false);
+      });
+
+      // Clicking a card opens its editor; the language chips keep their own links.
+      document.querySelectorAll(".pcard[data-href]").forEach((card) => {
+        card.addEventListener("click", (e) => {
+          if (e.target.closest("a")) return;
+          window.location.href = card.dataset.href;
+        });
       });
 
       // set the initial empty-state message correctly

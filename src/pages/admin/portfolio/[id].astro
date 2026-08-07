@@ -116,13 +116,53 @@ const fields = Object.entries(item.data as Record<string, unknown>).map(([key, v
 });
 
 const meta = JSON.stringify(Object.fromEntries(fields.map((f) => [f.key, f.type === "text" || f.type === "textarea" ? "text" : f.type])));
+
+// Group the dynamic fields so the editor reads as a form, not a wall of inputs.
+const SECTIONS: Array<{ title: string; keys: string[] }> = [
+  { title: "Overview", keys: ["tagline", "status", "location", "parish", "sector", "structure", "headlineReturn", "riskProfile"] },
+  { title: "Key figures", keys: [
+      "value", "totalProjectValue", "investmentRequired", "equityRaise", "minInvestment", "maxInvestment",
+      "fixedReturn", "profitShare", "holdPeriod", "returnStructure", "fundingProgress", "amountCommitted",
+      "fundingDeadline", "units", "sqm", "parking", "floors", "completionDate",
+    ] },
+  { title: "Narrative", keys: ["description", "investmentCase", "highlights", "planningStatus", "regulatoryNote"] },
+  { title: "Structured data", keys: ["milestones", "capitalStack", "useOfFunds", "partners"] },
+  { title: "Media", keys: ["image", "gallery"] },
+];
+
+const byKey = new Map(fields.map((f) => [f.key, f]));
+const used = new Set<string>();
+const grouped = SECTIONS.map((sec) => {
+  const items = sec.keys.map((k) => byKey.get(k)).filter(Boolean) as typeof fields;
+  items.forEach((f) => used.add(f.key));
+  return { title: sec.title, items };
+}).filter((sec) => sec.items.length > 0);
+
+const leftovers = fields.filter((f) => !used.has(f.key));
+if (leftovers.length) grouped.push({ title: "Other", items: leftovers });
+
+// Short inputs sit two-per-row; long-form fields take the full width.
+const isWide = (t: string) => t !== "text" && t !== "number";
+
+const publicUrl = `/${item.kind === "project" ? "projects" : "opportunities"}/${item.slug}`;
 ---
 
 <AdminLayout title={isNew ? `New ${item.kind}` : `Edit — ${item.name}`} active="portfolio">
   <a class="back" href="/admin/portfolio">← All portfolio items</a>
-  <div class="page-head">
-    <h1>{isNew ? `New ${item.kind}` : item.name}</h1>
-    {saved && <p class="saved-note">Saved ✓</p>}
+  <div class="page-head head-row">
+    <div>
+      <h1>{isNew ? `New ${item.kind}` : item.name}</h1>
+      <p class="sub">
+        <span class={`kind-pill is-${item.kind}`}>{item.kind}</span>
+        {!isNew && <span class="muted">{publicUrl}</span>}
+      </p>
+    </div>
+    {!isNew && item.status === "published" && (
+      <a class="view-site" href={publicUrl} target="_blank" rel="noreferrer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>
+        View on site
+      </a>
+    )}
   </div>
 
   <form class="editor" method="post" action="/api/admin/portfolio">
@@ -132,22 +172,34 @@ const meta = JSON.stringify(Object.fromEntries(fields.map((f) => [f.key, f.type 
     {!isNew && <input type="hidden" name="id" value={item.id} />}
 
     <div class="main-col">
-      <label class="field">
-        <span>Name</span>
-        <input class="in" type="text" name="name" value={item.name} required />
-      </label>
+      <section class="card">
+        <h2>Name</h2>
+        <div class="grid">
+          <label class="field wide">
+            <span>Display name</span>
+            <input class="in" type="text" name="name" value={item.name} required />
+          </label>
+        </div>
+      </section>
 
-      {fields.map((f) => (
-        <label class="field">
-          <span>{f.label} {f.hint && <em>({f.hint})</em>}</span>
-          {f.type === "text" ? (
-            <input class="in" type="text" name={`data.${f.key}`} value={f.value} />
-          ) : f.type === "number" ? (
-            <input class="in" type="number" step="any" name={`data.${f.key}`} value={f.value} />
-          ) : (
-            <textarea class={`in ${f.type === "json" ? "mono" : ""}`} name={`data.${f.key}`} rows={f.rows}>{f.value}</textarea>
-          )}
-        </label>
+      {grouped.map((sec) => (
+        <section class="card">
+          <h2>{sec.title}</h2>
+          <div class="grid">
+            {sec.items.map((f) => (
+              <label class:list={["field", { wide: isWide(f.type) }]}>
+                <span>{f.label} {f.hint && <em>{f.hint}</em>}</span>
+                {f.type === "text" ? (
+                  <input class="in" type="text" name={`data.${f.key}`} value={f.value} />
+                ) : f.type === "number" ? (
+                  <input class="in" type="number" step="any" name={`data.${f.key}`} value={f.value} />
+                ) : (
+                  <textarea class={`in ${f.type === "json" ? "mono" : ""}`} name={`data.${f.key}`} rows={f.rows}>{f.value}</textarea>
+                )}
+              </label>
+            ))}
+          </div>
+        </section>
       ))}
     </div>
 
@@ -191,31 +243,86 @@ const meta = JSON.stringify(Object.fromEntries(fields.map((f) => [f.key, f.type 
 
   <style>
     .back { display: inline-block; margin-top: 0.4rem; font-size: 0.82rem; font-weight: 600; color: #2e7d54; text-decoration: none; }
+    .back:hover { text-decoration: underline; }
+    .head-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+    .sub { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.45rem; }
+    .kind-pill {
+      font-size: 0.62rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.24rem 0.6rem; border-radius: 999px;
+    }
+    .kind-pill.is-project { background: rgba(90, 125, 170, 0.14); color: #3d5a80; }
+    .kind-pill.is-opportunity { background: rgba(83, 178, 127, 0.14); color: #2e7d54; }
+    .muted { font-size: 0.78rem; color: #93a3b8; }
     .saved-note { color: #2e7d54; font-weight: 700; font-size: 0.85rem; margin-top: 0.3rem; }
-    .editor { margin-top: 1.4rem; display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 1.2rem; align-items: start; }
-    .main-col, .panel { background: #ffffff; border: 1px solid #e2e8f1; border-radius: 12px; padding: 1.2rem 1.4rem; }
+    .view-site {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      font-size: 0.76rem; font-weight: 700; color: #2e7d54; text-decoration: none;
+      background: rgba(83, 178, 127, 0.09); border: 1px solid rgba(83, 178, 127, 0.38);
+      border-radius: 999px; padding: 0.45rem 1rem;
+      transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+    }
+    .view-site svg { width: 14px; height: 14px; }
+    .view-site:hover { background: #53b27f; border-color: #53b27f; color: #ffffff; }
+
+    .editor {
+      margin-top: 1.5rem;
+      display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 1.2rem; align-items: start;
+    }
+    .main-col { display: grid; gap: 1rem; min-width: 0; }
     .side-col { display: grid; gap: 1rem; position: sticky; top: 1rem; }
-    .kind-line { font-size: 0.85rem; color: #46586f; margin-bottom: 1rem; }
-    .field { display: grid; gap: 0.35rem; margin-bottom: 1rem; }
-    .field:last-child { margin-bottom: 0; }
-    .field span { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #46586f; }
-    .field em { font-weight: 400; text-transform: none; letter-spacing: 0; color: #8a99ad; }
+
+    /* Section cards */
+    .card, .panel {
+      background: #ffffff; border: 1px solid #d7deea; border-radius: 12px;
+      padding: 1.2rem 1.4rem 1.4rem;
+      box-shadow: 0 8px 24px rgba(15, 26, 42, 0.05);
+    }
+    .card h2 {
+      font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+      color: #5c6f88; padding-bottom: 0.7rem; margin-bottom: 1rem;
+      border-bottom: 1px solid #eef2f7;
+    }
+
+    /* Two short fields per row; long-form fields span the width */
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem 1.2rem; }
+    .field { display: grid; gap: 0.35rem; min-width: 0; }
+    .field.wide { grid-column: 1 / -1; }
+    .field span {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: #46586f;
+    }
+    .field em { font-weight: 400; text-transform: none; letter-spacing: 0; color: #93a3b8; font-size: 0.92em; }
     .in {
       font: inherit; font-size: 0.9rem; color: #16283e; width: 100%;
-      padding: 0.55rem 0.7rem; border: 1px solid #d5deea; border-radius: 8px; background: #fbfcfe;
+      padding: 0.6rem 0.75rem; border: 1px solid #d5deea; border-radius: 9px; background: #fbfcfe;
+      transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
     }
-    .in:focus { outline: none; border-color: #53b27f; }
+    .in:hover { border-color: #c3cfe0; }
+    .in:focus {
+      outline: none; background: #ffffff;
+      border-color: #53b27f; box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.16);
+    }
+    textarea.in { line-height: 1.6; resize: vertical; max-width: 72ch; }
+    .field.wide textarea.in { max-width: none; }
     .in.mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.8rem; }
+
+    .panel .field + .field { margin-top: 0.9rem; }
+    .kind-line { font-size: 0.85rem; color: #46586f; margin-bottom: 1rem; }
     .save {
       font: inherit; font-size: 0.9rem; font-weight: 700; color: #ffffff;
       background: #53b27f; border: 0; border-radius: 10px; padding: 0.8rem; cursor: pointer;
+      box-shadow: 0 8px 20px rgba(83, 178, 127, 0.28);
+      transition: filter 180ms ease, transform 180ms ease;
     }
-    .save:hover { filter: brightness(1.07); }
+    .save:hover { filter: brightness(1.07); transform: translateY(-1px); }
     .delete {
       font: inherit; font-size: 0.78rem; font-weight: 600; color: #a33d3d;
       background: none; border: 1px solid rgba(203, 76, 76, 0.4); border-radius: 8px;
-      padding: 0.5rem; cursor: pointer;
+      padding: 0.5rem; cursor: pointer; transition: background-color 180ms ease;
     }
+    .delete:hover { background: rgba(203, 76, 76, 0.07); }
+
+    @media (max-width: 1100px) { .grid { grid-template-columns: 1fr; } }
     @media (max-width: 900px) { .editor { grid-template-columns: 1fr; } .side-col { position: static; } }
   </style>
 </AdminLayout>
