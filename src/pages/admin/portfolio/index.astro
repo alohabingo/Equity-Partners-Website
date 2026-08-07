@@ -59,6 +59,7 @@ const cards = [...bySlug.values()]
       value: d.value ?? d.totalProjectValue ?? "",
       completion: d.completionDate ?? "",
       units: d.units ?? "",
+      sqm: d.sqm ?? "",
       fundingProgress: typeof d.fundingProgress === "number" ? d.fundingProgress : null,
       minInvestment: d.minInvestment ?? "",
       variants: LOCALES.map((loc) => ({
@@ -235,7 +236,15 @@ const STAGES: Array<{ key: Stage; label: string }> = [
       font-size: 0.6rem; font-weight: 600; letter-spacing: 0.1em;
       text-transform: uppercase; color: #5a667a;
     }
-    .pcard-footer { margin-top: auto; display: flex; align-items: center; gap: 0.5rem; }
+    .pcard-footer {
+      margin-top: auto; display: flex; align-items: center;
+      justify-content: space-between; gap: 0.5rem;
+    }
+    .pcard-sector {
+      font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #5a667a;
+      background: #f0f4fa; padding: 0.3rem 0.7rem; border-radius: 999px;
+    }
 
     .langs { display: inline-flex; gap: 0.25rem; }
     .lang {
@@ -314,8 +323,8 @@ const STAGES: Array<{ key: Stage; label: string }> = [
               <span class="pcard-metric-label">{c.units ? "Number of units" : "Min. investment"}</span>
             </div>
             <div class="pcard-metric">
-              <span class="pcard-metric-value">{c.fundingProgress !== null ? `${c.fundingProgress}%` : (c.sector || "—")}</span>
-              <span class="pcard-metric-label">{c.fundingProgress !== null ? "Committed" : "Sector"}</span>
+              <span class="pcard-metric-value">{c.sqm || "—"}</span>
+              <span class="pcard-metric-label">Total area</span>
             </div>
             <div class="pcard-metric">
               <span class="pcard-metric-value">{c.completion || "—"}</span>
@@ -324,6 +333,7 @@ const STAGES: Array<{ key: Stage; label: string }> = [
           </div>
 
           <div class="pcard-footer">
+            {c.sector ? <span class="pcard-sector">{c.sector}</span> : <span></span>}
             <span class="langs">
               {c.variants.map((v) =>
                 v.item
