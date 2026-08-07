@@ -12,10 +12,10 @@ type Stage = (typeof VALID_STAGES)[number];
 const stageParam = Astro.url.searchParams.get("stage") ?? "current";
 const stageFilter: Stage = (VALID_STAGES as readonly string[]).includes(stageParam) ? (stageParam as Stage) : "current";
 
+// Fetch every item (both kinds) so switching filters is instant, client-side.
 const { data: rows } = await supabase
   .from("portfolio_items")
   .select("id, kind, slug, locale, status, sort_order, name, data")
-  .eq("kind", kindFilter)
   .order("sort_order");
 
 /** Derive the lifecycle stage from the item's deal status text. */
@@ -26,13 +26,14 @@ function stageOf(dealStatus: string | undefined): Stage {
   return "current";
 }
 
-// One card per slug: EN is canonical, other locales become edit links.
+// One card per kind+slug: EN is canonical, other locales become edit links.
 type Item = NonNullable<typeof rows>[number];
 const bySlug = new Map<string, Item[]>();
 for (const r of rows ?? []) {
-  const arr = bySlug.get(r.slug) ?? [];
+  const key = `${r.kind}:${r.slug}`;
+  const arr = bySlug.get(key) ?? [];
   arr.push(r);
-  bySlug.set(r.slug, arr);
+  bySlug.set(key, arr);
 }
 
 const LOCALES = ["en", "es", "ca"];
@@ -64,21 +65,17 @@ const cards = [...bySlug.values()]
       })),
     };
   })
-  .filter((c) => c.stage === stageFilter)
   .sort((a, b) => a.sortOrder - b.sortOrder);
 
-const stageCounts: Record<Stage, number> = { prospective: 0, current: 0, past: 0 };
-for (const variants of bySlug.values()) {
-  const canonical = variants.find((v) => v.locale === "en") ?? variants[0];
-  stageCounts[stageOf(((canonical.data ?? {}) as any).status)] += 1;
-}
-
-const href = (kind: string, stage: string) => {
-  const p = new URLSearchParams();
-  if (kind === "opportunity") p.set("kind", kind);
-  if (stage !== "current") p.set("stage", stage);
-  const q = p.toString();
-  return q ? `/admin/portfolio?${q}` : "/admin/portfolio";
+// Counts per kind + stage, so the pills can relabel themselves client-side.
+const counts: Record<string, Record<Stage, number>> = {
+  project: { prospective: 0, current: 0, past: 0 },
+  opportunity: { prospective: 0, current: 0, past: 0 },
+};
+for (const c of cards) counts[c.kind][c.stage] += 1;
+const kindCounts = {
+  project: cards.filter((c) => c.kind === "project").length,
+  opportunity: cards.filter((c) => c.kind === "opportunity").length,
 };
 
 const publicPath = (c: { kind: string; slug: string }) =>
@@ -102,23 +99,48 @@ const STAGES: Array<{ key: Stage; label: string }> = [
     .new-btn.alt { background: #16283e; }
     .new-btn:hover { filter: brightness(1.1); }
     .filters { margin-top: 1.4rem; display: flex; gap: 0.7rem; flex-wrap: wrap; }
+    /* Sliding-thumb switchers (same as Team / Partners) */
     .seg {
+      position: relative;
       display: inline-flex;
       background: #ffffff;
       border: 1px solid #d5deea;
       border-radius: 999px;
-      padding: 0.25rem;
-      gap: 0.2rem;
+      padding: 0.3rem;
+      box-shadow: 0 6px 18px rgba(15, 26, 42, 0.06);
+      isolation: isolate;
     }
+    .seg-thumb {
+      position: absolute;
+      top: 0.3rem;
+      bottom: 0.3rem;
+      left: 0;
+      width: 0;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #16283e 0%, #0f2036 100%);
+      box-shadow: 0 6px 16px rgba(15, 26, 42, 0.28);
+      transition: transform 420ms cubic-bezier(0.32, 1.3, 0.44, 1), width 420ms cubic-bezier(0.32, 1.3, 0.44, 1);
+      z-index: -1;
+    }
+    .seg-thumb.no-anim { transition: none; }
     .seg-btn {
-      font-size: 0.78rem; font-weight: 700; color: #46586f; text-decoration: none;
-      padding: 0.4rem 1.1rem; border-radius: 999px;
-      transition: background-color 200ms ease, color 200ms ease;
+      font: inherit; font-size: 0.84rem; font-weight: 700; color: #46586f;
+      background: none; border: 0; cursor: pointer; white-space: nowrap;
+      padding: 0.5rem 1.4rem; border-radius: 999px;
+      transition: color 300ms ease;
     }
+    .seg-btn:focus { outline: none; }
+    .seg-btn:focus-visible { box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.35); }
     .seg-btn:hover:not(.active) { color: #2e7d54; }
-    .seg-btn.active { background: #16283e; color: #ffffff; }
-    .count { opacity: 0.65; font-weight: 600; margin-left: 0.15rem; }
+    .seg-btn.active { color: #ffffff; }
+    .count { opacity: 0.6; font-weight: 600; margin-left: 0.3rem; font-size: 0.85em; }
     .empty { margin-top: 2rem; color: #5c6f88; font-size: 0.92rem; }
+    .empty[hidden] { display: none; }
+
+    /* Card filtering transition */
+    .pcard { transition: opacity 260ms ease, transform 260ms ease; }
+    .pcard.is-hidden { display: none; }
+    .cards.swapping .pcard { opacity: 0; transform: translateY(6px); }
 
     .cards {
       margin-top: 1.4rem;
@@ -204,26 +226,33 @@ const STAGES: Array<{ key: Stage; label: string }> = [
   </div>
 
   <div class="filters">
-    <div class="seg">
+    <div class="seg" data-seg="kind">
+      <span class="seg-thumb no-anim"></span>
       {[["project", "Projects"], ["opportunity", "Opportunities"]].map(([k, label]) => (
-        <a class={kindFilter === k ? "seg-btn active" : "seg-btn"} href={href(k, stageFilter)}>{label}</a>
+        <button class={kindFilter === k ? "seg-btn active" : "seg-btn"} type="button" data-kind={k}>
+          {label} <span class="count" data-kind-count={k}>{kindCounts[k as "project" | "opportunity"]}</span>
+        </button>
       ))}
     </div>
-    <div class="seg">
+    <div class="seg" data-seg="stage">
+      <span class="seg-thumb no-anim"></span>
       {STAGES.map((s) => (
-        <a class={stageFilter === s.key ? "seg-btn active" : "seg-btn"} href={href(kindFilter, s.key)}>
-          {s.label} <span class="count">{stageCounts[s.key]}</span>
-        </a>
+        <button class={stageFilter === s.key ? "seg-btn active" : "seg-btn"} type="button" data-stage={s.key}>
+          {s.label} <span class="count" data-stage-count={s.key}>{counts[kindFilter][s.key]}</span>
+        </button>
       ))}
     </div>
   </div>
 
-  {cards.length === 0 ? (
-    <p class="empty">No {stageFilter} {kindFilter === "project" ? "projects" : "opportunities"}.</p>
-  ) : (
-    <div class="cards">
-      {cards.map((c) => (
-        <article class="pcard">
+  <p class="empty" id="empty-msg" hidden>Nothing here for this filter.</p>
+
+  <div class="cards" id="cards">
+    {cards.map((c) => (
+      <article
+        class:list={["pcard", { "is-hidden": c.kind !== kindFilter || c.stage !== stageFilter }]}
+        data-card-kind={c.kind}
+        data-card-stage={c.stage}
+      >
           <a class="pcard-media" href={`/admin/portfolio/${c.id}`}>
             {c.image
               ? <img src={c.image} alt={c.name} loading="lazy" />
@@ -266,8 +295,97 @@ const STAGES: Array<{ key: Stage; label: string }> = [
               </span>
             </div>
           </div>
-        </article>
-      ))}
-    </div>
-  )}
+      </article>
+    ))}
+  </div>
+
+  <script is:inline define:vars={{ counts }}>
+    (() => {
+      const params = new URLSearchParams(location.search);
+      let kind = params.get("kind") === "opportunity" ? "opportunity" : "project";
+      let stage = ["prospective", "current", "past"].includes(params.get("stage"))
+        ? params.get("stage")
+        : "current";
+
+      const cardsWrap = document.getElementById("cards");
+      const emptyMsg = document.getElementById("empty-msg");
+
+      function moveThumb(seg, animate = true) {
+        const thumb = seg.querySelector(".seg-thumb");
+        const active = seg.querySelector(".seg-btn.active");
+        if (!thumb || !active) return;
+        thumb.classList.toggle("no-anim", !animate);
+        thumb.style.width = `${active.offsetWidth}px`;
+        thumb.style.transform = `translateX(${active.offsetLeft}px)`;
+        if (!animate) requestAnimationFrame(() => thumb.classList.remove("no-anim"));
+      }
+      function placeThumbs(animate = false) {
+        document.querySelectorAll(".seg").forEach((s) => moveThumb(s, animate));
+      }
+      placeThumbs(false);
+      document.fonts?.ready.then(() => placeThumbs(false));
+      window.addEventListener("resize", () => placeThumbs(false));
+
+      function apply(push = true) {
+        // fade out, re-filter, fade in
+        cardsWrap.classList.add("swapping");
+        setTimeout(() => {
+          let visible = 0;
+          cardsWrap.querySelectorAll(".pcard").forEach((card) => {
+            const match = card.dataset.cardKind === kind && card.dataset.cardStage === stage;
+            card.classList.toggle("is-hidden", !match);
+            if (match) visible++;
+          });
+          emptyMsg.hidden = visible > 0;
+          emptyMsg.textContent = `No ${stage} ${kind === "project" ? "projects" : "opportunities"}.`;
+          cardsWrap.classList.remove("swapping");
+        }, 170);
+
+        // stage counts depend on the selected kind
+        for (const s of ["prospective", "current", "past"]) {
+          const el = document.querySelector(`[data-stage-count="${s}"]`);
+          if (el) el.textContent = counts[kind][s];
+        }
+        document.querySelectorAll("[data-kind]").forEach((b) =>
+          b.classList.toggle("active", b.dataset.kind === kind)
+        );
+        document.querySelectorAll("[data-stage]").forEach((b) =>
+          b.classList.toggle("active", b.dataset.stage === stage)
+        );
+        placeThumbs(true);
+
+        if (push) {
+          const p = new URLSearchParams();
+          if (kind === "opportunity") p.set("kind", kind);
+          if (stage !== "current") p.set("stage", stage);
+          const q = p.toString();
+          history.pushState({ kind, stage }, "", q ? `/admin/portfolio?${q}` : "/admin/portfolio");
+        }
+      }
+
+      document.querySelectorAll("[data-kind]").forEach((btn) =>
+        btn.addEventListener("click", () => {
+          if (kind === btn.dataset.kind) return;
+          kind = btn.dataset.kind;
+          apply();
+        })
+      );
+      document.querySelectorAll("[data-stage]").forEach((btn) =>
+        btn.addEventListener("click", () => {
+          if (stage === btn.dataset.stage) return;
+          stage = btn.dataset.stage;
+          apply();
+        })
+      );
+      window.addEventListener("popstate", () => {
+        const p = new URLSearchParams(location.search);
+        kind = p.get("kind") === "opportunity" ? "opportunity" : "project";
+        stage = ["prospective", "current", "past"].includes(p.get("stage")) ? p.get("stage") : "current";
+        apply(false);
+      });
+
+      // set the initial empty-state message correctly
+      apply(false);
+    })();
+  </script>
 </AdminLayout>
