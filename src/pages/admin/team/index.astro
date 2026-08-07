@@ -19,8 +19,12 @@ const [{ data: members }, { data: partnerRows }] = await Promise.all([
     .order("sort_order"),
 ]);
 
-const list = members ?? [];
-const partners = partnerRows ?? [];
+const allMembers = members ?? [];
+const allPartners = partnerRows ?? [];
+const list = allMembers.filter((m) => m.status === "published");
+const hiddenMembers = allMembers.filter((m) => m.status !== "published");
+const partners = allPartners.filter((p) => p.status === "published");
+const hiddenPartners = allPartners.filter((p) => p.status !== "published");
 
 const error = q.get("error") === "name_required" ? "A name is required." : null;
 
@@ -95,14 +99,6 @@ const LOCALES = [
     .inline { display: inline; }
 
     /* ---------- Drag to reorder ---------- */
-    .drag-hint {
-      display: inline-flex; align-items: center; gap: 0.25rem;
-      font-size: 0.64rem; font-weight: 600; letter-spacing: 0.03em;
-      color: #a9b6c6; cursor: grab; user-select: none;
-      transition: color 200ms ease;
-    }
-    .drag-hint svg { width: 13px; height: 13px; }
-    .mcard:hover .drag-hint, .pcard:hover .drag-hint { color: #5c6f88; }
     .mcard, .pcard { cursor: grab; }
     .mcard:active, .pcard:active { cursor: grabbing; }
     .mcard.dragging, .pcard.dragging {
@@ -126,6 +122,38 @@ const LOCALES = [
     }
     .sort-saving.show { opacity: 1; transform: none; }
     .sort-saving.err { background: rgba(163, 61, 61, 0.95); }
+
+    /* ---------- Hidden items group ---------- */
+    .hidden-group {
+      margin-top: 1.8rem;
+      border: 1px dashed #d5deea;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.55);
+      overflow: hidden;
+    }
+    .hidden-group summary {
+      list-style: none; cursor: pointer;
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.8rem 1.1rem;
+      font-size: 0.74rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: #7a8ba1;
+      transition: background-color 200ms ease, color 200ms ease;
+    }
+    .hidden-group summary::-webkit-details-marker { display: none; }
+    .hidden-group summary:hover { background: rgba(22, 40, 62, 0.03); color: #46586f; }
+    .hidden-group .chev { width: 14px; height: 14px; flex: none; transition: transform 260ms ease; }
+    .hidden-group[open] .chev { transform: rotate(90deg); }
+    .hidden-group .hcount {
+      margin-left: auto; font-size: 0.64rem; font-weight: 700;
+      background: rgba(196, 148, 58, 0.16); color: #8a6420;
+      padding: 0.2rem 0.55rem; border-radius: 999px;
+    }
+    .hidden-group .hidden-body { padding: 0 1.1rem 1.1rem; }
+    .hidden-group[open] .hidden-body { animation: hidIn 240ms ease; }
+    @keyframes hidIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+    .hidden-group .cards, .hidden-group .pcards { margin-top: 0.6rem; }
+    .hidden-group .mcard, .hidden-group .pcard { opacity: 0.75; }
+    .hidden-group .mcard:hover, .hidden-group .pcard:hover { opacity: 1; }
 
     /* ---------- Slide-over drawer ---------- */
     .backdrop {
@@ -394,17 +422,51 @@ const LOCALES = [
               {p.website_url && (
                 <a class="p-site" href={p.website_url} target="_blank" rel="noreferrer">Website ↗</a>
               )}
-              <span class="drag-hint" title="Drag to reorder">
-              <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>
-              drag to reorder
-            </span>
             <button class="mini" type="button" data-open-partner={p.id}>Edit</button>
             </div>
           </div>
         </article>
       ))}
     </div>
-    {partners.length === 0 && <p class="empty">No partners yet — add the first one.</p>}
+    {partners.length === 0 && <p class="empty">No partners visible on the website.</p>}
+
+    {hiddenPartners.length > 0 && (
+      <details class="hidden-group">
+        <summary>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          Hidden from website
+          <span class="hcount">{hiddenPartners.length}</span>
+        </summary>
+        <div class="hidden-body">
+          <div class="pcards" id="partner-hidden-list">
+            {hiddenPartners.map((p) => (
+              <article class="pcard" draggable="true" data-id={p.id} data-open-partner={p.id} title={`Edit ${p.name}`}>
+                <span class="status-pill hidden">hidden</span>
+                <div class="logo-box">
+                  {p.logo_url ? <img src={p.logo_url} alt={p.name} loading="lazy" /> : <span class="no-logo">no logo</span>}
+                </div>
+                <div class="p-body">
+                  <p class="p-role">{tr(p, "en", "role")}</p>
+                  <p class="p-name">{p.name}</p>
+                  <p class="p-summary">{tr(p, "en", "summary")}</p>
+                  <div class="p-foot">
+                    <span class="badges">
+                      {["en", "es", "ca"].map((loc) => (
+                        <span class={tr(p, loc, "role") ? "lang has" : "lang missing"}>{loc.toUpperCase()}</span>
+                      ))}
+                    </span>
+                    {p.website_url && (
+                      <a class="p-site" href={p.website_url} target="_blank" rel="noreferrer">Website ↗</a>
+                    )}
+                    <button class="mini" type="button" data-open-partner={p.id}>Edit</button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </details>
+    )}
   </section>
 
   <section class="view" id="view-team" hidden={view === "partners"}>
@@ -429,17 +491,46 @@ const LOCALES = [
           )}
         </span>
         <div class="m-foot">
-          <span class="drag-hint" title="Drag to reorder">
-              <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>
-              drag to reorder
-            </span>
             <button class="mini" type="button" data-open={m.id}>Edit</button>
         </div>
       </article>
     ))}
   </div>
 
-  {list.length === 0 && <p class="empty">No team members yet — add the first one.</p>}
+  {list.length === 0 && <p class="empty">No team members visible on the website.</p>}
+
+  {hiddenMembers.length > 0 && (
+    <details class="hidden-group">
+      <summary>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        Hidden from website
+        <span class="hcount">{hiddenMembers.length}</span>
+      </summary>
+      <div class="hidden-body">
+        <div class="cards" id="team-hidden-grid">
+          {hiddenMembers.map((m) => (
+            <article class="mcard" draggable="true" data-id={m.id} data-open={m.id} title={`Edit ${m.name}`}>
+              <span class="draft-tag">hidden</span>
+              {m.photo_url
+                ? <img class="avatar" src={m.photo_url} alt={m.name} loading="lazy" />
+                : <div class="avatar avatar-empty">no photo</div>}
+              <p class="m-name">{m.name}</p>
+              <p class="m-role">{tr(m, "en", "role")}</p>
+              <p class="m-bio">{tr(m, "en", "description")}</p>
+              <span class="badges">
+                {["en", "es", "ca"].map((loc) => (
+                  <span class={tr(m, loc, "role") ? "lang has" : "lang missing"}>{loc.toUpperCase()}</span>
+                ))}
+              </span>
+              <div class="m-foot">
+                <button class="mini" type="button" data-open={m.id}>Edit</button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </details>
+  )}
   </section>
 
   <!-- ---------- Drawer ---------- -->
@@ -639,7 +730,7 @@ const LOCALES = [
         toastTimer = window.setTimeout(() => toast.classList.remove("show"), isError ? 4000 : 1400);
       }
 
-      function makeSortable(container: HTMLElement | null, endpoint: string, cardSel: string, horizontal: boolean) {
+      function makeSortable(container: HTMLElement | null, endpoint: string, cardSel: string, horizontal: boolean, groupIds: string[]) {
         if (!container) return;
         let dragging: HTMLElement | null = null;
         let originalOrder: string[] = [];
@@ -649,7 +740,10 @@ const LOCALES = [
           const card = (e.target as HTMLElement).closest(cardSel) as HTMLElement | null;
           if (!card) return;
           dragging = card;
-          originalOrder = [...container.querySelectorAll<HTMLElement>(cardSel)].map((c) => c.dataset.id!);
+          originalOrder = groupIds.flatMap((gid) => {
+            const box = document.getElementById(gid);
+            return box ? [...box.querySelectorAll<HTMLElement>(cardSel)].map((c) => c.dataset.id!) : [];
+          });
           container.classList.add("is-sorting");
           // let the browser paint the card before dimming it
           setTimeout(() => card.classList.add("dragging"), 0);
@@ -676,7 +770,10 @@ const LOCALES = [
           container.classList.remove("is-sorting");
           dragging = null;
 
-          const ids = [...container.querySelectorAll<HTMLElement>(cardSel)].map((c) => c.dataset.id!);
+          const ids = groupIds.flatMap((gid) => {
+            const box = document.getElementById(gid);
+            return box ? [...box.querySelectorAll<HTMLElement>(cardSel)].map((c) => c.dataset.id!) : [];
+          });
           if (ids.join(",") === originalOrder.join(",")) return; // nothing moved
 
           flash("Saving order…");
@@ -697,8 +794,16 @@ const LOCALES = [
         container.addEventListener("drop", (e) => e.preventDefault());
       }
 
-      makeSortable(document.getElementById("team-grid"), "/api/admin/team", ".mcard", true);
-      makeSortable(document.getElementById("partner-list"), "/api/admin/partners", ".pcard", false);
+      // Visible lists first, then the hidden group — the saved order covers both
+      // so sort_order stays consistent across the whole table.
+      makeSortable(document.getElementById("team-grid"), "/api/admin/team", ".mcard", true,
+        ["team-grid", "team-hidden-grid"]);
+      makeSortable(document.getElementById("team-hidden-grid"), "/api/admin/team", ".mcard", true,
+        ["team-grid", "team-hidden-grid"]);
+      makeSortable(document.getElementById("partner-list"), "/api/admin/partners", ".pcard", false,
+        ["partner-list", "partner-hidden-list"]);
+      makeSortable(document.getElementById("partner-hidden-list"), "/api/admin/partners", ".pcard", false,
+        ["partner-list", "partner-hidden-list"]);
     })();
 
     // Tidy the URL after a save/remove redirect (no banner is shown).
