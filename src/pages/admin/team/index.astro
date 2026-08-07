@@ -22,11 +22,6 @@ const [{ data: members }, { data: partnerRows }] = await Promise.all([
 const list = members ?? [];
 const partners = partnerRows ?? [];
 
-const notice = q.get("saved")
-  ? "Saved ✓"
-  : q.get("removed")
-    ? (view === "partners" ? "Partner removed ✓" : "Team member removed ✓")
-    : null;
 const error = q.get("error") === "name_required" ? "A name is required." : null;
 
 const tr = (m: any, loc: string, field: "role" | "description" | "summary") =>
@@ -48,7 +43,6 @@ const LOCALES = [
     }
     .new-btn:hover { filter: brightness(1.08); }
     .notice { margin-top: 1.1rem; padding: 0.65rem 0.9rem; border-radius: 8px; font-size: 0.85rem; }
-    .notice.ok { background: rgba(83, 178, 127, 0.12); border: 1px solid rgba(83, 178, 127, 0.4); color: #2e7d54; }
     .notice.err { background: rgba(203, 76, 76, 0.1); border: 1px solid rgba(203, 76, 76, 0.35); color: #a33d3d; }
     .empty { margin-top: 2rem; color: #5c6f88; font-size: 0.92rem; }
 
@@ -349,7 +343,6 @@ const LOCALES = [
     </button>
   </div>
 
-  {notice && <p class="notice ok">{notice}</p>}
   {error && <p class="notice err">{error}</p>}
 
   <section class="view" id="view-partners" hidden={view !== "partners"}>
@@ -626,6 +619,17 @@ const LOCALES = [
   <script type="application/json" id="partner-data" set:html={JSON.stringify(partners)}></script>
 
   <script>
+    // Tidy the URL after a save/remove redirect (no banner is shown).
+    (() => {
+      const p = new URLSearchParams(location.search);
+      if (p.has("saved") || p.has("removed")) {
+        p.delete("saved");
+        p.delete("removed");
+        const q = p.toString();
+        history.replaceState({}, "", q ? `/admin/team?${q}` : "/admin/team");
+      }
+    })();
+
     // ---------- Smooth Team ⇄ Partners switching (no page reload) ----------
     (() => {
       const views: Record<string, HTMLElement | null> = {
