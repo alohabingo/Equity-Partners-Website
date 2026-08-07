@@ -5,17 +5,31 @@ import AdminLayout from "../../../layouts/AdminLayout.astro";
 import { supabaseServer } from "../../../lib/supabase";
 
 const supabase = supabaseServer(Astro.cookies, Astro.request);
-const { data: members } = await supabase
-  .from("team_members")
-  .select("id, name, photo_url, linkedin_url, sort_order, status, translations")
-  .order("sort_order");
+const q = Astro.url.searchParams;
+const view = q.get("view") === "partners" ? "partners" : "team";
+
+const [{ data: members }, { data: partnerRows }] = await Promise.all([
+  supabase
+    .from("team_members")
+    .select("id, name, photo_url, linkedin_url, sort_order, status, translations")
+    .order("sort_order"),
+  supabase
+    .from("partners")
+    .select("id, name, logo_url, website_url, sort_order, status, translations")
+    .order("sort_order"),
+]);
 
 const list = members ?? [];
-const q = Astro.url.searchParams;
-const notice = q.get("saved") ? "Saved ✓" : q.get("removed") ? "Team member removed ✓" : null;
+const partners = partnerRows ?? [];
+
+const notice = q.get("saved")
+  ? "Saved ✓"
+  : q.get("removed")
+    ? (view === "partners" ? "Partner removed ✓" : "Team member removed ✓")
+    : null;
 const error = q.get("error") === "name_required" ? "A name is required." : null;
 
-const tr = (m: any, loc: string, field: "role" | "description") =>
+const tr = (m: any, loc: string, field: "role" | "description" | "summary") =>
   (m?.translations?.[loc]?.[field] ?? "") as string;
 
 const LOCALES = [
@@ -204,20 +218,131 @@ const LOCALES = [
     .drawer-cancel { font: inherit; font-size: 0.8rem; font-weight: 600; color: #7a8ba1; background: none; border: 0; cursor: pointer; }
     .drawer-delete { margin-left: auto; font: inherit; font-size: 0.78rem; font-weight: 700; color: #a33d3d; background: none; border: 0; cursor: pointer; }
     .drawer-delete:hover { text-decoration: underline; }
+
+    /* ---------- View switcher ---------- */
+    .seg {
+      display: inline-flex; background: #ffffff; border: 1px solid #d5deea;
+      border-radius: 999px; padding: 0.25rem; gap: 0.2rem; margin-top: 1.3rem;
+    }
+    .seg-btn {
+      font-size: 0.78rem; font-weight: 700; color: #46586f; text-decoration: none;
+      padding: 0.4rem 1.1rem; border-radius: 999px;
+      transition: background-color 200ms ease, color 200ms ease;
+    }
+    .seg-btn:hover:not(.active) { color: #2e7d54; }
+    .seg-btn.active { background: #16283e; color: #ffffff; }
+    .seg-btn .count { opacity: 0.65; font-weight: 600; margin-left: 0.15rem; }
+
+    /* ---------- Partner cards ---------- */
+    .pcards { margin-top: 1.4rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    @media (max-width: 1100px) { .pcards { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 720px) { .pcards { grid-template-columns: 1fr; } }
+    .pcard {
+      position: relative; cursor: pointer;
+      background: #ffffff; border: 1px solid #d7deea; border-radius: 0.9rem;
+      padding: 1.1rem 1.2rem 0.9rem;
+      box-shadow: 0 10px 30px rgba(15, 26, 42, 0.06);
+      display: flex; flex-direction: column; gap: 0.5rem;
+      overflow: hidden; isolation: isolate;
+      transition: border-color 360ms ease, box-shadow 360ms ease, transform 360ms cubic-bezier(0.2, 0.65, 0.35, 1);
+    }
+    .pcard::after {
+      content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(83, 178, 127, 0.55), transparent);
+      opacity: 0; transition: opacity 360ms ease;
+    }
+    .pcard:hover { transform: translateY(-4px); border-color: rgba(83, 178, 127, 0.42); box-shadow: 0 20px 40px rgba(15, 26, 42, 0.1); }
+    .pcard:hover::after { opacity: 1; }
+    .logo-box {
+      height: 70px; display: grid; place-items: center;
+      background: #f7f9fc; border: 1px solid #eef2f7; border-radius: 0.6rem; padding: 0.6rem;
+    }
+    .logo-box img { max-height: 100%; max-width: 100%; object-fit: contain; }
+    .logo-box .no-logo { color: #93a3b8; font-size: 0.72rem; }
+    .p-name { font-size: 0.95rem; font-weight: 700; color: #16283e; }
+    .p-role { font-size: 0.75rem; font-weight: 600; color: #2e7d54; }
+    .p-summary {
+      font-size: 0.75rem; color: #5c6f88; line-height: 1.5;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .status-pill {
+      position: absolute; top: 0.7rem; right: 0.7rem;
+      font-size: 0.58rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+      padding: 0.2rem 0.5rem; border-radius: 999px;
+    }
+    .status-pill.live { background: rgba(83, 178, 127, 0.15); color: #2e7d54; }
+    .status-pill.hidden { background: rgba(196, 148, 58, 0.9); color: #ffffff; }
   </style>
 
   <div class="page-head head-row">
     <div>
-      <h1>Team</h1>
-      <p>Click a team member to edit. Changes go live on the About page immediately.</p>
+      <h1>{view === "partners" ? "Partners" : "Team"}</h1>
+      <p>
+        {view === "partners"
+          ? "Click a partner to edit. Visible partners appear on the public Partners page."
+          : "Click a team member to edit. Changes go live on the About page immediately."}
+      </p>
     </div>
-    <button class="new-btn" type="button" id="add-member">+ Add team member</button>
+    {view === "partners"
+      ? <button class="new-btn" type="button" id="add-partner">+ Add partner</button>
+      : <button class="new-btn" type="button" id="add-member">+ Add team member</button>}
+  </div>
+
+  <div class="seg">
+    <a class={view === "team" ? "seg-btn active" : "seg-btn"} href="/admin/team">
+      Team <span class="count">{list.length}</span>
+    </a>
+    <a class={view === "partners" ? "seg-btn active" : "seg-btn"} href="/admin/team?view=partners">
+      Partners <span class="count">{partners.length}</span>
+    </a>
   </div>
 
   {notice && <p class="notice ok">{notice}</p>}
   {error && <p class="notice err">{error}</p>}
 
-  <div class="cards">
+  {view === "partners" && (
+    <div class="pcards">
+      {partners.map((p, i) => (
+        <article class="pcard" data-open-partner={p.id} title={`Edit ${p.name}`}>
+          <span class={p.status === "published" ? "status-pill live" : "status-pill hidden"}>
+            {p.status === "published" ? "visible" : "hidden"}
+          </span>
+          <div class="logo-box">
+            {p.logo_url ? <img src={p.logo_url} alt={p.name} loading="lazy" /> : <span class="no-logo">no logo</span>}
+          </div>
+          <p class="p-name">{p.name}</p>
+          <p class="p-role">{tr(p, "en", "role")}</p>
+          <p class="p-summary">{tr(p, "en", "summary")}</p>
+          <span class="badges">
+            {["en", "es", "ca"].map((loc) => (
+              <span class={tr(p, loc, "role") ? "lang has" : "lang missing"}>{loc.toUpperCase()}</span>
+            ))}
+          </span>
+          <div class="m-foot">
+            <span class="arrows">
+              <form class="inline" method="post" action="/api/admin/partners">
+                <input type="hidden" name="action" value="move" />
+                <input type="hidden" name="id" value={p.id} />
+                <input type="hidden" name="dir" value="up" />
+                <button class="arrow" type="submit" disabled={i === 0} title="Move up">↑</button>
+              </form>
+              <form class="inline" method="post" action="/api/admin/partners">
+                <input type="hidden" name="action" value="move" />
+                <input type="hidden" name="id" value={p.id} />
+                <input type="hidden" name="dir" value="down" />
+                <button class="arrow" type="submit" disabled={i === partners.length - 1} title="Move down">↓</button>
+              </form>
+            </span>
+            <button class="mini" type="button" data-open-partner={p.id}>Edit</button>
+          </div>
+        </article>
+      ))}
+    </div>
+  )}
+
+  {view === "partners" && partners.length === 0 && <p class="empty">No partners yet — add the first one.</p>}
+
+  <div class="cards" style={view === "partners" ? "display:none" : ""}>
     {list.map((m, i) => (
       <article class="mcard" data-open={m.id} title={`Edit ${m.name}`}>
         {m.status !== "published" && <span class="draft-tag">draft</span>}
@@ -349,7 +474,98 @@ const LOCALES = [
     </form>
   </aside>
 
+  <!-- ---------- Partner drawer ---------- -->
+  <aside class="drawer" id="pdrawer" aria-hidden="true">
+    <div class="drawer-head">
+      <h2 id="pdrawer-title">Edit partner</h2>
+      <button class="close-btn" type="button" id="pdrawer-close" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form method="post" action="/api/admin/partners" style="display:contents;">
+      <input type="hidden" name="action" value="save" />
+      <input type="hidden" name="id" id="p-id" />
+      <div class="drawer-body">
+        <div class="photo-row" id="p-dropzone">
+          <div class="logo-box" style="width:110px;flex:none;">
+            <img id="p-preview" src="" alt="" style="max-height:100%;max-width:100%;object-fit:contain;" />
+          </div>
+          <div>
+            <span class="upload-wrap">
+              <span class="upload-btn">Choose logo…</span>
+              <input
+                class="file-overlay"
+                type="file"
+                id="p-logo-input"
+                accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,.png,.jpg,.jpeg,.webp,.gif,.svg"
+                title="Choose a logo"
+              />
+            </span>
+            <p class="upload-status" id="p-upload-status"></p>
+          </div>
+        </div>
+        <label class="field">
+          <span>Logo URL</span>
+          <input class="in" type="text" name="logo_url" id="p-logo-url" />
+        </label>
+        <label class="field">
+          <span>Partner name</span>
+          <input class="in" type="text" name="name" id="p-name" required />
+        </label>
+        <label class="field">
+          <span>Website <em>(optional)</em></span>
+          <input class="in" type="text" name="website_url" id="p-website" placeholder="https://…" />
+        </label>
+        <label class="field">
+          <span>Visibility</span>
+          <select class="in" name="status" id="p-status">
+            <option value="published">Visible on website</option>
+            <option value="draft">Hidden</option>
+          </select>
+        </label>
+
+        <fieldset class="loc-block">
+          <legend>English</legend>
+          <label class="field">
+            <span>Role</span>
+            <input class="in" type="text" name="role_en" id="p-role-en" />
+          </label>
+          <label class="field">
+            <span>Summary</span>
+            <textarea class="in" name="summary_en" id="p-summary-en" rows="4"></textarea>
+          </label>
+        </fieldset>
+
+        {LOCALES.filter((l) => l.key !== "en").map((loc) => (
+          <details class="loc-acc" data-pacc={loc.key}>
+            <summary>
+              <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              <span class="acc-title">{loc.label}</span>
+              <span class="acc-flag"></span>
+            </summary>
+            <div class="acc-body">
+              <label class="field">
+                <span>Role</span>
+                <input class="in" type="text" name={`role_${loc.key}`} id={`p-role-${loc.key}`} />
+              </label>
+              <label class="field">
+                <span>Summary</span>
+                <textarea class="in" name={`summary_${loc.key}`} id={`p-summary-${loc.key}`} rows="4"></textarea>
+              </label>
+            </div>
+          </details>
+        ))}
+      </div>
+      <div class="drawer-foot">
+        <button class="save" type="submit">Save</button>
+        <button class="drawer-cancel" type="button" id="pdrawer-cancel">Cancel</button>
+        <button class="drawer-delete" type="submit" name="action" value="delete" id="pdrawer-delete" formnovalidate>Remove</button>
+      </div>
+    </form>
+  </aside>
+
   <script type="application/json" id="team-data" set:html={JSON.stringify(list)}></script>
+  <script type="application/json" id="partner-data" set:html={JSON.stringify(partners)}></script>
 
   <script>
     const members = JSON.parse(document.getElementById("team-data")?.textContent || "[]");
@@ -474,6 +690,108 @@ const LOCALES = [
     dropzone.addEventListener("drop", (e) => {
       const file = (e as DragEvent).dataTransfer?.files?.[0];
       if (file) uploadFile(file);
+    });
+
+    // ================= PARTNERS =================
+    const partners = JSON.parse(document.getElementById("partner-data")?.textContent || "[]");
+    const pById = new Map(partners.map((p: any) => [p.id, p]));
+    const pdrawer = document.getElementById("pdrawer")!;
+    const pTitle = document.getElementById("pdrawer-title")!;
+    const pDel = document.getElementById("pdrawer-delete") as HTMLButtonElement;
+    const LOGO_BLANK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E";
+
+    function openPartner(id: string | null) {
+      const p: any = id ? pById.get(id) : null;
+      const t = p?.translations ?? {};
+      pTitle.textContent = p ? `Edit ${p.name}` : "New partner";
+      $("p-id").value = p?.id ?? "";
+      $("p-name").value = p?.name ?? "";
+      $("p-logo-url").value = p?.logo_url ?? "";
+      $("p-website").value = p?.website_url ?? "";
+      ($("p-status") as unknown as HTMLSelectElement).value = p?.status ?? "published";
+      (document.getElementById("p-preview") as HTMLImageElement).src = p?.logo_url || LOGO_BLANK;
+      for (const loc of ["en", "es", "ca"]) {
+        $(`p-role-${loc}`).value = t[loc]?.role ?? "";
+        ($(`p-summary-${loc}`) as unknown as HTMLTextAreaElement).value = t[loc]?.summary ?? "";
+      }
+      document.querySelectorAll<HTMLDetailsElement>("[data-pacc]").forEach((acc) => {
+        acc.open = false;
+        const loc = acc.dataset.pacc!;
+        const flag = acc.querySelector<HTMLElement>(".acc-flag")!;
+        const filled = Boolean(t[loc]?.role || t[loc]?.summary);
+        flag.textContent = filled ? "translated" : "empty";
+        flag.classList.toggle("filled", filled);
+      });
+      pDel.style.display = p ? "block" : "none";
+      pDel.onclick = (e) => {
+        if (!confirm(`Remove ${p?.name} from the partners page?`)) e.preventDefault();
+      };
+      const st = document.getElementById("p-upload-status")!;
+      st.textContent = "";
+      st.className = "upload-status";
+      pdrawer.classList.add("open");
+      backdrop.classList.add("open");
+      pdrawer.setAttribute("aria-hidden", "false");
+      setTimeout(() => $("p-name").focus(), 320);
+    }
+
+    function closePartner() {
+      pdrawer.classList.remove("open");
+      backdrop.classList.remove("open");
+      pdrawer.setAttribute("aria-hidden", "true");
+    }
+
+    document.querySelectorAll("[data-open-partner]").forEach((el) => {
+      el.addEventListener("click", (e) => {
+        if ((e.target as HTMLElement).closest("form.inline")) return;
+        e.preventDefault();
+        openPartner(el.getAttribute("data-open-partner"));
+      });
+    });
+    document.getElementById("add-partner")?.addEventListener("click", () => openPartner(null));
+    document.getElementById("pdrawer-close")?.addEventListener("click", closePartner);
+    document.getElementById("pdrawer-cancel")?.addEventListener("click", closePartner);
+    backdrop.addEventListener("click", closePartner);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePartner(); });
+
+    // Logo upload (button + drag & drop)
+    const logoInput = document.getElementById("p-logo-input") as HTMLInputElement;
+    const pDropzone = document.getElementById("p-dropzone")!;
+    function setPStatus(msg: string, kind: "" | "ok" | "err" = "") {
+      const el = document.getElementById("p-upload-status")!;
+      el.textContent = msg;
+      el.className = "upload-status" + (kind ? " " + kind : "");
+    }
+    async function uploadLogo(file: File) {
+      if (!file) return;
+      if (file.size > 8 * 1024 * 1024) return setPStatus(ERRORS.too_large, "err");
+      setPStatus(`Uploading ${file.name}…`);
+      const fd = new FormData();
+      fd.append("file", file);
+      try {
+        const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) throw new Error(ERRORS[data.error] || data.error || `upload failed (${res.status})`);
+        $("p-logo-url").value = data.url;
+        (document.getElementById("p-preview") as HTMLImageElement).src = data.url;
+        setPStatus("Logo uploaded ✓ — remember to Save", "ok");
+      } catch (err) {
+        setPStatus(err instanceof Error ? err.message : "Upload failed", "err");
+      }
+    }
+    logoInput?.addEventListener("change", () => {
+      const file = logoInput.files?.[0];
+      if (file) uploadLogo(file);
+    });
+    ["dragenter", "dragover"].forEach((ev) =>
+      pDropzone.addEventListener(ev, (e) => { e.preventDefault(); pDropzone.classList.add("dragover"); })
+    );
+    ["dragleave", "drop"].forEach((ev) =>
+      pDropzone.addEventListener(ev, (e) => { e.preventDefault(); pDropzone.classList.remove("dragover"); })
+    );
+    pDropzone.addEventListener("drop", (e) => {
+      const file = (e as DragEvent).dataTransfer?.files?.[0];
+      if (file) uploadLogo(file);
     });
   </script>
 </AdminLayout>

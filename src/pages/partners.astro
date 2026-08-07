@@ -1,4 +1,7 @@
 ---
+export const prerender = false;
+
+import { supabaseServer } from "../lib/supabase";
 import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import SEO from "../components/SEO.astro";
@@ -6,68 +9,7 @@ import { getLocaleFromUrl } from "../lib/i18n";
 import { getContentTranslations } from "../i18n/content";
 import { getPageTitle } from "../i18n/ui";
 
-const partners = [
-  {
-    name: "Andorra Resident",
-    role: "",
-    summary: "",
-    logo: "/images/partners/AR%20Logo%20EP.png",
-  },
-  {
-    name: "Emindset Law",
-    role: "",
-    summary: "",
-    logo: "/images/partners/Emindset LAW LOGO.png",
-  },
-  {
-    name: "Govern d'Andorra",
-    role: "",
-    summary: "",
-    logo: "/images/partners/Govern d'Andorra logo.png",
-  },
-  {
-    name: "DATA Architects",
-    role: "",
-    summary: "",
-    logo: "/images/partners/DATA LOGO.png",
-  },
-  {
-    name: "Engel & Völkers",
-    role: "",
-    summary: "",
-    logo: "/images/partners/engel volkers logo.png",
-  },
-  {
-    name: "MoraBank",
-    role: "",
-    summary: "",
-    logo: "/images/partners/mora%20bank.png",
-  },
-  {
-    name: "Pret a Porter Casas",
-    role: "",
-    summary: "",
-    logo: "/images/partners/pret%20a%20porter%20casas%20logo.svg",
-  },
-  {
-    name: "Heracles",
-    role: "",
-    summary: "",
-    logo: "/images/partners/heracles%20logo.png",
-  },
-  {
-    name: "Hormipresa",
-    role: "",
-    summary: "",
-    logo: "/images/partners/hormipresa%20.webp",
-  },
-  {
-    name: "Mariné Construccions",
-    role: "",
-    summary: "",
-    logo: "/images/partners/marine.png",
-  },
-];
+// Partners now come from the CMS (portal → Team / Partners).
 const locale = getLocaleFromUrl(Astro.url);
 const content = getContentTranslations(locale).partners;
 const partnerSlug = (name: string): string =>
@@ -78,12 +20,25 @@ const partnerSlug = (name: string): string =>
     .replace(/&/g, "and")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-const localizedPartners = partners.map((partner, index) => ({
-  ...partner,
-  slug: partnerSlug(partner.name),
-  role: content.entries[index]?.role ?? partner.role,
-  summary: content.entries[index]?.summary ?? partner.summary,
-}));
+const supabase = supabaseServer(Astro.cookies, Astro.request);
+const { data: partnerRows } = await supabase
+  .from("partners")
+  .select("name, logo_url, website_url, translations")
+  .eq("status", "published")
+  .order("sort_order");
+
+const localizedPartners = (partnerRows ?? []).map((p) => {
+  const t = (p.translations ?? {}) as Record<string, { role?: string; summary?: string }>;
+  const loc = t[locale] ?? t.en ?? {};
+  return {
+    name: p.name,
+    logo: p.logo_url ?? "",
+    website: p.website_url ?? "",
+    slug: partnerSlug(p.name),
+    role: loc.role ?? "",
+    summary: loc.summary ?? "",
+  };
+});
 
 ---
 
