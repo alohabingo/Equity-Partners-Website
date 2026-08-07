@@ -3,6 +3,8 @@ export const prerender = false;
 
 import AdminLayout from "../../../layouts/AdminLayout.astro";
 import { supabaseServer } from "../../../lib/supabase";
+import { statusColour } from "../../../data/projects";
+import { opportunityStatusColour } from "../../../data/opportunities";
 
 const supabase = supabaseServer(Astro.cookies, Astro.request);
 
@@ -80,6 +82,10 @@ const kindCounts = {
 
 const publicPath = (c: { kind: string; slug: string }) =>
   `/${c.kind === "project" ? "projects" : "opportunities"}/${c.slug}`;
+
+/** Same status colours the public project / opportunity cards use. */
+const badgeColour = (kind: string, status: string) =>
+  (kind === "project" ? statusColour[status] : opportunityStatusColour[status]) ?? "#8494a9";
 
 const STAGES: Array<{ key: Stage; label: string }> = [
   { key: "prospective", label: "Prospective" },
