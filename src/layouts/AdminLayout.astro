@@ -1,4 +1,5 @@
 ---
+import { BRAND_WORDMARK, BRAND_MARK } from "../lib/brandAssets";
 import "@fontsource/montserrat/400.css";
 import "@fontsource/montserrat/600.css";
 import "@fontsource/montserrat/700.css";
@@ -235,8 +236,8 @@ const NAV_ICONS: Record<string, string> = {
   </head>
   <body>
     <aside>
-      <img class="brand-logo" src="/ep-logo-wordmark-transparent.png" alt="Equity Partners — Andorra Property Group" />
-      <img class="brand-mark" src="/EP%20favicon.png" alt="Equity Partners" />
+      <img class="brand-logo" src={BRAND_WORDMARK} alt="Equity Partners — Andorra Property Group" width="400" height="132" decoding="sync" fetchpriority="high" />
+      <img class="brand-mark" src={BRAND_MARK} alt="Equity Partners" width="96" height="96" decoding="sync" />
       <p class="brand-sub">Command Center</p>
       <nav>
         {visibleNav.map((item) => (
