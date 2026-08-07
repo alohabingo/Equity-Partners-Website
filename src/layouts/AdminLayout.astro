@@ -4,6 +4,14 @@ import "@fontsource/montserrat/400.css";
 import "@fontsource/montserrat/600.css";
 import "@fontsource/montserrat/700.css";
 
+// Preloaded so Montserrat is ready before first paint. Without this the
+// fonts load with `font-display: swap`, so text renders in a fallback face
+// and visibly re-flows when the real font arrives — most noticeable on the
+// wide-tracked "COMMAND CENTER" caption.
+import montserrat400 from "@fontsource/montserrat/files/montserrat-latin-400-normal.woff2?url";
+import montserrat600 from "@fontsource/montserrat/files/montserrat-latin-600-normal.woff2?url";
+import montserrat700 from "@fontsource/montserrat/files/montserrat-latin-700-normal.woff2?url";
+
 interface Props {
   title: string;
   active?: string;
@@ -44,6 +52,9 @@ const NAV_ICONS: Record<string, string> = {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
     <title>{title} | EP Admin</title>
+    <link rel="preload" href={montserrat700} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={montserrat600} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={montserrat400} as="font" type="font/woff2" crossorigin />
     <script is:inline>
       // Runs before paint so a collapsed sidebar never flashes open on navigation.
       try {
