@@ -58,12 +58,7 @@ const NAV_ICONS: Record<string, string> = {
         display: grid;
         grid-template-columns: 232px 1fr;
         font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
-        /* Same soft green fade the website uses, over the light base */
-        background:
-          radial-gradient(ellipse at 30% 0%, rgba(83, 178, 127, 0.12), transparent 55%),
-          radial-gradient(circle at 10% -10%, #eef2f8 0, #f2f5f9 50%),
-          #f2f5f9;
-        background-attachment: fixed;
+        background: transparent;
         color: #16283e;
       }
       /* ---- Sidebar ---- */
@@ -154,13 +149,7 @@ const NAV_ICONS: Record<string, string> = {
       /* Animate only on user toggle, never on page load. */
       body { transition: grid-template-columns 240ms ease; }
       html:not(.ready) body { transition: none; }
-      /* Soften page-to-page navigation */
-      .main { animation: pageIn 160ms ease-out; }
-      @keyframes pageIn { from { opacity: 0; } to { opacity: 1; } }
-      @media (prefers-reduced-motion: reduce) {
-        .main { animation: none; }
-        body { transition: none; }
-      }
+      @media (prefers-reduced-motion: reduce) { body { transition: none; } }
       .side-footer {
         margin-top: auto;
         padding: 0.9rem 0.7rem 0;
@@ -210,6 +199,37 @@ const NAV_ICONS: Record<string, string> = {
       @media (max-width: 860px) {
         body { grid-template-columns: 1fr; }
         aside { position: static; height: auto; }
+      }
+    </style>
+
+    <style is:global>
+      /* Root-level rules must be global: Astro would otherwise scope them
+         and the view-transition pseudo-elements would never match. */
+      html {
+        background:
+          radial-gradient(ellipse at 30% 0%, rgba(83, 178, 127, 0.12), transparent 55%),
+          radial-gradient(circle at 10% -10%, #eef2f8 0, #f2f5f9 50%),
+          #f2f5f9;
+        background-attachment: fixed;
+      }
+
+      /* Smooth cross-document navigation: the sidebar stays put while the
+         page content cross-fades. Browsers without support just navigate. */
+      @view-transition { navigation: auto; }
+      aside { view-transition-name: ep-sidebar; }
+      .main { view-transition-name: ep-main; }
+
+      ::view-transition-old(ep-main) { animation: epFadeOut 120ms ease-in both; }
+      ::view-transition-new(ep-main) { animation: epFadeIn 240ms ease-out both; }
+      ::view-transition-old(ep-sidebar),
+      ::view-transition-new(ep-sidebar) { animation: none; }
+
+      @keyframes epFadeOut { to { opacity: 0; } }
+      @keyframes epFadeIn { from { opacity: 0; transform: translateY(6px); } }
+
+      @media (prefers-reduced-motion: reduce) {
+        ::view-transition-old(ep-main),
+        ::view-transition-new(ep-main) { animation: none; }
       }
     </style>
   </head>
