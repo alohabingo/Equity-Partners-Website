@@ -58,8 +58,8 @@ const LOCALES = [
 
     .mcard {
       position: relative; cursor: pointer;
-      background: #ffffff; border: 1px solid #d7deea; border-radius: 0.9rem;
-      padding: 1.2rem 1.2rem 1rem; text-align: center;
+      background: #ffffff; border: 1px solid #d7deea; border-radius: 1.2rem;
+      padding: 1.7rem 1.5rem 1.3rem; text-align: center;
       box-shadow: 0 10px 30px rgba(15, 26, 42, 0.06);
       display: flex; flex-direction: column; align-items: center; gap: 0.45rem;
       overflow: hidden; isolation: isolate;
@@ -70,7 +70,7 @@ const LOCALES = [
       background: linear-gradient(90deg, transparent, rgba(83, 178, 127, 0.55), transparent);
       opacity: 0; transition: opacity 360ms ease;
     }
-    .mcard:hover { transform: translateY(-4px); border-color: rgba(83, 178, 127, 0.42); box-shadow: 0 20px 40px rgba(15, 26, 42, 0.1); }
+    .mcard:hover { transform: translateY(-6px); border-color: rgba(83, 178, 127, 0.42); box-shadow: 0 20px 40px rgba(15, 26, 42, 0.1); }
     .mcard:hover::after { opacity: 1; }
     .avatar { width: 96px; height: 96px; border-radius: 999px; object-fit: cover; border: 3px solid rgba(83, 178, 127, 0.25); background: #eef2f7; }
     .avatar-empty { display: grid; place-items: center; color: #93a3b8; font-size: 0.7rem; }
@@ -86,7 +86,7 @@ const LOCALES = [
       position: absolute; top: 0.7rem; right: 0.7rem; z-index: 3;
       width: 30px; height: 30px; border-radius: 8px;
       display: grid; place-items: center;
-      color: #7a8ba1; background: #f4f7fb; border: 1px solid #e2e8f1;
+      color: #7a8ba1; background: #f4f7fb; border: 1px solid #d7deea;
       /* colour-only transition — transforms made the glyph shimmer */
       transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
     }
@@ -138,7 +138,7 @@ const LOCALES = [
     .hidden-group {
       margin-top: 1.8rem;
       border: 1px solid #d7deea;
-      border-radius: 12px;
+      border-radius: 1.2rem;
       background: #ffffff;
       overflow: hidden;
     }
@@ -207,7 +207,7 @@ const LOCALES = [
 
     /* ---------- Language accordions ---------- */
     .loc-acc {
-      margin-top: 0.8rem; border: 1px solid #e2e8f1; border-radius: 10px;
+      margin-top: 0.8rem; border: 1px solid #d7deea; border-radius: 10px;
       background: #fbfcfe; overflow: hidden;
     }
     .loc-acc summary {
@@ -258,7 +258,7 @@ const LOCALES = [
     .upload-status.err { color: #a33d3d; font-weight: 600; }
     .upload-status.ok { color: #2e7d54; font-weight: 600; }
     .photo-row.dragover {
-      outline: 2px dashed rgba(83, 178, 127, 0.6); outline-offset: 6px; border-radius: 12px;
+      outline: 2px dashed rgba(83, 178, 127, 0.6); outline-offset: 6px; border-radius: 1.2rem;
       background: rgba(83, 178, 127, 0.05);
     }
     .field { display: grid; gap: 0.35rem; margin-top: 0.9rem; }
