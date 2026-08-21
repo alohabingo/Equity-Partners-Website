@@ -17,3 +17,9 @@
 /ca/opportunities/escaldes-penthouse-collection       /ca/opportunities/project-escaldes           301
 /ca/opportunities/canillo-wellness-retreat            /ca/opportunities/project-canillo            301
 /ca/opportunities/la-massana-alpine-residences        /ca/opportunities/project-la-massana         301
+
+# 301 redirects: renamed project slugs (old -> new), all languages
+
+/projects/nanta-alta-luxury-villas                    /projects/nanta-alta                      301
+/es/projects/nanta-alta-luxury-villas                 /es/projects/nanta-alta                   301
+/ca/projects/nanta-alta-luxury-villas                 /ca/projects/nanta-alta                   301
