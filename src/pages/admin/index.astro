@@ -110,6 +110,7 @@ if (isSuper) {
 // ---- Blog views (staff) ----
 let views30: { post_id: string; viewed_at: string }[] = [];
 let viewsPrev30 = 0;
+let views30Total = 0;
 try {
   const { data } = await supabase
     .from("post_views")
@@ -117,6 +118,14 @@ try {
     .gte("viewed_at", iso(now - 30 * DAY))
     .limit(20000);
   views30 = data ?? [];
+  // PostgREST caps returned rows server-side (default 1000) no matter what
+  // .limit() asks for, so views30.length plateaus and silently under-reports.
+  // The headline total therefore comes from an exact count, not row length.
+  const { count: total30 } = await supabase
+    .from("post_views")
+    .select("*", { count: "exact", head: true })
+    .gte("viewed_at", iso(now - 30 * DAY));
+  views30Total = total30 ?? views30.length;
   const { count } = await supabase
     .from("post_views")
     .select("*", { count: "exact", head: true })
@@ -125,7 +134,7 @@ try {
   viewsPrev30 = count ?? 0;
 } catch { /* analytics optional */ }
 
-const totalViews30 = views30.length;
+const totalViews30 = views30Total;
 const viewsTrendPct = viewsPrev30 > 0 ? Math.round(((totalViews30 - viewsPrev30) / viewsPrev30) * 100) : null;
 
 // Top posts
@@ -180,18 +189,25 @@ try {
 
 // ---- Document links (super only) ----
 let docOpens7 = 0;
+let docOpensPrev7 = 0;
 let topDocLabel: string | null = null;
 let expiringLinks = 0;
 if (isSuper) {
   try {
+    // Fetch 14 days so the card can compare this week against last week
+    // instead of inventing a trend from a single week's number.
     const { data: dviews } = await supabase
       .from("document_link_views")
       .select("viewed_at, document_links(label, documents(title))")
-      .gte("viewed_at", iso(now - 7 * DAY))
-      .limit(2000);
-    docOpens7 = (dviews ?? []).length;
+      .gte("viewed_at", iso(now - 14 * DAY))
+      .limit(4000);
+    const recentViews = ((dviews ?? []) as any[]).filter(
+      (v) => new Date(v.viewed_at).getTime() > now - 7 * DAY,
+    );
+    docOpens7 = recentViews.length;
+    docOpensPrev7 = ((dviews ?? []) as any[]).length - docOpens7;
     const counts = new Map<string, number>();
-    for (const v of (dviews ?? []) as any[]) {
+    for (const v of recentViews) {
       const title = v.document_links?.documents?.title ?? null;
       if (title) counts.set(title, (counts.get(title) ?? 0) + 1);
     }
@@ -281,28 +297,41 @@ const relTime = (t: string) => {
   return `${Math.round(mins / (60 * 24))}d ago`;
 };
 
-// Sparkline points from a numeric series → "x,y x,y …" for a 74×26 viewBox
-function spark(series: number[]): { line: string; area: string } {
-  if (series.length < 2) return { line: "", area: "" };
-  const max = Math.max(1, ...series);
-  const pts = series.map((v, i) => {
-    const x = (i / (series.length - 1)) * 74;
-    const y = 24 - (v / max) * 20;
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  });
-  return { line: pts.join(" "), area: `0,26 ${pts.join(" ")} 74,26` };
-}
-const inquirySpark = spark(weeklyTotals.slice(-8));
-const subSpark = spark(growthData);
+// ---- Metric card deltas -------------------------------------------------
+// Each card states a change against a NAMED period. The "new"/"flat" kinds exist
+// so a metric with no baseline never shows a percentage against zero — blog
+// views currently has traffic this period and none in the previous one, which
+// would otherwise render as an infinite or nonsense percentage.
+type Delta = { kind: "up" | "down" | "flat" | "new"; text: string; period: string };
 
-// Blog views sparkline: 30 days → 8 buckets of ~4 days
-const viewBuckets = new Array(8).fill(0);
-for (const v of views30) {
-  const age = now - new Date(v.viewed_at).getTime();
-  const b = Math.min(7, Math.floor(age / (3.75 * DAY)));
-  viewBuckets[7 - b] += 1;
+function countDelta(current: number, previous: number, period: string): Delta {
+  const diff = current - previous;
+  if (diff > 0) return { kind: "up", text: `\u25B2 +${diff}`, period };
+  if (diff < 0) return { kind: "down", text: `\u25BC ${diff}`, period };
+  return { kind: "flat", text: "\u2014 0", period };
 }
-const viewSpark = spark(viewBuckets);
+
+const inquiryDelta = countDelta(inThisWeek, inLastWeek, "vs last week");
+
+const subsDelta: Delta = !isSuper
+  ? { kind: "flat", text: "list", period: "newsletter" }
+  : subsThisMonth > 0
+    ? { kind: "up", text: `\u25B2 +${subsThisMonth}`, period: "last 30 days" }
+    : { kind: "flat", text: "\u2014 0", period: "last 30 days" };
+
+const viewsDelta: Delta = viewsPrev30 === 0
+  ? (totalViews30 > 0
+      ? { kind: "new", text: "new", period: "first 30 days" }
+      : { kind: "flat", text: "\u2014", period: "no views yet" })
+  : viewsTrendPct === null
+    ? { kind: "flat", text: "\u2014", period: "no views yet" }
+    : viewsTrendPct >= 0
+      ? { kind: "up", text: `\u25B2 ${viewsTrendPct}%`, period: "vs prev 30 days" }
+      : { kind: "down", text: `\u25BC ${Math.abs(viewsTrendPct)}%`, period: "vs prev 30 days" };
+
+const docDelta: Delta = docOpens7 === 0 && docOpensPrev7 === 0
+  ? { kind: "flat", text: "\u2014 0", period: "no opens this week" }
+  : { ...countDelta(docOpens7, docOpensPrev7, topDocLabel ? `top: ${topDocLabel}` : "vs last week") };
 
 const TYPE_PILL: Record<string, { label: string; cls: string }> = {
   investor: { label: "Investor", cls: "investor" },
@@ -341,71 +370,77 @@ if (isSuper && expiringLinks > 0) healthItems.push({ level: "alert", text: `${ex
   <section class="strip">
     {isSuper && (
       <article class="cell">
-        <p class="m-label">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-          Inquiries this week
-        </p>
-        <p class="m-value">{inThisWeek}</p>
-        <p class="m-trend">
-          {inThisWeek >= inLastWeek
-            ? <span class="up">▲ +{inThisWeek - inLastWeek}</span>
-            : <span class="down">▼ {inThisWeek - inLastWeek}</span>} vs last week
-        </p>
-        {inquirySpark.line && (
-          <svg class="spark" viewBox="0 0 74 26" preserveAspectRatio="none">
-            <polygon points={inquirySpark.area} /><polyline points={inquirySpark.line} />
-          </svg>
-        )}
+        <div class="m-top">
+          <span class="m-tile" style="background: rgba(37, 99, 199, 0.10); color: #2563c7;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
+          </span>
+          <p class="m-value">{inThisWeek}</p>
+        </div>
+        <p class="m-label">Inquiries this week</p>
+        <div class="m-sep"></div>
+        <div class="m-foot">
+          <span class={`m-delta ${inquiryDelta.kind}`}>{inquiryDelta.text}</span>
+          <span class="m-period">{inquiryDelta.period}</span>
+        </div>
       </article>
     )}
     <article class="cell">
-      <p class="m-label">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="m4 7 8 6 8-6"/></svg>
-        Subscribers
-      </p>
-      <p class="m-value">{subscriberCount ?? "—"}</p>
-      <p class="m-trend">{isSuper ? <><span class="up">▲ +{subsThisMonth}</span> last 30 days</> : "newsletter list"}</p>
-      {isSuper && subSpark.line && (
-        <svg class="spark" viewBox="0 0 74 26" preserveAspectRatio="none">
-          <polygon points={subSpark.area} /><polyline points={subSpark.line} />
-        </svg>
-      )}
+      <div class="m-top">
+        <span class="m-tile" style="background: rgba(15, 138, 95, 0.10); color: #0f8a5f;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+        </span>
+        <p class="m-value">{subscriberCount ?? "\u2014"}</p>
+      </div>
+      <p class="m-label">Subscribers</p>
+      <div class="m-sep"></div>
+      <div class="m-foot">
+        <span class={`m-delta ${subsDelta.kind}`}>{subsDelta.text}</span>
+        <span class="m-period">{subsDelta.period}</span>
+      </div>
     </article>
     <article class="cell">
-      <p class="m-label">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-        Blog views · 30d
-      </p>
-      <p class="m-value">{totalViews30.toLocaleString("en-GB")}</p>
-      <p class="m-trend">
-        {viewsTrendPct === null ? "collecting data…" :
-          viewsTrendPct >= 0
-            ? <><span class="up">▲ {viewsTrendPct}%</span> vs previous 30d</>
-            : <><span class="down">▼ {Math.abs(viewsTrendPct)}%</span> vs previous 30d</>}
-      </p>
-      {viewSpark.line && (
-        <svg class="spark" viewBox="0 0 74 26" preserveAspectRatio="none">
-          <polygon points={viewSpark.area} /><polyline points={viewSpark.line} />
-        </svg>
-      )}
+      <div class="m-top">
+        <span class="m-tile" style="background: rgba(155, 63, 191, 0.10); color: #9b3fbf;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </span>
+        <p class="m-value">{totalViews30.toLocaleString("en-GB")}</p>
+      </div>
+      <p class="m-label">Blog views</p>
+      <div class="m-sep"></div>
+      <div class="m-foot">
+        <span class={`m-delta ${viewsDelta.kind}`}>{viewsDelta.text}</span>
+        <span class="m-period">{viewsDelta.period}</span>
+      </div>
     </article>
     {isSuper ? (
       <article class="cell">
-        <p class="m-label">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          Doc link opens · 7d
-        </p>
-        <p class="m-value">{docOpens7}</p>
-        <p class="m-trend">{topDocLabel ? `most opened: ${topDocLabel}` : "no opens this week"}</p>
+        <div class="m-top">
+          <span class="m-tile" style="background: rgba(200, 106, 0, 0.10); color: #c86a00;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </span>
+          <p class="m-value">{docOpens7}</p>
+        </div>
+        <p class="m-label">Doc link opens</p>
+        <div class="m-sep"></div>
+        <div class="m-foot">
+          <span class={`m-delta ${docDelta.kind}`}>{docDelta.text}</span>
+          <span class="m-period">{docDelta.period}</span>
+        </div>
       </article>
     ) : (
       <article class="cell">
-        <p class="m-label">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-          Published articles
-        </p>
-        <p class="m-value">{publishedPosts}</p>
-        <p class="m-trend">across all languages</p>
+        <div class="m-top">
+          <span class="m-tile" style="background: rgba(200, 106, 0, 0.10); color: #c86a00;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          </span>
+          <p class="m-value">{publishedPosts}</p>
+        </div>
+        <p class="m-label">Published articles</p>
+        <div class="m-sep"></div>
+        <div class="m-foot">
+          <span class="m-delta flat">all languages</span>
+          <span class="m-period">EN / ES / CA</span>
+        </div>
       </article>
     )}
   </section>
@@ -596,63 +631,62 @@ if (isSuper && expiringLinks > 0) healthItems.push({ level: "alert", text: `${ex
     }
     .empty { margin-top: 0.8rem; color: #7a8ba1; font-size: 0.85rem; }
 
-    /* Four separate metric cards with the website's green hover treatment */
+    /* ---- Metric cards -------------------------------------------------
+       Icon in a tinted tile, the value, the label beneath it, then a hairline
+       rule and the change against a named period. */
     .strip {
       margin-top: 1.5rem;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       gap: 0.9rem;
     }
     .cell {
-      position: relative;
-      padding: 1.7rem 1.8rem 1.5rem;
       background: #ffffff;
       border: 1px solid #d7deea;
       border-radius: 1.2rem;
+      padding: 1.2rem 1.4rem 1rem;
       box-shadow: 0 10px 30px rgba(15, 26, 42, 0.06);
-      overflow: hidden;
-      isolation: isolate;
-      transition: background-color 360ms ease, border-color 360ms ease, box-shadow 360ms ease;
-    }
-    .cell::after {
-      content: "";
-      position: absolute;
-      left: 0; right: 0; top: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, rgba(83, 178, 127, 0.55), transparent);
-      opacity: 0;
-      transition: opacity 360ms ease;
-    }
-    /* Green glow that fades down from the top of the card on hover */
-    .cell::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at 50% -20%, rgba(83, 178, 127, 0.18), transparent 70%);
-      opacity: 0;
-      transition: opacity 360ms ease;
-      z-index: -1;
+      transition: box-shadow 300ms ease, border-color 300ms ease, transform 300ms ease;
     }
     .cell:hover {
-      border-color: rgba(83, 178, 127, 0.42);
-      box-shadow: 0 14px 30px rgba(15, 26, 42, 0.1), 0 0 0 1px rgba(83, 178, 127, 0.16) inset;
+      border-color: rgba(83, 178, 127, 0.5);
+      box-shadow: 0 16px 38px rgba(15, 26, 42, 0.1);
+      transform: translateY(-2px);
     }
-    .cell:hover::after { opacity: 1; }
-    .cell:hover::before { opacity: 1; }
-    .m-label {
-      display: flex; align-items: center; gap: 0.5rem;
-      font-size: 0.66rem; font-weight: 700; letter-spacing: 0.09em;
-      text-transform: uppercase; color: #5c6f88;
+    .m-tile {
+      width: 32px; height: 32px; border-radius: 9px; flex: none;
+      display: grid; place-items: center;
     }
-    .m-label svg { width: 15px; height: 15px; color: #2e7d54; flex: none; transition: transform 360ms ease; }
-    .cell:hover .m-label svg { transform: translateY(-2px); }
-    .m-value { margin-top: 0.55rem; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; color: #16283e; line-height: 1; }
-    .m-trend { margin-top: 0.4rem; font-size: 0.7rem; font-weight: 600; color: #93a3b8; }
-    .m-trend .up { color: #2e7d54; }
-    .m-trend .down { color: #a33d3d; }
-    .spark { position: absolute; right: 0.6rem; bottom: 0.55rem; width: 74px; height: 26px; opacity: 0.9; }
-    .spark polyline { fill: none; stroke: #53b27f; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .spark polygon { fill: rgba(83, 178, 127, 0.13); stroke: none; }
+    .m-tile svg { width: 17px; height: 17px; }
+    /* Display numbers use the font's default proportional figures. tabular-nums
+       belongs in the tables further down, where digits must align in a column —
+       here it would give every digit the width of a 0 and make a value like 121
+       look gappy at this size. */
+    /* Icon and value share one row: it removes a whole stacked band and is
+       what takes the card from square to rectangular. */
+    .m-top { display: flex; align-items: center; gap: 0.95rem; }
+    .m-value {
+      /* margin: 0 is explicit because AdminLayout's `* { margin: 0 }` sits in a
+         SCOPED block, so it never reaches page content arriving via <slot/> —
+         these <p>s were carrying the browser's default 1em margins (34px above
+         AND below the value), which is what made the cards square. */
+      margin: 0;
+      font-size: 2.3rem; font-weight: 600;
+      letter-spacing: -0.02em; line-height: 1; color: #16283e;
+    }
+    .m-label { margin: 0.55rem 0 0; font-size: 0.78rem; font-weight: 500; line-height: 1.25; color: #5c6f88; }
+    .m-sep { height: 1px; background: #eef2f7; margin: 0.7rem 0 0.55rem; }
+    .m-foot { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+    /* Named .m-delta, not .pill — this page already uses .pill for lead types. */
+    .m-delta {
+      font-size: 0.68rem; font-weight: 700; border-radius: 999px;
+      padding: 0.16rem 0.5rem; line-height: 1.35; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 0.25rem;
+    }
+    .m-delta.up { background: rgba(15, 138, 95, 0.1); color: #0f8a5f; }
+    .m-delta.down { background: rgba(179, 38, 30, 0.09); color: #b3261e; }
+    .m-delta.flat, .m-delta.new { background: #f2f5f9; color: #7d8ea6; }
+    .m-period { font-size: 0.7rem; line-height: 1.3; color: #93a3b8; text-align: right; overflow-wrap: anywhere; }
 
     .grid { margin-top: 1.1rem; display: grid; grid-template-columns: 1.55fr 1fr; gap: 0.9rem; align-items: start; }
     .stack { display: grid; gap: 0.9rem; }
