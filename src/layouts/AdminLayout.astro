@@ -202,7 +202,12 @@ const NAV_ICONS: Record<string, string> = {
          scaling down gracefully on narrower screens. */
       .main {
         padding: 2.4rem clamp(1.4rem, 5vw, 5.2rem) 3.4rem;
-        max-width: 1460px;
+        /* Cap the content at the width it has while the sidebar is EXPANDED
+           (hence the fixed 232px, not the live column width). Collapsing the
+           sidebar then widens the grid column but not the content, so the page
+           re-centres instead of stretching. Above ~1692px the 1460px cap wins
+           and this makes no difference; below it, it is what stops the reflow. */
+        max-width: min(1460px, calc(100vw - 232px));
         width: 100%;
         margin-inline: auto;
       }
@@ -211,6 +216,8 @@ const NAV_ICONS: Record<string, string> = {
       @media (max-width: 860px) {
         body { grid-template-columns: 1fr; }
         aside { position: static; height: auto; }
+        /* Sidebar sits above the content here, so nothing to subtract. */
+        .main { max-width: 1460px; }
       }
     </style>
 
@@ -237,6 +244,43 @@ const NAV_ICONS: Record<string, string> = {
       .main select,
       .main textarea { max-width: 100%; }
       .main textarea { resize: vertical; }
+
+      /* ---- Selects ----------------------------------------------------
+         The native arrow sits hard against the right edge and can't be
+         styled or animated. We suppress it and draw our own chevron on a
+         wrapper (added by the script below), which gives us breathing room
+         and something we can rotate when the menu opens.
+
+         `.main select.ep-select` is (0,2,1), which outranks a page's scoped
+         `.in[data-astro-cid-…]` (0,2,0) — so the padding and appearance
+         reset win without needing !important. The chevron lives on the
+         wrapper rather than the select's background, so pages that set a
+         `background:` shorthand (leads' colour-coded status pills) can't
+         wipe it out. */
+      .main select.ep-select {
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: none;
+        padding-right: 2.4rem;
+      }
+      .select-wrap { position: relative; display: inline-block; max-width: 100%; }
+      .select-wrap.is-block { display: block; width: 100%; }
+      .select-wrap::after {
+        content: "";
+        position: absolute; right: 0.9rem; top: 50%;
+        width: 11px; height: 11px; margin-top: -5px;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235c6f88' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        pointer-events: none;
+        transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .select-wrap.is-open::after { transform: rotate(180deg); }
+
+      @media (prefers-reduced-motion: reduce) {
+        .select-wrap::after { transition: none; }
+      }
 
       /* Smooth cross-document navigation: the sidebar stays put while the
          page content cross-fades. Browsers without support just navigate. */
@@ -299,6 +343,41 @@ const NAV_ICONS: Record<string, string> = {
         btn?.addEventListener("click", () => {
           root.classList.toggle("is-collapsed");
           localStorage.setItem(KEY, root.classList.contains("is-collapsed") ? "1" : "0");
+        });
+
+        /* Give every select a custom chevron that rotates while its menu is
+           open. Done here rather than per page so the portal stays consistent
+           and any select added later is covered automatically.
+
+           Width is measured BEFORE the wrapper goes in: a select that already
+           filled its parent (the `.in` fields) needs a block wrapper so its
+           `width: 100%` still resolves against the full column, while an
+           auto-width one (the leads status pills) needs an inline wrapper that
+           hugs it, or the chevron would drift to the far right of the row. */
+        document.querySelectorAll(".main select").forEach((select) => {
+          if (select.closest(".select-wrap")) return;
+
+          const parent = select.parentElement;
+          const fillsParent = !!parent && parent.clientWidth > 0
+            && select.offsetWidth >= parent.clientWidth - 2;
+
+          const wrap = document.createElement("span");
+          wrap.className = "select-wrap" + (fillsParent ? " is-block" : "");
+          parent.insertBefore(wrap, select);
+          wrap.appendChild(select);
+          select.classList.add("ep-select");
+
+          const open = () => wrap.classList.add("is-open");
+          const close = () => wrap.classList.remove("is-open");
+          // focus covers keyboard opening; mousedown re-arms it when the menu
+          // is reopened while the select already holds focus.
+          select.addEventListener("focus", open);
+          select.addEventListener("mousedown", open);
+          select.addEventListener("blur", close);
+          select.addEventListener("change", close);
+          select.addEventListener("keyup", (e) => {
+            if (e.key === "Escape" || e.key === "Enter") close();
+          });
         });
       })();
     </script>
