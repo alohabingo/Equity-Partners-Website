@@ -96,26 +96,50 @@ const FORMAT_HINTS: Record<string, string> = {
   capitalStack: "one per line: Label | percentage | note (optional)",
   useOfFunds: "one per line: Label | percentage",
   partners: "one per line: Name | /images/partners/logo.png",
-  gallery: "one image URL per line",
   highlights: "one per line",
 };
 
 const humanize = (key: string) =>
   key.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase());
 
-const fields = Object.entries(item.data as Record<string, unknown>).map(([key, value]) => {
-  const type = classify(key, value);
-  return {
-    key,
-    type,
-    label: humanize(key),
-    hint: FORMAT_HINTS[key] ?? (type === "json" ? "JSON — edit carefully" : ""),
-    value: serialize(type, value),
-    rows: type === "textarea" ? 4 : type === "json" ? 6 : Math.max(2, String(serialize(type, value)).split("\n").length + 1),
-  };
+// Images get their own section with previews and uploads, so they are kept out
+// of the generic field loop below.
+const MEDIA_KEYS = new Set(["image", "gallery"]);
+
+const fields = Object.entries(item.data as Record<string, unknown>)
+  .filter(([key]) => !MEDIA_KEYS.has(key))
+  .map(([key, value]) => {
+    const type = classify(key, value);
+    return {
+      key,
+      type,
+      label: humanize(key),
+      hint: FORMAT_HINTS[key] ?? (type === "json" ? "JSON — edit carefully" : ""),
+      value: serialize(type, value),
+      rows: type === "textarea" ? 4 : type === "json" ? 6 : Math.max(2, String(serialize(type, value)).split("\n").length + 1),
+    };
+  });
+
+// __meta tells the save endpoint how to rebuild each value. The two media keys
+// are always declared, so a brand-new item can be given images straight away.
+const meta = JSON.stringify({
+  ...Object.fromEntries(fields.map((f) => [f.key, f.type === "text" || f.type === "textarea" ? "text" : f.type])),
+  image: "text",
+  gallery: "imageSlots",
 });
 
-const meta = JSON.stringify(Object.fromEntries(fields.map((f) => [f.key, f.type === "text" || f.type === "textarea" ? "text" : f.type])));
+// ---- images ----
+const heroImage = typeof item.data?.image === "string" ? item.data.image : "";
+const galleryRaw = Array.isArray(item.data?.gallery)
+  ? (item.data.gallery as unknown[]).map((v) => String(v ?? ""))
+  : [];
+// Every project and opportunity page shows three gallery images; keep three
+// slots always visible, and show extras if an item somehow has more.
+const GALLERY_SLOTS = 3;
+const gallerySlots = Array.from(
+  { length: Math.max(GALLERY_SLOTS, galleryRaw.length) },
+  (_, i) => galleryRaw[i] ?? "",
+);
 
 // Group the dynamic fields so the editor reads as a form, not a wall of inputs.
 const SECTIONS: Array<{ title: string; keys: string[] }> = [
@@ -127,7 +151,6 @@ const SECTIONS: Array<{ title: string; keys: string[] }> = [
     ] },
   { title: "Narrative", keys: ["description", "investmentCase", "highlights", "planningStatus", "regulatoryNote"] },
   { title: "Structured data", keys: ["milestones", "capitalStack", "useOfFunds", "partners"] },
-  { title: "Media", keys: ["image", "gallery"] },
 ];
 
 const byKey = new Map(fields.map((f) => [f.key, f]));
@@ -145,102 +168,10 @@ if (leftovers.length) grouped.push({ title: "Other", items: leftovers });
 const isWide = (t: string) => t !== "text" && t !== "number";
 
 const publicUrl = `/${item.kind === "project" ? "projects" : "opportunities"}/${item.slug}`;
+const kindWord = item.kind === "project" ? "project" : "opportunity";
 ---
 
 <AdminLayout title={isNew ? `New ${item.kind}` : `Edit — ${item.name}`} active="portfolio">
-  <a class="back" href="/admin/portfolio">← All portfolio items</a>
-  <div class="page-head head-row">
-    <div>
-      <h1>{isNew ? `New ${item.kind}` : item.name}</h1>
-      <p class="sub">
-        <span class={`kind-pill is-${item.kind}`}>{item.kind}</span>
-        {!isNew && <span class="muted">{publicUrl}</span>}
-      </p>
-    </div>
-    {!isNew && item.status === "published" && (
-      <a class="view-site" href={publicUrl} target="_blank" rel="noreferrer">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>
-        View on site
-      </a>
-    )}
-  </div>
-
-  <form class="editor" method="post" action="/api/admin/portfolio">
-    <input type="hidden" name="action" value="save" />
-    <input type="hidden" name="kind" value={item.kind} />
-    <input type="hidden" name="__meta" value={meta} />
-    {!isNew && <input type="hidden" name="id" value={item.id} />}
-
-    <div class="main-col">
-      <section class="card">
-        <h2>Name</h2>
-        <div class="grid">
-          <label class="field wide">
-            <span>Display name</span>
-            <input class="in" type="text" name="name" value={item.name} required />
-          </label>
-        </div>
-      </section>
-
-      {grouped.map((sec) => (
-        <section class="card">
-          <h2>{sec.title}</h2>
-          <div class="grid">
-            {sec.items.map((f) => (
-              <label class:list={["field", { wide: isWide(f.type) }]}>
-                <span>{f.label} {f.hint && <em>{f.hint}</em>}</span>
-                {f.type === "text" ? (
-                  <input class="in" type="text" name={`data.${f.key}`} value={f.value} />
-                ) : f.type === "number" ? (
-                  <input class="in" type="number" step="any" name={`data.${f.key}`} value={f.value} />
-                ) : (
-                  <textarea class={`in ${f.type === "json" ? "mono" : ""}`} name={`data.${f.key}`} rows={f.rows}>{f.value}</textarea>
-                )}
-              </label>
-            ))}
-          </div>
-        </section>
-      ))}
-    </div>
-
-    <aside class="side-col">
-      <div class="panel">
-        <p class="kind-line">Kind: <strong>{item.kind}</strong></p>
-        <label class="field">
-          <span>Status</span>
-          <select class="in" name="status">
-            <option value="draft" selected={item.status === "draft"}>Draft</option>
-            <option value="published" selected={item.status === "published"}>Published</option>
-            <option value="archived" selected={item.status === "archived"}>Archived</option>
-          </select>
-        </label>
-        <label class="field">
-          <span>Language</span>
-          <select class="in" name="locale">
-            <option value="en" selected={item.locale === "en"}>English</option>
-            <option value="es" selected={item.locale === "es"}>Español</option>
-            <option value="ca" selected={item.locale === "ca"}>Català</option>
-          </select>
-        </label>
-        <label class="field">
-          <span>URL slug <em>(keep identical across languages)</em></span>
-          <input class="in" type="text" name="slug" value={item.slug} />
-        </label>
-        <label class="field">
-          <span>Sort order <em>(lower = first)</em></span>
-          <input class="in" type="number" name="sort_order" value={item.sort_order} />
-        </label>
-      </div>
-
-      <button class="save" type="submit">Save</button>
-
-      {!isNew && (
-        <button class="delete" type="submit" name="action" value="delete" formnovalidate
-          onclick="return confirm('Delete this item permanently?')">Delete item</button>
-      )}
-    </aside>
-  </form>
-
   <style>
     .back { display: inline-block; margin-top: 0.4rem; font-size: 0.82rem; font-weight: 600; color: #2e7d54; text-decoration: none; }
     .back:hover { text-decoration: underline; }
@@ -282,6 +213,8 @@ const publicUrl = `/${item.kind === "project" ? "projects" : "opportunities"}/${
       color: #5c6f88; padding-bottom: 0.7rem; margin-bottom: 1rem;
       border-bottom: 1px solid #eef2f7;
     }
+    /* A card whose heading is the field label itself needs no rule beneath it. */
+    .card.plain h2 { border-bottom: 0; padding-bottom: 0; margin-bottom: 0.7rem; }
 
     /* Two short fields per row; long-form fields span the width */
     .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem 1.2rem; }
@@ -306,6 +239,52 @@ const publicUrl = `/${item.kind === "project" ? "projects" : "opportunities"}/${
     .field.wide textarea.in { max-width: none; }
     .in.mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.8rem; }
 
+    /* ---- Images ---- */
+    .card-note { font-size: 0.8rem; color: #5c6f88; margin: -0.35rem 0 1.1rem; }
+    .media-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.2rem; }
+    .media-slot { display: grid; gap: 0.45rem; align-content: start; min-width: 0; }
+    .media-slot.hero { grid-column: 1 / -1; }
+    .slot-label {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: #46586f;
+    }
+    .slot-label em { font-weight: 400; text-transform: none; letter-spacing: 0; color: #93a3b8; font-size: 0.92em; }
+    .thumb {
+      position: relative; display: grid; place-items: center; overflow: hidden;
+      aspect-ratio: 4 / 3; border-radius: 10px;
+      background: #f2f5f9; border: 1px dashed #d5deea;
+      transition: border-color 180ms ease, background-color 180ms ease;
+    }
+    .media-slot.hero .thumb { aspect-ratio: 21 / 9; }
+    .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .thumb-ph { font-size: 0.72rem; font-weight: 600; color: #93a3b8; }
+    .thumb.dragover { border-color: #53b27f; background: rgba(83, 178, 127, 0.08); }
+    .slot-actions { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+    /* The button IS the file input's <label>, so clicking it opens the picker
+       natively. No overlay to mis-position and no JS in the path. */
+    .upload-btn {
+      font: inherit; display: inline-block; font-size: 0.74rem; font-weight: 700; color: #46586f;
+      background: #ffffff; border: 1px solid #d5deea; border-radius: 8px;
+      padding: 0.4rem 0.8rem; cursor: pointer;
+      transition: border-color 180ms ease, color 180ms ease;
+    }
+    .upload-btn:hover { border-color: #53b27f; color: #2e7d54; }
+    .file-input:focus-visible + .upload-btn,
+    .upload-btn:focus-visible { outline: 2px solid #53b27f; outline-offset: 2px; }
+    /* Hidden from view but still focusable and label-activatable. */
+    .file-input {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+    }
+    .slot-clear {
+      font: inherit; font-size: 0.72rem; font-weight: 600; color: #93a3b8;
+      background: none; border: 0; padding: 0; cursor: pointer;
+    }
+    .slot-clear:hover { color: #a33d3d; text-decoration: underline; }
+    .upload-status { font-size: 0.72rem; color: #5c6f88; min-height: 1em; }
+    .upload-status.err { color: #a33d3d; font-weight: 600; }
+    .upload-status.ok { color: #2e7d54; font-weight: 600; }
+
     .panel .field + .field { margin-top: 0.9rem; }
     .kind-line { font-size: 0.85rem; color: #46586f; margin-bottom: 1rem; }
     .save {
@@ -324,5 +303,254 @@ const publicUrl = `/${item.kind === "project" ? "projects" : "opportunities"}/${
 
     @media (max-width: 1100px) { .grid { grid-template-columns: 1fr; } }
     @media (max-width: 900px) { .editor { grid-template-columns: 1fr; } .side-col { position: static; } }
+    @media (max-width: 700px) { .media-grid { grid-template-columns: 1fr; } }
   </style>
+
+  <script>
+    // ---------- Keep the dropdowns on the values this record actually has ----------
+    // Chrome restores form-control state when you navigate back and forward
+    // between records, which can silently leave the wrong Language selected and
+    // save a translation over the wrong language. Re-assert the server value on
+    // every page show.
+    function restoreSelects() {
+      document.querySelectorAll("[data-server-value]").forEach((el) => {
+        const select = el as HTMLSelectElement;
+        const serverValue = select.dataset.serverValue;
+        if (serverValue && select.value !== serverValue) select.value = serverValue;
+      });
+    }
+    restoreSelects();
+    window.addEventListener("pageshow", restoreSelects);
+
+    // ---------- Image slots: live preview, upload, drag & drop ----------
+    const ERRORS: Record<string, string> = {
+      bad_type: "That file type isn't supported. Please use JPG, PNG, WebP or GIF (iPhone .HEIC photos need exporting as JPG first).",
+      too_large: "That image is over 8 MB — please use a smaller file.",
+      no_file: "No file was received. Please try again.",
+    };
+
+    document.querySelectorAll<HTMLElement>(".media-slot").forEach((slot) => {
+      const url = slot.querySelector("[data-url]") as HTMLInputElement | null;
+      const img = slot.querySelector("[data-preview]") as HTMLImageElement | null;
+      const ph = slot.querySelector("[data-ph]") as HTMLElement | null;
+      const file = slot.querySelector("[data-file]") as HTMLInputElement | null;
+      const clear = slot.querySelector("[data-clear]") as HTMLButtonElement | null;
+      const status = slot.querySelector("[data-status]") as HTMLElement | null;
+      const thumb = slot.querySelector(".thumb") as HTMLElement | null;
+      if (!url || !img || !ph || !thumb) return;
+
+      const setStatus = (msg: string, kind = "") => {
+        if (!status) return;
+        status.textContent = msg;
+        status.className = "upload-status" + (kind ? " " + kind : "");
+      };
+
+      const sync = () => {
+        const v = url.value.trim();
+        if (v) {
+          img.src = v;
+          img.hidden = false;
+          ph.hidden = true;
+        } else {
+          img.removeAttribute("src");
+          img.hidden = true;
+          ph.hidden = false;
+        }
+      };
+
+      url.addEventListener("input", sync);
+      url.addEventListener("change", sync);
+      img.addEventListener("error", () => {
+        if (url.value.trim()) setStatus("That image URL didn't load — check the path.", "err");
+      });
+      img.addEventListener("load", () => {
+        if (status?.classList.contains("err")) setStatus("");
+      });
+
+      clear?.addEventListener("click", () => {
+        url.value = "";
+        sync();
+        setStatus("Cleared — remember to Save");
+      });
+
+      async function upload(f: File) {
+        if (!f) return;
+        if (f.size > 8 * 1024 * 1024) return setStatus(ERRORS.too_large, "err");
+        setStatus(`Uploading ${f.name}…`);
+        const fd = new FormData();
+        fd.append("file", f);
+        fd.append("folder", "portfolio");
+        try {
+          const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+          const data = await res.json();
+          if (!res.ok || !data.ok) {
+            throw new Error(ERRORS[data.error] || data.error || `upload failed (${res.status})`);
+          }
+          url!.value = data.url;
+          sync();
+          setStatus("Uploaded ✓ — remember to Save", "ok");
+        } catch (err) {
+          setStatus(err instanceof Error ? err.message : String(err), "err");
+        }
+      }
+
+      file?.addEventListener("change", () => {
+        const f = file.files?.[0];
+        if (f) upload(f);
+        file.value = "";
+      });
+
+      ["dragenter", "dragover"].forEach((evt) =>
+        thumb.addEventListener(evt, (e) => {
+          e.preventDefault();
+          thumb.classList.add("dragover");
+        }),
+      );
+      ["dragleave", "dragend", "drop"].forEach((evt) =>
+        thumb.addEventListener(evt, (e) => {
+          e.preventDefault();
+          thumb.classList.remove("dragover");
+        }),
+      );
+      thumb.addEventListener("drop", (e) => {
+        const f = (e as DragEvent).dataTransfer?.files?.[0];
+        if (f) upload(f);
+      });
+    });
+  </script>
+
+  <a class="back" href="/admin/portfolio">← All portfolio items</a>
+  <div class="page-head head-row">
+    <div>
+      <h1>{isNew ? `New ${item.kind}` : item.name}</h1>
+      <p class="sub">
+        <span class={`kind-pill is-${item.kind}`}>{item.kind}</span>
+        {!isNew && <span class="muted">{publicUrl}</span>}
+      </p>
+    </div>
+    {!isNew && item.status === "published" && (
+      <a class="view-site" href={publicUrl} target="_blank" rel="noreferrer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>
+        View on site
+      </a>
+    )}
+  </div>
+
+  <form class="editor" method="post" action="/api/admin/portfolio" autocomplete="off">
+    <input type="hidden" name="action" value="save" />
+    <input type="hidden" name="kind" value={item.kind} />
+    <input type="hidden" name="__meta" value={meta} />
+    {!isNew && <input type="hidden" name="id" value={item.id} />}
+
+    <div class="main-col">
+      <section class="card plain">
+        <h2>Name</h2>
+        <input class="in" type="text" name="name" value={item.name} required />
+      </section>
+
+      {grouped.map((sec) => (
+        <section class="card">
+          <h2>{sec.title}</h2>
+          <div class="grid">
+            {sec.items.map((f) => (
+              <label class:list={["field", { wide: isWide(f.type) }]}>
+                <span>{f.label} {f.hint && <em>{f.hint}</em>}</span>
+                {f.type === "text" ? (
+                  <input class="in" type="text" name={`data.${f.key}`} value={f.value} />
+                ) : f.type === "number" ? (
+                  <input class="in" type="number" step="any" name={`data.${f.key}`} value={f.value} />
+                ) : (
+                  <textarea class={`in ${f.type === "json" ? "mono" : ""}`} name={`data.${f.key}`} rows={f.rows}>{f.value}</textarea>
+                )}
+              </label>
+            ))}
+          </div>
+        </section>
+      ))}
+
+      <section class="card">
+        <h2>Images</h2>
+        <p class="card-note">
+          Every {kindWord} page uses four images: the hero across the top, then the three
+          gallery images further down. Drop a file on a thumbnail or use Upload to replace one.
+        </p>
+        <div class="media-grid">
+          <div class="media-slot hero">
+            <span class="slot-label">Hero image <em>top of the page and the listing card</em></span>
+            <div class="thumb">
+              <img src={heroImage || undefined} alt="" hidden={!heroImage} data-preview />
+              <span class="thumb-ph" hidden={!!heroImage} data-ph>No image yet</span>
+            </div>
+            <input class="in" type="text" name="data.image" value={heroImage}
+              placeholder="/image.webp or https://…" data-url />
+            <div class="slot-actions">
+              <input class="file-input" id="img-hero" type="file" accept="image/*" data-file />
+              <label class="upload-btn" for="img-hero">Upload…</label>
+              <button class="slot-clear" type="button" data-clear>Clear</button>
+            </div>
+            <p class="upload-status" data-status></p>
+          </div>
+
+          {gallerySlots.map((url, i) => (
+            <div class="media-slot">
+              <span class="slot-label">
+                Image {i + 1}
+                {i === 0 && <em>shown large in the gallery</em>}
+              </span>
+              <div class="thumb">
+                <img src={url || undefined} alt="" hidden={!url} data-preview />
+                <span class="thumb-ph" hidden={!!url} data-ph>No image yet</span>
+              </div>
+              <input class="in" type="text" name={`data.gallery.${i}`} value={url}
+                placeholder="/image.webp or https://…" data-url />
+              <div class="slot-actions">
+                <input class={`file-input`} id={`img-gallery-${i}`} type="file" accept="image/*" data-file />
+                <label class="upload-btn" for={`img-gallery-${i}`}>Upload…</label>
+                <button class="slot-clear" type="button" data-clear>Clear</button>
+              </div>
+              <p class="upload-status" data-status></p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+
+    <aside class="side-col">
+      <div class="panel">
+        <p class="kind-line">Kind: <strong>{item.kind}</strong></p>
+        <label class="field">
+          <span>Status</span>
+          <select class="in" name="status" data-server-value={item.status}>
+            <option value="draft" selected={item.status === "draft"}>Draft</option>
+            <option value="published" selected={item.status === "published"}>Published</option>
+            <option value="archived" selected={item.status === "archived"}>Archived</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Language</span>
+          <select class="in" name="locale" data-server-value={item.locale}>
+            <option value="en" selected={item.locale === "en"}>English</option>
+            <option value="es" selected={item.locale === "es"}>Español</option>
+            <option value="ca" selected={item.locale === "ca"}>Català</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>URL slug <em>(shared — renames every language)</em></span>
+          <input class="in" type="text" name="slug" value={item.slug} />
+        </label>
+        <label class="field">
+          <span>Sort order <em>(lower = first)</em></span>
+          <input class="in" type="number" name="sort_order" value={item.sort_order} />
+        </label>
+      </div>
+
+      <button class="save" type="submit">Save</button>
+
+      {!isNew && (
+        <button class="delete" type="submit" name="action" value="delete" formnovalidate
+          onclick="return confirm('Delete this item permanently?')">Delete item</button>
+      )}
+    </aside>
+  </form>
+
 </AdminLayout>
