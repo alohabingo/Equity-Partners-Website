@@ -20,6 +20,9 @@ const splitLines = (raw: string) =>
 
 const pipe = (line: string) => line.split("|").map((s) => s.trim());
 
+/** Upper bound on indexed image inputs (data.gallery.0 … .N). */
+const MAX_IMAGE_SLOTS = 24;
+
 /** Rebuild a typed value from its posted text according to the field's type marker. */
 function parseField(type: string, raw: string): unknown {
   switch (type) {
@@ -95,6 +98,19 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
 
   const data: Record<string, unknown> = {};
   for (const [key, type] of Object.entries(meta)) {
+    // "imageSlots" fields post one input per image (data.gallery.0, .1, .2 …)
+    // so the editor can show a thumbnail beside each one.
+    if (type === "imageSlots") {
+      const urls: string[] = [];
+      for (let i = 0; i < MAX_IMAGE_SLOTS; i++) {
+        const slot = form.get(`data.${key}.${i}`);
+        if (slot === null) continue;
+        const url = slot.toString().trim();
+        if (url) urls.push(url);
+      }
+      data[key] = urls;
+      continue;
+    }
     const raw = form.get(`data.${key}`)?.toString() ?? "";
     const value = parseField(type, raw);
     if (value !== null) data[key] = value;
@@ -113,6 +129,28 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
 
   let saved;
   if (id) {
+    // A slug identifies the item, not the translation: every language of the
+    // same item shares one. Renaming it on one language therefore renames all
+    // of them in a single statement — otherwise the untouched languages keep
+    // the old slug and the item splits into two entries in the portfolio list.
+    const { data: current } = await supabase
+      .from("portfolio_items").select("slug").eq("id", id).single();
+
+    if (current && current.slug !== slug) {
+      const { error: renameError } = await supabase
+        .from("portfolio_items")
+        .update({ slug, updated_at: new Date().toISOString() })
+        .eq("kind", kind)
+        .eq("slug", current.slug);
+      if (renameError) {
+        const dup = renameError.code === "23505";
+        return json(
+          { ok: false, error: dup ? "slug_exists_for_locale" : renameError.message },
+          dup ? 409 : 403,
+        );
+      }
+    }
+
     const { data: d, error } = await supabase
       .from("portfolio_items").update(payload).eq("id", id).select("id").single();
     if (error) return json({ ok: false, error: error.message }, 403);

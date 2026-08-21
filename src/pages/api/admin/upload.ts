@@ -21,7 +21,11 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   if (file.size > MAX_BYTES) return json({ ok: false, error: "too_large" }, 422);
 
   const ext = (file.name.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g, "");
-  const path = `blog/${new Date().toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+  // Callers may group their uploads (e.g. "portfolio"); anything unexpected
+  // falls back to the original "blog" folder.
+  const requested = form.get("folder")?.toString() ?? "";
+  const folder = /^[a-z0-9-]{1,32}$/.test(requested) ? requested : "blog";
+  const path = `${folder}/${new Date().toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
 
   const supabase = supabaseServer(cookies, request);
   const { error } = await supabase.storage
