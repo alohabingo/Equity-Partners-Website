@@ -32,6 +32,13 @@ const nav = [
 ];
 const visibleNav = nav.filter((n) => isSuper || !n.superOnly);
 
+// Projects starred on their portfolio card appear as sub-items under Portfolio.
+// Supplied by middleware via locals — NEVER query Supabase from this layout. A
+// layout is an imported component, so the response has already begun by the time
+// it renders, and the Supabase client's cookie write throws ResponseSentError and
+// takes the user's session down with it.
+const starredProjects = Astro.locals.sidebarProjects ?? [];
+
 const S = 'width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
 const NAV_ICONS: Record<string, string> = {
   dashboard: `<svg viewBox="0 0 24 24" ${S}><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>`,
@@ -117,6 +124,27 @@ const NAV_ICONS: Record<string, string> = {
       nav a svg { width: 17px; height: 17px; flex: none; }
       nav a:hover { background: rgba(83, 178, 127, 0.12); color: #ffffff; }
       nav a.active { background: #53b27f; color: #ffffff; }
+
+      /* Starred projects, nested under Portfolio. Hidden entirely when the
+         sidebar is collapsed — showing labels in an icons-only rail defeats
+         the point of collapsing it. */
+      .nav-projects { display: grid; gap: 0.1rem; margin: 0.15rem 0 0.35rem; }
+      nav a.nav-sub {
+        margin-left: 1.5rem;
+        padding: 0.42rem 0.7rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #9fb0c9;
+        border-left: 1px solid rgba(193, 206, 227, 0.2);
+        border-radius: 0 8px 8px 0;
+      }
+      nav a.nav-sub:hover { background: rgba(83, 178, 127, 0.1); color: #ffffff; }
+      nav a.nav-sub.active {
+        background: rgba(83, 178, 127, 0.16);
+        color: #ffffff;
+        border-left-color: #53b27f;
+      }
+      .is-collapsed body .nav-projects { display: none; }
 
       /* ---- Collapse toggle ---- */
       .collapse-btn {
@@ -309,10 +337,25 @@ const NAV_ICONS: Record<string, string> = {
       <p class="brand-sub">Command Center</p>
       <nav>
         {visibleNav.map((item) => (
-          <a href={item.href} class={active === item.key ? "active" : ""} title={item.label}>
-            <Fragment set:html={NAV_ICONS[item.key] ?? ""} />
-            <span class="nav-text">{item.label}</span>
-          </a>
+          <>
+            <a href={item.href} class={active === item.key ? "active" : ""} title={item.label}>
+              <Fragment set:html={NAV_ICONS[item.key] ?? ""} />
+              <span class="nav-text">{item.label}</span>
+            </a>
+            {item.key === "portfolio" && starredProjects.length > 0 && (
+              <div class="nav-projects">
+                {starredProjects.map((p) => (
+                  <a
+                    href={`/admin/projects/${p.slug}`}
+                    class:list={["nav-sub", { active: active === `project:${p.slug}` }]}
+                    title={p.name}
+                  >
+                    <span class="nav-text">{p.name}</span>
+                  </a>
+                ))}
+              </div>
+            )}
+          </>
         ))}
       </nav>
       <button class="collapse-btn" type="button" id="sidebar-toggle" aria-label="Collapse menu">

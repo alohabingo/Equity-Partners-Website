@@ -20,6 +20,14 @@ const { data: rows } = await supabase
   .select("id, kind, slug, locale, status, sort_order, name, data")
   .order("sort_order");
 
+// Projects that have been starred into the Command Centre. Only projects can be
+// starred: opportunities are investor-facing and handled by the Leads section.
+const { data: starredRows } = await supabase
+  .from("projects")
+  .select("slug")
+  .eq("status", "active");
+const starred = new Set((starredRows ?? []).map((r) => r.slug));
+
 /** Derive the lifecycle stage from the item's deal status text. */
 function stageOf(dealStatus: string | undefined): Stage {
   const s = (dealStatus ?? "").toLowerCase();
@@ -187,6 +195,24 @@ const STAGES: Array<{ key: Stage; label: string }> = [
     .pcard-media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 400ms ease; }
     .pcard:hover .pcard-media img { transform: scale(1.04); }
     .no-img { height: 100%; display: grid; place-items: center; color: #93a3b8; font-size: 0.8rem; }
+    /* The star adds a project to the Command Centre. Deliberately NOT a
+       "feature on the website" control — hence the explicit tooltip, since a
+       star on a CMS card usually means exactly that. */
+    .pcard-star {
+      position: absolute; top: 0.8rem; right: 0.8rem; z-index: 2;
+      width: 30px; height: 30px; border-radius: 50%;
+      display: grid; place-items: center; cursor: pointer;
+      background: rgba(9, 21, 36, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+      backdrop-filter: blur(3px);
+      transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
+    }
+    .pcard-star svg { fill: none; }
+    .pcard-star:hover { background: rgba(9, 21, 36, 0.75); transform: scale(1.07); }
+    .pcard-star.on { background: #f0b429; border-color: #f0b429; color: #422f00; }
+    .pcard-star.on svg { fill: currentColor; }
+    .pcard-star.busy { opacity: 0.5; pointer-events: none; }
     .pcard-status {
       position: absolute; top: 0.9rem; left: 0.9rem;
       font-size: 0.6rem; font-weight: 700; letter-spacing: 0.13em; text-transform: uppercase;
@@ -306,6 +332,20 @@ const STAGES: Array<{ key: Stage; label: string }> = [
             : <div class="no-img">No image</div>}
           <span class="pcard-status" style={`background:${badgeColour(c.kind, c.dealStatus)}`}>{c.dealStatus}</span>
           {!c.published && <span class="draft-badge">draft</span>}
+          {c.kind === "project" && (
+            <button
+              class:list={["pcard-star", { on: starred.has(c.slug) }]}
+              type="button"
+              data-slug={c.slug}
+              data-name={c.name}
+              aria-pressed={starred.has(c.slug) ? "true" : "false"}
+              title={starred.has(c.slug)
+                ? "In the Command Centre — click to remove"
+                : "Add to Command Centre"}
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2.9 2.85 5.78 6.38.93-4.61 4.5 1.09 6.35L12 17.46l-5.71 2.99 1.09-6.35-4.61-4.5 6.38-.93L12 2.9Z"/></svg>
+            </button>
+          )}
         </div>
 
         <div class="pcard-body">
@@ -432,11 +472,41 @@ const STAGES: Array<{ key: Stage; label: string }> = [
         apply(false);
       });
 
-      // Clicking a card opens its editor; the language chips keep their own links.
+      // Clicking a card opens its editor; the language chips and the star button
+      // keep their own behaviour.
       document.querySelectorAll(".pcard[data-href]").forEach((card) => {
         card.addEventListener("click", (e) => {
-          if (e.target.closest("a")) return;
+          if (e.target.closest("a, button")) return;
           window.location.href = card.dataset.href;
+        });
+      });
+
+      // Star = add this project to the Command Centre. Un-starring ARCHIVES the
+      // project rather than deleting it, so its enquiries and history survive.
+      // The page reloads afterwards so the sidebar reflects the change.
+      document.querySelectorAll(".pcard-star").forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const wasOn = btn.classList.contains("on");
+          btn.classList.add("busy");
+          try {
+            const res = await fetch("/api/admin/project-star", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                slug: btn.dataset.slug,
+                name: btn.dataset.name,
+                starred: !wasOn,
+              }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.ok) throw new Error(data.error || `failed (${res.status})`);
+            btn.classList.toggle("on", !wasOn);
+            setTimeout(() => window.location.reload(), 220);
+          } catch (err) {
+            btn.classList.remove("busy");
+            alert("Couldn't update the Command Centre: " + err.message);
+          }
         });
       });
 

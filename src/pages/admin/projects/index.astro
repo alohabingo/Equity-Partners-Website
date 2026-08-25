@@ -1,0 +1,117 @@
+---
+export const prerender = false;
+
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { supabaseServer } from "../../../lib/supabase";
+
+const supabase = supabaseServer(Astro.cookies, Astro.request);
+
+const { data: projects } = await supabase
+  .from("projects")
+  .select("id, slug, name, domain, mailbox, status")
+  .eq("status", "active")
+  .order("name");
+
+const list = projects ?? [];
+
+// Hero images and enquiry counts, fetched together rather than per card.
+const slugs = list.map((p) => p.slug);
+const ids = list.map((p) => p.id);
+
+const { data: content } = slugs.length
+  ? await supabase
+      .from("portfolio_items")
+      .select("slug, data")
+      .in("slug", slugs)
+      .eq("kind", "project")
+      .eq("locale", "en")
+  : { data: [] };
+const imageBySlug = new Map(
+  (content ?? []).map((c: any) => [c.slug, typeof c.data?.image === "string" ? c.data.image : ""]),
+);
+
+const { data: enquiries } = ids.length
+  ? await supabase.from("inquiries").select("project_id").in("project_id", ids)
+  : { data: [] };
+const countByProject = new Map<string, number>();
+for (const e of enquiries ?? []) {
+  countByProject.set(e.project_id, (countByProject.get(e.project_id) ?? 0) + 1);
+}
+---
+
+<AdminLayout title="Projects" active="projects">
+  <style>
+    .lede { margin-top: 0.4rem; font-size: 0.9rem; color: #5c6f88; }
+    .cards { margin-top: 1.5rem; display: grid; gap: 0.9rem; }
+    .pcard {
+      background: #fff; border: 1px solid #d7deea; border-radius: 1.2rem; overflow: hidden;
+      box-shadow: 0 10px 30px rgba(15, 26, 42, 0.06); text-decoration: none; color: inherit;
+      display: block; transition: box-shadow 300ms ease, border-color 300ms ease, transform 300ms ease;
+    }
+    .pcard:hover { border-color: rgba(83,178,127,.5); box-shadow: 0 16px 38px rgba(15,26,42,.1); transform: translateY(-2px); }
+    .banner { position: relative; height: 104px; }
+    .banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .banner .no-img { width: 100%; height: 100%; background: linear-gradient(120deg, #16283e, #0f2036); }
+    .banner .veil {
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, rgba(9,21,36,.88) 0%, rgba(9,21,36,.62) 42%, rgba(9,21,36,.12) 100%);
+    }
+    .banner .inner { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 1.7rem; }
+    .banner h2 { font-size: 1.3rem; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
+    .bsub { margin-top: 0.3rem; font-size: 0.76rem; color: #c8d8e8; display: flex; gap: 0.7rem; flex-wrap: wrap; }
+    .foot { display: flex; gap: 2.2rem; flex-wrap: wrap; align-items: center; padding: 1.05rem 1.7rem; }
+    .foot b { font-size: 1.25rem; font-weight: 600; }
+    .foot span.l { font-size: 0.8rem; color: #5c6f88; }
+    .foot .go { margin-left: auto; font-size: 0.8rem; font-weight: 700; color: #2e7d54; }
+    .setup { font-size: 0.75rem; font-weight: 700; color: #8a6420; background: rgba(196,148,58,.14); border-radius: 999px; padding: 0.2rem 0.6rem; }
+    .none { margin-top: 1.5rem; background: #fff; border: 1px solid #d7deea; border-radius: 1.2rem; padding: 2rem 1.8rem; box-shadow: 0 10px 30px rgba(15,26,42,.06); }
+    .none h2 { font-size: 1rem; font-weight: 700; }
+    .none p { margin-top: 0.6rem; font-size: 0.86rem; color: #5c6f88; line-height: 1.65; max-width: 62ch; }
+    .none a { color: #2e7d54; font-weight: 700; text-decoration: none; }
+    .none a:hover { text-decoration: underline; }
+  </style>
+
+  <div class="page-head">
+    <h1>Projects</h1>
+    <p class="lede">Buyer enquiries from each project's own website.</p>
+  </div>
+
+  {list.length === 0 ? (
+    <div class="none">
+      <h2>No projects yet</h2>
+      <p>
+        Projects are added from the <a href="/admin/portfolio">Portfolio</a> page: open it and
+        click the star in the corner of a project's card. That creates its command centre and
+        adds it to the menu here. Only projects can be starred — opportunities are investor
+        enquiries and live under Leads.
+      </p>
+    </div>
+  ) : (
+    <div class="cards">
+      {list.map((p) => (
+        <a class="pcard" href={`/admin/projects/${p.slug}`}>
+          <div class="banner">
+            {imageBySlug.get(p.slug)
+              ? <img src={imageBySlug.get(p.slug)} alt={p.name} loading="lazy" />
+              : <div class="no-img"></div>}
+            <div class="veil"></div>
+            <div class="inner">
+              <div>
+                <h2>{p.name}</h2>
+                <p class="bsub">
+                  <span>{p.domain ?? "no domain set"}</span>
+                  <span>{p.mailbox ?? "mailbox not connected"}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="foot">
+            <span><b>{countByProject.get(p.id) ?? 0}</b> <span class="l">enquiries</span></span>
+            {(!p.domain || !p.mailbox) && <span class="setup">setup incomplete</span>}
+            <span class="go">Open command centre →</span>
+          </div>
+        </a>
+      ))}
+    </div>
+  )}
+</AdminLayout>
