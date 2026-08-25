@@ -1,0 +1,66 @@
+---
+export const prerender = false;
+
+import AdminLayout from "../../../../../layouts/AdminLayout.astro";
+import EnquiryPanel from "../../../../../components/admin/EnquiryPanel.astro";
+import { supabaseServer } from "../../../../../lib/supabase";
+import type { EnquiryRow } from "../../../../../lib/enquiries";
+
+const { slug, id } = Astro.params;
+const supabase = supabaseServer(Astro.cookies, Astro.request);
+const me = Astro.locals.user;
+
+const { data: project } = await supabase
+  .from("projects").select("slug, name, mailbox").eq("slug", slug).maybeSingle();
+if (!project) return Astro.redirect("/admin/projects");
+
+const { data: enquiryRow } = await supabase
+  .from("enquiry_state").select("*").eq("id", id).maybeSingle();
+if (!enquiryRow) return Astro.redirect(`/admin/projects/${slug}`);
+const enquiry = enquiryRow as EnquiryRow;
+
+const { data: profiles } = await supabase.from("profiles").select("id, full_name");
+const nameById = new Map((profiles ?? []).map((p: any) => [p.id, p.full_name]));
+
+const [m, n, ev] = await Promise.all([
+  supabase.from("inquiry_messages").select("direction, subject, body_html, sent_at")
+    .eq("inquiry_id", id).order("sent_at"),
+  supabase.from("enquiry_notes").select("body, created_at, author_id")
+    .eq("inquiry_id", id).order("created_at", { ascending: false }),
+  supabase.from("enquiry_events").select("kind, detail, created_at, actor_id")
+    .eq("inquiry_id", id).order("created_at", { ascending: false }).limit(20),
+]);
+
+const messages = m.data ?? [];
+const notes = (n.data ?? []).map((x: any) => ({ ...x, author: nameById.get(x.author_id) ?? "Someone" }));
+const events = (ev.data ?? []).map((x: any) => ({ ...x, actor: nameById.get(x.actor_id) ?? "System" }));
+
+const selfHref = Astro.url.pathname;
+---
+
+<AdminLayout title={enquiry.name} active={`project:${slug}`}>
+  <style>
+    .back { display: inline-block; margin-top: 0.4rem; font-size: 0.82rem; font-weight: 600; color: #2e7d54; text-decoration: none; }
+    .back:hover { text-decoration: underline; }
+    .panel {
+      margin-top: 1.1rem; background: #fff; border: 1px solid #d7deea; border-radius: 1.2rem;
+      padding: 1.6rem 1.8rem; box-shadow: 0 10px 30px rgba(15, 26, 42, 0.06);
+      max-width: 900px;
+    }
+  </style>
+
+  <a class="back" href={`/admin/projects/${slug}?tab=inbox`}>← {project.name} inbox</a>
+
+  <div class="panel">
+    <EnquiryPanel
+      enquiry={enquiry}
+      messages={messages}
+      notes={notes}
+      events={events}
+      project={{ slug: project.slug, name: project.name, mailbox: project.mailbox }}
+      currentUserId={me?.id ?? ""}
+      currentUserName={me?.fullName ?? "You"}
+      back={selfHref}
+    />
+  </div>
+</AdminLayout>

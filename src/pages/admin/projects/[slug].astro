@@ -1,0 +1,806 @@
+---
+export const prerender = false;
+
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import EnquiryPanel from "../../../components/admin/EnquiryPanel.astro";
+import { supabaseServer } from "../../../lib/supabase";
+import { BUYER_STAGES, stageLabel, stageShade, OVERDUE_WORKING_DAYS } from "../../../lib/pipeline";
+import { bucketOf, needsAttention, BUCKET_LABELS, shortAge, plain, type EnquiryRow } from "../../../lib/enquiries";
+
+const { slug } = Astro.params;
+const supabase = supabaseServer(Astro.cookies, Astro.request);
+const me = Astro.locals.user;
+
+const { data: project } = await supabase
+  .from("projects").select("*").eq("slug", slug).maybeSingle();
+if (!project) return Astro.redirect("/admin/projects");
+
+// Banner and display name come from the published portfolio content; the
+// operational record only stores what marketing doesn't own.
+const { data: content } = await supabase
+  .from("portfolio_items")
+  .select("name, data")
+  .eq("slug", slug).eq("kind", "project").eq("locale", "en")
+  .maybeSingle();
+const heroImage = typeof content?.data?.image === "string" ? content.data.image : "";
+const dealStatus = typeof content?.data?.status === "string" ? content.data.status : "";
+
+const VALID_TABS = ["overview", "inbox", "settings"] as const;
+const tabParam = Astro.url.searchParams.get("tab") ?? "overview";
+const tab = (VALID_TABS as readonly string[]).includes(tabParam) ? tabParam : "overview";
+const saved = Astro.url.searchParams.get("saved") === "1";
+
+// The plaintext ingest key is shown exactly once, right after generation. It
+// arrives in a short-lived httpOnly cookie rather than the URL — secrets don't
+// belong in browser history, server logs or referrer headers. Reading it here
+// also consumes it, so a refresh won't show it again.
+const freshKeyCookie = Astro.cookies.get("ep_fresh_ingest_key");
+const freshKey = freshKeyCookie?.value ?? "";
+if (freshKey) Astro.cookies.delete("ep_fresh_ingest_key", { path: "/admin" });
+
+// ---- enquiries, with their derived waiting state ----
+const { data: rows } = await supabase
+  .from("enquiry_state")
+  .select("*")
+  .eq("project_id", project.id)
+  .order("last_activity_at", { ascending: false });
+const enquiries = (rows ?? []) as EnquiryRow[];
+
+const { data: profiles } = await supabase.from("profiles").select("id, full_name");
+const nameById = new Map((profiles ?? []).map((p: any) => [p.id, p.full_name]));
+
+const now = new Date();
+const DAY = 86_400_000;
+const since = (d: number) => new Date(now.getTime() - d * DAY);
+
+const newThisWeek = enquiries.filter((e) => new Date(e.created_at) > since(7)).length;
+const newLastWeek = enquiries.filter(
+  (e) => new Date(e.created_at) <= since(7) && new Date(e.created_at) > since(14),
+).length;
+// "We owe them something": they replied and we haven't, or we've never replied.
+const awaitingReply = enquiries.filter((e) => e.waiting_on_us === true || e.message_count === 0).length;
+const stageCount = (key: string) => enquiries.filter((e) => (e.stage ?? "new") === key).length;
+
+const attention = enquiries.filter((e) => needsAttention(e, now));
+const groups = (["unclaimed", "waiting", "overdue"] as const)
+  .map((b) => ({ bucket: b, label: BUCKET_LABELS[b], items: attention.filter((e) => bucketOf(e, now) === b) }))
+  .filter((g) => g.items.length > 0);
+
+const maxStage = Math.max(1, ...BUYER_STAGES.map((s) => stageCount(s.key)));
+
+// ---- inbox: segment + selected enquiry ----
+const SEGMENTS = [
+  { key: "needs", label: "Needs you", rows: attention },
+  { key: "unclaimed", label: "Unclaimed", rows: enquiries.filter((e) => !e.assigned_to) },
+  { key: "mine", label: "Mine", rows: enquiries.filter((e) => e.assigned_to === me?.id) },
+  { key: "all", label: "All", rows: enquiries },
+];
+const segParam = Astro.url.searchParams.get("seg") ?? "needs";
+const segment = SEGMENTS.find((s) => s.key === segParam) ?? SEGMENTS[0];
+const inboxRows = segment.rows;
+
+const selectedId = Astro.url.searchParams.get("e") ?? inboxRows[0]?.id ?? "";
+const selected = enquiries.find((e) => e.id === selectedId) ?? null;
+
+let messages: any[] = [];
+let notes: any[] = [];
+let events: any[] = [];
+if (selected) {
+  const [m, n, ev] = await Promise.all([
+    supabase.from("inquiry_messages").select("direction, subject, body_html, sent_at")
+      .eq("inquiry_id", selected.id).order("sent_at"),
+    supabase.from("enquiry_notes").select("body, created_at, author_id")
+      .eq("inquiry_id", selected.id).order("created_at", { ascending: false }),
+    supabase.from("enquiry_events").select("kind, detail, created_at, actor_id")
+      .eq("inquiry_id", selected.id).order("created_at", { ascending: false }).limit(12),
+  ]);
+  messages = m.data ?? [];
+  notes = (n.data ?? []).map((x: any) => ({ ...x, author: nameById.get(x.author_id) ?? "Someone" }));
+  events = (ev.data ?? []).map((x: any) => ({ ...x, actor: nameById.get(x.actor_id) ?? "System" }));
+}
+
+// ---- setup state ----
+const hasDomain = !!project.domain;
+const hasKey = !!project.ingest_key_hash;
+const receivedAny = enquiries.length > 0;
+
+// The checklist follows the mailbox route, which is how enquiries actually
+// arrive: the website form emails the project inbox, and people email it
+// directly too. The webhook is an optional extra, so it isn't a step here.
+const steps = [
+  { done: hasDomain, label: "Add the project domain", hint: "Identifies the site this project belongs to." },
+  { done: !!project.mailbox_connected_at, label: "Connect the mailbox",
+    hint: "Lets enquiries arrive automatically and replies go out from the project address." },
+  { done: receivedAny, label: "First enquiry arrives",
+    hint: "Ticks itself once mail from the inbox has been picked up." },
+];
+const remaining = steps.filter((s) => !s.done && !s.later).length;
+
+const { data: rejections } = await supabase
+  .from("ingest_log")
+  .select("outcome, reason, created_at")
+  .eq("project_id", project.id).eq("outcome", "rejected")
+  .order("created_at", { ascending: false }).limit(3);
+
+const inboxHref = (opts: { seg?: string; e?: string }) => {
+  const p = new URLSearchParams({ tab: "inbox", seg: opts.seg ?? segment.key });
+  if (opts.e) p.set("e", opts.e);
+  return `/admin/projects/${slug}?${p.toString()}`;
+};
+const selfHref = Astro.url.pathname + Astro.url.search;
+
+const mailboxMessage = Astro.url.searchParams.get("mailbox") ?? "";
+const mailboxConnected = !!project.mailbox_connected_at;
+const oauthReady = !!(import.meta.env.ZOHO_OAUTH_CLIENT_ID && import.meta.env.ZOHO_OAUTH_CLIENT_SECRET);
+
+const webhookUrl = `${Astro.url.origin}/api/ingest/inquiry`;
+
+const snippet = `// Example only — any language or form service can do this.
+// The endpoint also accepts urlencoded and multipart bodies.
+await fetch("${webhookUrl}", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "X-Ingest-Key": process.env.EP_INGEST_KEY,   // never expose this in the browser
+  },
+  body: JSON.stringify({
+    name:    "Marta Puig",
+    email:   "marta@example.com",
+    phone:   "+376 300 111",       // optional
+    message: "Interested in villa 4",
+    locale:  "ca",                 // optional: en | es | ca
+    source_page: "/vila-4",        // optional
+  }),
+});`;
+---
+
+<AdminLayout title={project.name} active={`project:${slug}`}>
+  <style>
+    .banner {
+      position: relative; height: 104px; border-radius: 1.2rem; overflow: hidden;
+      box-shadow: 0 10px 30px rgba(15, 26, 42, 0.1);
+    }
+    .banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .banner .no-img { width: 100%; height: 100%; background: linear-gradient(120deg, #16283e, #0f2036); }
+    /* Left-to-right rather than top-down: project photos vary from bright sky to
+       dark timber, and a horizontal veil keeps the white text legible over any of
+       them without a per-project overlay. */
+    .banner .veil {
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, rgba(9,21,36,.88) 0%, rgba(9,21,36,.62) 42%, rgba(9,21,36,.12) 100%);
+    }
+    .banner .inner { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 1.7rem; }
+    .banner h1 { font-size: 1.45rem; font-weight: 700; letter-spacing: -0.01em; color: #ffffff; }
+    .bsub { margin-top: 0.35rem; display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; font-size: 0.78rem; color: #c8d8e8; }
+    .bsub a { color: #a7e0c1; font-weight: 600; text-decoration: none; }
+    .bsub a:hover { text-decoration: underline; }
+    .bpill {
+      font-size: 0.62rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+      padding: 0.22rem 0.6rem; border-radius: 999px;
+      background: rgba(255, 255, 255, 0.16); color: #eaf6ef;
+    }
+
+    .tabs { display: flex; gap: 0.2rem; margin-top: 1.3rem; border-bottom: 1px solid #d7deea; flex-wrap: wrap; }
+    .tabs a, .tabs span {
+      font-size: 0.82rem; font-weight: 700; color: #5c6f88; text-decoration: none;
+      border-bottom: 2px solid transparent; padding: 0.6rem 1rem;
+      display: flex; align-items: center; gap: 0.45rem;
+    }
+    .tabs a:hover { color: #16283e; }
+    .tabs a.on { color: #2e7d54; border-bottom-color: #53b27f; }
+    .tabs span { color: #c3cfe0; cursor: not-allowed; }
+    .tabs .soon {
+      font-size: 0.58rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+      background: #f2f5f9; color: #93a3b8; border-radius: 999px; padding: 0.1rem 0.4rem;
+    }
+
+    .card {
+      background: #ffffff; border: 1px solid #d7deea; border-radius: 1.2rem;
+      padding: 1.5rem 1.7rem; box-shadow: 0 10px 30px rgba(15, 26, 42, 0.06);
+    }
+    .card + .card { margin-top: 0.9rem; }
+    h2.sec { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #5c6f88; }
+    .lede { margin-top: 0.5rem; font-size: 0.85rem; color: #5c6f88; line-height: 1.6; }
+
+    .steps { margin-top: 1.1rem; display: grid; gap: 0.1rem; }
+    .step { display: grid; grid-template-columns: 24px 1fr; gap: 0.75rem; padding: 0.7rem 0; border-bottom: 1px solid #eef2f7; }
+    .step:last-child { border-bottom: 0; }
+    .tick {
+      width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
+      font-size: 0.7rem; font-weight: 800; margin-top: 0.1rem;
+    }
+    .tick.done { background: rgba(15, 138, 95, 0.13); color: #0f8a5f; }
+    .tick.todo { background: #f2f5f9; color: #93a3b8; }
+    .step .l { font-size: 0.86rem; font-weight: 600; }
+    .step.is-later .l { color: #93a3b8; }
+    .step .h { margin-top: 0.15rem; font-size: 0.76rem; color: #93a3b8; }
+
+    .field { display: grid; gap: 0.35rem; margin-top: 1rem; }
+    .field span { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #46586f; }
+    .field em { font-weight: 400; text-transform: none; letter-spacing: 0; color: #93a3b8; font-size: 0.92em; }
+    .in {
+      font: inherit; font-size: 0.9rem; color: #16283e; width: 100%;
+      padding: 0.6rem 0.75rem; border: 1px solid #d5deea; border-radius: 9px; background: #fbfcfe;
+    }
+    .in:focus { outline: none; background: #fff; border-color: #53b27f; box-shadow: 0 0 0 3px rgba(83,178,127,.16); }
+    .row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem 1.2rem; }
+    .field-spacer { display: block; }
+    @media (max-width: 720px) { .field-spacer { display: none; } }
+    .btn {
+      font: inherit; font-size: 0.85rem; font-weight: 700; color: #fff; background: #53b27f;
+      border: 0; border-radius: 10px; padding: 0.7rem 1.3rem; cursor: pointer; margin-top: 1.2rem;
+      box-shadow: 0 8px 20px rgba(83, 178, 127, 0.28);
+    }
+    .btn.ghost { background: #fff; color: #46586f; border: 1px solid #d5deea; box-shadow: none; }
+    .saved { margin-top: 0.8rem; font-size: 0.82rem; font-weight: 700; color: #2e7d54; }
+
+    .keybox { margin-top: 0.9rem; background: #fffdf5; border: 1px solid #eadfbf; border-radius: 0.9rem; padding: 1rem 1.1rem; }
+    .keybox .kh { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: #8a6420; }
+    .keybox code {
+      display: block; margin-top: 0.5rem; font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 0.82rem; background: #fff; border: 1px solid #eadfbf; border-radius: 7px;
+      padding: 0.55rem 0.7rem; overflow-wrap: anywhere; color: #16283e;
+    }
+    .keybox p { margin-top: 0.55rem; font-size: 0.78rem; color: #7a6a3f; line-height: 1.55; }
+
+    .adv { margin-top: 0.9rem; }
+    .adv > summary {
+      cursor: pointer; font-size: 0.8rem; font-weight: 700; color: #5c6f88;
+      padding: 0.7rem 0.9rem; background: #fff; border: 1px solid #d7deea;
+      border-radius: 0.9rem; list-style: none;
+    }
+    .adv > summary::-webkit-details-marker { display: none; }
+    .adv > summary::before { content: "▸ "; color: #93a3b8; }
+    .adv[open] > summary::before { content: "▾ "; }
+    .adv > summary:hover { color: #16283e; border-color: #c3cfe0; }
+    .adv[open] > summary { margin-bottom: 0.4rem; }
+    .adv > .lede { padding: 0 0.2rem; }
+    .kv { margin-top: 0.9rem; display: grid; gap: 0.5rem; }
+    .kv > div { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 0.8rem; align-items: center; }
+    .kv span { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #93a3b8; }
+    .kv code {
+      font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.78rem;
+      background: #f4f7fb; border: 1px solid #e3e9f2; border-radius: 7px;
+      padding: 0.35rem 0.55rem; overflow-wrap: anywhere; color: #16283e;
+    }
+    pre.snip {
+      margin-top: 0.9rem; background: #0f2036; color: #d8e5f5; border-radius: 0.9rem;
+      padding: 1rem 1.1rem; font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 0.74rem; line-height: 1.6; overflow-x: auto;
+    }
+
+    table.q { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 0.8rem; }
+    table.q th {
+      text-align: left; font-size: 0.62rem; letter-spacing: 0.07em; text-transform: uppercase;
+      color: #93a3b8; font-weight: 800; padding: 0.45rem 0.5rem; border-bottom: 1px solid #d7deea;
+    }
+    table.q td { padding: 0.7rem 0.5rem; border-bottom: 1px solid #eef2f7; }
+    table.q tr:last-child td { border-bottom: 0; }
+    .flag { font-size: 0.6rem; font-weight: 700; color: #93a3b8; border: 1px solid #d7deea; border-radius: 4px; padding: 0 0.22rem; }
+    .empty { margin-top: 0.9rem; font-size: 0.85rem; color: #93a3b8; }
+    .warn {
+      margin-top: 0.9rem; background: rgba(179,38,30,.05); border: 1px solid rgba(179,38,30,.25);
+      border-radius: 0.8rem; padding: 0.8rem 1rem; font-size: 0.8rem; color: #8a2a22;
+    }
+    .warn b { display: block; margin-bottom: 0.3rem; }
+
+    /* ---- metric cards: same spec as the main dashboard ---- */
+    .strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.9rem; margin-top: 1.4rem; }
+    .cell { background: #fff; border: 1px solid #d7deea; border-radius: 1.2rem; padding: 1.2rem 1.4rem 1rem; box-shadow: 0 10px 30px rgba(15,26,42,.06); }
+    .m-top { display: flex; align-items: center; gap: 0.95rem; }
+    .m-tile { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; flex: none; }
+    .m-tile svg { width: 17px; height: 17px; }
+    .m-value { margin: 0; font-size: 2.3rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1; color: #16283e; }
+    .m-label { margin: 0.55rem 0 0; font-size: 0.78rem; font-weight: 500; line-height: 1.25; color: #5c6f88; }
+    .m-sep { height: 1px; background: #eef2f7; margin: 0.7rem 0 0.55rem; }
+    .m-foot { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+    .m-delta { font-size: 0.68rem; font-weight: 700; border-radius: 999px; padding: 0.16rem 0.5rem; line-height: 1.35; white-space: nowrap; }
+    .m-delta.up { background: rgba(15,138,95,.1); color: #0f8a5f; }
+    .m-delta.flat { background: #f2f5f9; color: #7d8ea6; }
+    .m-delta.alert { background: rgba(179,38,30,.09); color: #b3261e; }
+    .m-period { font-size: 0.7rem; line-height: 1.3; color: #93a3b8; text-align: right; }
+
+    .grid2 { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 0.9rem; align-items: start; margin-top: 0.9rem; }
+    .stack { display: grid; gap: 0.9rem; }
+
+    /* ---- needs-you ---- */
+    .group + .group { margin-top: 1.2rem; }
+    .group-h { display: flex; align-items: center; gap: 0.55rem; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #5c6f88; }
+    .group-h .n { background: #f2f5f9; color: #5c6f88; border-radius: 999px; padding: 0.1rem 0.42rem; font-size: 0.66rem; }
+    .group-h.warn .n { background: rgba(179,38,30,.09); color: #b3261e; }
+    .rows { margin-top: 0.5rem; }
+    .row { display: grid; grid-template-columns: 1fr auto; gap: 0.8rem; align-items: center; padding: 0.7rem 0.1rem; border-bottom: 1px solid #eef2f7; }
+    .row:last-child { border-bottom: 0; }
+    .nm { font-size: 0.86rem; font-weight: 700; color: #16283e; text-decoration: none; }
+    .nm:hover { color: #2e7d54; text-decoration: underline; }
+    .flag { font-size: 0.6rem; font-weight: 700; color: #93a3b8; border: 1px solid #d7deea; border-radius: 4px; padding: 0 0.22rem; vertical-align: 2px; }
+    .prev { margin-top: 0.18rem; font-size: 0.76rem; color: #5c6f88; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 52ch; }
+    .rmeta { text-align: right; font-size: 0.72rem; color: #93a3b8; white-space: nowrap; }
+    .rmeta .w { display: block; font-weight: 700; color: #16283e; }
+    .rmeta .w.late { color: #b3261e; }
+    .chip { font-size: 0.64rem; font-weight: 700; padding: 0.16rem 0.48rem; border-radius: 999px; background: #f2f5f9; color: #5c6f88; }
+    .claimbtn { font: inherit; font-size: 0.68rem; font-weight: 700; color: #2e7d54; background: rgba(83,178,127,.1); border: 1px solid rgba(83,178,127,.35); border-radius: 999px; padding: 0.2rem 0.55rem; cursor: pointer; }
+
+    /* ---- pipeline: one hue, darker as it progresses ---- */
+    .stagerow { display: grid; grid-template-columns: 1fr 40px; align-items: center; gap: 0.6rem; font-size: 0.79rem; padding: 0.38rem 0; border-bottom: 1px solid #eef2f7; }
+    .stagerow:last-child { border-bottom: 0; }
+    .stagerow b { text-align: right; }
+    .stagerow.zero { color: #93a3b8; }
+    .track { height: 7px; border-radius: 4px; background: #eef2f7; overflow: hidden; margin-top: 0.28rem; }
+    .track i { display: block; height: 100%; border-radius: 4px; }
+
+    table.q { width: 100%; border-collapse: collapse; font-size: 0.81rem; margin-top: 0.7rem; }
+    table.q th { text-align: left; font-size: 0.62rem; letter-spacing: 0.07em; text-transform: uppercase; color: #93a3b8; font-weight: 800; padding: 0.45rem 0.5rem; border-bottom: 1px solid #d7deea; }
+    table.q td { padding: 0.68rem 0.5rem; border-bottom: 1px solid #eef2f7; }
+    table.q tr:last-child td { border-bottom: 0; }
+    .dirin { color: #b3261e; font-weight: 800; }
+    .dirout { color: #93a3b8; font-weight: 800; }
+
+    /* ---- inbox ---- */
+    .split { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 0.9rem; align-items: start; margin-top: 1.4rem; }
+    .listcard { background: #fff; border: 1px solid #d7deea; border-radius: 1.2rem; overflow: hidden; box-shadow: 0 10px 30px rgba(15,26,42,.06); }
+    .segs { display: flex; gap: 0.35rem; padding: 0.75rem; border-bottom: 1px solid #eef2f7; flex-wrap: wrap; }
+    .segs a { font-size: 0.7rem; font-weight: 700; color: #5c6f88; background: #f6f8fb; border: 1px solid #d7deea; border-radius: 999px; padding: 0.25rem 0.6rem; text-decoration: none; }
+    .segs a.on { background: #0f2036; border-color: #0f2036; color: #fff; }
+    .ilist { max-height: 640px; overflow: auto; }
+    .item { display: block; padding: 0.78rem 0.85rem; border-bottom: 1px solid #eef2f7; text-decoration: none; color: inherit; }
+    .item:hover { background: #f8fbfd; }
+    .item.on { background: rgba(83,178,127,.07); box-shadow: inset 3px 0 0 #53b27f; }
+    .item .t { display: flex; justify-content: space-between; gap: 0.5rem; align-items: baseline; }
+    .item .t b { font-size: 0.83rem; }
+    .item .t span { font-size: 0.68rem; color: #93a3b8; white-space: nowrap; }
+    .item .t span.late { color: #b3261e; font-weight: 700; }
+    .item p { margin: 0.2rem 0 0; font-size: 0.74rem; color: #5c6f88; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .item .tags { margin-top: 0.3rem; display: flex; gap: 0.3rem; flex-wrap: wrap; }
+    .panel { background: #fff; border: 1px solid #d7deea; border-radius: 1.2rem; padding: 1.4rem 1.6rem; box-shadow: 0 10px 30px rgba(15,26,42,.06); }
+    .nothing { padding: 3rem 1.6rem; text-align: center; font-size: 0.86rem; color: #93a3b8; }
+  </style>
+
+  <div class="banner">
+    {heroImage ? <img src={heroImage} alt={project.name} /> : <div class="no-img"></div>}
+    <div class="veil"></div>
+    <div class="inner">
+      <div>
+        <h1>{project.name}</h1>
+        <p class="bsub">
+          {dealStatus && <span class="bpill">{dealStatus}</span>}
+          {project.domain
+            ? <a href={`https://${project.domain}`} target="_blank" rel="noreferrer">{project.domain} ↗</a>
+            : <span>no domain set</span>}
+          <span>{project.mailbox ? `replies from ${project.mailbox}` : "mailbox not connected"}</span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <a href={`/admin/projects/${slug}`} class={tab === "overview" ? "on" : ""}>Overview</a>
+    <a href={inboxHref({ seg: "needs" })} class={tab === "inbox" ? "on" : ""}>
+      Inbox {attention.length > 0 && <em class="soon" style="background:rgba(179,38,30,.09);color:#b3261e">{attention.length}</em>}
+    </a>
+    <span>Documents <em class="soon">phase D</em></span>
+    <a href={`/admin/projects/${slug}?tab=settings`} class={tab === "settings" ? "on" : ""}>Settings</a>
+  </div>
+
+  {tab === "overview" && (
+    <div>
+      {remaining > 0 && (
+        <section class="card" style="margin-top:1.4rem">
+          <h2 class="sec">Setup — {remaining} step{remaining === 1 ? "" : "s"} left</h2>
+          <p class="lede">
+            Enquiries from {project.domain || "this project's site"} will appear here once the
+            steps below are done. Nothing is broken in the meantime — it just isn't connected yet.
+          </p>
+          <div class="steps">
+            {steps.map((st) => (
+              <div class:list={["step", { "is-later": st.later }]}>
+                <span class:list={["tick", st.done ? "done" : "todo"]}>{st.done ? "✓" : "•"}</span>
+                <div>
+                  <div class="l">{st.label}</div>
+                  <div class="h">{st.hint}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <a class="btn ghost" href={`/admin/projects/${slug}?tab=settings`} style="display:inline-block;text-decoration:none">Open Settings →</a>
+        </section>
+      )}
+
+      {rejections && rejections.length > 0 && (
+        <div class="warn">
+          <b>Submissions were rejected</b>
+          {rejections.map((r) => (
+            <div>{new Date(r.created_at).toLocaleString("en-GB")} — {r.reason}</div>
+          ))}
+        </div>
+      )}
+
+      <div class="strip">
+        <article class="cell">
+          <div class="m-top">
+            <span class="m-tile" style="background:rgba(37,99,199,.1);color:#2563c7">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+            </span>
+            <p class="m-value">{newThisWeek}</p>
+          </div>
+          <p class="m-label">New enquiries</p>
+          <div class="m-sep"></div>
+          <div class="m-foot">
+            {newThisWeek === newLastWeek
+              ? <span class="m-delta flat">— 0</span>
+              : <span class:list={["m-delta", newThisWeek > newLastWeek ? "up" : "alert"]}>
+                  {newThisWeek > newLastWeek ? `▲ +${newThisWeek - newLastWeek}` : `▼ ${newThisWeek - newLastWeek}`}
+                </span>}
+            <span class="m-period">vs last week</span>
+          </div>
+        </article>
+
+        <article class="cell">
+          <div class="m-top">
+            <span class="m-tile" style="background:rgba(179,38,30,.09);color:#b3261e">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            </span>
+            <p class="m-value">{awaitingReply}</p>
+          </div>
+          <p class="m-label">Awaiting our reply</p>
+          <div class="m-sep"></div>
+          <div class="m-foot">
+            {awaitingReply > 0
+              ? <span class="m-delta alert">needs a human</span>
+              : <span class="m-delta flat">all answered</span>}
+            <span class="m-period">{attention.length > 0 ? `${attention.length} need attention` : "nothing waiting"}</span>
+          </div>
+        </article>
+
+        <article class="cell">
+          <div class="m-top">
+            <span class="m-tile" style="background:rgba(155,63,191,.1);color:#9b3fbf">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
+            </span>
+            <p class="m-value">{stageCount("viewing_booked")}</p>
+          </div>
+          <p class="m-label">Viewings booked</p>
+          <div class="m-sep"></div>
+          <div class="m-foot">
+            <span class="m-delta flat">{stageCount("offer")} at offer</span>
+            <span class="m-period">in the pipeline</span>
+          </div>
+        </article>
+
+        <article class="cell">
+          <div class="m-top">
+            <span class="m-tile" style="background:rgba(200,106,0,.1);color:#c86a00">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>
+            </span>
+            <p class="m-value">{stageCount("reserved")}</p>
+          </div>
+          <p class="m-label">Reserved</p>
+          <div class="m-sep"></div>
+          <div class="m-foot">
+            <span class="m-delta flat">{enquiries.length} total</span>
+            <span class="m-period">all time</span>
+          </div>
+        </article>
+      </div>
+
+      <div class="grid2">
+        <div class="stack">
+          <section class="card">
+            <h2 class="sec">Needs you</h2>
+            {groups.length === 0 ? (
+              <p class="empty">Nothing waiting — every enquiry is answered and claimed.</p>
+            ) : groups.map((g) => (
+              <div class="group">
+                <div class:list={["group-h", { warn: g.bucket === "overdue" }]}>
+                  {g.label} <span class="n">{g.items.length}</span>
+                </div>
+                <div class="rows">
+                  {g.items.map((e) => (
+                    <div class="row">
+                      <div>
+                        <a class="nm" href={`/admin/projects/${slug}/enquiry/${e.id}`}>
+                          {e.name} <span class="flag">{(e.locale ?? "en").toUpperCase()}</span>
+                        </a>
+                        <div class="prev">{plain(e.message) || "—"}</div>
+                      </div>
+                      <div class="rmeta">
+                        <span class:list={["w", { late: g.bucket === "overdue" }]}>{shortAge(e.last_activity_at)}</span>
+                        {e.assigned_to
+                          ? <span>{nameById.get(e.assigned_to) ?? "assigned"}</span>
+                          : (
+                            <form method="post" action="/api/admin/enquiry" style="display:inline">
+                              <input type="hidden" name="id" value={e.id} />
+                              <input type="hidden" name="action" value="claim" />
+                              <input type="hidden" name="back" value={selfHref} />
+                              <button class="claimbtn" type="submit">Claim</button>
+                            </form>
+                          )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </section>
+
+          <section class="card">
+            <h2 class="sec">All enquiries · {enquiries.length}</h2>
+            {enquiries.length === 0 ? (
+              <p class="empty">No enquiries yet. The first one from the project site will land here.</p>
+            ) : (
+              <table class="q">
+                <tr><th>Buyer</th><th>Stage</th><th>Owner</th><th>Last</th></tr>
+                {enquiries.map((e) => (
+                  <tr>
+                    <td>
+                      <a class="nm" href={`/admin/projects/${slug}/enquiry/${e.id}`}>{e.name}</a>
+                      <span class="flag">{(e.locale ?? "en").toUpperCase()}</span>
+                    </td>
+                    <td><span class="chip">{stageLabel(e.stage)}</span></td>
+                    <td>{e.assigned_to ? (nameById.get(e.assigned_to) ?? "assigned") : <span class="chip">unclaimed</span>}</td>
+                    <td>
+                      {e.last_direction === "inbound" && <span class="dirin">← {shortAge(e.last_activity_at)}</span>}
+                      {e.last_direction === "outbound" && <span class="dirout">→ {shortAge(e.last_activity_at)}</span>}
+                      {!e.last_direction && <span class="dirin">← {shortAge(e.created_at)}</span>}
+                    </td>
+                  </tr>
+                ))}
+              </table>
+            )}
+          </section>
+        </div>
+
+        <div class="stack">
+          <section class="card">
+            <h2 class="sec">Pipeline</h2>
+            <div style="margin-top:0.5rem">
+              {BUYER_STAGES.map((st) => (
+                <div class:list={["stagerow", { zero: stageCount(st.key) === 0 }]}>
+                  <div>
+                    {st.label}
+                    <div class="track">
+                      <i style={`width:${Math.round((stageCount(st.key) / maxStage) * 100)}%;background:${st.shade}`}></i>
+                    </div>
+                  </div>
+                  <b>{stageCount(st.key)}</b>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section class="card">
+            <h2 class="sec">How this is measured</h2>
+            <p class="lede">
+              <b>Awaiting our reply</b> is worked out from the direction of the most recent
+              message — not from a status anyone has to remember to set, so it can't go stale.
+              An enquiry we've answered becomes a chase after {OVERDUE_WORKING_DAYS} working
+              days of silence, weekends excluded.
+            </p>
+          </section>
+        </div>
+      </div>
+    </div>
+  )}
+
+  {tab === "inbox" && (
+    <div class="split">
+      <div class="listcard">
+        <div class="segs">
+          {SEGMENTS.map((sg) => (
+            <a href={inboxHref({ seg: sg.key })} class={sg.key === segment.key ? "on" : ""}>
+              {sg.label} · {sg.rows.length}
+            </a>
+          ))}
+        </div>
+        <div class="ilist">
+          {inboxRows.length === 0 && <p class="nothing">Nothing in this view.</p>}
+          {inboxRows.map((e) => (
+            <a class:list={["item", { on: e.id === selectedId }]} href={inboxHref({ e: e.id })}>
+              <div class="t">
+                <b>{e.name}</b>
+                <span class={bucketOf(e, now) === "overdue" ? "late" : ""}>{shortAge(e.last_activity_at)}</span>
+              </div>
+              <p>{plain(e.message, 70) || "—"}</p>
+              <div class="tags">
+                <span class="chip">{stageLabel(e.stage)}</span>
+                {!e.assigned_to && <span class="chip">unclaimed</span>}
+                {e.waiting_on_us === true && <span class="chip" style="background:rgba(179,38,30,.09);color:#b3261e">waiting on us</span>}
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <div class="panel">
+        {selected ? (
+          <EnquiryPanel
+            enquiry={selected}
+            messages={messages}
+            notes={notes}
+            events={events}
+            project={{ slug: project.slug, name: project.name, mailbox: project.mailbox }}
+            currentUserId={me?.id ?? ""}
+            currentUserName={me?.fullName ?? "You"}
+            back={selfHref}
+          />
+        ) : (
+          <p class="nothing">Select an enquiry on the left.</p>
+        )}
+      </div>
+    </div>
+  )}
+
+  {tab === "settings" && (
+    <div style="margin-top: 1.4rem">
+      <form class="card" method="post" action="/api/admin/project-settings">
+        <input type="hidden" name="slug" value={project.slug} />
+        <h2 class="sec">This project</h2>
+        <p class="lede">Its name in the menu, where its website lives, and which mailbox answers it.</p>
+
+        <div class="row2">
+          <label class="field">
+            <span>Sidebar name <em>(how it reads in the left menu — leave blank to use "{project.name}")</em></span>
+            <input
+              class="in"
+              type="text"
+              name="nav_name"
+              maxlength="40"
+              value={project.nav_name ?? ""}
+              placeholder={project.name}
+            />
+          </label>
+          <span class="field-spacer"></span>
+          <label class="field">
+            <span>Domain <em>(no https://)</em></span>
+            <input class="in" type="text" name="domain" value={project.domain ?? ""} placeholder="nantaalta.com" />
+          </label>
+          <label class="field">
+            <span>Mailbox <em>(filled in automatically when you connect)</em></span>
+            <input class="in" type="email" name="mailbox" value={project.mailbox ?? ""} placeholder="sales@nantaalta.com" />
+          </label>
+        </div>
+        <button class="btn" type="submit">Save</button>
+        {saved && <p class="saved">Saved ✓</p>}
+      </form>
+
+      <section class="card">
+        <h2 class="sec">Mailbox</h2>
+
+        {mailboxMessage && <p class="saved" style="margin-top:0">{mailboxMessage}</p>}
+
+        {!oauthReady && (
+          <p class="lede">
+            The Zoho application isn't configured on this environment yet —
+            <b> ZOHO_OAUTH_CLIENT_ID</b> and <b>ZOHO_OAUTH_CLIENT_SECRET</b> need to be set,
+            then the server restarted. See <b>zoho-oauth-app-setup.md</b>.
+          </p>
+        )}
+
+        {oauthReady && !mailboxConnected && (
+          <>
+            <p class="lede">
+              This lets the portal read enquiries arriving in the project's inbox and reply from
+              that address. You'll be sent to Zoho to sign in.
+            </p>
+            <p class="lede">
+              <b>Sign in as the project's mailbox</b>{project.mailbox ? ` — ${project.mailbox}` : ""},
+              not your own admin account. Whichever mailbox you sign in as is the one that gets
+              connected, and its address is filled in here automatically afterwards.
+            </p>
+            <a class="btn" href={`/api/admin/zoho/connect?slug=${project.slug}`}
+               style="display:inline-block;text-decoration:none">Connect mailbox</a>
+          </>
+        )}
+
+        {mailboxConnected && (
+          <>
+            <div class="kv" style="margin-top:0.4rem">
+              <div><span>Connected</span><code>{project.mailbox}</code></div>
+              <div><span>Since</span><code>{new Date(project.mailbox_connected_at).toLocaleString("en-GB")}</code></div>
+              <div>
+                <span>Last sync</span>
+                <code>{project.mailbox_last_sync_at
+                  ? new Date(project.mailbox_last_sync_at).toLocaleString("en-GB")
+                  : "not yet"}</code>
+              </div>
+            </div>
+
+            {project.mailbox_last_error && (
+              <div class="warn"><b>Last sync failed</b><div>{project.mailbox_last_error}</div></div>
+            )}
+
+            <p class="lede" style="margin-top:0.9rem">
+              Mail arriving here becomes an enquiry automatically. A sender we already have
+              is added to their existing thread; anyone new becomes an unclaimed enquiry in
+              Needs you. Form notifications are read via their Reply-To, so the buyer is the
+              contact rather than the form service.
+            </p>
+
+            <div style="display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center">
+              <form method="post" action="/api/admin/project-mail-sync">
+                <input type="hidden" name="slug" value={project.slug} />
+                <button class="btn ghost" type="submit">Sync now</button>
+              </form>
+              <form method="post" action="/api/admin/zoho/disconnect"
+                    onsubmit="return confirm('Disconnect this mailbox? Existing enquiries are kept.')">
+                <input type="hidden" name="slug" value={project.slug} />
+                <button class="btn ghost" type="submit" style="color:#a33d3d;border-color:rgba(203,76,76,.4)">Disconnect</button>
+              </form>
+            </div>
+          </>
+        )}
+      </section>
+      <details class="adv">
+        <summary>Advanced — connect the website form directly</summary>
+        <p class="lede">
+          Not needed once the mailbox is connected: form submissions already reach you
+          as email. This exists for a project whose site cannot send email, or if you
+          ever want submissions to arrive instantly rather than within ten minutes.
+        </p>
+      <section class="card">
+        <h2 class="sec">Ingest key</h2>
+        <p class="lede">
+          Authenticates submissions from the project site. Stored as a hash — it can be
+          replaced but never read back, so keep the copy you take now.
+        </p>
+
+        {freshKey && (
+          <div class="keybox">
+            <div class="kh">Your new key — copy it now</div>
+            <code>{freshKey}</code>
+            <p>This is the only time it will be shown. Put it in the project site's
+            environment as <b>EP_INGEST_KEY</b>. Generating another key immediately
+            invalidates this one.</p>
+          </div>
+        )}
+
+        <form method="post" action="/api/admin/project-settings">
+          <input type="hidden" name="slug" value={project.slug} />
+          <input type="hidden" name="action" value="rotate_key" />
+          <button class="btn ghost" type="submit">
+            {hasKey ? "Generate a new key" : "Generate a key"}
+          </button>
+        </form>
+        {hasKey && !freshKey && <p class="empty">A key is set. Generate a new one only if it has leaked or been lost.</p>}
+      </section>
+
+      <section class="card">
+        <h2 class="sec">Webhook — give these to whoever runs the site</h2>
+        <p class="lede">
+          The site's form should POST here when it's submitted. It doesn't matter what the
+          site is built with or which form service it uses — anything that can make an HTTP
+          request will work.
+        </p>
+        <div class="kv">
+          <div><span>URL</span><code>{webhookUrl}</code></div>
+          <div><span>Method</span><code>POST</code></div>
+          <div><span>Auth header</span><code>X-Ingest-Key: your-key</code></div>
+          <div><span>Required</span><code>name, email</code></div>
+          <div><span>Optional</span><code>phone, message, locale, source_page</code></div>
+        </div>
+        <p class="lede" style="margin-top:0.9rem">
+          Field names are matched loosely — <b>Full Name</b>, <b>fullName</b> and <b>name</b>
+          all work, as do Spanish and Catalan equivalents. JSON, urlencoded and multipart
+          bodies are all accepted. If the form service cannot set headers, the key can go in
+          the body as <b>key</b> or on the URL as <b>?key=…</b>, though the header is better
+          because URLs end up in server logs.
+        </p>
+        <p class="lede">
+          Anything rejected is logged and shown on the Overview tab with the reason and the
+          field names it did receive — so a mismatch is visible rather than silent.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2 class="sec">Example call</h2>
+        <p class="lede">
+          Store the key as <b>EP_INGEST_KEY</b> in the site's environment variables
+          (Vercel → Settings → Environment Variables) and call this from the server, never
+          from the browser — a key in page source can be read by anyone.
+        </p>
+        <pre class="snip">{snippet}</pre>
+      </section>
+      </details>
+    </div>
+  )}
+</AdminLayout>
