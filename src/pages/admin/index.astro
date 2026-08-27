@@ -25,6 +25,10 @@ if (isSuper) {
   const { data } = await supabase
     .from("inquiries")
     .select("id, type, status, created_at")
+    // Fund enquiries only, matching the Leads section this card links to. The
+    // status pipeline below is the fund's, so project buyers counted here would
+    // be filed under statuses that mean nothing to them.
+    .is("project_id", null)
     .order("created_at", { ascending: false })
     .limit(2000);
   inquiries = data ?? [];
@@ -74,6 +78,10 @@ if (isSuper) {
   const { data } = await supabase
     .from("inquiries")
     .select("id, name, email, type, status, created_at")
+    // Fund enquiries only. A project's buyers belong to that project's command
+    // centre — they have a buyer pipeline and a triage state, neither of which
+    // this list can show, and each row here links to the fund's lead screen.
+    .is("project_id", null)
     .order("created_at", { ascending: false })
     .limit(5);
   recentLeads = (data ?? []) as LeadRow[];

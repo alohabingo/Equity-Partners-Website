@@ -3,29 +3,77 @@ export const prerender = false;
 
 import AdminLayout from "../../../layouts/AdminLayout.astro";
 import EnquiryPanel from "../../../components/admin/EnquiryPanel.astro";
+import UnitRows from "../../../components/admin/UnitRows.astro";
 import { supabaseServer } from "../../../lib/supabase";
 import { BUYER_STAGES, stageLabel, stageShade, OVERDUE_WORKING_DAYS } from "../../../lib/pipeline";
-import { bucketOf, needsAttention, BUCKET_LABELS, shortAge, plain, type EnquiryRow } from "../../../lib/enquiries";
+import { UNIT_STATES, SALES_BAR_ORDER, unitState, summarise, unitStateTheme, euros, type UnitRow } from "../../../lib/units";
+import { bucketOf, needsAttention, BUCKET_LABELS, isLive, shortAge, plain, REJECT_REASONS, rejectReasonLabel, LOCALE_OPTIONS, localeChip, localeTitle, type EnquiryRow } from "../../../lib/enquiries";
 
 const { slug } = Astro.params;
 const supabase = supabaseServer(Astro.cookies, Astro.request);
 const me = Astro.locals.user;
 
+// How the last reply went. The endpoint puts this on the URL because a send
+// that failed must not look like one that worked.
+const sent = Astro.url.searchParams.get("sent") === "1";
+const sendError = Astro.url.searchParams.get("send_error");
+
 const { data: project } = await supabase
   .from("projects").select("*").eq("slug", slug).maybeSingle();
 if (!project) return Astro.redirect("/admin/projects");
 
-// Banner and display name come from the published portfolio content; the
-// operational record only stores what marketing doesn't own.
-const { data: content } = await supabase
-  .from("portfolio_items")
-  .select("name, data")
-  .eq("slug", slug).eq("kind", "project").eq("locale", "en")
-  .maybeSingle();
+// Everything the page needs about this project, fetched AT ONCE.
+//
+// These six were six separate awaits, so the browser waited for each round trip
+// before the next was even sent — about half a second of dead time before a
+// single byte of HTML went out. That is what made switching tabs feel glitchy:
+// the browser holds the old page on screen until the new one is ready, so
+// server latency shows up as a frozen page rather than as slowness.
+//
+// None of them depends on another; they only depend on `project`. So they go
+// together, and the page now waits for the slowest one instead of the sum.
+const [contentRes, unitRes, buildingRes, enquiryRes, profileRes, rejectionRes] = await Promise.all([
+  supabase.from("portfolio_items").select("name, data")
+    .eq("slug", slug).eq("kind", "project").eq("locale", "en").maybeSingle(),
+  supabase.from("project_units")
+    .select("id, code, state, price, inquiry_id, position, building_id")
+    .eq("project_id", project.id).order("position"),
+  supabase.from("project_buildings").select("id, name, kind, notes, position")
+    .eq("project_id", project.id).order("position"),
+  supabase.from("enquiry_state").select("*")
+    .eq("project_id", project.id).order("last_activity_at", { ascending: false }),
+  supabase.from("profiles").select("id, full_name"),
+  supabase.from("ingest_log").select("outcome, reason, created_at")
+    .eq("project_id", project.id).eq("outcome", "rejected")
+    .is("acknowledged_at", null)
+    .order("created_at", { ascending: false }).limit(3),
+]);
+
+const content = contentRes.data;
 const heroImage = typeof content?.data?.image === "string" ? content.data.image : "";
 const dealStatus = typeof content?.data?.status === "string" ? content.data.status : "";
 
-const VALID_TABS = ["overview", "inbox", "settings"] as const;
+// The rail's facts come from the PUBLISHED marketing content, not a second copy
+// typed into the operational record. One place to change a figure means the
+// portal can't quietly disagree with the website.
+const pdata: Record<string, any> = (content?.data ?? {}) as Record<string, any>;
+const str = (k: string) => (typeof pdata[k] === "string" && pdata[k].trim() ? pdata[k].trim() : "");
+const projectLocation = str("location");
+const facts = [
+  { k: "Units", v: str("units") },
+  { k: "Site", v: str("sqm") },
+  { k: "Value", v: str("value") },
+  { k: "Completion", v: str("completionDate") },
+].filter((f) => f.v);
+
+// A small donut for the rail. The arithmetic is done here rather than in the
+// template because an SVG arc is dash lengths along a circumference, and that
+// is unreadable inline: each segment is drawn as a gap in a full circle, offset
+// by everything before it.
+const DONUT = { size: 112, r: 42, w: 15 };
+const DONUT_C = 2 * Math.PI * DONUT.r;
+
+const VALID_TABS = ["overview", "units", "inbox", "settings"] as const;
 const tabParam = Astro.url.searchParams.get("tab") ?? "overview";
 const tab = (VALID_TABS as readonly string[]).includes(tabParam) ? tabParam : "overview";
 const saved = Astro.url.searchParams.get("saved") === "1";
@@ -38,63 +86,147 @@ const freshKeyCookie = Astro.cookies.get("ep_fresh_ingest_key");
 const freshKey = freshKeyCookie?.value ?? "";
 if (freshKey) Astro.cookies.delete("ep_fresh_ingest_key", { path: "/admin" });
 
-// ---- enquiries, with their derived waiting state ----
-const { data: rows } = await supabase
-  .from("enquiry_state")
-  .select("*")
-  .eq("project_id", project.id)
-  .order("last_activity_at", { ascending: false });
-const enquiries = (rows ?? []) as EnquiryRow[];
+// ---- units: the project's sellable stock ----
+// Every sales figure on this page is COUNTED from these rows. Nothing types a
+// total in anywhere, so the figures cannot quietly go stale.
+const units = (unitRes.data ?? []) as UnitRow[];
+const sales = summarise(units);
 
-const { data: profiles } = await supabase.from("profiles").select("id, full_name");
-const nameById = new Map((profiles ?? []).map((p: any) => [p.id, p.full_name]));
+// How the project is laid out. A building's unit count is COUNTED here, never
+// stored — "3 blocks of 12" typed into a field is a number that can disagree
+// with the units actually recorded, and disagreeing numbers are how a portal
+// stops being believed.
+const buildings = (buildingRes.data ?? []) as { id: string; name: string; kind: string; notes: string | null; position: number }[];
+
+const unitsInBuilding = (id: string | null) =>
+  units.filter((u) => (u.building_id ?? null) === id);
+const unplacedUnits = unitsInBuilding(null);
+
+// What the "add" form suggests as a name: Block A on an empty project, Block B
+// once there is one entry, and so on. It also steps past any letter already in
+// use, so it can never suggest a name that is about to be rejected as a
+// duplicate.
+// There is no stored "unit type" — it is what the units are actually called.
+// Deriving it means the card can never claim a building holds apartments while
+// its rows all say Villa; the trade is that a mixed building reports "Mixed"
+// rather than picking a winner, which is the honest answer.
+const unitTypeOf = (buildingId: string | null): string => {
+  const kinds = [...new Set(
+    unitsInBuilding(buildingId)
+      .map((u) => u.code.trim().replace(/\s+\d+$/, "").trim())
+      .filter(Boolean),
+  )];
+  if (kinds.length === 0) return "—";
+  return kinds.length === 1 ? kinds[0] : "Mixed";
+};
+
+const nextBlockName = (() => {
+  const taken = new Set(
+    buildings
+      .map((b) => b.name.trim().match(/^block\s+([a-z])$/i)?.[1]?.toUpperCase())
+      .filter((x): x is string => !!x),
+  );
+  let i = buildings.length;
+  while (i < 26 && taken.has(String.fromCharCode(65 + i))) i += 1;
+  return i < 26 ? `Block ${String.fromCharCode(65 + i)}` : "";
+})();
+
+
+let donutAt = 0;
+const donutSegments = SALES_BAR_ORDER.map((key) => {
+  const full = sales.total > 0 ? (sales[key] / sales.total) * DONUT_C : 0;
+  const seg = { key, colour: unitState(key).colour, length: full, offset: donutAt };
+  donutAt += full;
+  return seg;
+}).filter((seg) => seg.length > 0);
+
+// A 2px breath between arcs, so two colours never touch — but only when there
+// is more than one, or the single full ring would show a nick in it.
+const DONUT_GAP = donutSegments.length > 1 ? 2 : 0;
+
+const unitsError = Astro.url.searchParams.get("units_error");
+const unitsOk = Astro.url.searchParams.get("units_ok");
+
+// ---- enquiries, with their derived waiting state ----
+const allRows = (enquiryRes.data ?? []) as EnquiryRow[];
+
+// Rejected enquiries are archived, not deleted - so they are held apart here
+// and everything downstream works off `enquiries`. Doing it once, at the top,
+// is why a rejected enquiry can't reappear in a stage count or a metric: there
+// is no list further down that still contains it.
+const enquiries = allRows.filter(isLive);
+const rejected = allRows.filter((e) => !isLive(e));
+// Who a unit can be sold to: this project's real buyers, resolved once rather
+// than per row.
+const buyerOptions = enquiries
+  .filter((e) => e.triage === "converted")
+  .map((e) => ({ id: e.id, name: e.name }));
+
+const nameById = new Map((profileRes.data ?? []).map((p: any) => [p.id, p.full_name]));
 
 const now = new Date();
 const DAY = 86_400_000;
 const since = (d: number) => new Date(now.getTime() - d * DAY);
 
+const toTriage = enquiries.filter((e) => e.triage === "pending");
 const newThisWeek = enquiries.filter((e) => new Date(e.created_at) > since(7)).length;
 const newLastWeek = enquiries.filter(
   (e) => new Date(e.created_at) <= since(7) && new Date(e.created_at) > since(14),
 ).length;
 // "We owe them something": they replied and we haven't, or we've never replied.
-const awaitingReply = enquiries.filter((e) => e.waiting_on_us === true || e.message_count === 0).length;
-const stageCount = (key: string) => enquiries.filter((e) => (e.stage ?? "new") === key).length;
+// Untriaged enquiries are excluded: we don't "owe a reply" to something nobody
+// has decided is real. They have their own queue and their own count.
+const awaitingReply = enquiries.filter(
+  (e) => e.triage === "converted" && (e.waiting_on_us === true || e.message_count === 0),
+).length;
+const stageCount = (key: string) =>
+  enquiries.filter((e) => e.triage === "converted" && (e.stage ?? "new") === key).length;
 
 const attention = enquiries.filter((e) => needsAttention(e, now));
-const groups = (["unclaimed", "waiting", "overdue"] as const)
+const groups = (["triage", "waiting", "overdue"] as const)
   .map((b) => ({ bucket: b, label: BUCKET_LABELS[b], items: attention.filter((e) => bucketOf(e, now) === b) }))
   .filter((g) => g.items.length > 0);
 
 const maxStage = Math.max(1, ...BUYER_STAGES.map((s) => stageCount(s.key)));
 
+// Two cards, not one queue: deciding whether someone is a real buyer and
+// chasing someone who already is are different jobs, done at different moments.
+// Both still come from the same bucketing, so nothing can appear in both.
+const triageItems = groups.find((g) => g.bucket === "triage")?.items ?? [];
+const followUpGroups = groups.filter((g) => g.bucket !== "triage");
+const followUpCount = followUpGroups.reduce((n, g) => n + g.items.length, 0);
+
 // ---- inbox: segment + selected enquiry ----
 const SEGMENTS = [
   { key: "needs", label: "Needs you", rows: attention },
-  { key: "unclaimed", label: "Unclaimed", rows: enquiries.filter((e) => !e.assigned_to) },
-  { key: "mine", label: "Mine", rows: enquiries.filter((e) => e.assigned_to === me?.id) },
+  { key: "triage", label: "To triage", rows: toTriage },
   { key: "all", label: "All", rows: enquiries },
+  // Last, and only ever reached deliberately - rejecting is meant to make an
+  // enquiry go away, but recoverably.
+  { key: "rejected", label: "Rejected", rows: rejected },
 ];
 const segParam = Astro.url.searchParams.get("seg") ?? "needs";
 const segment = SEGMENTS.find((s) => s.key === segParam) ?? SEGMENTS[0];
 const inboxRows = segment.rows;
 
 const selectedId = Astro.url.searchParams.get("e") ?? inboxRows[0]?.id ?? "";
-const selected = enquiries.find((e) => e.id === selectedId) ?? null;
+const selected = allRows.find((e) => e.id === selectedId) ?? null;
 
 let messages: any[] = [];
 let notes: any[] = [];
 let events: any[] = [];
 if (selected) {
   const [m, n, ev] = await Promise.all([
-    supabase.from("inquiry_messages").select("direction, subject, body_html, sent_at")
+    supabase.from("inquiry_messages").select("direction, subject, body_html, sent_at, sent_by")
       .eq("inquiry_id", selected.id).order("sent_at"),
     supabase.from("enquiry_notes").select("body, created_at, author_id")
       .eq("inquiry_id", selected.id).order("created_at", { ascending: false }),
     supabase.from("enquiry_events").select("kind, detail, created_at, actor_id")
       .eq("inquiry_id", selected.id).order("created_at", { ascending: false }).limit(12),
   ]);
-  messages = m.data ?? [];
+  // The mailbox is shared, so an outbound message says who actually wrote it
+  // rather than assuming it was whoever happens to be reading the thread.
+  messages = (m.data ?? []).map((x: any) => ({ ...x, sentByName: nameById.get(x.sent_by) ?? null }));
   notes = (n.data ?? []).map((x: any) => ({ ...x, author: nameById.get(x.author_id) ?? "Someone" }));
   events = (ev.data ?? []).map((x: any) => ({ ...x, actor: nameById.get(x.actor_id) ?? "System" }));
 }
@@ -116,20 +248,30 @@ const steps = [
 ];
 const remaining = steps.filter((s) => !s.done && !s.later).length;
 
-const { data: rejections } = await supabase
-  .from("ingest_log")
-  .select("outcome, reason, created_at")
-  .eq("project_id", project.id).eq("outcome", "rejected")
-  .order("created_at", { ascending: false }).limit(3);
+// Only rejections nobody has dismissed yet. The rows stay either way — the log
+// is the record that a submission was refused, and that remains true after it
+// has been read.
+const rejections = rejectionRes.data;
 
 const inboxHref = (opts: { seg?: string; e?: string }) => {
   const p = new URLSearchParams({ tab: "inbox", seg: opts.seg ?? segment.key });
   if (opts.e) p.set("e", opts.e);
   return `/admin/projects/${slug}?${p.toString()}`;
 };
-const selfHref = Astro.url.pathname + Astro.url.search;
+// Where a form action returns to. Outcome parameters are stripped out first:
+// leaving them in would stack "&sent=1" on every send, and would keep showing a
+// stale banner over an action that had just gone perfectly well.
+const backParams = new URLSearchParams(Astro.url.search);
+backParams.delete("sent");
+backParams.delete("send_error");
+backParams.delete("mailbox");
+backParams.delete("notice");
+const selfHref = Astro.url.pathname + (backParams.size ? `?${backParams}` : "");
 
-const mailboxMessage = Astro.url.searchParams.get("mailbox") ?? "";
+// One line under the tab row for "something just happened": the mailbox sync
+// reports through it, and so does anything else that needs to say a word back.
+const mailboxMessage =
+  Astro.url.searchParams.get("mailbox") ?? Astro.url.searchParams.get("notice") ?? "";
 const mailboxConnected = !!project.mailbox_connected_at;
 const oauthReady = !!(import.meta.env.ZOHO_OAUTH_CLIENT_ID && import.meta.env.ZOHO_OAUTH_CLIENT_SECRET);
 
@@ -155,51 +297,286 @@ await fetch("${webhookUrl}", {
 ---
 
 <AdminLayout title={project.name} active={`project:${slug}`}>
-  <style>
-    .banner {
-      position: relative; height: 104px; border-radius: 1.2rem; overflow: hidden;
-      box-shadow: 0 10px 30px rgba(15, 26, 42, 0.1);
-    }
-    .banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .banner .no-img { width: 100%; height: 100%; background: linear-gradient(120deg, #16283e, #0f2036); }
-    /* Left-to-right rather than top-down: project photos vary from bright sky to
-       dark timber, and a horizontal veil keeps the white text legible over any of
-       them without a per-project overlay. */
-    .banner .veil {
-      position: absolute; inset: 0;
-      background: linear-gradient(90deg, rgba(9,21,36,.88) 0%, rgba(9,21,36,.62) 42%, rgba(9,21,36,.12) 100%);
-    }
-    .banner .inner { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 1.7rem; }
-    .banner h1 { font-size: 1.45rem; font-weight: 700; letter-spacing: -0.01em; color: #ffffff; }
-    .bsub { margin-top: 0.35rem; display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; font-size: 0.78rem; color: #c8d8e8; }
-    .bsub a { color: #a7e0c1; font-weight: 600; text-decoration: none; }
-    .bsub a:hover { text-decoration: underline; }
-    .bpill {
-      font-size: 0.62rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
-      padding: 0.22rem 0.6rem; border-radius: 999px;
-      background: rgba(255, 255, 255, 0.16); color: #eaf6ef;
+  <style is:global>
+    /* Cross-document view transitions: the browser cross-fades the old page into
+       the new one and morphs any element the two share a view-transition-name
+       for — here, the switcher's thumb, which slides between tabs.
+       Global because @view-transition applies to the document, not a selector.
+       Unsupported browsers ignore the whole rule and simply navigate. */
+    @view-transition { navigation: auto; }
+
+    /* The thumb travels on a slight overshoot, the same easing the switcher
+       uses when it moves within a page — so the two are one motion, not two
+       different-feeling ones. */
+    ::view-transition-group(tab-thumb),
+    ::view-transition-group(tab-label) {
+      animation-duration: 380ms;
+      animation-timing-function: cubic-bezier(0.32, 1.15, 0.44, 1);
     }
 
-    .tabs { display: flex; gap: 0.2rem; margin-top: 1.3rem; border-bottom: 1px solid #d7deea; flex-wrap: wrap; }
-    .tabs a, .tabs span {
-      font-size: 0.82rem; font-weight: 700; color: #5c6f88; text-decoration: none;
-      border-bottom: 2px solid transparent; padding: 0.6rem 1rem;
-      display: flex; align-items: center; gap: 0.45rem;
+    /* The body of the page does not merely cross-fade: the outgoing content
+       drops a few pixels as it goes and the incoming rises into place, which is
+       what makes a full page load read as a switch rather than a flash. */
+    ::view-transition-old(root) {
+      animation: 200ms cubic-bezier(0.4, 0, 1, 1) both vt-leave;
     }
-    .tabs a:hover { color: #16283e; }
-    .tabs a.on { color: #2e7d54; border-bottom-color: #53b27f; }
-    .tabs span { color: #c3cfe0; cursor: not-allowed; }
-    .tabs .soon {
-      font-size: 0.58rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
-      background: #f2f5f9; color: #93a3b8; border-radius: 999px; padding: 0.1rem 0.4rem;
+    ::view-transition-new(root) {
+      animation: 320ms cubic-bezier(0.16, 1, 0.3, 1) both vt-enter;
     }
+    @keyframes vt-leave {
+      to { opacity: 0; transform: translateY(6px); }
+    }
+    @keyframes vt-enter {
+      from { opacity: 0; transform: translateY(10px); }
+    }
+
+    /* Browsers without view transitions get the same feeling by other means:
+       the new page's content rises into place on load. Behind @supports so the
+       two can never both run and read as a double take. */
+    @supports not (view-transition-name: none) {
+      @media (prefers-reduced-motion: no-preference) {
+        .tabpane { animation: 300ms cubic-bezier(0.16, 1, 0.3, 1) both vt-enter; }
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      ::view-transition-group(*),
+      ::view-transition-old(*),
+      ::view-transition-new(*) { animation: none !important; }
+    }
+
+    /* AdminLayout wraps every select on the page and draws one chevron on the
+       wrapper. These rules only retune that chevron for the unit pills: smaller,
+       tucked closer in, and in the row's own state colour. Written here rather
+       than in the scoped block because the wrapper is created by script and so
+       has no scope attribute for Astro to match on. The extra class in the
+       selector also puts it above the layout's own (0,2,1) rules. */
+    .pick .select-wrap select.ep-select {
+      padding-right: 1.75rem;
+      padding-left: 0.85rem;
+      padding-top: 0.34rem;
+      padding-bottom: 0.34rem;
+    }
+    /* Drawn with borders rather than the layout's SVG: an SVG used as a
+       background-image is its own document, so currentColor inside it resolves
+       to black and never picks up the row's state colour. Two borders on a
+       rotated box can. */
+    .pick .select-wrap::after {
+      right: 0.66rem;
+      width: 7px; height: 7px; margin-top: -4px;
+      background-image: none;
+      border-right: 1.8px solid var(--ink, #93a3b8);
+      border-bottom: 1.8px solid var(--ink, #93a3b8);
+      transform: rotate(45deg);
+    }
+    .pick .select-wrap.is-open::after { transform: rotate(225deg); }
+  </style>
+
+  <style>
+    /* No page title: the project's name is on the rail card, and the browser
+       tab carries it too, so a heading above the switcher was saying the same
+       thing a third time. The tab row is the first thing on the page. */
+
+    /* ---- Overview: work on the left, the property on the right ---- */
+    .ov { display: grid; grid-template-columns: minmax(0, 1fr) 348px; gap: 1rem; align-items: start; margin-top: 1.3rem; }
+    .ov .strip { margin-top: 0; }
+    /* .card.rail, not .rail: .card sets its own padding further down this
+       stylesheet, and on equal specificity the later rule wins - which is what
+       left the photo floating inside a white border instead of running to the
+       card's edges. The padding moves inside, to .rbody. */
+    .card.rail { overflow: hidden; padding: 0; }
+    .rail .rphoto { display: block; width: 100%; height: 208px; object-fit: cover; }
+    .rail .no-img { width: 100%; height: 208px; background: linear-gradient(120deg, #16283e, #0f2036); }
+    .rail .rbody { padding: 1.2rem 1.4rem 1.3rem; }
+    .rphoto-wrap { position: relative; }
+    /* The status belongs to the photo, not to the name - and off that row the
+       project name gets the full width, which is what keeps it on one line. */
+    .rpill {
+      position: absolute; top: 0.8rem; right: 0.85rem;
+      background: rgba(255, 255, 255, 0.94); color: #a35700;
+      box-shadow: 0 4px 14px rgba(15, 26, 42, 0.22);
+    }
+    /* Sits on the switcher's row, at the far end of it — the same height as the
+       tabs, so the row reads as one control strip rather than a button parked
+       above the content. */
+    .tabrow {
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    }
+    .syncbtn {
+      font: inherit; font-size: 0.78rem; font-weight: 700; color: #ffffff; background: #53b27f;
+      border: 0; border-radius: 999px; padding: 0.55rem 1.25rem; cursor: pointer;
+      box-shadow: 0 8px 20px rgba(83, 178, 127, 0.3);
+      transition: background-color 200ms ease, transform 200ms ease;
+    }
+    .syncbtn:hover { background: #47a071; }
+    .syncbtn:active { transform: translateY(1px); }
+    .syncmsg {
+      margin-top: 0.8rem; font-size: 0.78rem; line-height: 1.45; color: #2e7d54;
+      background: rgba(83, 178, 127, 0.1); border: 1px solid rgba(83, 178, 127, 0.28);
+      border-radius: 10px; padding: 0.55rem 0.8rem;
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 0.8rem;
+    }
+    .msgx {
+      flex: none; font-size: 1.05rem; line-height: 1; color: #2e7d54; opacity: 0.55;
+      text-decoration: none; padding: 0 0.25rem; border-radius: 6px;
+      transition: opacity 160ms ease, background-color 160ms ease;
+    }
+    .msgx:hover { opacity: 1; background: rgba(83, 178, 127, 0.16); }
+
+    .rname {
+      font-size: 1.02rem; font-weight: 700; line-height: 1.2;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .rloc { margin-top: 0.15rem; font-size: 0.75rem; color: #5c6f88; }
+    .rpill {
+      font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 0.22rem 0.6rem; border-radius: 999px; white-space: nowrap;
+    }
+    .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem 1rem; }
+    .fact .k { font-size: 0.66rem; letter-spacing: 0.05em; text-transform: uppercase; color: #93a3b8; }
+    .fact .v { margin-top: 0.1rem; font-size: 0.92rem; font-weight: 700; }
+    /* Card B, shrunk to fit the rail: the ring on the left, the three states
+       read down the right. Small enough that the counts do the work and the
+       ring is the shape of the thing rather than the measurement. */
+    .donutrow { display: flex; align-items: center; gap: 1rem; margin-top: 0.8rem; }
+    .donut { position: relative; flex: none; }
+    .dcen { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+    .dcen b { font-size: 1.45rem; font-weight: 600; line-height: 1; letter-spacing: -0.02em; }
+    .dcen span { display: block; margin-top: 0.15rem; font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; color: #93a3b8; }
+    .dlist { flex: 1; min-width: 0; display: grid; gap: 0.1rem; }
+    .drow {
+      display: grid; grid-template-columns: 9px 1fr auto auto; align-items: center; gap: 0.5rem;
+      padding: 0.34rem 0; border-bottom: 1px solid #f2f5f9; font-size: 0.76rem;
+    }
+    .drow:last-child { border-bottom: 0; }
+    .drow .dot { width: 9px; height: 9px; border-radius: 3px; }
+    .drow .k { color: #5c6f88; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .drow b { font-weight: 700; }
+    .drow .p { color: #93a3b8; font-size: 0.7rem; width: 34px; text-align: right; }
+    .rnone { margin-top: 0.5rem; font-size: 0.76rem; color: #93a3b8; }
+
+    .rsep { height: 1px; background: #eef2f7; margin: 1.1rem 0 0.8rem; }
+    .rkv { display: flex; justify-content: space-between; gap: 0.8rem; font-size: 0.78rem; padding: 0.32rem 0; border-bottom: 1px solid #f2f5f9; }
+    .rkv:last-child { border-bottom: 0; }
+    .rkv span { color: #93a3b8; }
+    .rkv b { font-weight: 700; text-align: right; word-break: break-word; }
+    .rkv a { color: #2e7d54; text-decoration: none; font-weight: 700; }
+
+    .cardhead { display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap; }
+    .cardhead .hint { margin-left: auto; font-size: 0.72rem; color: #93a3b8; }
+    /* ---- sales status ---- */
+    /* 2px of surface between segments, so two colours never touch. */
+    .s-bar { display: flex; gap: 2px; height: 26px; margin-top: 1.1rem; }
+    .s-bar i { display: block; height: 100%; min-width: 4px; }
+    .s-bar i:first-child { border-radius: 8px 0 0 8px; }
+    .s-bar i:last-child { border-radius: 0 8px 8px 0; }
+    .s-bar i:only-child { border-radius: 8px; }
+    .s-leg { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1.1rem; align-items: center; }
+    .s-leg .it { display: flex; align-items: center; gap: 0.45rem; }
+    .s-leg .dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+    .s-leg .k { font-size: 0.76rem; color: #5c6f88; }
+    .s-leg b { font-size: 0.9rem; font-weight: 700; }
+    .s-leg .money { margin-left: auto; font-size: 0.78rem; font-weight: 700; color: #2e7d54; }
+    .s-leg .money em { font-style: normal; font-weight: 500; color: #93a3b8; }
+
+    .btn.top { margin-top: 0; margin-left: auto; padding: 0.5rem 1.1rem; font-size: 0.8rem; }
+    .enqmodal.wide { width: min(920px, calc(100vw - 2.4rem)); }
+    .msep { height: 1px; background: #eef2f7; margin: 1.4rem 0 1rem; }
+    .msub-h { margin: 0; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #2e7d54; }
+    .genform { display: flex; align-items: flex-end; gap: 0.9rem; flex-wrap: wrap; margin-top: 1rem; }
+    /* Four equal columns and the button on the end. Equal rather than sized to
+       their contents: the fields are a set of four choices about one building,
+       and giving one of them the leftover width made the row read as three
+       fields and an afterthought. */
+    .modalform {
+      display: grid; gap: 0.9rem;
+      grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+      align-items: end;
+    }
+    .modalform .field { max-width: none; }
+    .modalform .btn { margin-top: 0; }
+    @media (max-width: 780px) {
+      .modalform { grid-template-columns: minmax(0, 1fr); }
+      .modalform .btn { justify-self: start; }
+    }
+    .genform .btn { margin-top: 0; }
+    .genform .field { max-width: 190px; }
+    .b-table td { vertical-align: middle; }
+    .b-table .inline { display: flex; align-items: center; gap: 0.4rem; }
+    .b-table .in.bname { width: 190px; padding: 0.4rem 0.6rem; font-size: 0.8rem; }
+    .b-table .in.bkind { width: 130px; padding: 0.4rem 0.6rem; font-size: 0.8rem; }
+    .b-table .hint { font-size: 0.7rem; color: #93a3b8; }
+    .tiny {
+      font: inherit; font-size: 0.68rem; font-weight: 700; color: #5c6f88; background: #fff;
+      border: 1px solid #d5deea; border-radius: 999px; padding: 0.22rem 0.6rem; cursor: pointer;
+    }
+    .tiny:hover { color: #2e7d54; border-color: rgba(83, 178, 127, 0.5); }
+    .tiny.danger:hover { color: #b3261e; border-color: #e7b9b5; }
+
+    .cardhead .n { background: #f2f5f9; color: #5c6f88; border-radius: 999px; padding: 0.1rem 0.45rem; font-size: 0.66rem; font-weight: 800; }
+    .cardhead + .rows, .cardhead + .group { margin-top: 0.5rem; }
+
+    @media (max-width: 1080px) {
+      .ov { grid-template-columns: minmax(0, 1fr); }
+    }
+    /* Four metric cards now share the page with a 348px rail, so they run out of
+       room sooner than they used to. */
+    @media (max-width: 1240px) {
+      .ov .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    /* Same sliding-thumb switcher as Projects / Opportunities on the Portfolio
+       page and the Team / Partners one. The thumb is positioned by script rather
+       than by CSS because only the browser knows how wide each label ends up. */
+    .seg {
+      position: relative; display: inline-flex;
+      background: #ffffff; border: 1px solid #d5deea; border-radius: 999px;
+      padding: 0.3rem; box-shadow: 0 6px 18px rgba(15, 26, 42, 0.06);
+      /* Deliberately no flex-wrap: the thumb is placed with offsetLeft, which
+         only describes one row. Four short labels always fit. */
+      isolation: isolate;
+    }
+    .seg-thumb {
+      position: absolute; top: 0.3rem; bottom: 0.3rem; left: 0; width: 0;
+      border-radius: 999px; background: linear-gradient(180deg, #16283e 0%, #0f2036 100%);
+      box-shadow: 0 6px 16px rgba(15, 26, 42, 0.28); z-index: -1;
+      transition: transform 420ms cubic-bezier(0.32, 1.3, 0.44, 1), width 420ms cubic-bezier(0.32, 1.3, 0.44, 1);
+    }
+    .seg-thumb.no-anim { transition: none; }
+    /* Named, so the browser can morph THIS element from its old position to its
+       new one across the page load rather than cross-fading the whole strip. */
+    .seg-thumb { view-transition-name: tab-thumb; }
+    /* The active label is named too, and comes later in the DOM, so its snapshot
+       is painted ABOVE the thumb's. Without this the sliding pill passes over
+       the white label instead of carrying it. */
+    .seg-btn.active { view-transition-name: tab-label; }
+    .seg-btn {
+      font: inherit; font-size: 0.84rem; font-weight: 700; color: #46586f; text-decoration: none;
+      background: none; border: 0; cursor: pointer; white-space: nowrap;
+      padding: 0.5rem 1.4rem; border-radius: 999px;
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      transition: color 300ms ease;
+    }
+    .seg-btn:hover:not(.active):not(.off) { color: #2e7d54; }
+    .seg-btn.active { color: #ffffff; }
+    .seg-btn.off { color: #c3cfe0; cursor: not-allowed; }
+    .seg .count {
+      font-size: 0.62rem; font-weight: 800; border-radius: 999px; padding: 0.08rem 0.42rem;
+      background: rgba(83, 178, 127, 0.16); color: #2e7d54;
+    }
+    .seg-btn.active .count { background: rgba(255, 255, 255, 0.18); color: #ffffff; }
 
     .card {
       background: #ffffff; border: 1px solid #d7deea; border-radius: 1.2rem;
       padding: 1.5rem 1.7rem; box-shadow: 0 10px 30px rgba(15, 26, 42, 0.06);
     }
     .card + .card { margin-top: 0.9rem; }
-    h2.sec { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #5c6f88; }
+    .stack > .card + .card { margin-top: 0; }
+    /* Section titles are green rather than grey: they are the portal's own
+       labels, and reading them as headings instead of as muted metadata makes
+       each card easier to find at a glance. */
+    h2.sec, h3.sec { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #2e7d54; }
     .lede { margin-top: 0.5rem; font-size: 0.85rem; color: #5c6f88; line-height: 1.6; }
 
     .steps { margin-top: 1.1rem; display: grid; gap: 0.1rem; }
@@ -282,7 +659,14 @@ await fetch("${webhookUrl}", {
       margin-top: 0.9rem; background: rgba(179,38,30,.05); border: 1px solid rgba(179,38,30,.25);
       border-radius: 0.8rem; padding: 0.8rem 1rem; font-size: 0.8rem; color: #8a2a22;
     }
-    .warn b { display: block; margin-bottom: 0.3rem; }
+    .warn b { display: block; }
+    .warnhead { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.8rem; margin-bottom: 0.3rem; }
+    .warnx {
+      font: inherit; font-size: 1.05rem; line-height: 1; color: #b3261e; opacity: 0.55;
+      background: none; border: 0; cursor: pointer; padding: 0 0.25rem; border-radius: 6px;
+      transition: opacity 160ms ease, background-color 160ms ease;
+    }
+    .warnx:hover { opacity: 1; background: rgba(179, 38, 30, 0.08); }
 
     /* ---- metric cards: same spec as the main dashboard ---- */
     .strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.9rem; margin-top: 1.4rem; }
@@ -309,6 +693,7 @@ await fetch("${webhookUrl}", {
     .group-h .n { background: #f2f5f9; color: #5c6f88; border-radius: 999px; padding: 0.1rem 0.42rem; font-size: 0.66rem; }
     .group-h.warn .n { background: rgba(179,38,30,.09); color: #b3261e; }
     .rows { margin-top: 0.5rem; }
+    .group-h + .rows { margin-top: 0.5rem; }
     .row { display: grid; grid-template-columns: 1fr auto; gap: 0.8rem; align-items: center; padding: 0.7rem 0.1rem; border-bottom: 1px solid #eef2f7; }
     .row:last-child { border-bottom: 0; }
     .nm { font-size: 0.86rem; font-weight: 700; color: #16283e; text-decoration: none; }
@@ -318,8 +703,58 @@ await fetch("${webhookUrl}", {
     .rmeta { text-align: right; font-size: 0.72rem; color: #93a3b8; white-space: nowrap; }
     .rmeta .w { display: block; font-weight: 700; color: #16283e; }
     .rmeta .w.late { color: #b3261e; }
+    .enqmodal {
+      border: 0; border-radius: 1.1rem; padding: 1.5rem 1.6rem; width: min(560px, calc(100vw - 2.4rem));
+      color: #16283e; background: #fff; box-shadow: 0 24px 60px rgba(15, 26, 42, 0.24);
+    }
+    .enqmodal::backdrop { background: rgba(15, 26, 42, 0.42); }
+    .enqmodal .mhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+    .enqmodal h3 { margin: 0; font-size: 1.05rem; font-weight: 700; }
+    .enqmodal .msub { margin: 0.25rem 0 0; font-size: 0.76rem; color: #5c6f88; }
+    .mx {
+      font: inherit; font-size: 1.2rem; line-height: 1; color: #93a3b8; background: none;
+      border: 0; cursor: pointer; padding: 0.1rem 0.35rem; border-radius: 8px;
+    }
+    .mx:hover { background: #f2f5f9; color: #16283e; }
+
+    /* The decision sits ABOVE the detail, so it is never something you have to
+       scroll back up to find - but the detail is on the same screen, so it is
+       never something you make blind either. */
+    .macts {
+      display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+      margin-top: 1rem; padding: 0.85rem 0.9rem; border-radius: 0.8rem;
+      background: linear-gradient(180deg, #f4fbf7, #fff); border: 1px solid #cfe3d7;
+    }
+    .macts .mhint { font-size: 0.72rem; color: #5c6f88; }
+    .tbtn {
+      font: inherit; font-size: 0.8rem; font-weight: 700; border-radius: 9px;
+      padding: 0.45rem 1rem; cursor: pointer; border: 1px solid transparent;
+    }
+    .tbtn.go { color: #fff; background: #53b27f; box-shadow: 0 8px 18px rgba(83, 178, 127, 0.28); }
+
+    .mfacts { display: grid; grid-template-columns: auto 1fr; gap: 0.3rem 1rem; margin: 1.1rem 0 0; font-size: 0.79rem; }
+    .mfacts dt { color: #93a3b8; }
+    .mfacts dd { margin: 0; color: #16283e; }
+    .mfacts a { color: #2e7d54; }
+    .mmsg {
+      margin-top: 1rem; padding: 0.85rem 0.95rem; border-radius: 0.8rem; background: #f8fafc;
+      border: 1px solid #eef2f7; font-size: 0.84rem; line-height: 1.6; white-space: pre-wrap;
+      max-height: 38vh; overflow: auto;
+    }
+    .mfull { display: inline-block; margin-top: 0.9rem; font-size: 0.78rem; font-weight: 600; color: #2e7d54; text-decoration: none; }
+    .mfull:hover { text-decoration: underline; }
+
+    .rejsel {
+      font: inherit; font-size: 0.68rem; font-weight: 700; color: #7d8ea6;
+      background: #fff; border: 1px solid #d5deea; border-radius: 999px;
+      padding: 0.2rem 0.5rem; cursor: pointer;
+    }
+    .rejsel:hover { color: #b3261e; border-color: #e7b9b5; }
+    .rejsel.big { font-size: 0.8rem; border-radius: 9px; padding: 0.45rem 0.8rem; }
     .chip { font-size: 0.64rem; font-weight: 700; padding: 0.16rem 0.48rem; border-radius: 999px; background: #f2f5f9; color: #5c6f88; }
     .claimbtn { font: inherit; font-size: 0.68rem; font-weight: 700; color: #2e7d54; background: rgba(83,178,127,.1); border: 1px solid rgba(83,178,127,.35); border-radius: 999px; padding: 0.2rem 0.55rem; cursor: pointer; }
+    a.claimbtn { text-decoration: none; display: inline-block; }
+    .chip.untriaged { background: rgba(200,106,0,.12); color: #a35700; }
 
     /* ---- pipeline: one hue, darker as it progresses ---- */
     .stagerow { display: grid; grid-template-columns: 1fr 40px; align-items: center; gap: 0.6rem; font-size: 0.79rem; padding: 0.38rem 0; border-bottom: 1px solid #eef2f7; }
@@ -356,36 +791,58 @@ await fetch("${webhookUrl}", {
     .nothing { padding: 3rem 1.6rem; text-align: center; font-size: 0.86rem; color: #93a3b8; }
   </style>
 
-  <div class="banner">
-    {heroImage ? <img src={heroImage} alt={project.name} /> : <div class="no-img"></div>}
-    <div class="veil"></div>
-    <div class="inner">
-      <div>
-        <h1>{project.name}</h1>
-        <p class="bsub">
-          {dealStatus && <span class="bpill">{dealStatus}</span>}
-          {project.domain
-            ? <a href={`https://${project.domain}`} target="_blank" rel="noreferrer">{project.domain} ↗</a>
-            : <span>no domain set</span>}
-          <span>{project.mailbox ? `replies from ${project.mailbox}` : "mailbox not connected"}</span>
-        </p>
-      </div>
-    </div>
+  <div class="tabrow">
+  <div class="seg" data-seg="tabs">
+    <span class="seg-thumb no-anim"></span>
+    <a href={`/admin/projects/${slug}`} class:list={["seg-btn", { active: tab === "overview" }]}>Overview</a>
+    <a href={`/admin/projects/${slug}?tab=units`} class:list={["seg-btn", { active: tab === "units" }]}>Units</a>
+    <a href={inboxHref({ seg: "needs" })} class:list={["seg-btn", { active: tab === "inbox" }]}>
+      Inbox {attention.length > 0 && <span class="count">{attention.length}</span>}
+    </a>
+    <span class="seg-btn off">Documents</span>
+    <a href={`/admin/projects/${slug}?tab=settings`} class:list={["seg-btn", { active: tab === "settings" }]}>Settings</a>
   </div>
 
-  <div class="tabs">
-    <a href={`/admin/projects/${slug}`} class={tab === "overview" ? "on" : ""}>Overview</a>
-    <a href={inboxHref({ seg: "needs" })} class={tab === "inbox" ? "on" : ""}>
-      Inbox {attention.length > 0 && <em class="soon" style="background:rgba(179,38,30,.09);color:#b3261e">{attention.length}</em>}
-    </a>
-    <span>Documents <em class="soon">phase D</em></span>
-    <a href={`/admin/projects/${slug}?tab=settings`} class={tab === "settings" ? "on" : ""}>Settings</a>
+  {/* Not on Settings: that tab has its own Sync now, beside Disconnect, where
+      the pair belongs. Two identical buttons on one screen is worse than one. */}
+  {mailboxConnected && tab !== "settings" && (
+    <form class="syncform" method="post" action="/api/admin/project-mail-sync">
+      <input type="hidden" name="slug" value={project.slug} />
+      <input type="hidden" name="back" value={selfHref} />
+      <button class="syncbtn" type="submit">Sync now</button>
+    </form>
+  )}
   </div>
+
+  {mailboxMessage && tab !== "settings" && (
+    <p class="syncmsg">
+      <span>{mailboxMessage}</span>
+      {/* An anchor to the clean URL, so it still works with no JavaScript. The
+          script upgrades it to close on the spot instead of reloading. */}
+      <a class="msgx" href={selfHref} aria-label="Dismiss">×</a>
+    </p>
+  )}
+
+  <script is:inline>
+    // Runs synchronously, before the page is first painted — see the note in the
+    // module script at the foot of this file for why that matters here.
+    (function () {
+      var seg = document.querySelector(".seg");
+      if (!seg) return;
+      var thumb = seg.querySelector(".seg-thumb");
+      var active = seg.querySelector(".seg-btn.active");
+      if (!thumb || !active) return;
+      thumb.style.width = active.offsetWidth + "px";
+      thumb.style.transform = "translateX(" + active.offsetLeft + "px)";
+      requestAnimationFrame(function () { thumb.classList.remove("no-anim"); });
+    })();
+  </script>
 
   {tab === "overview" && (
-    <div>
+    <div class="ov tabpane">
+      <div class="stack">
       {remaining > 0 && (
-        <section class="card" style="margin-top:1.4rem">
+        <section class="card">
           <h2 class="sec">Setup — {remaining} step{remaining === 1 ? "" : "s"} left</h2>
           <p class="lede">
             Enquiries from {project.domain || "this project's site"} will appear here once the
@@ -408,12 +865,69 @@ await fetch("${webhookUrl}", {
 
       {rejections && rejections.length > 0 && (
         <div class="warn">
-          <b>Submissions were rejected</b>
+          <div class="warnhead">
+            <b>Submissions were rejected</b>
+            <form method="post" action="/api/admin/ingest-ack">
+              <input type="hidden" name="slug" value={project.slug} />
+              <input type="hidden" name="back" value={selfHref} />
+              <button class="warnx" type="submit" aria-label="Dismiss" title="Dismiss — you'll be told again if another one fails">×</button>
+            </form>
+          </div>
           {rejections.map((r) => (
             <div>{new Date(r.created_at).toLocaleString("en-GB")} — {r.reason}</div>
           ))}
         </div>
       )}
+
+      <section class="card sales">
+        <div class="cardhead">
+          <h2 class="sec">Sales status</h2>
+          <span class="hint">
+            {units.length > 0
+              ? `${sales.soldPct}% sold · ${sales.sold} of ${sales.total} units`
+              : "no units recorded yet"}
+          </span>
+        </div>
+
+        {units.length === 0 ? (
+          <>
+            <p class="empty">
+              Nothing sellable is recorded for this project, so there is no sales figure to show.
+            </p>
+            <a class="btn ghost" href={`/admin/projects/${slug}?tab=units`}
+               style="display:inline-block;text-decoration:none;margin-top:0.9rem">Set up the units →</a>
+          </>
+        ) : (
+          <>
+            <div class="s-bar">
+              {SALES_BAR_ORDER.map((key) => (
+                sales[key] > 0 && <i style={`flex:${sales[key]};background:${unitState(key).colour}`}></i>
+              ))}
+            </div>
+
+            {/* Same order as the bar. A legend that reads in a different order
+                than the thing it explains is worse than no legend. */}
+            <div class="s-leg">
+              {SALES_BAR_ORDER.map((key) => (
+                <span class="it">
+                  <i class="dot" style={`background:${unitState(key).colour}`}></i>
+                  <span class="k">{unitState(key).label}</span>
+                  <b class="num">{sales[key]}</b>
+                  <span class="k">· {sales.pct[key]}%</span>
+                </span>
+              ))}
+              {sales.value.priced > 0 && (
+                <span class="it money">
+                  {euros(sales.value.sold + sales.value.reserved)} committed
+                  {sales.value.priced < sales.total && (
+                    <em> · {sales.value.priced} of {sales.total} priced</em>
+                  )}
+                </span>
+              )}
+            </div>
+          </>
+        )}
+      </section>
 
       <div class="strip">
         <article class="cell">
@@ -483,45 +997,130 @@ await fetch("${webhookUrl}", {
         </article>
       </div>
 
-      <div class="grid2">
-        <div class="stack">
-          <section class="card">
-            <h2 class="sec">Needs you</h2>
-            {groups.length === 0 ? (
-              <p class="empty">Nothing waiting — every enquiry is answered and claimed.</p>
-            ) : groups.map((g) => (
-              <div class="group">
-                <div class:list={["group-h", { warn: g.bucket === "overdue" }]}>
-                  {g.label} <span class="n">{g.items.length}</span>
+      <section class="card">
+        <div class="cardhead">
+          <h2 class="sec">New enquiries</h2>
+          {triageItems.length > 0 && <span class="n">{triageItems.length}</span>}
+          <span class="hint">a real buyer, or not?</span>
+        </div>
+        {triageItems.length === 0 ? (
+          <p class="empty">Nothing to judge — every enquiry has been decided.</p>
+        ) : (
+          <div class="rows">
+            {triageItems.map((e) => (
+              <div class="row">
+                <div>
+                  <a class="nm" href={`/admin/projects/${slug}/enquiry/${e.id}`}>
+                    {e.name} <span class="flag" title={localeTitle(e.locale)}>{localeChip(e.locale)}</span>
+                  </a>
+                  <div class="prev">{plain(e.message) || "—"}</div>
                 </div>
-                <div class="rows">
-                  {g.items.map((e) => (
-                    <div class="row">
-                      <div>
-                        <a class="nm" href={`/admin/projects/${slug}/enquiry/${e.id}`}>
-                          {e.name} <span class="flag">{(e.locale ?? "en").toUpperCase()}</span>
-                        </a>
-                        <div class="prev">{plain(e.message) || "—"}</div>
-                      </div>
-                      <div class="rmeta">
-                        <span class:list={["w", { late: g.bucket === "overdue" }]}>{shortAge(e.last_activity_at)}</span>
-                        {e.assigned_to
-                          ? <span>{nameById.get(e.assigned_to) ?? "assigned"}</span>
-                          : (
-                            <form method="post" action="/api/admin/enquiry" style="display:inline">
-                              <input type="hidden" name="id" value={e.id} />
-                              <input type="hidden" name="action" value="claim" />
-                              <input type="hidden" name="back" value={selfHref} />
-                              <button class="claimbtn" type="submit">Claim</button>
-                            </form>
-                          )}
-                      </div>
-                    </div>
-                  ))}
+                <div class="rmeta">
+                  <span class="w">{shortAge(e.last_activity_at)}</span>
+                  <button class="claimbtn" type="button" data-open-enq={e.id}>See enquiry</button>
                 </div>
               </div>
             ))}
-          </section>
+          </div>
+        )}
+      </section>
+
+      <section class="card">
+        <div class="cardhead">
+          <h2 class="sec">Follow ups</h2>
+          {followUpCount > 0 && <span class="n">{followUpCount}</span>}
+          <span class="hint">overdue after {OVERDUE_WORKING_DAYS} working days</span>
+        </div>
+        {followUpCount === 0 ? (
+          <p class="empty">Nobody is waiting on a reply.</p>
+        ) : followUpGroups.map((g) => (
+          <div class="group">
+            {/* No heading over the waiting group: the card is called Follow ups
+                and its own subtitle already says what that means, so "Waiting on
+                us" was the same sentence a third time. Overdue keeps its
+                heading — that one is an escalation, not a restatement. */}
+            {g.bucket === "overdue" && (
+              <div class="group-h warn">
+                {g.label} <span class="n">{g.items.length}</span>
+              </div>
+            )}
+            <div class="rows">
+              {g.items.map((e) => (
+                <div class="row">
+                  <div>
+                    <a class="nm" href={`/admin/projects/${slug}/enquiry/${e.id}`}>
+                      {e.name} <span class="flag" title={localeTitle(e.locale)}>{localeChip(e.locale)}</span>
+                    </a>
+                    <div class="prev">{plain(e.message) || "—"}</div>
+                  </div>
+                  <div class="rmeta">
+                    <span class:list={["w", { late: g.bucket === "overdue" }]}>{shortAge(e.last_activity_at)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </section>
+
+          {toTriage.map((e) => (
+            <dialog class="enqmodal" id={`enq-${e.id}`}>
+              <div class="mhead">
+                <div>
+                  <h3>
+                    {e.name}
+                    <span class="flag" title={localeTitle(e.locale)}>{localeChip(e.locale)}</span>
+                  </h3>
+                  <p class="msub">Arrived {shortAge(e.created_at)} ago · nobody has decided on this yet</p>
+                </div>
+                <form method="dialog"><button class="mx" aria-label="Close">×</button></form>
+              </div>
+
+              <div class="macts">
+                <form method="post" action="/api/admin/enquiry">
+                  <input type="hidden" name="id" value={e.id} />
+                  <input type="hidden" name="action" value="convert" />
+                  <input type="hidden" name="back" value={selfHref} />
+                  <button class="tbtn go" type="submit">Convert to lead</button>
+                </form>
+                <form method="post" action="/api/admin/enquiry">
+                  <input type="hidden" name="id" value={e.id} />
+                  <input type="hidden" name="action" value="reject" />
+                  <input type="hidden" name="back" value={selfHref} />
+                  <select class="rejsel big" name="reason" onchange="this.form.submit()">
+                    <option value="">Reject…</option>
+                    {REJECT_REASONS.map((r) => <option value={r.value}>{r.label}</option>)}
+                  </select>
+                </form>
+                <span class="mhint">Rejecting files it away — it isn't deleted.</span>
+              </div>
+
+              <dl class="mfacts">
+                <dt>Email</dt><dd><a href={`mailto:${e.email}`}>{e.email}</a></dd>
+                {e.phone && <><dt>Phone</dt><dd>{e.phone}</dd></>}
+                <dt>Language</dt>
+                <dd>
+                  <form method="post" action="/api/admin/enquiry" style="display:inline">
+                    <input type="hidden" name="id" value={e.id} />
+                    <input type="hidden" name="action" value="locale" />
+                    <input type="hidden" name="back" value={selfHref} />
+                    <select class="rejsel" name="locale" onchange="this.form.submit()">
+                      <option value="" selected={!e.locale}>Unknown</option>
+                      {LOCALE_OPTIONS.map((l) => (
+                        <option value={l.value} selected={e.locale === l.value}>{l.label}</option>
+                      ))}
+                    </select>
+                  </form>
+                </dd>
+                {e.source_page && <><dt>From page</dt><dd>{e.source_page}</dd></>}
+                <dt>Received</dt><dd>{new Date(e.created_at).toLocaleString("en-GB")}</dd>
+              </dl>
+
+              <div class="mmsg">{e.message || "No message was included."}</div>
+
+              <a class="mfull" href={`/admin/projects/${slug}/enquiry/${e.id}`}>Open the full enquiry →</a>
+            </dialog>
+          ))}
 
           <section class="card">
             <h2 class="sec">All enquiries · {enquiries.length}</h2>
@@ -529,61 +1128,218 @@ await fetch("${webhookUrl}", {
               <p class="empty">No enquiries yet. The first one from the project site will land here.</p>
             ) : (
               <table class="q">
-                <tr><th>Buyer</th><th>Stage</th><th>Owner</th><th>Last</th></tr>
+                <tr><th>Buyer</th><th>Stage</th><th>Accepted by</th><th>Last</th></tr>
                 {enquiries.map((e) => (
                   <tr>
                     <td>
                       <a class="nm" href={`/admin/projects/${slug}/enquiry/${e.id}`}>{e.name}</a>
-                      <span class="flag">{(e.locale ?? "en").toUpperCase()}</span>
+                      <span class="flag" title={localeTitle(e.locale)}>{localeChip(e.locale)}</span>
                     </td>
-                    <td><span class="chip">{stageLabel(e.stage)}</span></td>
-                    <td>{e.assigned_to ? (nameById.get(e.assigned_to) ?? "assigned") : <span class="chip">unclaimed</span>}</td>
+                    <td>
+                      {e.triage === "pending"
+                        ? <span class="chip untriaged">Awaiting triage</span>
+                        : <span class="chip">{stageLabel(e.stage)}</span>}
+                    </td>
+                    <td>{e.triaged_by ? (nameById.get(e.triaged_by) ?? "someone") : <span class="chip">—</span>}</td>
                     <td>
                       {e.last_direction === "inbound" && <span class="dirin">← {shortAge(e.last_activity_at)}</span>}
-                      {e.last_direction === "outbound" && <span class="dirout">→ {shortAge(e.last_activity_at)}</span>}
+                      {e.last_direction === "outbound" && (
+                        <span class="dirout">
+                          → {shortAge(e.last_activity_at)}
+                          {e.last_sent_by && ` · ${nameById.get(e.last_sent_by) ?? "someone"}`}
+                        </span>
+                      )}
                       {!e.last_direction && <span class="dirin">← {shortAge(e.created_at)}</span>}
                     </td>
                   </tr>
                 ))}
               </table>
             )}
-          </section>
-        </div>
+      </section>
 
-        <div class="stack">
-          <section class="card">
-            <h2 class="sec">Pipeline</h2>
-            <div style="margin-top:0.5rem">
-              {BUYER_STAGES.map((st) => (
-                <div class:list={["stagerow", { zero: stageCount(st.key) === 0 }]}>
-                  <div>
-                    {st.label}
-                    <div class="track">
-                      <i style={`width:${Math.round((stageCount(st.key) / maxStage) * 100)}%;background:${st.shade}`}></i>
-                    </div>
-                  </div>
-                  <b>{stageCount(st.key)}</b>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section class="card">
-            <h2 class="sec">How this is measured</h2>
-            <p class="lede">
-              <b>Awaiting our reply</b> is worked out from the direction of the most recent
-              message — not from a status anyone has to remember to set, so it can't go stale.
-              An enquiry we've answered becomes a chase after {OVERDUE_WORKING_DAYS} working
-              days of silence, weekends excluded.
-            </p>
-          </section>
-        </div>
       </div>
+
+      <aside class="card rail">
+        <div class="rphoto-wrap">
+          {heroImage
+            ? <img class="rphoto" src={heroImage} alt={project.name} />
+            : <div class="no-img"></div>}
+          {dealStatus && <span class="rpill">{dealStatus}</span>}
+        </div>
+        <div class="rbody">
+          <div class="rname">{project.name}</div>
+          {projectLocation && <div class="rloc">{projectLocation}</div>}
+
+          {facts.length > 0 && (
+            <>
+              {/* Inside the condition, not above it: a project with no published
+                  figures would otherwise get a rule with nothing under it. */}
+              <div class="rsep"></div>
+              <div class="facts">
+                {facts.map((f) => (
+                  <div class="fact"><div class="k">{f.k}</div><div class="v">{f.v}</div></div>
+                ))}
+              </div>
+            </>
+          )}
+
+          <div class="rsep"></div>
+          <h2 class="sec">Sales status</h2>
+          {units.length === 0 ? (
+            <p class="rnone">No units recorded yet.</p>
+          ) : (
+            <div class="donutrow">
+              <div class="donut" style={`width:${DONUT.size}px;height:${DONUT.size}px`}>
+                <svg width={DONUT.size} height={DONUT.size} viewBox={`0 0 ${DONUT.size} ${DONUT.size}`}>
+                  <g transform={`rotate(-90 ${DONUT.size / 2} ${DONUT.size / 2})`}>
+                    <circle cx={DONUT.size / 2} cy={DONUT.size / 2} r={DONUT.r}
+                            fill="none" stroke="#eef2f7" stroke-width={DONUT.w} />
+                    {donutSegments.map((seg) => (
+                      <circle
+                        cx={DONUT.size / 2} cy={DONUT.size / 2} r={DONUT.r}
+                        fill="none" stroke={seg.colour} stroke-width={DONUT.w}
+                        stroke-dasharray={`${Math.max(seg.length - DONUT_GAP, 0.5)} ${DONUT_C}`}
+                        stroke-dashoffset={-seg.offset}
+                      />
+                    ))}
+                  </g>
+                </svg>
+                <div class="dcen">
+                  <b class="num">{sales.total}</b>
+                  <span>units</span>
+                </div>
+              </div>
+
+              <div class="dlist">
+                {SALES_BAR_ORDER.map((key) => (
+                  <div class="drow">
+                    <i class="dot" style={`background:${unitState(key).colour}`}></i>
+                    <span class="k">{unitState(key).label}</span>
+                    <b class="num">{sales[key]}</b>
+                    <span class="p num">{sales.pct[key]}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div class="rsep"></div>
+          <h2 class="sec">Pipeline</h2>
+          <div style="margin-top:0.5rem">
+            {BUYER_STAGES.map((st) => (
+              <div class:list={["stagerow", { zero: stageCount(st.key) === 0 }]}>
+                <div>
+                  {st.label}
+                  <div class="track">
+                    <i style={`width:${Math.round((stageCount(st.key) / maxStage) * 100)}%;background:${st.shade}`}></i>
+                  </div>
+                </div>
+                <b>{stageCount(st.key)}</b>
+              </div>
+            ))}
+          </div>
+
+          <div class="rsep"></div>
+          <h2 class="sec">Mailbox</h2>
+          <div style="margin-top:0.4rem">
+            <div class="rkv">
+              <span>Replies from</span>
+              <b>{project.mailbox ?? "not connected"}</b>
+            </div>
+            <div class="rkv">
+              <span>Last checked</span>
+              <b>{project.mailbox_last_sync_at ? `${shortAge(project.mailbox_last_sync_at)} ago` : "never"}</b>
+            </div>
+            {project.domain && (
+              <div class="rkv">
+                <span>Website</span>
+                <a href={`https://${project.domain}`} target="_blank" rel="noreferrer">{project.domain}</a>
+              </div>
+            )}
+          </div>
+        </div>
+      </aside>
+    </div>
+  )}
+
+  {tab === "units" && (
+    <div class="tabpane" style="margin-top:1.4rem">
+      {unitsError && <div class="warn"><b>That didn't work</b>{unitsError}</div>}
+      {unitsOk && (
+        <p class="syncmsg">
+          <span>{unitsOk}</span>
+          <a class="msgx" href={`/admin/projects/${slug}?tab=units`} aria-label="Dismiss">×</a>
+        </p>
+      )}
+
+      {units.length === 0 ? (
+        <section class="card">
+          <h2 class="sec">Set up the units</h2>
+          <p class="lede">
+            Nothing sellable is recorded for this project yet. Create the run in one go —
+            they all start as available, and you change each one as it moves.
+          </p>
+          <form method="post" action="/api/admin/project-units" class="genform">
+            <input type="hidden" name="slug" value={project.slug} />
+            <input type="hidden" name="action" value="generate" />
+            <label class="field">
+              <span>Type</span>
+              <select class="in" name="prefix">
+                <option value="Villa">Villa</option>
+                <option value="Apartment">Apartment</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>How many</span>
+              <input class="in" type="number" name="count" value="25" min="1" max="500" required />
+            </label>
+            <button class="btn" type="submit">Create units</button>
+          </form>
+        </section>
+      ) : (
+        <>
+          {/* One card per building, so a project reads as its own structure —
+              and a second block becomes a second card by existing, with nothing
+              to configure. */}
+          {buildings.map((b) => {
+            const mine = unitsInBuilding(b.id);
+            const n = (state: string) => mine.filter((u) => u.state === state).length;
+            return (
+              <section class="card">
+                <div class="cardhead">
+                  <h2 class="sec">{b.name} · {mine.length} unit{mine.length === 1 ? "" : "s"}</h2>
+                  {mine.length > 0 && (
+                    <span class="hint">{n("sold")} sold · {n("reserved")} reserved · {n("available")} available</span>
+                  )}
+                </div>
+                {mine.length === 0 ? (
+                  <p class="empty">No units in this building yet.</p>
+                ) : (
+                  <UnitRows units={mine} slug={project.slug} buildings={buildings} buyers={buyerOptions} />
+                )}
+              </section>
+            );
+          })}
+
+          {unplacedUnits.length > 0 && (
+            <section class="card">
+              <div class="cardhead">
+                <h2 class="sec">
+                  {buildings.length > 0 ? "Not placed" : "Units"} · {unplacedUnits.length} unit{unplacedUnits.length === 1 ? "" : "s"}
+                </h2>
+                {buildings.length > 0 && <span class="hint">give each one a building below</span>}
+              </div>
+              <UnitRows units={unplacedUnits} slug={project.slug} buildings={buildings} buyers={buyerOptions} />
+            </section>
+          )}
+
+        </>
+      )}
     </div>
   )}
 
   {tab === "inbox" && (
-    <div class="split">
+    <div class="split tabpane">
       <div class="listcard">
         <div class="segs">
           {SEGMENTS.map((sg) => (
@@ -602,9 +1358,12 @@ await fetch("${webhookUrl}", {
               </div>
               <p>{plain(e.message, 70) || "—"}</p>
               <div class="tags">
-                <span class="chip">{stageLabel(e.stage)}</span>
-                {!e.assigned_to && <span class="chip">unclaimed</span>}
-                {e.waiting_on_us === true && <span class="chip" style="background:rgba(179,38,30,.09);color:#b3261e">waiting on us</span>}
+                {e.triage === "pending" && <span class="chip untriaged">decide</span>}
+                {e.triage === "rejected" && <span class="chip">{rejectReasonLabel(e.triage_reason).toLowerCase()}</span>}
+                {e.triage === "converted" && <span class="chip">{stageLabel(e.stage)}</span>}
+                {e.triage === "converted" && e.waiting_on_us === true && (
+                  <span class="chip" style="background:rgba(179,38,30,.09);color:#b3261e">waiting on us</span>
+                )}
               </div>
             </a>
           ))}
@@ -619,9 +1378,10 @@ await fetch("${webhookUrl}", {
             notes={notes}
             events={events}
             project={{ slug: project.slug, name: project.name, mailbox: project.mailbox }}
-            currentUserId={me?.id ?? ""}
             currentUserName={me?.fullName ?? "You"}
             back={selfHref}
+            sent={sent}
+            sendError={sendError}
           />
         ) : (
           <p class="nothing">Select an enquiry on the left.</p>
@@ -631,7 +1391,7 @@ await fetch("${webhookUrl}", {
   )}
 
   {tab === "settings" && (
-    <div style="margin-top: 1.4rem">
+    <div class="tabpane" style="margin-top: 1.4rem">
       <form class="card" method="post" action="/api/admin/project-settings">
         <input type="hidden" name="slug" value={project.slug} />
         <h2 class="sec">This project</h2>
@@ -662,6 +1422,144 @@ await fetch("${webhookUrl}", {
         <button class="btn" type="submit">Save</button>
         {saved && <p class="saved">Saved ✓</p>}
       </form>
+
+      <section class="card">
+        <div class="cardhead">
+          <h2 class="sec">Layout</h2>
+          <button class="btn top" type="button" data-open-dialog="edit-layout">Edit</button>
+        </div>
+
+        {/* Layout messages belong HERE. They were being written to the page's
+            one notice line, which is hidden on Settings — so a refusal to
+            delete looked exactly like a button that did nothing. */}
+        {mailboxMessage && <p class="syncmsg" style="margin-top:0.8rem"><span>{mailboxMessage}</span></p>}
+
+        {buildings.length === 0 && unplacedUnits.length === 0 ? (
+          <p class="empty">Nothing recorded yet. Press Edit to describe how this project is laid out.</p>
+        ) : (
+          <table class="q b-table">
+            {/* Structure only. The sales split lives on the Overview and the
+                Units tab, and repeating it here made a settings card look like
+                a report. */}
+            <tr><th>Type</th><th>Name</th><th>Unit type</th><th>Units</th></tr>
+            {buildings.map((b) => (
+              <tr>
+                <td><span class="chip">{b.kind === "project" ? "Project" : "Building"}</span></td>
+                <td><b>{b.name}</b></td>
+                <td>{unitTypeOf(b.id)}</td>
+                <td><b>{unitsInBuilding(b.id).length}</b></td>
+              </tr>
+            ))}
+            {unplacedUnits.length > 0 && (
+              <tr>
+                <td></td>
+                <td><span class="chip">Not placed yet</span></td>
+                <td>{unitTypeOf(null)}</td>
+                <td><b>{unplacedUnits.length}</b></td>
+              </tr>
+            )}
+          </table>
+        )}
+
+        {/* Everything editable lives in here. The card itself is a statement of
+            what the project is; changing it is a deliberate act, not something
+            that can happen while reading. */}
+        <dialog class="enqmodal wide" id="edit-layout">
+          <div class="mhead">
+            <div>
+              <h3>Edit layout</h3>
+              <p class="msub">Blocks or phases, and the units in each.</p>
+            </div>
+            <form method="dialog"><button class="mx" aria-label="Close">×</button></form>
+          </div>
+
+          {buildings.length > 0 && (
+            <table class="q b-table">
+              <tr><th>Type</th><th>Name</th><th>Units</th><th></th></tr>
+              {buildings.map((b) => (
+                <tr>
+                  <td>
+                    <form method="post" action="/api/admin/project-buildings">
+                      <input type="hidden" name="slug" value={project.slug} />
+                      <input type="hidden" name="id" value={b.id} />
+                      <input type="hidden" name="action" value="kind" />
+                      <select class="in bkind" name="kind" onchange="this.form.submit()">
+                        <option value="building" selected={b.kind !== "project"}>Building</option>
+                        <option value="project" selected={b.kind === "project"}>Project</option>
+                      </select>
+                    </form>
+                  </td>
+                  <td>
+                    <form method="post" action="/api/admin/project-buildings" class="inline">
+                      <input type="hidden" name="slug" value={project.slug} />
+                      <input type="hidden" name="id" value={b.id} />
+                      <input type="hidden" name="action" value="rename" />
+                      <input class="in bname" type="text" name="name" value={b.name} />
+                      <button class="tiny" type="submit">Save</button>
+                    </form>
+                  </td>
+                  <td><b>{unitsInBuilding(b.id).length}</b></td>
+                  <td style="text-align:right">
+                    {unitsInBuilding(b.id).length === 0 ? (
+                      <form method="post" action="/api/admin/project-buildings"
+                            onsubmit={`return confirm('Remove ${b.name}?')`}>
+                        <input type="hidden" name="slug" value={project.slug} />
+                        <input type="hidden" name="id" value={b.id} />
+                        <input type="hidden" name="action" value="remove" />
+                        <button class="tiny danger" type="submit">Remove</button>
+                      </form>
+                    ) : (
+                      <form method="post" action="/api/admin/project-buildings"
+                            onsubmit={`return confirm('Remove ${b.name} and its ${unitsInBuilding(b.id).length} units? This cannot be undone.')`}>
+                        <input type="hidden" name="slug" value={project.slug} />
+                        <input type="hidden" name="id" value={b.id} />
+                        <input type="hidden" name="action" value="remove_all" />
+                        {/* Just "Remove". The count stays in the confirmation,
+                            which is where it can still stop a mistake without
+                            making the button read like a warning label. */}
+                        <button class="tiny danger" type="submit">Remove</button>
+                      </form>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </table>
+          )}
+
+          <div class="msep"></div>
+          <h4 class="msub-h">Add a building</h4>
+          <form method="post" action="/api/admin/project-buildings" class="genform modalform">
+            <input type="hidden" name="slug" value={project.slug} />
+            <input type="hidden" name="action" value="add" />
+            <label class="field">
+              <span>Type</span>
+              <select class="in" name="kind">
+                <option value="building">Building</option>
+                <option value="project">Project</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Name</span>
+              <input class="in" type="text" name="name" value={nextBlockName} placeholder="Name" required />
+            </label>
+            <label class="field">
+              <span>Units in it <em>(optional)</em></span>
+              <input class="in" type="number" name="count" min="0" max="500" placeholder="0" />
+            </label>
+            <label class="field">
+              <span>Unit type</span>
+              {/* Follows Type on its own — a building holds apartments, a
+                  project of this kind holds villas — but stays a real field,
+                  because the rule is a sensible default and not a law. */}
+              <select class="in" name="prefix" data-follows-kind>
+                <option value="Apartment" selected>Apartment</option>
+                <option value="Villa">Villa</option>
+              </select>
+            </label>
+            <button class="btn" type="submit">Add</button>
+          </form>
+        </dialog>
+      </section>
 
       <section class="card">
         <h2 class="sec">Mailbox</h2>
@@ -711,7 +1609,7 @@ await fetch("${webhookUrl}", {
 
             <p class="lede" style="margin-top:0.9rem">
               Mail arriving here becomes an enquiry automatically. A sender we already have
-              is added to their existing thread; anyone new becomes an unclaimed enquiry in
+              is added to their existing thread; anyone new becomes a new enquiry in
               Needs you. Form notifications are read via their Reply-To, so the buyer is the
               contact rather than the form service.
             </p>
@@ -720,6 +1618,15 @@ await fetch("${webhookUrl}", {
               <form method="post" action="/api/admin/project-mail-sync">
                 <input type="hidden" name="slug" value={project.slug} />
                 <button class="btn ghost" type="submit">Sync now</button>
+              </form>
+              {/* The routine sync reads the newest page of the INBOX only. This
+                  one-off walks the whole inbox back to the beginning, then the
+                  Sent folder, so replies made in Zoho before the portal existed
+                  appear on the threads they belong to. */}
+              <form method="post" action="/api/admin/project-mail-sync">
+                <input type="hidden" name="slug" value={project.slug} />
+                <input type="hidden" name="mode" value="history" />
+                <button class="btn ghost" type="submit">Import mail history</button>
               </form>
               <form method="post" action="/api/admin/zoho/disconnect"
                     onsubmit="return confirm('Disconnect this mailbox? Existing enquiries are kept.')">
@@ -804,3 +1711,82 @@ await fetch("${webhookUrl}", {
     </div>
   )}
 </AdminLayout>
+
+<script>
+  // Keep the switcher's thumb behind the active tab. The FIRST placement is done
+  // by an inline script next to the markup, before paint; these re-runs are for
+  // the two things that change the measurement afterwards — the web font
+  // finishing loading, and the window being resized.
+  function placeThumb(animate) {
+    document.querySelectorAll(".seg").forEach((seg) => {
+      const thumb = seg.querySelector(".seg-thumb");
+      const active = seg.querySelector(".seg-btn.active");
+      if (!(thumb instanceof HTMLElement) || !(active instanceof HTMLElement)) return;
+      thumb.classList.toggle("no-anim", !animate);
+      thumb.style.width = `${active.offsetWidth}px`;
+      thumb.style.transform = `translateX(${active.offsetLeft}px)`;
+      if (!animate) requestAnimationFrame(() => thumb.classList.remove("no-anim"));
+    });
+  }
+  document.fonts?.ready.then(() => placeThumb(false));
+  window.addEventListener("resize", () => placeThumb(false));
+
+  // Dismissing a one-off message. The link already points at the clean URL, so
+  // this only has to stop the navigation and do the same thing in place: drop
+  // the note, and take the outcome parameters out of the address bar so a
+  // refresh doesn't bring it back.
+  document.querySelectorAll(".syncmsg .msgx").forEach((x) => {
+    x.addEventListener("click", (ev) => {
+      ev.preventDefault();
+      x.closest(".syncmsg")?.remove();
+      const url = new URL(window.location.href);
+      ["mailbox", "notice", "sent", "send_error", "units_ok", "units_error"]
+        .forEach((k) => url.searchParams.delete(k));
+      window.history.replaceState(null, "", url.pathname + url.search);
+    });
+  });
+
+  // Open the enquiry a "See enquiry" pill belongs to. Native <dialog> gives the
+  // backdrop, Esc-to-close and focus handling for free.
+  document.querySelectorAll("[data-open-enq]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-open-enq");
+      const dlg = id ? document.getElementById("enq-" + id) : null;
+      if (dlg instanceof HTMLDialogElement) dlg.showModal();
+    });
+  });
+
+  // Unit type follows Type: a Building holds apartments, a Project holds villas.
+  // It stops following the moment someone sets it themselves — an automatic
+  // field that overwrites a deliberate choice is worse than no automation.
+  document.querySelectorAll("select[data-follows-kind]").forEach((prefix) => {
+    const form = prefix.closest("form");
+    const kind = form?.querySelector('select[name="kind"]');
+    if (!(kind instanceof HTMLSelectElement) || !(prefix instanceof HTMLSelectElement)) return;
+
+    let chosenByHand = false;
+    prefix.addEventListener("change", () => { chosenByHand = true; });
+    kind.addEventListener("change", () => {
+      if (chosenByHand) return;
+      prefix.value = kind.value === "project" ? "Villa" : "Apartment";
+    });
+  });
+
+  // Any button that names a dialog opens it.
+  document.querySelectorAll("[data-open-dialog]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-open-dialog");
+      const dlg = id ? document.getElementById(id) : null;
+      if (dlg instanceof HTMLDialogElement) dlg.showModal();
+    });
+  });
+
+  // Clicking the backdrop closes it. A <dialog>'s own box is what receives the
+  // click when you hit the content, so comparing target to the dialog itself is
+  // what distinguishes "outside" from "inside".
+  document.querySelectorAll("dialog.enqmodal").forEach((dlg) => {
+    dlg.addEventListener("click", (ev) => {
+      if (ev.target === dlg && dlg instanceof HTMLDialogElement) dlg.close();
+    });
+  });
+</script>

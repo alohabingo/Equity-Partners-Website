@@ -31,7 +31,8 @@ const imageBySlug = new Map(
 );
 
 const { data: enquiries } = ids.length
-  ? await supabase.from("inquiries").select("project_id").in("project_id", ids)
+  ? await supabase.from("inquiries").select("project_id")
+      .in("project_id", ids).neq("triage", "rejected")
   : { data: [] };
 const countByProject = new Map<string, number>();
 for (const e of enquiries ?? []) {

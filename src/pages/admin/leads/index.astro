@@ -26,6 +26,10 @@ const statusFilter = Astro.url.searchParams.get("status") ?? "all";
 let query = supabase
   .from("inquiries")
   .select("id, type, status, name, email, company, locale, created_at")
+  // Fund enquiries only. Buyers belong to their project's command centre, where
+  // they have a buyer pipeline; here they would be filed under fund statuses
+  // that don't describe them, and a rejected one would read as a live lead.
+  .is("project_id", null)
   .order("created_at", { ascending: false })
   .limit(200);
 if (typeFilter !== "all") query = query.eq("type", typeFilter);
