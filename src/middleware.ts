@@ -10,6 +10,9 @@ const SUPER_ONLY = [
   "/api/admin/project-mail-sync",
   "/api/admin/zoho",
   "/api/admin/project-settings",
+  "/api/admin/project-units",
+  "/api/admin/ingest-ack",
+  "/api/admin/project-buildings",
   "/admin/leads",
   "/admin/subscribers",
   "/admin/vault",
@@ -51,12 +54,19 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   if (!user) return deny(401, "unauthenticated");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role, full_name")
-    .eq("id", user.id)
-    .single();
+  // The sidebar's project list is fetched ALONGSIDE the profile rather than
+  // after it. It is only used for super admins, so this occasionally fetches a
+  // list nobody sees — but every admin page waits on this, and one avoided
+  // round trip on every request is worth more than one skipped query on a few.
+  const wantsSidebar = pathname.startsWith("/admin");
+  const [profileRes, sidebarRes] = await Promise.all([
+    supabase.from("profiles").select("role, full_name").eq("id", user.id).single(),
+    wantsSidebar
+      ? supabase.from("projects").select("slug, name, nav_name").eq("status", "active").order("name")
+      : Promise.resolve({ data: null }),
+  ]);
 
+  const profile = profileRes.data;
   if (!profile) return deny(401, "noprofile");
 
   if (
@@ -79,16 +89,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // refreshed auth cookies throws ResponseSentError — which in turn destroyed the
   // session and signed the user out. Middleware runs before any of that.
   context.locals.sidebarProjects = [];
-  if (profile.role === "super_admin" && pathname.startsWith("/admin")) {
-    const { data } = await supabase
-      .from("projects")
-      .select("slug, name, nav_name")
-      .eq("status", "active")
-      .order("name");
+  if (profile.role === "super_admin" && wantsSidebar) {
     // Resolve the sidebar label here so the layout never has to think about it.
     // nav_name is cosmetic and optional; falling back to name means an empty
     // field is the same as no field, and nothing can end up nameless.
-    context.locals.sidebarProjects = (data ?? []).map((p) => ({
+    context.locals.sidebarProjects = (sidebarRes.data ?? []).map((p: any) => ({
       slug: p.slug,
       name: (p.nav_name ?? "").trim() || p.name,
     }));
