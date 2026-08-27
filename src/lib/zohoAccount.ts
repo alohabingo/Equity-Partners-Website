@@ -152,13 +152,49 @@ export type ZohoMessage = {
   receivedTime: string;
 };
 
+export type ZohoFolder = { folderId: string; folderName: string; folderType?: string };
+
+/**
+ * The mailbox's folders.
+ *
+ * Needed because the sync reads the INBOX, and mail we have SENT lives
+ * somewhere else entirely — which is why a thread answered in Zoho before the
+ * portal existed shows in the portal as a buyer nobody ever replied to.
+ */
+export async function listFolders(
+  account: { id?: string; refresh_token: string; api_base: string; zoho_account_id: string },
+): Promise<ZohoFolder[]> {
+  const data = await zohoFetch(account, `/accounts/${account.zoho_account_id}/folders`);
+  return (data?.data ?? []) as ZohoFolder[];
+}
+
+/** The Sent folder, by type where Zoho reports it and by name otherwise. */
+export function findSentFolder(folders: ZohoFolder[]): ZohoFolder | null {
+  return (
+    folders.find((f) => (f.folderType ?? "").toLowerCase() === "sent") ??
+    folders.find((f) => /^sent/i.test(f.folderName ?? "")) ??
+    null
+  );
+}
+
+/**
+ * A page of messages, newest first.
+ *
+ * `start` is Zoho's 1-based index into that ordering, which is what makes it
+ * possible to walk backwards through a mailbox rather than only ever seeing the
+ * most recent handful — the difference between a ten-minute sync and importing
+ * a project's whole history.
+ */
 export async function listRecentMessages(
   account: { id?: string; refresh_token: string; api_base: string; zoho_account_id: string },
   limit = 50,
+  start = 1,
+  folderId?: string,
 ): Promise<ZohoMessage[]> {
+  const folder = folderId ? `&folderId=${encodeURIComponent(folderId)}` : "";
   const data = await zohoFetch(
     account,
-    `/accounts/${account.zoho_account_id}/messages/view?limit=${limit}&sortorder=false`,
+    `/accounts/${account.zoho_account_id}/messages/view?limit=${limit}&start=${start}&sortorder=false${folder}`,
   );
   return (data?.data ?? []) as ZohoMessage[];
 }
