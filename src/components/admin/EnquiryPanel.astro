@@ -1,28 +1,50 @@
 ---
 import { BUYER_STAGES, stageLabel } from "../../lib/pipeline";
-import { LOCALE_LABEL, plain, shortAge, type EnquiryRow } from "../../lib/enquiries";
+import { LOCALE_OPTIONS, localeChip, localeTitle, plain, shortAge, REJECT_REASONS, rejectReasonLabel, type EnquiryRow } from "../../lib/enquiries";
 
 interface Props {
   enquiry: EnquiryRow;
-  messages: { direction: string; subject: string | null; body_html: string | null; sent_at: string }[];
+  messages: { direction: string; subject: string | null; body_html: string | null; sent_at: string; sentByName?: string | null }[];
   notes: { body: string; created_at: string; author: string }[];
   events: { kind: string; detail: any; created_at: string; actor: string }[];
   project: { slug: string; name: string; mailbox: string | null };
-  currentUserId: string;
   currentUserName: string;
   /** Where the action endpoints send the browser back to. */
   back: string;
+  /**
+   * False where the page renders EnquirySide itself, as its own card next to
+   * this one. True keeps notes and history stacked underneath - which is right
+   * in the Inbox, where the pane is already half a split and has no room for
+   * a second column.
+   */
+  showSide?: boolean;
+  /** Outcome of the reply just posted, read off the URL by the page. */
+  sent?: boolean;
+  sendError?: string | null;
 }
-const { enquiry, messages, notes, events, project, currentUserId, currentUserName, back } = Astro.props;
+const {
+  enquiry, messages, notes, events, project,
+  currentUserName, back, sent = false, sendError = null,
+  showSide = true,
+} = Astro.props;
 
-const isMine = enquiry.assigned_to === currentUserId;
-const isUnclaimed = !enquiry.assigned_to;
 const canReply = !!project.mailbox;
+
+// Triage gates the rest of the screen. Until someone has said this is a real
+// buyer there is no stage to set, so that control is not shown at all rather
+// than shown and ignored.
+const triage = enquiry.triage ?? "converted";
+const isPending = triage === "pending";
+const isRejected = triage === "rejected";
 
 const EVENT_LABELS: Record<string, string> = {
   received: "Enquiry received",
-  claimed: "Claimed",
-  released: "Released",
+  converted: "Converted to a lead",
+  rejected: "Rejected",
+  untriaged: "Put back for triage",
+  locale_changed: "Language set",
+  claimed: "Claimed (before ownership was removed)",
+  released: "Released (before ownership was removed)",
   stage_changed: "Stage changed",
   note_added: "Note added",
   document_sent: "Document sent",
@@ -45,10 +67,6 @@ const EVENT_LABELS: Record<string, string> = {
     font: inherit; font-size: 0.75rem; padding: 0.35rem 0.6rem;
     border: 1px solid #d5deea; border-radius: 8px; background: #fff; color: #16283e;
   }
-  .owner { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.74rem; color: #5c6f88; }
-  .av { width: 21px; height: 21px; border-radius: 50%; background: #53b27f; color: #fff;
-        font-size: 0.6rem; font-weight: 800; display: grid; place-items: center; }
-  .av.none { background: #c9d4e3; color: #5c6f88; }
   .btn {
     font: inherit; font-size: 0.72rem; font-weight: 700; border-radius: 999px;
     padding: 0.28rem 0.7rem; cursor: pointer; border: 1px solid rgba(83,178,127,.38);
@@ -56,6 +74,31 @@ const EVENT_LABELS: Record<string, string> = {
   }
   .btn:hover { background: rgba(83,178,127,.2); }
   .btn.quiet { border-color: #d5deea; background: #fff; color: #7d8ea6; }
+
+  /* The one decision that has to be obvious on the screen, so it gets the
+     weight: its own band, above the conversation, before anything else. */
+  .triage {
+    margin-top: 1rem; border: 1px solid #cfe3d7; border-radius: 0.9rem;
+    background: linear-gradient(180deg, #f4fbf7, #fff); padding: 0.9rem 1rem;
+  }
+  .triage .tq { margin: 0; font-size: 0.86rem; font-weight: 700; color: #16283e; }
+  .triage .tacts { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.7rem; }
+  .triage .rejform { display: flex; align-items: center; gap: 0.4rem; }
+  .triage .thint { margin: 0.6rem 0 0; font-size: 0.72rem; color: #5c6f88; }
+  .tbtn {
+    font: inherit; font-size: 0.78rem; font-weight: 700; border-radius: 9px;
+    padding: 0.45rem 1rem; cursor: pointer; border: 1px solid transparent;
+  }
+  .tbtn.go { color: #fff; background: #53b27f; box-shadow: 0 8px 18px rgba(83,178,127,.28); }
+  .tbtn.no { color: #7d8ea6; background: #fff; border-color: #d5deea; }
+  .tbtn.no:hover { color: #b3261e; border-color: #e7b9b5; }
+
+  .rejbar {
+    margin-top: 1rem; display: flex; align-items: center; justify-content: space-between;
+    gap: 0.8rem; flex-wrap: wrap; padding: 0.6rem 0.9rem; border-radius: 0.8rem;
+    background: #f6f8fb; border: 1px solid #e2e8f1; font-size: 0.8rem; color: #5c6f88;
+  }
+
 
   .waiting {
     margin-top: 0.9rem; font-size: 0.78rem; font-weight: 700;
@@ -86,6 +129,9 @@ const EVENT_LABELS: Record<string, string> = {
   .send { font: inherit; font-size: 0.78rem; font-weight: 700; color: #fff; background: #53b27f; border: 0; border-radius: 9px; padding: 0.45rem 1rem; }
   .send:disabled { background: #c9d4e3; cursor: not-allowed; }
   .locked { font-size: 0.72rem; color: #93a3b8; }
+  .sendmsg { font-size: 0.75rem; padding: 0.5rem 0.8rem; margin: 0; border-bottom: 1px solid #eef2f7; }
+  .sendmsg.good { background: rgba(83,178,127,.1); color: #2e7d54; }
+  .sendmsg.bad { background: #fdf2f2; color: #b3261e; }
 
   .notes { margin-top: 1.1rem; background: #fffdf5; border: 1px solid #eadfbf; border-radius: 0.9rem; padding: 0.9rem 1rem; }
   .notes .nh { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: #8a6420; }
@@ -109,7 +155,7 @@ const EVENT_LABELS: Record<string, string> = {
   <div>
     <div class="who">
       {enquiry.name}
-      <span class="flag" title={LOCALE_LABEL[enquiry.locale ?? "en"]}>{(enquiry.locale ?? "en").toUpperCase()}</span>
+      <span class="flag" title={localeTitle(enquiry.locale)}>{localeChip(enquiry.locale)}</span>
     </div>
     <p class="meta">
       <a href={`mailto:${enquiry.email}`}>{enquiry.email}</a>
@@ -120,47 +166,80 @@ const EVENT_LABELS: Record<string, string> = {
   </div>
 
   <div class="controls">
-    <form method="post" action="/api/admin/enquiry">
-      <input type="hidden" name="id" value={enquiry.id} />
-      <input type="hidden" name="action" value="stage" />
-      <input type="hidden" name="back" value={back} />
-      <select class="sel" name="stage" onchange="this.form.submit()">
-        {BUYER_STAGES.map((s) => (
-          <option value={s.key} selected={(enquiry.stage ?? "new") === s.key}>{s.label}</option>
-        ))}
-      </select>
-    </form>
-
-    {isUnclaimed ? (
+    {!isRejected && (
       <form method="post" action="/api/admin/enquiry">
         <input type="hidden" name="id" value={enquiry.id} />
-        <input type="hidden" name="action" value="claim" />
+        <input type="hidden" name="action" value="locale" />
         <input type="hidden" name="back" value={back} />
-        <button class="btn" type="submit">Claim</button>
+        <select class="sel" name="locale" onchange="this.form.submit()" title="Language of the enquiry">
+          <option value="" selected={!enquiry.locale}>Language ?</option>
+          {LOCALE_OPTIONS.map((l) => (
+            <option value={l.value} selected={enquiry.locale === l.value}>{l.label}</option>
+          ))}
+        </select>
       </form>
-    ) : (
-      <>
-        <span class="owner"><i class="av">{currentUserName.slice(0, 2).toUpperCase()}</i>{isMine ? "You" : "Assigned"}</span>
-        {isMine && (
-          <form method="post" action="/api/admin/enquiry">
-            <input type="hidden" name="id" value={enquiry.id} />
-            <input type="hidden" name="action" value="release" />
-            <input type="hidden" name="back" value={back} />
-            <button class="btn quiet" type="submit">Release</button>
-          </form>
-        )}
-      </>
     )}
+
+    {!isPending && !isRejected && (
+      <form method="post" action="/api/admin/enquiry">
+        <input type="hidden" name="id" value={enquiry.id} />
+        <input type="hidden" name="action" value="stage" />
+        <input type="hidden" name="back" value={back} />
+        <select class="sel" name="stage" onchange="this.form.submit()">
+          {BUYER_STAGES.map((s) => (
+            <option value={s.key} selected={(enquiry.stage ?? "new") === s.key}>{s.label}</option>
+          ))}
+        </select>
+      </form>
+    )}
+
   </div>
 </div>
 
-{enquiry.waiting_on_us === true && (
+{isPending && (
+  <div class="triage">
+    <p class="tq">A real buyer, or not? Nothing enters the pipeline until you say so.</p>
+    <div class="tacts">
+      <form method="post" action="/api/admin/enquiry">
+        <input type="hidden" name="id" value={enquiry.id} />
+        <input type="hidden" name="action" value="convert" />
+        <input type="hidden" name="back" value={back} />
+        <button class="tbtn go" type="submit">Convert to lead</button>
+      </form>
+      <form method="post" action="/api/admin/enquiry" class="rejform">
+        <input type="hidden" name="id" value={enquiry.id} />
+        <input type="hidden" name="action" value="reject" />
+        <input type="hidden" name="back" value={back} />
+        <select class="sel" name="reason" required>
+          <option value="">Reason…</option>
+          {REJECT_REASONS.map((r) => <option value={r.value}>{r.label}</option>)}
+        </select>
+        <button class="tbtn no" type="submit">Reject</button>
+      </form>
+    </div>
+    <p class="thint">Converting takes it on as yours and puts it in the pipeline. Rejecting files it away — it isn't deleted.</p>
+  </div>
+)}
+
+{isRejected && (
+  <div class="rejbar">
+    <span>Rejected · {rejectReasonLabel(enquiry.triage_reason)}</span>
+    <form method="post" action="/api/admin/enquiry">
+      <input type="hidden" name="id" value={enquiry.id} />
+      <input type="hidden" name="action" value="untriage" />
+      <input type="hidden" name="back" value={back} />
+      <button class="btn quiet" type="submit">Put it back</button>
+    </form>
+  </div>
+)}
+
+{!isPending && !isRejected && enquiry.waiting_on_us === true && (
   <p class="waiting us">Waiting on us — they replied {shortAge(enquiry.last_activity_at)} ago</p>
 )}
-{enquiry.waiting_on_us === false && (
+{!isRejected && enquiry.waiting_on_us === false && (
   <p class="waiting them">Waiting on them — we replied {shortAge(enquiry.last_activity_at)} ago</p>
 )}
-{enquiry.waiting_on_us === null && (
+{!isPending && !isRejected && enquiry.waiting_on_us === null && (
   <p class="waiting us">No reply sent yet — arrived {shortAge(enquiry.created_at)} ago</p>
 )}
 
@@ -174,30 +253,48 @@ const EVENT_LABELS: Record<string, string> = {
 {messages.map((m) => (
   <div class:list={["msg", m.direction]}>
     <div class="hd">
-      <span>{m.direction === "inbound" ? enquiry.name : `${currentUserName} · ${project.name}`}</span>
+      <span>{m.direction === "inbound"
+        ? enquiry.name
+        : m.sentByName ? `${m.sentByName} · ${project.name}` : project.name}</span>
       <span>{new Date(m.sent_at).toLocaleString("en-GB")}</span>
     </div>
     <div class="body" set:html={m.body_html ?? ""}></div>
   </div>
 ))}
 
-<div class="composer">
+{!isRejected && (
+<form class="composer" method="post" action="/api/admin/enquiry">
+  <input type="hidden" name="id" value={enquiry.id} />
+  <input type="hidden" name="action" value="reply" />
+  <input type="hidden" name="back" value={back} />
   <div class="cbar">
     <span>From <b>{project.mailbox ? `${currentUserName} · ${project.name} <${project.mailbox}>` : "no mailbox connected"}</b></span>
+    <span>to <b>{enquiry.email}</b></span>
   </div>
-  <textarea disabled={!canReply} placeholder={canReply
-    ? "Write your reply…"
-    : "Connect this project's mailbox in Settings to reply from here."}></textarea>
+  {sendError && <p class="sendmsg bad">{sendError}</p>}
+  {sent && !sendError && <p class="sendmsg good">Sent — it will appear in the thread above.</p>}
+  <textarea
+    name="body"
+    required
+    disabled={!canReply}
+    placeholder={canReply
+      ? "Write your reply…"
+      : "Connect this project's mailbox in Settings to reply from here."}></textarea>
   <div class="cfoot">
     <span class="locked">
-      {canReply
-        ? "Sending arrives in phase B, once the mailbox is connected to Zoho."
-        : "No mailbox set — add one in Settings."}
+      {!canReply
+        ? "No mailbox set — add one in Settings."
+        : isPending
+          ? `Replying accepts this as a lead. It goes out as ${currentUserName}.`
+          : `Goes out as ${currentUserName}, from the shared project mailbox.`}
     </span>
-    <button class="send" type="button" disabled>Send reply</button>
+    <button class="send" type="submit" disabled={!canReply}>Send reply</button>
   </div>
-</div>
+</form>
+)}
 
+{showSide && (
+<>
 <div class="notes">
   <div class="nh">Internal notes · visible to the team, never sent</div>
   {notes.length === 0 && <p class="nrow" style="color:#9a8a5f">No notes yet.</p>}
@@ -220,10 +317,14 @@ const EVENT_LABELS: Record<string, string> = {
       <div class="hrow">
         <span style="color:#5c6f88">
           {EVENT_LABELS[ev.kind] ?? ev.kind}
-          {ev.kind === "stage_changed" && ev.detail?.label ? ` → ${ev.detail.label}` : ""}
+          {(ev.kind === "stage_changed" || ev.kind === "locale_changed") && ev.detail?.label
+            ? ` → ${ev.detail.label}` : ""}
+          {ev.kind === "rejected" && ev.detail?.label ? ` · ${ev.detail.label}` : ""}
         </span>
         <span>{ev.actor} · {new Date(ev.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
       </div>
     ))}
   </div>
+)}
+</>
 )}

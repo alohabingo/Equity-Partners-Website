@@ -3,12 +3,18 @@ export const prerender = false;
 
 import AdminLayout from "../../../../../layouts/AdminLayout.astro";
 import EnquiryPanel from "../../../../../components/admin/EnquiryPanel.astro";
+import EnquirySide from "../../../../../components/admin/EnquirySide.astro";
 import { supabaseServer } from "../../../../../lib/supabase";
 import type { EnquiryRow } from "../../../../../lib/enquiries";
 
 const { slug, id } = Astro.params;
 const supabase = supabaseServer(Astro.cookies, Astro.request);
 const me = Astro.locals.user;
+
+// How the last reply went. The endpoint puts this on the URL because a send
+// that failed must not look like one that worked.
+const sent = Astro.url.searchParams.get("sent") === "1";
+const sendError = Astro.url.searchParams.get("send_error");
 
 const { data: project } = await supabase
   .from("projects").select("slug, name, mailbox").eq("slug", slug).maybeSingle();
@@ -23,7 +29,7 @@ const { data: profiles } = await supabase.from("profiles").select("id, full_name
 const nameById = new Map((profiles ?? []).map((p: any) => [p.id, p.full_name]));
 
 const [m, n, ev] = await Promise.all([
-  supabase.from("inquiry_messages").select("direction, subject, body_html, sent_at")
+  supabase.from("inquiry_messages").select("direction, subject, body_html, sent_at, sent_by")
     .eq("inquiry_id", id).order("sent_at"),
   supabase.from("enquiry_notes").select("body, created_at, author_id")
     .eq("inquiry_id", id).order("created_at", { ascending: false }),
@@ -31,7 +37,9 @@ const [m, n, ev] = await Promise.all([
     .eq("inquiry_id", id).order("created_at", { ascending: false }).limit(20),
 ]);
 
-const messages = m.data ?? [];
+// The mailbox is shared, so an outbound message says who actually wrote it
+// rather than assuming it was whoever happens to be reading the thread.
+const messages = (m.data ?? []).map((x: any) => ({ ...x, sentByName: nameById.get(x.sent_by) ?? null }));
 const notes = (n.data ?? []).map((x: any) => ({ ...x, author: nameById.get(x.author_id) ?? "Someone" }));
 const events = (ev.data ?? []).map((x: any) => ({ ...x, actor: nameById.get(x.actor_id) ?? "System" }));
 
@@ -42,25 +50,47 @@ const selfHref = Astro.url.pathname;
   <style>
     .back { display: inline-block; margin-top: 0.4rem; font-size: 0.82rem; font-weight: 600; color: #2e7d54; text-decoration: none; }
     .back:hover { text-decoration: underline; }
-    .panel {
-      margin-top: 1.1rem; background: #fff; border: 1px solid #d7deea; border-radius: 1.2rem;
-      padding: 1.6rem 1.8rem; box-shadow: 0 10px 30px rgba(15, 26, 42, 0.06);
-      max-width: 900px;
+    /* Two cards, not one card in two columns: the left is the exchange with the
+       buyer, the right is what the team did about it. They are different kinds
+       of thing, so they get different cards. */
+    .cols {
+      margin-top: 1.1rem; display: grid; gap: 1.1rem; align-items: start;
+      grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+      max-width: 1220px;
+    }
+    .panel, .sidecard {
+      background: #fff; border: 1px solid #d7deea; border-radius: 1.2rem;
+      box-shadow: 0 10px 30px rgba(15, 26, 42, 0.06);
+    }
+    .panel { padding: 1.6rem 1.8rem; }
+    .sidecard { padding: 1.2rem 1.3rem; position: sticky; top: 1rem; }
+
+    @media (max-width: 1080px) {
+      .cols { display: block; max-width: 900px; }
+      .sidecard { position: static; margin-top: 1.1rem; }
     }
   </style>
 
   <a class="back" href={`/admin/projects/${slug}?tab=inbox`}>← {project.name} inbox</a>
 
-  <div class="panel">
-    <EnquiryPanel
-      enquiry={enquiry}
-      messages={messages}
-      notes={notes}
-      events={events}
-      project={{ slug: project.slug, name: project.name, mailbox: project.mailbox }}
-      currentUserId={me?.id ?? ""}
-      currentUserName={me?.fullName ?? "You"}
-      back={selfHref}
-    />
+  <div class="cols">
+    <div class="panel">
+      <EnquiryPanel
+        enquiry={enquiry}
+        messages={messages}
+        notes={notes}
+        events={events}
+        project={{ slug: project.slug, name: project.name, mailbox: project.mailbox }}
+        currentUserName={me?.fullName ?? "You"}
+        back={selfHref}
+        sent={sent}
+        sendError={sendError}
+        showSide={false}
+      />
+    </div>
+
+    <aside class="sidecard">
+      <EnquirySide enquiryId={enquiry.id} notes={notes} events={events} back={selfHref} />
+    </aside>
   </div>
 </AdminLayout>
