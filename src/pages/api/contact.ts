@@ -78,6 +78,10 @@ export const POST: APIRoute = async ({ request, url }) => {
       locale,
       source_page: get("source_page") || null,
       details,
+      // Fund enquiries don't go through buyer triage - that queue belongs to a
+      // project. Set explicitly so the column never claims a fund lead is
+      // sitting unjudged in a queue that will never look at it.
+      triage: "converted",
     });
     if (error) throw error;
   } catch (e) {

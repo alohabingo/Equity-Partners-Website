@@ -7,7 +7,7 @@
  * The first case is a real Web3Forms notification from nantaalta.com, kept
  * verbatim: it is the shape everything else has to keep working against.
  */
-import { extractBuyer, shouldIgnore } from "./mailToEnquiry";
+import { extractBuyer, shouldIgnore, stripServiceFooter } from "./mailToEnquiry";
 
 let pass = 0, fail = 0;
 const check = (label: string, got: unknown, want: unknown) => {
@@ -59,6 +59,43 @@ check("ignores bounces", shouldIgnore({ from: "mailer-daemon@zoho.eu" }, ["sales
 check("ignores out-of-office", shouldIgnore({ from: "someone@example.com", subject: "Out of office: re Villa 4" }, []), "auto-reply or bounce");
 check("allows a real buyer", shouldIgnore({ from: "marta@example.com", subject: "Villa 4" }, ["sales@nantaalta.com"]), null);
 check("allows the forwarder through (it carries real buyers)", shouldIgnore({ from: "notify@web3forms.com", subject: "New Submission" }, ["sales@nantaalta.com"]), null);
+
+// ---- the form service's own trailer ----
+// Verbatim from the first real submission through the connected mailbox. All of
+// it lands in the one line the queue shows, so "I'd like the brochure" reads as
+// an IP address and a spam link unless it is cut.
+const trailer = `This is a portal connection test message
+Visitor IP: 217.148.133.158. Report Spam .
+Don't want these emails anymore?
+Manage Notifications .
+This e-mail was sent from
+https://www.nantaalta.com/
+Powered by
+Web3Forms`;
+check("real Web3Forms trailer is cut whole", stripServiceFooter(trailer), "This is a portal connection test message");
+check("a multi-paragraph message survives",
+  stripServiceFooter("Hello,\n\nI would like the brochure.\n\nVisitor IP: 1.2.3.4\nPowered by\nWeb3Forms"),
+  "Hello,\n\nI would like the brochure.");
+check("no trailer, nothing removed",
+  stripServiceFooter("Just a plain email."), "Just a plain email.");
+check("a message that is only a trailer ends up empty",
+  stripServiceFooter("Visitor IP: 9.9.9.9\nPowered by\nWeb3Forms"), "");
+check("cuts at the earliest marker, not the first listed",
+  stripServiceFooter("Real words.\nUnsubscribe\nVisitor IP: 1.1.1.1"), "Real words.");
+
+// Why every pattern is anchored to its own line: buyers write these words too,
+// and eating a real sentence would be far worse than leaving a footer in.
+check("'powered by' inside a sentence is left alone",
+  stripServiceFooter("The villa is powered by geothermal heating. Can you confirm?"),
+  "The villa is powered by geothermal heating. Can you confirm?");
+check("an IP mentioned mid-sentence is left alone",
+  stripServiceFooter("Our office powered by solar; my visitor IP question is separate."),
+  "Our office powered by solar; my visitor IP question is separate.");
+
+check("extractBuyer returns the trimmed message",
+  extractBuyer({ from: "notify@web3forms.com", replyTo: "buyer@example.com", subject: "New Submission",
+    bodyHtml: "<h3>Message</h3><p>Send me the floorplans.</p><p>Visitor IP: 1.2.3.4</p><p>Powered by</p><p>Web3Forms</p>" }).message,
+  "Send me the floorplans.");
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

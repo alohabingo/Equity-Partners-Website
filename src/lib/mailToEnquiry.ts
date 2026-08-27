@@ -59,6 +59,37 @@ export function htmlToText(html: string): string {
     .trim();
 }
 
+/**
+ * Everything a form service staples to the bottom of its own notification:
+ * the visitor's IP, a Report Spam link, unsubscribe blurb, "Powered by".
+ *
+ * None of it is the buyer's words, and all of it lands in the one line the
+ * queue shows - so "I'd like the brochure" reads as an IP address and a spam
+ * link instead. Cut at the EARLIEST marker found: the trailer is contiguous, so
+ * the first one that appears is where the person stopped writing.
+ *
+ * Each pattern is anchored to its own line, or is a phrase no buyer writes, so
+ * a message that happens to mention one of these words survives intact.
+ */
+const FOOTER_MARKERS: RegExp[] = [
+  /^\s*visitor ip\s*:/im,
+  /^\s*report (spam|abuse)\b/im,
+  /don'?t want these emails/i,
+  /^\s*manage notifications\b/im,
+  /this e-?mail was sent from/i,
+  /^\s*powered by\s*$/im,
+  /^\s*unsubscribe\s*$/im,
+];
+
+export function stripServiceFooter(text: string): string {
+  let cut = (text ?? "").length;
+  for (const re of FOOTER_MARKERS) {
+    const at = text.match(re)?.index;
+    if (at !== undefined && at < cut) cut = at;
+  }
+  return text.slice(0, cut).trim();
+}
+
 const LABELS: Record<"name" | "email" | "message", string[]> = {
   name: ["name", "full name", "nombre", "nom"],
   email: ["email", "e-mail", "email address", "correo", "correu"],
@@ -122,6 +153,11 @@ export function extractBuyer(mail: ParsedMail): BuyerGuess {
   const bodyEmail = fieldFromBody(text, "email").match(EMAIL_RE)?.[0] ?? "";
   const bodyMessage = fieldFromBody(text, "message");
 
+  // Labels are read from the RAW text - they sit above the trailer, so nothing
+  // is lost - and only what we keep as the message is trimmed.
+  const cleanText = stripServiceFooter(text);
+  const cleanMessage = stripServiceFooter(bodyMessage);
+
   const from = (mail.from ?? "").toLowerCase().trim();
   const replyTo = (mail.replyTo ?? "").toLowerCase().trim();
   const viaForwarder = isForwarder(from) || isRobot(from);
@@ -131,7 +167,7 @@ export function extractBuyer(mail: ParsedMail): BuyerGuess {
     return {
       email: replyTo,
       name: bodyName || nameFromEmail(replyTo),
-      message: bodyMessage || text,
+      message: cleanMessage || cleanText,
       source: "reply-to",
       viaForwarder,
     };
@@ -143,7 +179,7 @@ export function extractBuyer(mail: ParsedMail): BuyerGuess {
     return {
       email: bodyEmail,
       name: bodyName || nameFromEmail(bodyEmail),
-      message: bodyMessage || text,
+      message: cleanMessage || cleanText,
       source: "body",
       viaForwarder,
     };
@@ -151,10 +187,10 @@ export function extractBuyer(mail: ParsedMail): BuyerGuess {
 
   // A direct email from a real person.
   if (from && !viaForwarder) {
-    return { email: from, name: bodyName || nameFromEmail(from), message: text, source: "from", viaForwarder: false };
+    return { email: from, name: bodyName || nameFromEmail(from), message: cleanText, source: "from", viaForwarder: false };
   }
 
-  return { email: "", name: "", message: text, source: "none", viaForwarder };
+  return { email: "", name: "", message: cleanText, source: "none", viaForwarder };
 }
 
 /** "resalanevera@gmail.com" → "Resalanevera". Better than showing an address as a name. */
