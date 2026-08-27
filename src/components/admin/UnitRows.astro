@@ -1,0 +1,143 @@
+---
+import { UNIT_STATES, unitStateTheme, type UnitRow } from "../../lib/units";
+
+/**
+ * The unit table for one building.
+ *
+ * Its own component because the Units tab now draws one of these per building,
+ * and three copies of sixty lines of form markup is three places for a field
+ * name to be typed differently.
+ */
+interface Props {
+  units: UnitRow[];
+  slug: string;
+  /** Only offered when there is somewhere else to move a unit TO. */
+  buildings: { id: string; name: string }[];
+  buyers: { id: string; name: string }[];
+}
+const { units, slug, buildings, buyers } = Astro.props;
+const canMove = buildings.length > 1;
+---
+
+<style>
+  table.q { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 0.8rem; }
+  table.q th {
+    text-align: left; font-size: 0.62rem; letter-spacing: 0.07em; text-transform: uppercase;
+    color: #93a3b8; font-weight: 800; padding: 0.45rem 0.5rem; border-bottom: 1px solid #d7deea;
+  }
+  table.q td { padding: 0.7rem 0.5rem; border-bottom: 1px solid #eef2f7; vertical-align: middle; }
+  table.q tr:last-child td { border-bottom: 0; }
+
+  .inline { display: flex; align-items: center; gap: 0.4rem; }
+  .in {
+    font: inherit; width: 100%; border: 1px solid #d5deea; border-radius: 9px;
+    padding: 0.5rem 0.7rem; font-size: 0.85rem; color: #16283e; background: #fff;
+  }
+  .in.price { width: 130px; padding: 0.4rem 0.6rem; font-size: 0.8rem; }
+  .tiny {
+    font: inherit; font-size: 0.68rem; font-weight: 700; color: #5c6f88; background: #fff;
+    border: 1px solid #d5deea; border-radius: 999px; padding: 0.22rem 0.6rem; cursor: pointer;
+  }
+  .tiny:hover { color: #2e7d54; border-color: rgba(83, 178, 127, 0.5); }
+  .tiny.danger:hover { color: #b3261e; border-color: #e7b9b5; }
+
+  /* Colours only. The chevron is the portal's, drawn by AdminLayout on a
+     wrapper it adds to every select; drawing another here is what once left
+     these with two arrows. */
+  .pick { position: relative; display: inline-flex; }
+  .pick select {
+    font: inherit; font-size: 0.76rem; font-weight: 700;
+    color: var(--ink, #5c6f88); background: var(--bg, #f2f5f9);
+    border: 1px solid var(--bd, transparent); border-radius: 999px;
+    cursor: pointer; min-width: 128px;
+    transition: filter 180ms ease, box-shadow 180ms ease;
+  }
+  .pick select:hover { filter: brightness(0.96); }
+  .pick select:focus { outline: none; }
+  .pick select:focus-visible { box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.32); }
+  .pick.quiet select { min-width: 150px; background: #fff; border-color: #d5deea; color: #16283e; }
+  .pick.quiet.empty select { background: #f8fafc; color: #93a3b8; font-weight: 600; }
+  .pick.quiet.empty { --ink: #93a3b8; }
+</style>
+
+<table class="q">
+  <tr>
+    <th>Unit</th>
+    {canMove && <th>Building</th>}
+    <th>State</th><th>Price</th><th>Buyer</th><th></th>
+  </tr>
+  {units.map((u) => (
+    <tr>
+      <td><b>{u.code}</b></td>
+
+      {canMove && (
+        <td>
+          <form method="post" action="/api/admin/project-units">
+            <input type="hidden" name="slug" value={slug} />
+            <input type="hidden" name="id" value={u.id} />
+            <input type="hidden" name="action" value="building" />
+            <span class:list={["pick", "quiet", { empty: !u.building_id }]}>
+              <select name="building_id" onchange="this.form.submit()">
+                <option value="" selected={!u.building_id}>Not placed</option>
+                {buildings.map((b) => (
+                  <option value={b.id} selected={u.building_id === b.id}>{b.name}</option>
+                ))}
+              </select>
+            </span>
+          </form>
+        </td>
+      )}
+
+      <td>
+        <form method="post" action="/api/admin/project-units">
+          <input type="hidden" name="slug" value={slug} />
+          <input type="hidden" name="id" value={u.id} />
+          <input type="hidden" name="action" value="state" />
+          <span class="pick" style={`--ink:${unitStateTheme(u.state).ink};--bg:${unitStateTheme(u.state).bg};--bd:${unitStateTheme(u.state).border}`}>
+            <select name="state" onchange="this.form.submit()">
+              {UNIT_STATES.map((st) => (
+                <option value={st.key} selected={u.state === st.key}>{st.label}</option>
+              ))}
+            </select>
+          </span>
+        </form>
+      </td>
+
+      <td>
+        <form method="post" action="/api/admin/project-units" class="inline">
+          <input type="hidden" name="slug" value={slug} />
+          <input type="hidden" name="id" value={u.id} />
+          <input type="hidden" name="action" value="price" />
+          <input class="in price" type="text" name="price" value={u.price ?? ""} placeholder="—" />
+          <button class="tiny" type="submit">Save</button>
+        </form>
+      </td>
+
+      <td>
+        <form method="post" action="/api/admin/project-units">
+          <input type="hidden" name="slug" value={slug} />
+          <input type="hidden" name="id" value={u.id} />
+          <input type="hidden" name="action" value="buyer" />
+          <span class:list={["pick", "quiet", { empty: !u.inquiry_id }]}>
+            <select name="inquiry_id" onchange="this.form.submit()">
+              <option value="" selected={!u.inquiry_id}>Nobody yet</option>
+              {buyers.map((b) => (
+                <option value={b.id} selected={u.inquiry_id === b.id}>{b.name}</option>
+              ))}
+            </select>
+          </span>
+        </form>
+      </td>
+
+      <td style="text-align:right">
+        <form method="post" action="/api/admin/project-units"
+              onsubmit={`return confirm('Remove ${u.code}?')`}>
+          <input type="hidden" name="slug" value={slug} />
+          <input type="hidden" name="id" value={u.id} />
+          <input type="hidden" name="action" value="remove" />
+          <button class="tiny danger" type="submit">Remove</button>
+        </form>
+      </td>
+    </tr>
+  ))}
+</table>
