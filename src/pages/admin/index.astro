@@ -457,7 +457,7 @@ if (isSuper && expiringLinks > 0) healthItems.push({ level: "alert", text: `${ex
     <div class="stack">
       {isSuper && (
         <section class="panel">
-          <h2>Inquiries per week <a class="link" href="/admin/leads">Open leads →</a></h2>
+          <h2>Inquiries per week <a class="link" href="/admin/investor-leads">Open leads →</a></h2>
           <div class="chart-wrap"><canvas id="inquiriesChart"></canvas></div>
         </section>
       )}
@@ -471,7 +471,7 @@ if (isSuper && expiringLinks > 0) healthItems.push({ level: "alert", text: `${ex
 
       {isSuper && (
         <section class="panel">
-          <h2>Latest inquiries <a class="link" href="/admin/leads">All leads →</a></h2>
+          <h2>Latest inquiries <a class="link" href="/admin/investor-leads">All leads →</a></h2>
           {recentLeads.length === 0 ? (
             <p class="empty">No inquiries yet.</p>
           ) : (
@@ -479,7 +479,7 @@ if (isSuper && expiringLinks > 0) healthItems.push({ level: "alert", text: `${ex
               {recentLeads.map((l) => (
                 <tr>
                   <td>
-                    <a class="l-name" href={`/admin/leads/${l.id}`}>{l.name}</a><br />
+                    <a class="l-name" href={`/admin/investor-leads/${l.id}`}>{l.name}</a><br />
                     <span class="l-meta">{l.email}</span>
                   </td>
                   <td><span class={`pill ${TYPE_PILL[l.type]?.cls ?? "general"}`}>{TYPE_PILL[l.type]?.label ?? l.type}</span></td>

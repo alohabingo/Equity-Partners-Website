@@ -8,8 +8,8 @@ import { runZohoSync } from "../../../lib/zoho-sync";
  *  Netlify function covers automatic syncing in production. */
 export const POST: APIRoute = async ({ request, redirect }) => {
   const result = await runZohoSync();
-  const back = new URL(request.headers.get("referer") ?? "/admin/leads").pathname;
-  const target = back.startsWith("/admin") ? back : "/admin/leads";
+  const back = new URL(request.headers.get("referer") ?? "/admin/investor-leads").pathname;
+  const target = back.startsWith("/admin") ? back : "/admin/investor-leads";
   const q = result.ok ? `synced=${result.inserted}` : `syncerror=${encodeURIComponent(result.error ?? "unknown")}`;
   return redirect(`${target}?${q}`);
 };

@@ -14,7 +14,7 @@ const { data: lead } = await supabase
   .eq("id", id)
   .single();
 
-if (!lead) return Astro.redirect("/admin/leads");
+if (!lead) return Astro.redirect("/admin/investor-leads");
 
 const { data: thread } = await supabase
   .from("inquiry_messages")
@@ -56,8 +56,8 @@ const dateFmt = new Intl.DateTimeFormat("en-GB", {
 const details = Object.entries((lead.details ?? {}) as Record<string, string>);
 ---
 
-<AdminLayout title={`Lead — ${lead.name}`} active="leads">
-  <a class="back" href="/admin/leads">← All leads</a>
+<AdminLayout title={`Lead — ${lead.name}`} active="investor-leads">
+  <a class="back" href="/admin/investor-leads">← All leads</a>
 
   <div class="head">
     <div>
@@ -70,7 +70,7 @@ const details = Object.entries((lead.details ?? {}) as Record<string, string>);
     </div>
     <form method="post" action="/api/admin/lead-status" data-status-form>
       <input type="hidden" name="id" value={lead.id} />
-      <input type="hidden" name="back_to" value={`/admin/leads/${lead.id}`} />
+      <input type="hidden" name="back_to" value={`/admin/investor-leads/${lead.id}`} />
       <select name="status" class="status-select">
         {STATUSES.map((s) => (
           <option value={s.key} selected={lead.status === s.key}>{s.label}</option>

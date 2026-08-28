@@ -1,0 +1,457 @@
+---
+import { BUYER_STAGES, stageLabel, stageTheme, stageDurations, daysSince } from "../../lib/pipeline";
+import { LEAD_SOURCES, localeTitle, sourceLabel, type EnquiryRow } from "../../lib/enquiries";
+
+/**
+ * One buyer, everything known about them, in a drawer.
+ *
+ * Rendered for the lead named in the URL rather than one per row. A drawer per
+ * row would put the whole thing in the page's markup dozens of times over and
+ * query every buyer's history to draw a list that shows none of it.
+ * ?lead=<id> also makes a buyer's profile a link somebody can send.
+ *
+ * READ plus three actions. The enquiry page already owns editing, the
+ * conversation and the composer; a drawer that did all of that too would be a
+ * second copy of a screen, and the two would disagree within a month.
+ */
+
+interface Props {
+  lead: EnquiryRow & { phone?: string | null; message?: string | null };
+  project: { slug: string; name: string };
+  events: { kind: string; detail: any; created_at: string; actor: string }[];
+  messages: { direction: string; subject: string | null; sent_at: string; sentByName?: string | null }[];
+  notes: { body: string; created_at: string; author: string }[];
+  unit: { code: string; state: string } | null;
+  docs: { title: string; views: number; created_at: string }[];
+  /** Where the × and Escape go: this page without the lead on it. */
+  back: string;
+}
+const { lead, project, events, messages, notes, unit, docs, back } = Astro.props;
+
+const EVENT_LABELS: Record<string, string> = {
+  received: "Enquiry received",
+  converted: "Accepted as a lead",
+  rejected: "Rejected",
+  untriaged: "Put back for triage",
+  locale_changed: "Language set",
+  contact_changed: "Contact details changed",
+  stage_changed: "Stage changed",
+  note_added: "Note added",
+  document_sent: "Document sent",
+  reply_sent: "Reply sent",
+  anonymised: "Personal data anonymised",
+};
+
+// ---- the person ----
+const initials = (lead.name ?? "")
+  .split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("") || "?";
+
+// A stable colour from the name, so the same buyer is the same colour every
+// time. Random would be prettier once and confusing forever.
+const hue = [...(lead.name ?? "?")].reduce((n, c) => (n * 31 + c.charCodeAt(0)) % 360, 7);
+
+// ---- the rail ----
+const stageMoves = events.filter((e) => e.kind === "stage_changed");
+const { totals, current, enteredCurrentAt } = stageDurations(lead.created_at, stageMoves);
+const reached = new Set(Object.keys(totals));
+const currentIndex = BUYER_STAGES.findIndex((s) => s.key === current);
+
+// ---- engagement ----
+const inbound = messages.filter((m) => m.direction === "inbound");
+const outbound = messages.filter((m) => m.direction !== "inbound");
+const lastHeard = inbound.length > 0
+  ? inbound.map((m) => m.sent_at).sort().slice(-1)[0]
+  : null;
+const docsOpened = docs.filter((d) => d.views > 0).length;
+const totalViews = docs.reduce((n, d) => n + d.views, 0);
+
+const tiles = [
+  { value: String(inbound.length), label: inbound.length === 1 ? "message in" : "messages in" },
+  { value: String(outbound.length), label: outbound.length === 1 ? "reply sent" : "replies sent" },
+  {
+    value: lastHeard ? String(daysSince(lastHeard)) : "—",
+    label: lastHeard ? "days since they wrote" : "never written",
+    warn: lastHeard ? daysSince(lastHeard) >= 14 : false,
+  },
+  {
+    value: docs.length === 0 ? "—" : `${docsOpened}/${docs.length}`,
+    label: docs.length === 0 ? "no documents sent" : `documents opened · ${totalViews} view${totalViews === 1 ? "" : "s"}`,
+  },
+];
+
+// ---- the feed ----
+type Entry = { when: string; title: string; detail?: string; who?: string; kind: string };
+const feed: Entry[] = [
+  ...messages.map((m) => ({
+    when: m.sent_at,
+    kind: m.direction === "inbound" ? "in" : "out",
+    title: m.direction === "inbound" ? "Email received" : "Reply sent",
+    detail: m.subject ?? undefined,
+    who: m.direction === "inbound" ? undefined : m.sentByName ?? undefined,
+  })),
+  ...events.map((e) => ({
+    when: e.created_at,
+    kind: e.kind,
+    title: EVENT_LABELS[e.kind] ?? e.kind,
+    detail:
+      e.kind === "stage_changed" ? `→ ${e.detail?.label ?? stageLabel(e.detail?.to)}`
+      : e.kind === "document_sent" ? e.detail?.title
+      : e.kind === "received" && e.detail?.via === "manual" ? `added by hand · ${sourceLabel(e.detail?.source)}`
+      : e.detail?.label,
+    who: e.actor,
+  })),
+].sort((a, b) => new Date(b.when).getTime() - new Date(a.when).getTime());
+
+const dt = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+
+const LIVE_STAGES = BUYER_STAGES.filter((s) => s.key !== "not_proceeding");
+const liveIndex = LIVE_STAGES.findIndex((s) => s.key === current);
+const stopped = current === "not_proceeding";
+
+const theme = stageTheme(current);
+const enquiryHref = `/admin/projects/${project.slug}/enquiry/${lead.id}`;
+const selfHref = Astro.url.pathname + Astro.url.search;
+const contactError = Astro.url.searchParams.get("contact_error");
+---
+
+<dialog class="lp" id="lead-profile" data-profile data-back={back}>
+  <div class="lphead">
+    <span class="avatar" style={`background:hsl(${hue} 42% 92%);color:hsl(${hue} 45% 32%)`}>{initials}</span>
+    <div class="who">
+      <h2>{lead.name || "No name given"}</h2>
+      <p class="sub">{project.name} · {localeTitle(lead.locale)}</p>
+    </div>
+    <div class="acts">
+      <a class="act primary" href={enquiryHref}>Open full enquiry</a>
+      <form method="post" action="/api/admin/enquiry" class="stageform">
+        <input type="hidden" name="id" value={lead.id} />
+        <input type="hidden" name="action" value="stage" />
+        <input type="hidden" name="back" value={Astro.url.pathname + Astro.url.search} />
+        <span class="pick" style={`--ink:${theme.ink};--bg:${theme.bg};--bd:${theme.border}`}>
+          <select name="stage" onchange="this.form.submit()" aria-label="Stage">
+            {BUYER_STAGES.map((st) => (
+              <option value={st.key} selected={st.key === current}>{st.label}</option>
+            ))}
+          </select>
+        </span>
+      </form>
+      <a class="lpx" href={back} aria-label="Close">×</a>
+    </div>
+  </div>
+
+  {/* ---- the pipeline ---- */}
+  <section class="block rail-block">
+    <ol class="rail" style={`--cols:${LIVE_STAGES.length}`}>
+      {LIVE_STAGES.map((st, i) => {
+        const days = totals[st.key];
+        const isNow = !stopped && st.key === current;
+        // "Passed" is by POSITION, not by whether an event exists for it. A lead
+        // dragged straight from New to Reservation never visited Information
+        // sharing, but the line still has to run through it or the pipeline
+        // reads as broken rather than as skipped.
+        const passed = !stopped && liveIndex > i;
+        return (
+          <li class:list={["step", { now: isNow, done: passed, ahead: !isNow && !passed }]}>
+            <span class="line"></span>
+            <span class="dot"></span>
+            <span class="sname">{st.label}</span>
+            <span class="sdays">
+              {isNow ? `${daysSince(enteredCurrentAt)} days here` : days !== undefined ? `${days}d` : "—"}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+    {stopped && (
+      <p class="stopped">Not proceeding — {daysSince(enteredCurrentAt)} days ago</p>
+    )}
+  </section>
+
+
+  {/* Editable, because these three are the ones that turn out to be wrong.
+      A guessed source, a typo'd address, a phone number taken down on a call —
+      each is a five-second fix here and a trip to the enquiry screen otherwise. */}
+  <form class="contact" method="post" action="/api/admin/enquiry">
+    <input type="hidden" name="id" value={lead.id} />
+    <input type="hidden" name="action" value="contact" />
+    <input type="hidden" name="back" value={selfHref} />
+
+    <label class="cfield">
+      <span class="clab">Email</span>
+      <input class="cin" type="email" name="email" value={lead.email ?? ""} placeholder="not recorded" />
+    </label>
+    <label class="cfield">
+      <span class="clab">Phone</span>
+      <input class="cin" type="tel" name="phone" value={lead.phone ?? ""} placeholder="not recorded" />
+    </label>
+    <label class="cfield">
+      <span class="clab">Where from</span>
+      <span class="pick quiet">
+        <select class="cin" name="source">
+          {LEAD_SOURCES.map((src) => (
+            <option value={src.value} selected={src.value === lead.source}>{src.label}</option>
+          ))}
+        </select>
+      </span>
+    </label>
+
+    <div class="cfoot">
+      {contactError && <p class="cerr">{contactError}</p>}
+      <button class="act" type="submit">Save contact</button>
+    </div>
+  </form>
+
+  <div class="cols">
+    <div class="col">
+      <section class="block">
+        <h3>Engagement</h3>
+        <div class="tiles">
+          {tiles.map((t) => (
+            <div class="tile">
+              <b class:list={[{ warn: t.warn }]}>{t.value}</b>
+              <span>{t.label}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section class="block">
+        <h3>Details</h3>
+        <dl class="kvs">
+          <dt>First contact</dt><dd>{dt(lead.created_at)} · {daysSince(lead.created_at)} days ago</dd>
+          <dt>Unit</dt><dd>{unit ? `${unit.code} · ${unit.state}` : <span class="muted">none assigned</span>}</dd>
+        </dl>
+        {lead.message && <p class="said">“{lead.message}”</p>}
+      </section>
+
+      <section class="block">
+        <h3>Notes</h3>
+        {notes.length === 0 && <p class="muted">No notes yet.</p>}
+        {notes.map((n) => (
+          <div class="note">
+            <p>{n.body}</p>
+            <span>{n.author} · {dt(n.created_at)}</span>
+          </div>
+        ))}
+        <form method="post" action="/api/admin/enquiry" class="noteform">
+          <input type="hidden" name="id" value={lead.id} />
+          <input type="hidden" name="action" value="note" />
+          <input type="hidden" name="back" value={Astro.url.pathname + Astro.url.search} />
+          <textarea name="body" rows="2" required placeholder="Spoke on the phone — wants a viewing in October."></textarea>
+          <button class="act" type="submit">Add note</button>
+        </form>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="block">
+        <h3>History</h3>
+        {feed.length === 0 ? (
+          <p class="muted">Nothing recorded yet.</p>
+        ) : (
+          <ol class="feed">
+            {feed.map((f) => (
+              <li class:list={["fitem", f.kind]}>
+                <div class="ftop">
+                  <b>{f.title}</b>
+                  <span>{dt(f.when)}</span>
+                </div>
+                {f.detail && <p class="fdetail">{f.detail}</p>}
+                {f.who && <p class="fwho">{f.who}</p>}
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+    </div>
+  </div>
+</dialog>
+
+<style>
+  /* A centred modal. transition-behavior lets a dialog animate across its own
+     display change; @starting-style gives the browser a frame to animate FROM,
+     without which it simply appears. */
+  .lp {
+    width: min(860px, calc(100vw - 2.5rem));
+    max-height: min(88dvh, 900px);
+    margin: auto;
+    border: 1px solid #d7deea; border-radius: 1.3rem;
+    padding: 1.5rem 1.7rem 2rem; overflow-y: auto;
+    background: #ffffff; color: #16283e;
+    box-shadow: 0 32px 80px rgba(15, 26, 42, 0.24);
+    opacity: 0; transform: translateY(10px) scale(0.985);
+    transition: opacity 200ms ease, transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1),
+                overlay 220ms allow-discrete, display 220ms allow-discrete;
+  }
+  .lp[open] { opacity: 1; transform: translateY(0) scale(1); }
+  @starting-style { .lp[open] { opacity: 0; transform: translateY(10px) scale(0.985); } }
+
+  .lp::backdrop {
+    background: rgba(15, 26, 42, 0.36); opacity: 0;
+    transition: opacity 220ms ease, overlay 220ms allow-discrete, display 220ms allow-discrete;
+  }
+  .lp[open]::backdrop { opacity: 1; }
+  @starting-style { .lp[open]::backdrop { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .lp, .lp::backdrop { transition: none; } }
+
+  .lphead { display: flex; align-items: flex-start; gap: 0.9rem; flex-wrap: wrap; }
+  .avatar {
+    flex: none; width: 48px; height: 48px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 1rem; font-weight: 800;
+  }
+  .who { flex: 1; min-width: 12rem; }
+  .who h2 { font-size: 1.16rem; font-weight: 800; line-height: 1.25; }
+  .sub { margin-top: 0.15rem; font-size: 0.78rem; color: #93a3b8; }
+  .muted { color: #93a3b8; }
+
+  .contact {
+    margin-top: 1.1rem; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.8rem 0.9rem;
+    background: #fbfcfe; border: 1px solid #e2e8f1; border-radius: 14px; padding: 0.9rem 1rem;
+  }
+  @media (max-width: 620px) { .contact { grid-template-columns: 1fr; } }
+  .cfield { display: grid; gap: 0.25rem; min-width: 0; }
+  .clab {
+    font-size: 0.6rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: #93a3b8;
+  }
+  .cin {
+    font: inherit; font-size: 0.84rem; font-weight: 600; color: #16283e; width: 100%;
+    padding: 0.45rem 0.6rem; border: 1px solid #e2e8f1; border-radius: 9px; background: #ffffff;
+  }
+  .cin::placeholder { font-weight: 400; font-style: italic; color: #b3c0d0; }
+  .cin:focus { outline: none; border-color: #53b27f; box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.16); }
+  .pick.quiet { display: block; }
+  .pick.quiet select { min-width: 0; border-radius: 9px; font-weight: 600; }
+
+  .cfoot {
+    grid-column: 1 / -1; display: flex; align-items: center; justify-content: flex-end; gap: 0.8rem;
+  }
+  .cerr { flex: 1; font-size: 0.76rem; font-weight: 600; color: #b3261e; }
+
+  .acts { display: flex; align-items: center; gap: 0.5rem; }
+  .act {
+    font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer; text-decoration: none;
+    padding: 0.45rem 0.9rem; border-radius: 999px; border: 1px solid #d5deea;
+    background: #ffffff; color: #46586f;
+  }
+  .act:hover { border-color: #53b27f; color: #2e7d54; }
+  .act.primary { background: #53b27f; border-color: #53b27f; color: #ffffff; }
+  .act.primary:hover { background: #47a071; color: #ffffff; }
+  .lpx {
+    font-size: 1.3rem; line-height: 1; text-decoration: none; color: #93a3b8;
+    width: 1.9rem; height: 1.9rem; display: grid; place-items: center; border-radius: 8px;
+  }
+  .lpx:hover { background: #f2f5f9; color: #16283e; }
+  .stageform { display: inline-flex; }
+  .pick { position: relative; display: inline-flex; }
+  .pick select {
+    font: inherit; font-size: 0.76rem; font-weight: 700;
+    color: var(--ink, #5c6f88); background: var(--bg, #f2f5f9);
+    border: 1px solid var(--bd, transparent); border-radius: 999px;
+    cursor: pointer; min-width: 128px;
+    padding-top: 0.45rem; padding-bottom: 0.45rem; padding-left: 0.95rem; line-height: 1.25;
+  }
+
+  /* ---- the pipeline ---- */
+  .rail-block { margin-top: 1.6rem; }
+  .rail {
+    list-style: none; display: grid; grid-template-columns: repeat(var(--cols), 1fr);
+    background: #fbfcfe; border: 1px solid #e2e8f1; border-radius: 14px; padding: 1.1rem 0.6rem 0.9rem;
+  }
+  .step { position: relative; display: grid; justify-items: center; gap: 0.3rem; }
+  /* The segment runs from the centre of the previous dot to the centre of this
+     one, so the track is continuous and the dots sit on it rather than beside it. */
+  .step .line {
+    position: absolute; top: 6px; right: 50%; width: 100%; height: 2px;
+    background: #e2e8f1;
+  }
+  .step:first-child .line { display: none; }
+  .step.done .line, .step.now .line { background: #53b27f; }
+  .step .dot {
+    position: relative; z-index: 1; width: 14px; height: 14px; border-radius: 50%;
+    background: #ffffff; border: 2px solid #d7deea;
+  }
+  .step.done .dot { background: #53b27f; border-color: #53b27f; }
+  .step.now .dot { background: #ffffff; border-color: #53b27f; box-shadow: 0 0 0 4px rgba(83, 178, 127, 0.2); }
+  .sname { font-size: 0.72rem; font-weight: 700; color: #5c6f88; text-align: center; line-height: 1.3; }
+  .step.now .sname { color: #16283e; }
+  .step.ahead .sname { color: #b3c0d0; }
+  .sdays { font-size: 0.68rem; color: #93a3b8; font-variant-numeric: tabular-nums; }
+  .step.now .sdays { color: #2e7d54; font-weight: 700; }
+  .stopped {
+    margin-top: 0.6rem; text-align: center; font-size: 0.76rem; font-weight: 700; color: #5c6f88;
+  }
+
+  .cols { margin-top: 0.4rem; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 1.8rem; }
+  @media (max-width: 720px) { .cols { grid-template-columns: 1fr; } }
+
+  .block { margin-top: 1.4rem; }
+  .block h3 {
+    font-size: 0.64rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase;
+    color: #2e7d54; margin-bottom: 0.65rem;
+  }
+
+  .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+  .tile { background: #fbfcfe; border: 1px solid #e2e8f1; border-radius: 12px; padding: 0.7rem 0.8rem; }
+  .tile b {
+    display: block; font-size: 1.3rem; font-weight: 800; line-height: 1.1; color: #16283e;
+    font-variant-numeric: tabular-nums;
+  }
+  .tile b.warn { color: #b3261e; }
+  .tile span { display: block; margin-top: 0.15rem; font-size: 0.68rem; color: #5c6f88; }
+
+  .kvs { display: grid; grid-template-columns: auto 1fr; gap: 0.4rem 0.9rem; font-size: 0.82rem; }
+  .kvs dt { color: #93a3b8; }
+  .said {
+    margin-top: 0.8rem; font-size: 0.82rem; line-height: 1.6; color: #46586f;
+    background: #fbfcfe; border-left: 2px solid #d7deea; border-radius: 0 8px 8px 0; padding: 0.6rem 0.8rem;
+  }
+
+  .feed { list-style: none; }
+  .fitem { position: relative; padding: 0.5rem 0 0.5rem 1.1rem; font-size: 0.82rem; }
+  .fitem::before {
+    content: ""; position: absolute; left: 3px; top: 0.95rem;
+    width: 7px; height: 7px; border-radius: 50%; background: #cfd8e4;
+  }
+  .fitem::after {
+    content: ""; position: absolute; left: 6px; top: 1.5rem; bottom: -0.1rem; width: 1px; background: #eef2f7;
+  }
+  .fitem:last-child::after { display: none; }
+  .fitem.in::before { background: #53b27f; }
+  .fitem.out::before { background: #5b8fc9; }
+  .fitem.document_sent::before { background: #e8a33d; }
+  .ftop { display: flex; justify-content: space-between; gap: 0.6rem; align-items: baseline; }
+  .ftop b { font-weight: 700; }
+  .ftop span { font-size: 0.72rem; color: #93a3b8; white-space: nowrap; }
+  .fdetail { margin-top: 0.1rem; color: #46586f; overflow-wrap: anywhere; }
+  .fwho { margin-top: 0.05rem; font-size: 0.72rem; color: #93a3b8; }
+
+  .note { background: #fffdf5; border: 1px solid #f0e6c8; border-radius: 10px; padding: 0.6rem 0.75rem; margin-bottom: 0.45rem; }
+  .note p { font-size: 0.82rem; line-height: 1.55; color: #4a422c; }
+  .note span { display: block; margin-top: 0.25rem; font-size: 0.7rem; color: #9a8a5f; }
+  .noteform { margin-top: 0.6rem; display: grid; gap: 0.5rem; justify-items: end; }
+  .noteform textarea {
+    font: inherit; font-size: 0.82rem; width: 100%; padding: 0.55rem 0.7rem; resize: vertical;
+    border: 1px solid #d5deea; border-radius: 10px; background: #fbfcfe; color: #16283e;
+  }
+  .noteform textarea:focus { outline: none; border-color: #53b27f; background: #fff; }
+</style>
+
+<script is:inline>
+  // INLINE, not a module. A module script is deferred, so the page painted
+  // first and the modal arrived a frame or two later — visible as a stutter on
+  // top of everything else. Running here, synchronously, the dialog is already
+  // open before the browser's first paint, and its entrance is the only motion.
+  (function () {
+    var modal = document.getElementById("lead-profile");
+    if (!modal || typeof modal.showModal !== "function") return;
+    if (!modal.open) modal.showModal();
+
+    var back = modal.dataset.back || ".";
+    // Escape and a backdrop click both fire `close`. Routing every dismissal
+    // through one place means they all agree, and a refresh cannot reopen a
+    // profile the person just shut.
+    modal.addEventListener("close", function () { window.location.href = back; });
+    modal.addEventListener("click", function (ev) { if (ev.target === modal) modal.close(); });
+  })();
+</script>

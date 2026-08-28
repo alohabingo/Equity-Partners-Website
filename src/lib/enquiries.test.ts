@@ -10,7 +10,7 @@
  * the work - and a rejected one that stayed in any queue would put spam back in
  * front of a person, which is the whole thing triage exists to prevent.
  */
-import { bucketOf, needsAttention, isLive, type EnquiryRow } from "./enquiries";
+import { bucketOf, needsAttention, isLive, type EnquiryRow, phoneKey, samePhone, sameEmail, sourceLabel } from "./enquiries";
 
 let pass = 0, fail = 0;
 const check = (label: string, got: unknown, want: unknown) => {
@@ -26,7 +26,7 @@ const ago = (days: number) => new Date(now.getTime() - days * 86_400_000).toISOS
 // An enquiry we have answered, today. Every case below is this, changed once.
 const base = {
   id: "1", project_id: "p", name: "Buyer", email: "b@example.com", phone: null,
-  locale: "en", message: null, stage: "contacted", source_page: null,
+  locale: "en", message: null, stage: "info", source_page: null,
   triage: "converted", triage_reason: null, triaged_at: null, triaged_by: "u1",
   assigned_to: null, created_at: ago(1),
   last_direction: "outbound", last_sent_at: ago(0), last_activity_at: ago(0),
@@ -76,6 +76,27 @@ check("the queue groups account for every enquiry needing attention",
   (["triage", "waiting", "overdue"] as const)
     .map((b) => many.filter((e) => bucketOf(e, now) === b).length)
     .reduce((a, b) => a + b, 0));
+
+// ---- matching a person who is already here ----
+//
+// The same buyer writes their number three different ways across three
+// conversations. If these are too strict the same person gets added twice and
+// two people quote them different prices; too loose and two genuine buyers get
+// merged, which is worse.
+check("international and local forms match", samePhone("+376 812 345", "00376812345"), true);
+check("spacing and punctuation are ignored", samePhone("+376-812-345", "+376 812345"), true);
+check("different numbers do not match", samePhone("+376 812 345", "+376 812 999"), false);
+check("an empty number matches nothing", samePhone("", "+376 812 345"), false);
+check("a too-short number matches nothing", samePhone("123", "123"), false);
+check("phoneKey takes the last nine digits", phoneKey("+34 600 123 456"), "600123456");
+
+check("email case is ignored", sameEmail("Ingrid@Example.com", "ingrid@example.com"), true);
+check("surrounding space is ignored", sameEmail("  a@b.co ", "a@b.co"), true);
+check("an empty email matches nothing", sameEmail("", ""), false);
+check("different emails do not match", sameEmail("a@b.co", "c@b.co"), false);
+
+check("source labels read as words", sourceLabel("walk_in"), "Walk-in");
+check("an unknown source is not invented", sourceLabel("carrier_pigeon"), "Unknown");
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

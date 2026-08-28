@@ -1,0 +1,212 @@
+---
+import { BUYER_STAGES, stageTheme, daysSince } from "../../lib/pipeline";
+
+/**
+ * The buyer list: a stage strip that doubles as a filter, and the table.
+ *
+ * Its own component because it is drawn in two places — inside a project's
+ * command centre, and across every project from the sidebar — and a list of
+ * people whose columns disagree depending on where you opened it is worse than
+ * having only one of the two.
+ *
+ * Filters are read straight from the URL here rather than passed in, so both
+ * hosts get the same behaviour without either having to know about it.
+ */
+
+export type LeadRow = {
+  id: string;
+  name: string | null;
+  email: string | null;
+  stage: string;
+  project_id: string | null;
+  /** When they last moved — or arrived, if they never have. */
+  since: string;
+};
+
+interface Props {
+  leads: LeadRow[];
+  projects: { id: string; name: string; nav_name?: string | null; slug: string }[];
+  /** Off inside a project, where every row would say the same thing. */
+  showProject?: boolean;
+}
+const { leads, projects, showProject = true } = Astro.props;
+
+const projectById = new Map(projects.map((p) => [p.id, p]));
+const projectName = (id: string | null) => {
+  const p = id ? projectById.get(id) : null;
+  return p ? ((p.nav_name ?? "").trim() || p.name) : "—";
+};
+
+const q = Astro.url.searchParams;
+const stageFilter = q.get("stage") ?? "";
+// "Not proceeding" stays out of the way unless asked for. It is the one stage
+// that only grows, so leaving it in would slowly make the list look busier than
+// the business is.
+const showClosed = q.get("closed") === "1" || stageFilter === "not_proceeding";
+
+const counts = new Map<string, number>();
+for (const l of leads) counts.set(l.stage, (counts.get(l.stage) ?? 0) + 1);
+
+const rows = leads
+  .filter((l) => (stageFilter ? l.stage === stageFilter : showClosed || l.stage !== "not_proceeding"))
+  // Longest-waiting first. Newest-first is the wrong default for a list whose
+  // whole purpose is finding whoever has been left alone too long.
+  .sort((a, b) => new Date(a.since).getTime() - new Date(b.since).getTime());
+
+const back = Astro.url.pathname + Astro.url.search;
+const withParam = (key: string, value: string) => {
+  const next = new URLSearchParams(Astro.url.search);
+  if (value) next.set(key, value); else next.delete(key);
+  const s = next.toString();
+  return Astro.url.pathname + (s ? `?${s}` : "");
+};
+const clearHref = withParam("stage", "");
+---
+
+<div class="lstrip">
+  {BUYER_STAGES.map((st) => {
+    const n = counts.get(st.key) ?? 0;
+    const active = stageFilter === st.key;
+    return (
+      <a href={withParam("stage", active ? "" : st.key)}
+         class:list={["ltile", { active, closed: st.key === "not_proceeding" }]}>
+        <span class="lswatch" style={`background:${stageTheme(st.key).colour}`}></span>
+        <b>{n}</b>
+        <span class="ltl">{st.label}</span>
+      </a>
+    );
+  })}
+</div>
+
+{!stageFilter && (
+  <div class="lbar">
+    <a class="ltoggle" href={withParam("closed", showClosed ? "" : "1")}>
+      {showClosed ? "Hide not proceeding" : `Show not proceeding (${counts.get("not_proceeding") ?? 0})`}
+    </a>
+  </div>
+)}
+
+<div class="ltable">
+  {rows.length === 0 ? (
+    <p class="lnone">
+      No buyers here yet.
+      {stageFilter && <a href={clearHref}>Show every stage</a>}
+    </p>
+  ) : (
+    <table>
+      <thead>
+        <tr>
+          <th>Buyer</th>
+          {showProject && <th>Project</th>}
+          <th>Stage</th>
+          <th class="num">In this stage</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((l) => {
+          const days = daysSince(l.since);
+          const theme = stageTheme(l.stage);
+          const stale = days >= 30 && l.stage !== "delivery" && l.stage !== "not_proceeding";
+          return (
+            <tr>
+              <td>
+                {/* Opens the profile drawer beside the list rather than
+                    navigating away, so the list you were reading is still there
+                    behind it. "Open full enquiry" inside the drawer is the way
+                    through to the conversation. */}
+                <a class="lwho" href={withParam("lead", l.id)}>{l.name || "No name given"}</a>
+              </td>
+              {showProject && <td class="lmuted">{projectName(l.project_id)}</td>}
+              <td>
+                <form method="post" action="/api/admin/enquiry">
+                  <input type="hidden" name="id" value={l.id} />
+                  <input type="hidden" name="action" value="stage" />
+                  <input type="hidden" name="back" value={back} />
+                  <span class="lpick" style={`--ink:${theme.ink};--bg:${theme.bg};--bd:${theme.border}`}>
+                    <select name="stage" onchange="this.form.submit()" aria-label={`Stage for ${l.name ?? "this buyer"}`}>
+                      {BUYER_STAGES.map((st) => (
+                        <option value={st.key} selected={l.stage === st.key}>{st.label}</option>
+                      ))}
+                    </select>
+                  </span>
+                </form>
+              </td>
+              <td class="num">
+                <span class:list={["ldays", { stale }]}>
+                  {days === 0 ? "today" : `${days} day${days === 1 ? "" : "s"}`}
+                </span>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  )}
+</div>
+
+<style>
+  .lstrip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.6rem; }
+  @media (max-width: 860px) { .lstrip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .ltile {
+    display: block; text-decoration: none; background: #fff; border: 1px solid #d7deea;
+    border-radius: 1rem; padding: 0.8rem 0.9rem; transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  }
+  .ltile:hover { border-color: #b9c6d8; }
+  .ltile.active { border-color: #53b27f; box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.16); }
+  .ltile.closed { background: #fbfcfe; }
+  .lswatch { display: block; width: 26px; height: 4px; border-radius: 999px; margin-bottom: 0.5rem; }
+  .ltile b {
+    display: block; font-size: 1.5rem; font-weight: 800; color: #16283e; line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+  .ltile .ltl { display: block; margin-top: 0.15rem; font-size: 0.72rem; font-weight: 700; color: #5c6f88; }
+
+  .lbar { margin-top: 0.8rem; display: flex; justify-content: flex-end; }
+  .ltoggle { font-size: 0.78rem; font-weight: 700; color: #5c6f88; text-decoration: none; }
+  .ltoggle:hover { color: #2e7d54; text-decoration: underline; }
+
+  .ltable { margin-top: 0.8rem; background: #fff; border: 1px solid #d7deea; border-radius: 1.2rem; overflow-x: auto; }
+  .ltable table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+  .ltable th {
+    text-align: left; font-size: 0.64rem; font-weight: 800; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #5c6f88; padding: 0.9rem 1.3rem; border-bottom: 1px solid #e2e8f1;
+  }
+  .ltable td { padding: 0.8rem 1.3rem; border-bottom: 1px solid #eef2f7; vertical-align: middle; }
+  .ltable tr:last-child td { border-bottom: 0; }
+  .ltable th.num, .ltable td.num { text-align: right; }
+  .lwho { display: block; font-weight: 700; color: #16283e; text-decoration: none; }
+  .lwho:hover { color: #2e7d54; text-decoration: underline; }
+  .lmuted { color: #5c6f88; }
+  .ldays { font-variant-numeric: tabular-nums; font-size: 0.82rem; color: #5c6f88; }
+  /* A month with no movement is the row worth finding. Terminal stages are
+     exempt: a delivered property has every right to sit still. */
+  .ldays.stale { color: #b3261e; font-weight: 700; }
+  .lnone { padding: 2.5rem 1.4rem; text-align: center; font-size: 0.86rem; color: #93a3b8; }
+  .lnone a { margin-left: 0.4rem; font-weight: 700; color: #2e7d54; }
+
+  /* Colours only — the chevron belongs to AdminLayout, which draws one on every
+     .main select. Drawing another here is what once left these with two. */
+  .lpick { position: relative; display: inline-flex; }
+  /* Geometry copied from .pick in UnitRows so the two controls are the same
+     shape and size: same font, weight, radius, min-width, border box and
+     transition. Only the colours differ, and those belong to the stage. */
+  .lpick select {
+    font: inherit; font-size: 0.76rem; font-weight: 700;
+    color: var(--ink, #5c6f88); background: var(--bg, #f2f5f9);
+    border: 1px solid var(--bd, transparent); border-radius: 999px;
+    cursor: pointer; min-width: 128px;
+    /* Explicit, and identical to the units state pill.
+       Neither of these set vertical padding before, so both fell back to the
+       browser's default for a <select> — a couple of pixels — and each table
+       handed the control a different inherited line-height, which is why two
+       controls meant to look the same came out different heights.
+       padding-right is left alone on purpose: AdminLayout reserves 2.4rem there
+       for the chevron it draws, and a `padding` shorthand here would eat it. */
+    padding-top: 0.45rem; padding-bottom: 0.45rem; padding-left: 0.95rem;
+    line-height: 1.25;
+    transition: filter 180ms ease, box-shadow 180ms ease;
+  }
+  .lpick select:hover { filter: brightness(0.96); }
+  .lpick select:focus { outline: none; }
+  .lpick select:focus-visible { box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.32); }
+</style>

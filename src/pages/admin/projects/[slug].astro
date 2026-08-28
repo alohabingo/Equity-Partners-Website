@@ -5,7 +5,7 @@ import AdminLayout from "../../../layouts/AdminLayout.astro";
 import EnquiryPanel from "../../../components/admin/EnquiryPanel.astro";
 import UnitRows from "../../../components/admin/UnitRows.astro";
 import LeadRows, { type LeadRow } from "../../../components/admin/LeadRows.astro";
-import LeadDrawer from "../../../components/admin/LeadDrawer.astro";
+import LeadProfile from "../../../components/admin/LeadProfile.astro";
 import { supabaseServer } from "../../../lib/supabase";
 import { BUYER_STAGES, stageLabel, stageShade, OVERDUE_WORKING_DAYS } from "../../../lib/pipeline";
 import { UNIT_STATES, SALES_BAR_ORDER, unitState, summarise, unitStateTheme, euros, type UnitRow } from "../../../lib/units";
@@ -1107,6 +1107,34 @@ await fetch("${webhookUrl}", {
   )}
 
   <script is:inline>
+    // Opening or closing a lead profile is not a page change to the eye — it is
+    // a modal appearing over a list that stays put. The document view transition
+    // ran anyway, and a <dialog> lives in the TOP LAYER, which is never part of
+    // that snapshot: so the page cross-faded underneath while the modal popped
+    // in over the top, out of step with it. Two animations, neither aware of the
+    // other, which is what the glitch was.
+    //
+    // Skipping the transition when only `lead` differs leaves the modal's own
+    // entrance as the single piece of motion. Switching TABS still transitions,
+    // because that genuinely is a page change.
+    (function () {
+      function onlyLeadDiffers(a, b) {
+        if (a.pathname !== b.pathname) return false;
+        var x = new URLSearchParams(a.search); x.delete("lead");
+        var y = new URLSearchParams(b.search); y.delete("lead");
+        x.sort(); y.sort();
+        return x.toString() === y.toString() && a.search !== b.search;
+      }
+      addEventListener("pageswap", function (e) {
+        var to = e.activation && e.activation.entry && e.activation.entry.url;
+        if (e.viewTransition && to && onlyLeadDiffers(location, new URL(to))) e.viewTransition.skipTransition();
+      });
+      addEventListener("pagereveal", function (e) {
+        var from = e.activation && e.activation.from && e.activation.from.url;
+        if (e.viewTransition && from && onlyLeadDiffers(new URL(from), location)) e.viewTransition.skipTransition();
+      });
+    })();
+
     // Runs synchronously, before the page is first painted — see the note in the
     // module script at the foot of this file for why that matters here.
     (function () {
@@ -1630,7 +1658,7 @@ await fetch("${webhookUrl}", {
       />
 
       {drawerLead && (
-        <LeadDrawer
+        <LeadProfile
           lead={drawerLead}
           project={{ slug: project.slug, name: project.name }}
           events={drawerEvents}

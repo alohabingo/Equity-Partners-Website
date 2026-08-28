@@ -9,7 +9,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   const form = await request.formData();
   const id = form.get("id")?.toString() ?? "";
   const status = form.get("status")?.toString() ?? "";
-  const backTo = form.get("back_to")?.toString() || "/admin/leads";
+  const backTo = form.get("back_to")?.toString() || "/admin/investor-leads";
 
   if (!id || !VALID_STATUSES.includes(status)) {
     return new Response(JSON.stringify({ ok: false, error: "invalid" }), { status: 422 });
@@ -32,5 +32,5 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
       headers: { "Content-Type": "application/json" },
     });
   }
-  return redirect(backTo.startsWith("/admin") ? backTo : "/admin/leads");
+  return redirect(backTo.startsWith("/admin") ? backTo : "/admin/investor-leads");
 };

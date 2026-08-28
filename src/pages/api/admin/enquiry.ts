@@ -4,7 +4,7 @@ import type { APIRoute } from "astro";
 import { supabaseServer } from "../../../lib/supabase";
 import { isValidStage, stageLabel } from "../../../lib/pipeline";
 import { sendEnquiryReply } from "../../../lib/enquiryReply";
-import { REJECT_REASONS, rejectReasonLabel, LOCALE_OPTIONS, LOCALE_LABEL } from "../../../lib/enquiries";
+import { REJECT_REASONS, rejectReasonLabel, LOCALE_OPTIONS, LOCALE_LABEL, LEAD_SOURCES } from "../../../lib/enquiries";
 
 const json = (body: object, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -122,6 +122,47 @@ export const POST: APIRoute = async ({ request, cookies, locals, redirect, url }
     if (error) return json({ ok: false, error: error.message }, 403);
 
     await event("stage_changed", { from: before?.stage ?? null, to: stage, label: stageLabel(stage) });
+    return redirect(back);
+  }
+
+  // ---- contact details, edited from the lead profile ----
+  if (action === "contact") {
+    const email = get("email");
+    const phone = get("phone");
+    const source = LEAD_SOURCES.some((l) => l.value === get("source")) ? get("source") : null;
+
+    // Mirrors the database constraint, so the person gets a sentence rather
+    // than a Postgres error. Removing the only way to reach someone is the one
+    // edit here that cannot be undone by looking at the record.
+    if (!email && !phone) {
+      return redirect(`${back}${back.includes("?") ? "&" : "?"}contact_error=${encodeURIComponent("Keep an email address or a phone number — a lead needs one of the two.")}`);
+    }
+    if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      return redirect(`${back}${back.includes("?") ? "&" : "?"}contact_error=${encodeURIComponent("That email address doesn't look right.")}`);
+    }
+
+    const { data: before } = await supabase
+      .from("inquiries").select("email, phone, source").eq("id", id).maybeSingle();
+
+    const { error } = await supabase
+      .from("inquiries")
+      .update({ email: email || null, phone: phone || null, source, updated_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) {
+      return redirect(`${back}${back.includes("?") ? "&" : "?"}contact_error=${encodeURIComponent(error.message)}`);
+    }
+
+    // Only record a change that actually changed something — an event for every
+    // press of Save would bury the real edits in a history of non-events.
+    const changed = (before?.email ?? null) !== (email || null)
+      || (before?.phone ?? null) !== (phone || null)
+      || (before?.source ?? null) !== source;
+    if (changed) {
+      await event("contact_changed", {
+        from: { email: before?.email ?? null, phone: before?.phone ?? null, source: before?.source ?? null },
+        to: { email: email || null, phone: phone || null, source },
+      });
+    }
     return redirect(back);
   }
 

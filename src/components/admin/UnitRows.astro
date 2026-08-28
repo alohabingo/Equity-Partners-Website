@@ -50,6 +50,15 @@ const canMove = buildings.length > 1;
     color: var(--ink, #5c6f88); background: var(--bg, #f2f5f9);
     border: 1px solid var(--bd, transparent); border-radius: 999px;
     cursor: pointer; min-width: 128px;
+    /* Explicit, and identical to the leads stage pill.
+       Neither of these set vertical padding before, so both fell back to the
+       browser's default for a <select> — a couple of pixels — and each table
+       handed the control a different inherited line-height, which is why two
+       controls meant to look the same came out different heights.
+       padding-right is left alone on purpose: AdminLayout reserves 2.4rem there
+       for the chevron it draws, and a `padding` shorthand here would eat it. */
+    padding-top: 0.45rem; padding-bottom: 0.45rem; padding-left: 0.95rem;
+    line-height: 1.25;
     transition: filter 180ms ease, box-shadow 180ms ease;
   }
   .pick select:hover { filter: brightness(0.96); }

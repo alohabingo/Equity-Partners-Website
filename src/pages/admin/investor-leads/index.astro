@@ -47,11 +47,11 @@ const filterHref = (type: string, status: string) => {
   if (type !== "all") p.set("type", type);
   if (status !== "all") p.set("status", status);
   const q = p.toString();
-  return q ? `/admin/leads?${q}` : "/admin/leads";
+  return q ? `/admin/investor-leads?${q}` : "/admin/investor-leads";
 };
 ---
 
-<AdminLayout title="Leads" active="leads">
+<AdminLayout title="Leads" active="investor-leads">
   <div class="page-head">
     <h1>Leads</h1>
     <p>Inquiries from the website contact forms, newest first.</p>
@@ -108,7 +108,7 @@ const filterHref = (type: string, status: string) => {
                   <noscript><button type="submit">Save</button></noscript>
                 </form>
               </td>
-              <td><a class="open-link" href={`/admin/leads/${lead.id}`}>Open →</a></td>
+              <td><a class="open-link" href={`/admin/investor-leads/${lead.id}`}>Open →</a></td>
             </tr>
           ))}
         </tbody>

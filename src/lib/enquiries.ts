@@ -32,6 +32,8 @@ export type EnquiryRow = {
   message: string | null;
   stage: string | null;
   source_page: string | null;
+  /** How the lead reached us — see LEAD_SOURCES. */
+  source?: string | null;
   /** Legacy. Ownership was removed; nothing writes this any more. */
   assigned_to: string | null;
   triage: Triage;
@@ -108,6 +110,61 @@ export function shortAge(iso: string, now: Date = new Date()): string {
 }
 
 export const LOCALE_LABEL: Record<string, string> = { en: "English", es: "Español", ca: "Català" };
+
+/**
+ * Where a lead came from.
+ *
+ * The first two are set by the system and never offered on the manual form: an
+ * enquiry that arrived by itself already knows how it got here, and letting
+ * someone hand-label a walk-in as "Website form" would quietly poison the one
+ * number this field exists to produce.
+ *
+ * TEXT in the database with the list here, for the same reason stages are:
+ * adding "Instagram" next spring should be an edit, not a migration.
+ */
+export const LEAD_SOURCES = [
+  { value: "website",  label: "Website form", manual: false },
+  { value: "email",    label: "Email",        manual: false },
+  { value: "walk_in",  label: "Walk-in",      manual: true },
+  { value: "phone",    label: "Phone call",   manual: true },
+  { value: "referral", label: "Referral",     manual: true },
+  { value: "broker",   label: "Agent / broker", manual: true },
+  { value: "portal",   label: "Property portal", manual: true },
+  { value: "event",    label: "Event",        manual: true },
+  { value: "other",    label: "Other",        manual: true },
+] as const;
+
+/** Only the ones a human should be able to choose. */
+export const MANUAL_LEAD_SOURCES = LEAD_SOURCES.filter((s) => s.manual);
+
+export const sourceLabel = (value: string | null | undefined): string =>
+  LEAD_SOURCES.find((s) => s.value === value)?.label ?? "Unknown";
+
+export const isManualSource = (value: unknown): boolean =>
+  typeof value === "string" && MANUAL_LEAD_SOURCES.some((s) => s.value === value);
+
+/**
+ * A phone number reduced to something comparable.
+ *
+ * The same person writes +376 812 345, 00376812345 and 812345 on three
+ * different days. Comparing the last nine digits catches all of those without
+ * needing to know the country, and nine is short enough to match a local number
+ * written without its prefix but long enough not to collide by accident.
+ */
+export function phoneKey(value: string | null | undefined): string {
+  const digits = (value ?? "").replace(/\D/g, "");
+  return digits.length >= 6 ? digits.slice(-9) : "";
+}
+
+export function samePhone(a: string | null | undefined, b: string | null | undefined): boolean {
+  const x = phoneKey(a);
+  return x !== "" && x === phoneKey(b);
+}
+
+export function sameEmail(a: string | null | undefined, b: string | null | undefined): boolean {
+  const x = (a ?? "").trim().toLowerCase();
+  return x !== "" && x === (b ?? "").trim().toLowerCase();
+}
 
 export const LOCALE_OPTIONS = [
   { value: "en", label: "English" },

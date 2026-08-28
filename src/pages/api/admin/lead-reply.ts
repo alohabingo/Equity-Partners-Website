@@ -50,5 +50,5 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     sent_at: new Date().toISOString(),
   });
 
-  return redirect(`/admin/leads/${lead.id}?sent=1`);
+  return redirect(`/admin/investor-leads/${lead.id}?sent=1`);
 };
