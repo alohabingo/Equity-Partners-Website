@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "./supabase";
 import { sendMessage } from "./zohoAccount";
+import { documentBlockHtml, LINK_EXPIRY_DAYS } from "./projectDocuments";
 
 /**
  * Send a reply to a buyer from the project's own mailbox.
@@ -22,7 +23,7 @@ import { sendMessage } from "./zohoAccount";
  */
 
 export type ReplyResult =
-  | { ok: true; stageAdvanced: boolean; converted: boolean }
+  | { ok: true; stageAdvanced: boolean; converted: boolean; documentsSent: number }
   | { ok: false; error: string };
 
 /** Turn what someone typed into a box into safe, readable HTML. */
@@ -56,8 +57,12 @@ export async function sendEnquiryReply(opts: {
   body: string;
   actorId: string | null;
   actorName: string;
+  /** Documents to include: ids of rows belonging to this enquiry's project. */
+  documentIds?: string[];
+  /** Where /d/<token> lives, so the links in the email are absolute. */
+  origin?: string;
 }): Promise<ReplyResult> {
-  const { inquiryId, body, actorId, actorName } = opts;
+  const { inquiryId, body, actorId, actorName, documentIds = [], origin = "" } = opts;
 
   const text = body.trim();
   if (!text) return { ok: false, error: "Nothing to send - the reply was empty." };
@@ -105,7 +110,74 @@ export async function sendEnquiryReply(opts: {
     .maybeSingle();
 
   const subject = replySubject(last?.subject ?? null, project.name);
-  const html = bodyToHtml(text);
+
+  // ---- documents ----
+  //
+  // A link has to EXIST before the email can be written, because its URL is the
+  // content. That inverts this module's rule of writing nothing until Zoho has
+  // accepted, so the rule is kept the other way round: if the send fails, the
+  // links are deleted again, and a link nobody ever received leaves no trace.
+  const expiresAt = new Date(Date.now() + LINK_EXPIRY_DAYS * 24 * 3600 * 1000);
+  const wanted = [...new Set(documentIds.filter(Boolean))];
+  const minted: { linkId: string; documentId: string; title: string; url: string;
+                  mime_type: string | null; file_size: number | null }[] = [];
+
+  if (wanted.length > 0) {
+    // Scoped to the project. An id from elsewhere must not be able to turn a
+    // reply into a delivery route for another development's paperwork.
+    const { data: docs } = await db
+      .from("documents")
+      .select("id, title, mime_type, file_size")
+      .in("id", wanted)
+      .eq("project_id", enquiry.project_id);
+
+    for (const doc of docs ?? []) {
+      const { data: link, error } = await db
+        .from("document_links")
+        .insert({
+          document_id: doc.id,
+          inquiry_id: inquiryId,
+          label: `${enquiry.name ?? "Buyer"} · ${project.name}`,
+          expires_at: expiresAt.toISOString(),
+          max_views: null,
+          created_by: actorId,
+        })
+        .select("id, token")
+        .single();
+
+      if (error || !link) {
+        console.error("document link could not be created:", error?.message);
+        continue;
+      }
+
+      minted.push({
+        linkId: link.id,
+        documentId: doc.id,
+        title: doc.title,
+        url: `${origin}/d/${link.token}`,
+        mime_type: doc.mime_type,
+        file_size: doc.file_size,
+      });
+    }
+
+    // Every requested document must have produced a link, or nothing is sent.
+    //
+    // A partial send is the worst outcome available here: the buyer gets an
+    // email promising documents with one of them quietly missing, it looks
+    // deliberate, and nobody on this side knows it happened. Better to fail
+    // visibly and let the person press send again.
+    if ((docs ?? []).length === 0) {
+      return { ok: false, error: "Those documents are no longer available — nothing was sent." };
+    }
+    if (minted.length !== (docs ?? []).length) {
+      if (minted.length > 0) {
+        await db.from("document_links").delete().in("id", minted.map((m) => m.linkId));
+      }
+      return { ok: false, error: "Could not prepare every document link — nothing was sent." };
+    }
+  }
+
+  const html = bodyToHtml(text) + documentBlockHtml(minted, expiresAt);
 
   try {
     await sendMessage(account as any, {
@@ -117,6 +189,11 @@ export async function sendEnquiryReply(opts: {
       fromName: `${actorName} · ${project.name}`,
     });
   } catch (e) {
+    // The links were made a moment ago and reached nobody. Remove them rather
+    // than leaving live URLs to this project's paperwork lying in the database.
+    if (minted.length > 0) {
+      await db.from("document_links").delete().in("id", minted.map((m) => m.linkId));
+    }
     return { ok: false, error: `Zoho refused the message: ${e instanceof Error ? e.message : String(e)}` };
   }
 
@@ -140,7 +217,7 @@ export async function sendEnquiryReply(opts: {
   const converted = enquiry.triage === "pending";
 
   const patch: Record<string, unknown> = { updated_at: now };
-  if (stageAdvanced) patch.stage = "contacted";
+  if (stageAdvanced) patch.stage = "info";
   if (converted) {
     patch.triage = "converted";
     patch.triaged_at = now;
@@ -157,11 +234,22 @@ export async function sendEnquiryReply(opts: {
       inquiry_id: inquiryId,
       actor_id: actorId,
       kind: "stage_changed",
-      detail: { from: "new", to: "contacted", label: "Contacted", via: "reply" },
+      detail: { from: "new", to: "info", label: "Information sharing", via: "reply" },
+    });
+  }
+  // One event per document rather than one listing them all: the history is read
+  // as "what happened to this enquiry", and "Brochure sent" is a thing that
+  // happened on its own, findable on its own.
+  for (const m of minted) {
+    events.push({
+      inquiry_id: inquiryId,
+      actor_id: actorId,
+      kind: "document_sent",
+      detail: { document_id: m.documentId, link_id: m.linkId, title: m.title },
     });
   }
   const { error: eventError } = await db.from("enquiry_events").insert(events);
   if (eventError) console.error("enquiry_events insert failed after reply:", eventError.message);
 
-  return { ok: true, stageAdvanced, converted };
+  return { ok: true, stageAdvanced, converted, documentsSent: minted.length };
 }

@@ -16,7 +16,7 @@ const json = (body: object, status = 200) =>
  * Every action also writes an enquiry_events row, so the enquiry's history shows
  * who did what rather than just its current state.
  */
-export const POST: APIRoute = async ({ request, cookies, locals, redirect }) => {
+export const POST: APIRoute = async ({ request, cookies, locals, redirect, url }) => {
   const form = await request.formData();
   const get = (k: string) => form.get(k)?.toString().trim() ?? "";
 
@@ -166,6 +166,9 @@ export const POST: APIRoute = async ({ request, cookies, locals, redirect }) => 
       body: form.get("body")?.toString() ?? "",
       actorId: actor,
       actorName: locals.user?.fullName || "Equity Partners",
+      // getAll: the composer posts one "doc" field per ticked document.
+      documentIds: form.getAll("doc").map((d) => d.toString()).filter(Boolean),
+      origin: url.origin,
     });
 
     // The outcome rides back on the URL rather than being swallowed: a reply
@@ -174,7 +177,7 @@ export const POST: APIRoute = async ({ request, cookies, locals, redirect }) => 
     const sep = back.includes("?") ? "&" : "?";
     return redirect(
       result.ok
-        ? `${back}${sep}sent=1`
+        ? `${back}${sep}sent=1${result.documentsSent ? `&docs=${result.documentsSent}` : ""}`
         : `${back}${sep}send_error=${encodeURIComponent(result.error)}`,
     );
   }
