@@ -6,6 +6,8 @@ import EnquiryPanel from "../../../../../components/admin/EnquiryPanel.astro";
 import EnquirySide from "../../../../../components/admin/EnquirySide.astro";
 import { supabaseServer } from "../../../../../lib/supabase";
 import type { EnquiryRow } from "../../../../../lib/enquiries";
+import { TEMPLATE_COLUMNS, type ReplyTemplate } from "../../../../../lib/replyTemplates";
+import type { ProjectDocument } from "../../../../../lib/projectDocuments";
 
 const { slug, id } = Astro.params;
 const supabase = supabaseServer(Astro.cookies, Astro.request);
@@ -15,9 +17,10 @@ const me = Astro.locals.user;
 // that failed must not look like one that worked.
 const sent = Astro.url.searchParams.get("sent") === "1";
 const sendError = Astro.url.searchParams.get("send_error");
+const sentDocs = Number(Astro.url.searchParams.get("docs") ?? 0) || 0;
 
 const { data: project } = await supabase
-  .from("projects").select("slug, name, mailbox").eq("slug", slug).maybeSingle();
+  .from("projects").select("id, slug, name, mailbox, templates_seeded_at").eq("slug", slug).maybeSingle();
 if (!project) return Astro.redirect("/admin/projects");
 
 const { data: enquiryRow } = await supabase
@@ -28,13 +31,22 @@ const enquiry = enquiryRow as EnquiryRow;
 const { data: profiles } = await supabase.from("profiles").select("id, full_name");
 const nameById = new Map((profiles ?? []).map((p: any) => [p.id, p.full_name]));
 
-const [m, n, ev] = await Promise.all([
+const [m, n, ev, tpl, docs, sentLinks] = await Promise.all([
   supabase.from("inquiry_messages").select("direction, subject, body_html, sent_at, sent_by")
     .eq("inquiry_id", id).order("sent_at"),
   supabase.from("enquiry_notes").select("body, created_at, author_id")
     .eq("inquiry_id", id).order("created_at", { ascending: false }),
   supabase.from("enquiry_events").select("kind, detail, created_at, actor_id")
     .eq("inquiry_id", id).order("created_at", { ascending: false }).limit(20),
+  // Fetched by the page, not by the composer: a component querying Supabase
+  // does it after the response has begun, and the client's cookie write then
+  // throws ResponseSentError and takes the session with it.
+  supabase.from("reply_templates").select(TEMPLATE_COLUMNS)
+    .eq("project_id", project.id).order("position").order("created_at"),
+  supabase.from("documents").select("id, title, category, storage_path, mime_type, file_size, created_at")
+    .eq("project_id", project.id).order("category").order("title"),
+  // What this buyer was actually sent, and whether they opened it.
+  supabase.from("document_links").select("id, view_count").eq("inquiry_id", id),
 ]);
 
 // The mailbox is shared, so an outbound message says who actually wrote it
@@ -42,6 +54,23 @@ const [m, n, ev] = await Promise.all([
 const messages = (m.data ?? []).map((x: any) => ({ ...x, sentByName: nameById.get(x.sent_by) ?? null }));
 const notes = (n.data ?? []).map((x: any) => ({ ...x, author: nameById.get(x.author_id) ?? "Someone" }));
 const events = (ev.data ?? []).map((x: any) => ({ ...x, actor: nameById.get(x.actor_id) ?? "System" }));
+
+let templates = (tpl.data ?? []) as ReplyTemplate[];
+const documents = (docs.data ?? []) as ProjectDocument[];
+const linkViews = Object.fromEntries((sentLinks.data ?? []).map((l: any) => [l.id, l.view_count ?? 0]));
+
+// An enquiry can be opened before anyone has visited the project's Templates
+// tab, so the starter kit is copied in here too. seed_project_templates claims
+// the right to do it atomically, so this and the project page cannot both.
+if (!project.templates_seeded_at) {
+  await supabase.rpc("seed_project_templates", { p_project: project.id });
+  // Re-read rather than trusting the count: another tab may have won the claim,
+  // in which case this call copies nothing and the templates are there anyway.
+  const { data: seeded } = await supabase
+    .from("reply_templates").select(TEMPLATE_COLUMNS)
+    .eq("project_id", project.id).order("position").order("created_at");
+  templates = (seeded ?? []) as ReplyTemplate[];
+}
 
 const selfHref = Astro.url.pathname;
 ---
@@ -86,11 +115,15 @@ const selfHref = Astro.url.pathname;
         sent={sent}
         sendError={sendError}
         showSide={false}
+        templates={templates}
+        documents={documents}
+        sentDocs={sentDocs}
+        linkViews={linkViews}
       />
     </div>
 
     <aside class="sidecard">
-      <EnquirySide enquiryId={enquiry.id} notes={notes} events={events} back={selfHref} />
+      <EnquirySide enquiryId={enquiry.id} notes={notes} events={events} back={selfHref} linkViews={linkViews} />
     </aside>
   </div>
 </AdminLayout>

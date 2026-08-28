@@ -48,10 +48,11 @@ if (isSupabaseConfigured() && token && /^[a-f0-9]{24,64}$/.test(token)) {
           ip_address: Astro.request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
           user_agent: Astro.request.headers.get("user-agent")?.slice(0, 500) ?? null,
         });
-        await db
-          .from("document_links")
-          .update({ view_count: link.view_count + 1 })
-          .eq("id", link.id);
+        // Counted in the database, not here. Reading the count and writing back
+        // count + 1 meant two people opening the same link in the same second
+        // both wrote the same number, so one view vanished - and a link limited
+        // to a single view could be beaten by opening it twice at once.
+        await db.rpc("count_document_view", { p_link: link.id });
       }
     }
   }

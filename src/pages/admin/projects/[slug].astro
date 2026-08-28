@@ -4,10 +4,20 @@ export const prerender = false;
 import AdminLayout from "../../../layouts/AdminLayout.astro";
 import EnquiryPanel from "../../../components/admin/EnquiryPanel.astro";
 import UnitRows from "../../../components/admin/UnitRows.astro";
+import LeadRows, { type LeadRow } from "../../../components/admin/LeadRows.astro";
+import LeadDrawer from "../../../components/admin/LeadDrawer.astro";
 import { supabaseServer } from "../../../lib/supabase";
 import { BUYER_STAGES, stageLabel, stageShade, OVERDUE_WORKING_DAYS } from "../../../lib/pipeline";
 import { UNIT_STATES, SALES_BAR_ORDER, unitState, summarise, unitStateTheme, euros, type UnitRow } from "../../../lib/units";
-import { bucketOf, needsAttention, BUCKET_LABELS, isLive, shortAge, plain, REJECT_REASONS, rejectReasonLabel, LOCALE_OPTIONS, localeChip, localeTitle, type EnquiryRow } from "../../../lib/enquiries";
+import {
+  TEMPLATE_LOCALES, TEMPLATE_LOCALE_LABEL, TEMPLATE_PLACEHOLDERS, TEMPLATE_COLUMNS,
+  writtenIn, bodyIn, type ReplyTemplate,
+} from "../../../lib/replyTemplates";
+import {
+  DOCUMENT_CATEGORIES, categoryLabel, fileKind, humanSize, LINK_EXPIRY_DAYS,
+  type ProjectDocument,
+} from "../../../lib/projectDocuments";
+import { MANUAL_LEAD_SOURCES, bucketOf, needsAttention, BUCKET_LABELS, isLive, shortAge, plain, REJECT_REASONS, rejectReasonLabel, LOCALE_OPTIONS, localeChip, localeTitle, type EnquiryRow } from "../../../lib/enquiries";
 
 const { slug } = Astro.params;
 const supabase = supabaseServer(Astro.cookies, Astro.request);
@@ -17,10 +27,23 @@ const me = Astro.locals.user;
 // that failed must not look like one that worked.
 const sent = Astro.url.searchParams.get("sent") === "1";
 const sendError = Astro.url.searchParams.get("send_error");
+const sentDocs = Number(Astro.url.searchParams.get("docs") ?? 0) || 0;
 
 const { data: project } = await supabase
   .from("projects").select("*").eq("slug", slug).maybeSingle();
 if (!project) return Astro.redirect("/admin/projects");
+
+// Which tab is open is settled BEFORE the queries, because it decides which of
+// them are worth sending at all.
+const VALID_TABS = ["overview", "units", "leads", "inbox", "templates", "documents", "settings"] as const;
+const tabParam = Astro.url.searchParams.get("tab") ?? "overview";
+const tab = (VALID_TABS as readonly string[]).includes(tabParam) ? tabParam : "overview";
+
+// Two tabs need the saved replies: the Templates tab edits them, the Inbox
+// composer offers them.
+const wantsTemplates = tab === "inbox" || tab === "templates";
+// The Inbox offers documents in the composer; the Documents tab manages them.
+const wantsDocuments = tab === "inbox" || tab === "documents";
 
 // Everything the page needs about this project, fetched AT ONCE.
 //
@@ -32,7 +55,7 @@ if (!project) return Astro.redirect("/admin/projects");
 //
 // None of them depends on another; they only depend on `project`. So they go
 // together, and the page now waits for the slowest one instead of the sum.
-const [contentRes, unitRes, buildingRes, enquiryRes, profileRes, rejectionRes] = await Promise.all([
+const [contentRes, unitRes, buildingRes, enquiryRes, profileRes, rejectionRes, templateRes, documentRes] = await Promise.all([
   supabase.from("portfolio_items").select("name, data")
     .eq("slug", slug).eq("kind", "project").eq("locale", "en").maybeSingle(),
   supabase.from("project_units")
@@ -47,7 +70,72 @@ const [contentRes, unitRes, buildingRes, enquiryRes, profileRes, rejectionRes] =
     .eq("project_id", project.id).eq("outcome", "rejected")
     .is("acknowledged_at", null)
     .order("created_at", { ascending: false }).limit(3),
+  // This project's own saved replies. Templates belong to ONE project: wording
+  // is where a development's character lives, and a sentence written for a ski
+  // apartment should not be able to reach a valley townhouse's buyers.
+  // This project's templates AND the starter kit in one trip. The kit is only
+  // needed to tell "update the starter" apart from "add a new one", which is a
+  // four-row question not worth a second round trip.
+  wantsTemplates
+    ? supabase.from("reply_templates").select(TEMPLATE_COLUMNS)
+        .or(`project_id.eq.${project.id},project_id.is.null`)
+        .order("position").order("created_at")
+    : Promise.resolve({ data: [] }),
+  wantsDocuments
+    ? supabase.from("documents")
+        .select("id, title, category, storage_path, mime_type, file_size, created_at")
+        .eq("project_id", project.id).order("category").order("title")
+    : Promise.resolve({ data: [] }),
 ]);
+
+const documents = (documentRes.data ?? []) as ProjectDocument[];
+
+// What has actually been sent from each document, and whether anyone opened it.
+// A second trip, made only on the tab that shows it: the ids are not known until
+// the batch above comes back, so this one cannot be run alongside the others.
+let linkStats = new Map<string, { sent: number; views: number; opened: number }>();
+if (tab === "documents" && documents.length > 0) {
+  const { data: links } = await supabase
+    .from("document_links")
+    .select("document_id, view_count")
+    .in("document_id", documents.map((d) => d.id));
+
+  for (const l of links ?? []) {
+    const row = linkStats.get(l.document_id) ?? { sent: 0, views: 0, opened: 0 };
+    row.sent += 1;
+    row.views += l.view_count ?? 0;
+    if ((l.view_count ?? 0) > 0) row.opened += 1;
+    linkStats.set(l.document_id, row);
+  }
+}
+
+const splitTemplates = (rows: ReplyTemplate[] | null) => ({
+  mine: (rows ?? []).filter((t) => t.project_id === project.id),
+  starterIds: new Set((rows ?? []).filter((t) => t.project_id === null).map((t) => t.id)),
+});
+
+let { mine: templates, starterIds } = splitTemplates(templateRes.data as ReplyTemplate[] | null);
+
+// The first time anyone opens Templates or the Inbox, a project is given its own
+// copy of the starter kit — the templates that carry no project.
+//
+// This is a write during a GET, which is not something to do casually. It is
+// once per project, and the claim happens inside seed_project_templates: the
+// row is only stamped while templates_seeded_at is still NULL, so two tabs
+// opened at the same moment cannot both copy the kit in. The stamp is what makes
+// deleting every template stick, too — without it an emptied project would find
+// the whole kit back on the next page load.
+if (wantsTemplates && !project.templates_seeded_at) {
+  await supabase.rpc("seed_project_templates", { p_project: project.id });
+  // Re-read rather than trusting the count the function hands back. Another tab
+  // may have won the claim a moment earlier, in which case this call correctly
+  // copies nothing — and the templates it wants are nonetheless there now.
+  const { data: seeded } = await supabase
+    .from("reply_templates").select(TEMPLATE_COLUMNS)
+    .or(`project_id.eq.${project.id},project_id.is.null`)
+    .order("position").order("created_at");
+  ({ mine: templates, starterIds } = splitTemplates(seeded as ReplyTemplate[] | null));
+}
 
 const content = contentRes.data;
 const heroImage = typeof content?.data?.image === "string" ? content.data.image : "";
@@ -73,9 +161,6 @@ const facts = [
 const DONUT = { size: 112, r: 42, w: 15 };
 const DONUT_C = 2 * Math.PI * DONUT.r;
 
-const VALID_TABS = ["overview", "units", "inbox", "settings"] as const;
-const tabParam = Astro.url.searchParams.get("tab") ?? "overview";
-const tab = (VALID_TABS as readonly string[]).includes(tabParam) ? tabParam : "overview";
 const saved = Astro.url.searchParams.get("saved") === "1";
 
 // The plaintext ingest key is shown exactly once, right after generation. It
@@ -183,6 +268,79 @@ const stageCount = (key: string) =>
   enquiries.filter((e) => e.triage === "converted" && (e.stage ?? "new") === key).length;
 
 const attention = enquiries.filter((e) => needsAttention(e, now));
+
+// ---- Leads tab ----
+//
+// Triaged-in buyers only: a pending enquiry is not a lead yet, and listing one
+// here would make triage look like an optional step. Their count is surfaced
+// above the table instead, so nothing goes quietly missing.
+let leadRows: LeadRow[] = [];
+let drawerLead: any = null;
+let drawerMessages: any[] = [];
+let drawerNotes: any[] = [];
+let drawerEvents: any[] = [];
+let drawerUnit: { code: string; state: string } | null = null;
+let drawerDocs: { title: string; views: number; created_at: string }[] = [];
+if (tab === "leads") {
+  const converted = allRows.filter((e) => (e.triage ?? "converted") === "converted");
+  // When each buyer last MOVED. The endpoint that changes a stage already
+  // writes one of these, so the age in the table resets itself with no extra
+  // bookkeeping anywhere.
+  const movedAt = new Map<string, string>();
+  if (converted.length > 0) {
+    const { data: moves } = await supabase
+      .from("enquiry_events")
+      .select("inquiry_id, created_at")
+      .eq("kind", "stage_changed")
+      .in("inquiry_id", converted.map((e) => e.id))
+      .order("created_at", { ascending: false });
+    // Newest first, so the first one seen for an enquiry is its latest.
+    for (const m of moves ?? []) if (!movedAt.has(m.inquiry_id)) movedAt.set(m.inquiry_id, m.created_at);
+  }
+
+  // ---- the one lead whose drawer is open ----
+  //
+  // Fetched only when the URL names one. Doing this per row would query every
+  // buyer's whole history to draw a list that shows none of it.
+  const wantedId = Astro.url.searchParams.get("lead") ?? "";
+  drawerLead = converted.find((e: any) => e.id === wantedId) ?? null;
+
+  if (drawerLead) {
+    const [dm, dn, de, du, dd] = await Promise.all([
+      supabase.from("inquiry_messages").select("direction, subject, sent_at, sent_by")
+        .eq("inquiry_id", drawerLead.id).order("sent_at"),
+      supabase.from("enquiry_notes").select("body, created_at, author_id")
+        .eq("inquiry_id", drawerLead.id).order("created_at", { ascending: false }),
+      supabase.from("enquiry_events").select("kind, detail, created_at, actor_id")
+        .eq("inquiry_id", drawerLead.id).order("created_at", { ascending: false }).limit(40),
+      supabase.from("project_units").select("code, state")
+        .eq("inquiry_id", drawerLead.id).maybeSingle(),
+      supabase.from("document_links").select("view_count, created_at, documents(title)")
+        .eq("inquiry_id", drawerLead.id).order("created_at", { ascending: false }),
+    ]);
+
+    drawerMessages = (dm.data ?? []).map((x: any) => ({ ...x, sentByName: nameById.get(x.sent_by) ?? null }));
+    drawerNotes = (dn.data ?? []).map((x: any) => ({ ...x, author: nameById.get(x.author_id) ?? "Someone" }));
+    drawerEvents = (de.data ?? []).map((x: any) => ({ ...x, actor: nameById.get(x.actor_id) ?? "System" }));
+    drawerUnit = du.data ?? null;
+    drawerDocs = (dd.data ?? []).map((x: any) => ({
+      title: Array.isArray(x.documents) ? x.documents[0]?.title ?? "Document" : x.documents?.title ?? "Document",
+      views: x.view_count ?? 0,
+      created_at: x.created_at,
+    }));
+  }
+
+  leadRows = converted.map((e: any) => ({
+    id: e.id,
+    name: e.name,
+    email: e.email,
+    stage: e.stage ?? "new",
+    project_id: e.project_id ?? project.id,
+    // No movement recorded means they have not moved: they have been sitting in
+    // the stage they arrived in since the day they arrived.
+    since: movedAt.get(e.id) ?? e.created_at,
+  }));
+}
 const groups = (["triage", "waiting", "overdue"] as const)
   .map((b) => ({ bucket: b, label: BUCKET_LABELS[b], items: attention.filter((e) => bucketOf(e, now) === b) }))
   .filter((g) => g.items.length > 0);
@@ -215,20 +373,28 @@ const selected = allRows.find((e) => e.id === selectedId) ?? null;
 let messages: any[] = [];
 let notes: any[] = [];
 let events: any[] = [];
-if (selected) {
-  const [m, n, ev] = await Promise.all([
+let linkViews: Record<string, number> = {};
+
+// Only the Inbox draws a conversation. Without the tab check these ran on every
+// tab, so opening the Overview fetched an email thread, its notes and its
+// history that nothing on that page shows.
+if (selected && tab === "inbox") {
+  const [m, n, ev, sentLinks] = await Promise.all([
     supabase.from("inquiry_messages").select("direction, subject, body_html, sent_at, sent_by")
       .eq("inquiry_id", selected.id).order("sent_at"),
     supabase.from("enquiry_notes").select("body, created_at, author_id")
       .eq("inquiry_id", selected.id).order("created_at", { ascending: false }),
     supabase.from("enquiry_events").select("kind, detail, created_at, actor_id")
       .eq("inquiry_id", selected.id).order("created_at", { ascending: false }).limit(12),
+    // What this buyer was actually sent, and whether they opened it.
+    supabase.from("document_links").select("id, view_count").eq("inquiry_id", selected.id),
   ]);
   // The mailbox is shared, so an outbound message says who actually wrote it
   // rather than assuming it was whoever happens to be reading the thread.
   messages = (m.data ?? []).map((x: any) => ({ ...x, sentByName: nameById.get(x.sent_by) ?? null }));
   notes = (n.data ?? []).map((x: any) => ({ ...x, author: nameById.get(x.author_id) ?? "Someone" }));
   events = (ev.data ?? []).map((x: any) => ({ ...x, actor: nameById.get(x.actor_id) ?? "System" }));
+  linkViews = Object.fromEntries((sentLinks.data ?? []).map((l: any) => [l.id, l.view_count ?? 0]));
 }
 
 // ---- setup state ----
@@ -403,6 +569,7 @@ await fetch("${webhookUrl}", {
       display: flex; align-items: center;
       justify-content: space-between; gap: 1rem; flex-wrap: wrap;
     }
+    .tabacts { display: flex; align-items: center; gap: 0.6rem; }
     .syncbtn {
       font: inherit; font-size: 0.78rem; font-weight: 700; color: #ffffff; background: #53b27f;
       border: 0; border-radius: 999px; padding: 0.55rem 1.25rem; cursor: pointer;
@@ -411,6 +578,23 @@ await fetch("${webhookUrl}", {
     }
     .syncbtn:hover { background: #47a071; }
     .syncbtn:active { transform: translateY(1px); }
+    .syncbtn.addlead {
+      background: #ffffff; color: #2e7d54; border: 1px solid #b7dfc9; box-shadow: none;
+    }
+    .syncbtn.addlead:hover { background: rgba(83, 178, 127, 0.1); border-color: #53b27f; }
+
+    .alform { display: grid; gap: 0.9rem 1.2rem; margin-top: 1rem; }
+    .alrow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem 1.2rem; }
+    @media (max-width: 620px) { .alrow { grid-template-columns: 1fr; } }
+    .alform .field { margin-top: 0; }
+    .alfoot { display: flex; justify-content: flex-end; align-items: center; gap: 0.7rem; }
+    .alfoot .btn { margin-top: 0; }
+    .aldup {
+      display: none; font-size: 0.8rem; line-height: 1.5; border-radius: 10px; padding: 0.6rem 0.8rem;
+      background: rgba(176, 138, 46, 0.1); border: 1px solid rgba(176, 138, 46, 0.32); color: #8a6d24;
+    }
+    .aldup.on { display: block; }
+    .aldup a { font-weight: 700; color: #8a6d24; }
     .syncmsg {
       margin-top: 0.8rem; font-size: 0.78rem; line-height: 1.45; color: #2e7d54;
       background: rgba(83, 178, 127, 0.1); border: 1px solid rgba(83, 178, 127, 0.28);
@@ -789,6 +973,89 @@ await fetch("${webhookUrl}", {
     .item .tags { margin-top: 0.3rem; display: flex; gap: 0.3rem; flex-wrap: wrap; }
     .panel { background: #fff; border: 1px solid #d7deea; border-radius: 1.2rem; padding: 1.4rem 1.6rem; box-shadow: 0 10px 30px rgba(15,26,42,.06); }
     .nothing { padding: 3rem 1.6rem; text-align: center; font-size: 0.86rem; color: #93a3b8; }
+
+    /* ---- Templates tab ---- */
+    .tpt {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem;
+      background: #f2f5f9; border-radius: 6px; padding: 0.1rem 0.35rem; color: #16283e;
+    }
+    .tphint { margin-top: 0.8rem; list-style: none; display: flex; flex-wrap: wrap; gap: 0.45rem 1.6rem; }
+    .tphint li { font-size: 0.82rem; color: #46586f; }
+    .tpfoot-note { margin-top: 0.75rem; font-size: 0.78rem; color: #93a3b8; line-height: 1.6; }
+
+    .tphead { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
+    .tpname { flex: 1; min-width: 12rem; width: auto; font-weight: 700; }
+    .tpchips { display: flex; gap: 0.3rem; }
+    .tchip {
+      font-size: 0.6rem; font-weight: 800; letter-spacing: 0.06em; border-radius: 999px;
+      padding: 0.2rem 0.45rem; background: #f2f5f9; color: #b3c0d0; border: 1px solid #e2e8f1;
+    }
+    .tchip.on { background: rgba(83, 178, 127, 0.14); color: #2e7d54; border-color: rgba(83, 178, 127, 0.35); }
+    .tptools { display: flex; gap: 0.25rem; }
+    .tpico {
+      font: inherit; font-size: 0.9rem; line-height: 1; width: 1.9rem; height: 1.9rem;
+      border: 1px solid #d5deea; border-radius: 8px; background: #fff; color: #5c6f88; cursor: pointer;
+    }
+    .tpico:hover:not(:disabled) { border-color: #53b27f; color: #2e7d54; }
+    .tpico:disabled { opacity: 0.35; cursor: default; }
+    .tpico.danger:hover { border-color: #cb4c4c; color: #a33d3d; }
+
+    .tpcols { margin-top: 0.9rem; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.9rem; }
+    @media (max-width: 900px) { .tpcols { grid-template-columns: 1fr; } }
+    .tpcol { display: flex; flex-direction: column; gap: 0.35rem; }
+    .tplab {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      color: #46586f; display: flex; gap: 0.5rem; align-items: baseline;
+    }
+    .tplab em {
+      font-style: normal; font-size: 0.62rem; font-weight: 700; letter-spacing: 0;
+      text-transform: none; color: #b08a2e;
+    }
+    .tpcol textarea { font-size: 0.82rem; line-height: 1.65; resize: vertical; }
+
+    .tpsave { display: flex; justify-content: flex-end; gap: 0.6rem; align-items: center; }
+    .tpsave .btn { margin-top: 0.9rem; }
+    .tpsave .tpprimary { order: 2; }
+    .tpsave .tpstarter { order: 1; font-weight: 600; color: #5c6f88; }
+    .tpsave .tpstarter:hover { color: #2e7d54; border-color: #53b27f; }
+
+    /* ---- Documents tab ---- */
+    .dcwrap { display: grid; gap: 0.5rem; }
+    .dcrow { display: flex; align-items: center; gap: 0.5rem; }
+    .dcform {
+      flex: 1; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+      border: 1px solid #e2e8f1; border-radius: 10px; padding: 0.5rem 0.6rem; background: #fbfcfe;
+    }
+    .dcname { flex: 1; min-width: 10rem; width: auto; font-weight: 600; }
+    .dccat { width: auto; min-width: 9rem; }
+    .dcmeta { font-size: 0.7rem; color: #93a3b8; white-space: nowrap; }
+    .dcstat {
+      font-size: 0.68rem; font-weight: 700; color: #5c6f88; white-space: nowrap;
+      background: #f2f5f9; border-radius: 999px; padding: 0.2rem 0.5rem;
+    }
+    .dcsave { margin-top: 0; padding: 0.4rem 0.8rem; font-size: 0.78rem; }
+    .dcrm { display: flex; }
+    .dcadd .field { margin-top: 0.6rem; }
+    .dcdrop {
+      display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
+      border: 1px dashed #d5deea; border-radius: 10px; padding: 0.5rem 0.6rem; background: #fbfcfe;
+      transition: border-color 0.12s ease, background 0.12s ease;
+    }
+    .dcdrop.over { border-color: #53b27f; background: rgba(83, 178, 127, 0.08); }
+    .dcchosen { font-size: 0.76rem; color: #93a3b8; }
+    .dcchosen.has { color: #2e7d54; font-weight: 700; }
+    .dcfile { padding: 0.45rem 0.6rem; cursor: pointer; width: auto; border: 0; background: none; }
+    .dcfile::file-selector-button {
+      font: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer;
+      margin-right: 0.7rem; padding: 0.35rem 0.8rem; border-radius: 8px;
+      border: 1px solid #d5deea; background: #ffffff; color: #46586f;
+    }
+    .dcfile::file-selector-button:hover { border-color: #53b27f; color: #2e7d54; }
+    .dcadd .row2 { margin-top: 0.2rem; }
+
+    .tpadd { display: flex; gap: 0.7rem; flex-wrap: wrap; align-items: center; }
+    .tpadd .in { flex: 1; min-width: 16rem; width: auto; }
+    .tpadd .btn { margin-top: 0; }
   </style>
 
   <div class="tabrow">
@@ -796,21 +1063,37 @@ await fetch("${webhookUrl}", {
     <span class="seg-thumb no-anim"></span>
     <a href={`/admin/projects/${slug}`} class:list={["seg-btn", { active: tab === "overview" }]}>Overview</a>
     <a href={`/admin/projects/${slug}?tab=units`} class:list={["seg-btn", { active: tab === "units" }]}>Units</a>
+    <a href={`/admin/projects/${slug}?tab=leads`} class:list={["seg-btn", { active: tab === "leads" }]}>Leads</a>
     <a href={inboxHref({ seg: "needs" })} class:list={["seg-btn", { active: tab === "inbox" }]}>
       Inbox {attention.length > 0 && <span class="count">{attention.length}</span>}
     </a>
-    <span class="seg-btn off">Documents</span>
+    <a href={`/admin/projects/${slug}?tab=templates`} class:list={["seg-btn", { active: tab === "templates" }]}>Templates</a>
+    <a href={`/admin/projects/${slug}?tab=documents`} class:list={["seg-btn", { active: tab === "documents" }]}>Documents</a>
     <a href={`/admin/projects/${slug}?tab=settings`} class:list={["seg-btn", { active: tab === "settings" }]}>Settings</a>
   </div>
 
-  {/* Not on Settings: that tab has its own Sync now, beside Disconnect, where
-      the pair belongs. Two identical buttons on one screen is worse than one. */}
-  {mailboxConnected && tab !== "settings" && (
-    <form class="syncform" method="post" action="/api/admin/project-mail-sync">
-      <input type="hidden" name="slug" value={project.slug} />
-      <input type="hidden" name="back" value={selfHref} />
-      <button class="syncbtn" type="submit">Sync now</button>
-    </form>
+  {/* One group, so the row's space-between puts the tabs at one end and the
+      pair of buttons together at the other. As three separate children the
+      Add lead button was spaced out into the middle of the row, beside nothing. */}
+  {tab !== "settings" && (
+    <div class="tabacts">
+      {/* Only on Leads, where the list it adds to is on screen. Offered even
+          without a mailbox, though: a project with no inbox still gets walk-ins,
+          and that is exactly when adding one by hand is the only way in. */}
+      {tab === "leads" && (
+        <button class="syncbtn addlead" type="button" data-open-dialog="add-lead">+ Add lead</button>
+      )}
+
+      {/* Sync now is absent on Settings, which has its own beside Disconnect —
+          two identical buttons on one screen is worse than one. */}
+      {mailboxConnected && (
+        <form class="syncform" method="post" action="/api/admin/project-mail-sync">
+          <input type="hidden" name="slug" value={project.slug} />
+          <input type="hidden" name="back" value={selfHref} />
+          <button class="syncbtn" type="submit">Sync now</button>
+        </form>
+      )}
+    </div>
   )}
   </div>
 
@@ -971,12 +1254,12 @@ await fetch("${webhookUrl}", {
             <span class="m-tile" style="background:rgba(155,63,191,.1);color:#9b3fbf">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
             </span>
-            <p class="m-value">{stageCount("viewing_booked")}</p>
+            <p class="m-value">{stageCount("info")}</p>
           </div>
-          <p class="m-label">Viewings booked</p>
+          <p class="m-label">Information sharing</p>
           <div class="m-sep"></div>
           <div class="m-foot">
-            <span class="m-delta flat">{stageCount("offer")} at offer</span>
+            <span class="m-delta flat">{stageCount("new")} not started</span>
             <span class="m-period">in the pipeline</span>
           </div>
         </article>
@@ -986,7 +1269,7 @@ await fetch("${webhookUrl}", {
             <span class="m-tile" style="background:rgba(200,106,0,.1);color:#c86a00">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>
             </span>
-            <p class="m-value">{stageCount("reserved")}</p>
+            <p class="m-value">{stageCount("reservation")}</p>
           </div>
           <p class="m-label">Reserved</p>
           <div class="m-sep"></div>
@@ -1338,6 +1621,34 @@ await fetch("${webhookUrl}", {
     </div>
   )}
 
+  {tab === "leads" && (
+    <div class="tabpane" style="margin-top: 1.4rem">
+      <LeadRows
+        leads={leadRows}
+        projects={[{ id: project.id, name: project.name, nav_name: project.nav_name, slug: project.slug }]}
+        showProject={false}
+      />
+
+      {drawerLead && (
+        <LeadDrawer
+          lead={drawerLead}
+          project={{ slug: project.slug, name: project.name }}
+          events={drawerEvents}
+          messages={drawerMessages}
+          notes={drawerNotes}
+          unit={drawerUnit}
+          docs={drawerDocs}
+          back={(() => {
+            const u = new URLSearchParams(Astro.url.search);
+            u.delete("lead");
+            const q = u.toString();
+            return Astro.url.pathname + (q ? `?${q}` : "");
+          })()}
+        />
+      )}
+    </div>
+  )}
+
   {tab === "inbox" && (
     <div class="split tabpane">
       <div class="listcard">
@@ -1382,11 +1693,221 @@ await fetch("${webhookUrl}", {
             back={selfHref}
             sent={sent}
             sendError={sendError}
+            templates={templates}
+            documents={documents}
+            sentDocs={sentDocs}
+            linkViews={linkViews}
           />
         ) : (
           <p class="nothing">Select an enquiry on the left.</p>
         )}
       </div>
+    </div>
+  )}
+
+  {tab === "templates" && (
+    <div class="tabpane" style="margin-top: 1.4rem">
+      <section class="card">
+        <h2 class="sec">Saved replies</h2>
+        <p class="lede">
+          Picking one drops it into the composer on the Inbox — nothing is ever sent without someone
+          reading it first. These belong to <b>{project.name}</b> alone; editing them changes nothing
+          anywhere else. A new project starts from a standard set and then goes its own way.
+        </p>
+        <ul class="tphint">
+          {TEMPLATE_PLACEHOLDERS.map((ph) => (
+            <li><code class="tpt">{ph.token}</code> <span>{ph.describes}</span></li>
+          ))}
+        </ul>
+        <p class="tpfoot-note">
+          An enquiry with no name simply loses the gap, so a template is safe to write as though everyone
+          gave one. Anything else in double braces is left sitting in the composer, where it is obvious
+          enough to catch before sending.
+        </p>
+      </section>
+
+      {templates.length === 0 && (
+        <section class="card"><p class="lede">No templates yet. Add one below, then write it in each language.</p></section>
+      )}
+
+      {templates.map((t, i) => {
+        const has = writtenIn(t);
+        return (
+          <section class="card">
+            <form method="post" action="/api/admin/reply-templates">
+              {/* `action` rides on the BUTTONS, not a hidden field, so both of
+                  them post whatever is in the boxes right now. Saving as a
+                  starter without first saving the edit would quietly promote the
+                  previous version — the one nobody is looking at. */}
+              <input type="hidden" name="id" value={t.id} />
+              <input type="hidden" name="slug" value={project.slug} />
+
+              <div class="tphead">
+                <input class="in tpname" type="text" name="name" value={t.name} required aria-label="Template name" />
+                <div class="tpchips">
+                  {TEMPLATE_LOCALES.map((l) => (
+                    <span class:list={["tchip", { on: has.includes(l) }]} title={has.includes(l)
+                      ? `${TEMPLATE_LOCALE_LABEL[l]} written`
+                      : `No ${TEMPLATE_LOCALE_LABEL[l]} version — English is used instead`}>{l.toUpperCase()}</span>
+                  ))}
+                </div>
+                <div class="tptools">
+                  <button class="tpico" type="submit" form={`up-${t.id}`} disabled={i === 0} title="Move up" aria-label="Move up">↑</button>
+                  <button class="tpico" type="submit" form={`down-${t.id}`} disabled={i === templates.length - 1} title="Move down" aria-label="Move down">↓</button>
+                  <button class="tpico danger" type="submit" form={`rm-${t.id}`} title="Remove" aria-label="Remove">×</button>
+                </div>
+              </div>
+
+              <div class="tpcols">
+                {TEMPLATE_LOCALES.map((l) => (
+                  <label class="tpcol">
+                    <span class="tplab">
+                      {TEMPLATE_LOCALE_LABEL[l]}
+                      {!has.includes(l) && l !== "en" && <em>falls back to English</em>}
+                    </span>
+                    <textarea class="in" name={`body_${l}`} rows="12"
+                      placeholder={l === "en" ? "Write the reply…" : "Leave this empty to use the English version."}
+                      set:text={bodyIn(t, l)}></textarea>
+                  </label>
+                ))}
+              </div>
+
+              <div class="tpsave">
+                <button class="btn tpprimary" type="submit" name="action" value="save">Save changes</button>
+                <button class="btn ghost tpstarter" type="submit" name="action" value="starter"
+                  onclick={`return confirm(${JSON.stringify(
+                    (t.source_id && starterIds.has(t.source_id)
+                      ? "Update the starter this was copied from?"
+                      : "Add this to the starter set?") +
+                    "\n\nNew projects will begin with this version. Nothing changes for " +
+                    "projects that already exist, including this one."
+                  )})`}>
+                  {t.source_id && starterIds.has(t.source_id) ? "Update starter" : "Save as starter"}
+                </button>
+              </div>
+            </form>
+
+            {/* Outside the editing form on purpose: a form cannot be nested in another. */}
+            <form id={`up-${t.id}`} method="post" action="/api/admin/reply-templates" hidden>
+              <input type="hidden" name="action" value="move" /><input type="hidden" name="id" value={t.id} /><input type="hidden" name="dir" value="up" /><input type="hidden" name="slug" value={project.slug} />
+            </form>
+            <form id={`down-${t.id}`} method="post" action="/api/admin/reply-templates" hidden>
+              <input type="hidden" name="action" value="move" /><input type="hidden" name="id" value={t.id} /><input type="hidden" name="dir" value="down" /><input type="hidden" name="slug" value={project.slug} />
+            </form>
+            <form id={`rm-${t.id}`} method="post" action="/api/admin/reply-templates" hidden
+              onsubmit={`return confirm('Remove this template? Replies already sent are unaffected.')`}>
+              <input type="hidden" name="action" value="remove" /><input type="hidden" name="id" value={t.id} /><input type="hidden" name="slug" value={project.slug} />
+            </form>
+          </section>
+        );
+      })}
+
+      <section class="card">
+        <form class="tpadd" method="post" action="/api/admin/reply-templates">
+          <input type="hidden" name="action" value="add" />
+          <input type="hidden" name="slug" value={project.slug} />
+          <input class="in" type="text" name="name" placeholder="Name it — “First reply”, “Invite to a viewing”…" required />
+          <button class="btn ghost" type="submit">Add a template</button>
+        </form>
+      </section>
+    </div>
+  )}
+
+  {tab === "documents" && (
+    <div class="tabpane" style="margin-top: 1.4rem">
+      <section class="card">
+        <h2 class="sec">Documents</h2>
+        <p class="lede">
+          The brochure, the floor plans, the price list. Nothing is ever attached to an email — replying
+          with a document mints a link that belongs to <b>that one buyer</b>, expires after {LINK_EXPIRY_DAYS} days,
+          and can be withdrawn after it has gone out. That is also how you find out whether they read it.
+        </p>
+      </section>
+
+      {documents.length === 0 ? (
+        <section class="card"><p class="lede">Nothing uploaded yet. Add the first document below.</p></section>
+      ) : (
+        <section class="card">
+          <div class="dcwrap">
+            {documents.map((d) => {
+              const stat = linkStats.get(d.id);
+              const meta = [fileKind(d.mime_type), humanSize(d.file_size)].filter(Boolean).join(" · ");
+              return (
+                <div class="dcrow">
+                  <form class="dcform" method="post" action="/api/admin/project-documents">
+                    <input type="hidden" name="action" value="save" />
+                    <input type="hidden" name="id" value={d.id} />
+                    <input type="hidden" name="slug" value={project.slug} />
+                    <input class="in dcname" type="text" name="title" value={d.title} required aria-label="Document name" />
+                    <select class="in dccat" name="category" aria-label="Category">
+                      {DOCUMENT_CATEGORIES.map((c) => (
+                        <option value={c.value} selected={c.value === d.category}>{c.label}</option>
+                      ))}
+                    </select>
+                    <span class="dcmeta">{meta}</span>
+                    <span class="dcstat">
+                      {stat
+                        ? `sent ${stat.sent}× · opened by ${stat.opened}`
+                        : "not sent yet"}
+                    </span>
+                    <button class="btn ghost dcsave" type="submit">Save</button>
+                  </form>
+                  <form method="post" action="/api/admin/project-documents" class="dcrm"
+                    onsubmit={`return confirm(${JSON.stringify(
+                      "Remove this document?\n\nEvery link already sent for it stops working immediately, " +
+                      "including any a buyer is holding."
+                    )})`}>
+                    <input type="hidden" name="action" value="remove" />
+                    <input type="hidden" name="id" value={d.id} />
+                    <input type="hidden" name="slug" value={project.slug} />
+                    <button class="tpico danger" type="submit" title="Remove" aria-label="Remove">×</button>
+                  </form>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      <section class="card">
+        <h3 class="sec">Add a document</h3>
+        <form class="dcadd" method="post" action="/api/admin/project-documents" enctype="multipart/form-data">
+          <input type="hidden" name="action" value="upload" />
+          <input type="hidden" name="slug" value={project.slug} />
+          {/* A DIV, not a LABEL. A file input nested inside its own label gets the
+              click twice - once itself, once forwarded by the label - and the
+              browser opens the file dialog and immediately cancels it, so the
+              control looks dead. Every other file input in this portal is a bare
+              sibling for the same reason. */}
+          <div class="field">
+            <span id="dcfile-label">File</span>
+            {/* No `accept` list. On macOS Chrome an extension list is mapped to
+                system file types, and anything it fails to map is greyed out in
+                the dialog — so a filter meant as a convenience can leave someone
+                staring at a folder of files they are not allowed to pick. The
+                endpoint checks the type anyway and says so in words, which is
+                the better place to be strict. */}
+            <div class="dcdrop" data-drop>
+              <input class="in dcfile" type="file" name="file" required aria-labelledby="dcfile-label" data-file />
+              <span class="dcchosen" data-chosen>or drag a file here</span>
+            </div>
+          </div>
+          <div class="row2">
+            <label class="field">
+              <span>Name <em>optional — the file name is used otherwise</em></span>
+              <input class="in" type="text" name="title" placeholder="Nanta Alta brochure" />
+            </label>
+            <label class="field">
+              <span>Category</span>
+              <select class="in" name="category">
+                {DOCUMENT_CATEGORIES.map((c) => <option value={c.value}>{c.label}</option>)}
+              </select>
+            </label>
+          </div>
+          <button class="btn" type="submit">Upload</button>
+          <p class="tpfoot-note">Up to 50 MB. PDFs, images, Office files, CSV and ZIP.</p>
+        </form>
+      </section>
     </div>
   )}
 
@@ -1710,6 +2231,88 @@ await fetch("${webhookUrl}", {
       </details>
     </div>
   )}
+
+{tab === "leads" && (
+  <dialog class="enqmodal wide" id="add-lead">
+    <div class="mhead">
+      <div>
+        <h3>Add a lead</h3>
+        <p class="msub">Someone who came to you another way — a walk-in, a call, a referral.</p>
+      </div>
+      <form method="dialog"><button class="mx" aria-label="Close">×</button></form>
+    </div>
+
+    <form class="alform" method="post" action="/api/admin/project-lead" data-addlead>
+      <input type="hidden" name="action" value="add" />
+      <input type="hidden" name="slug" value={project.slug} />
+      <input type="hidden" name="force" value="" data-force />
+
+      <label class="field">
+        <span>Name</span>
+        <input class="in" type="text" name="name" required autocomplete="off" placeholder="Ingrid Farré" />
+      </label>
+
+      <div class="alrow">
+        <label class="field">
+          <span>Email <em>(or a phone number below)</em></span>
+          <input class="in" type="email" name="email" autocomplete="off" placeholder="ingrid@example.com" data-dup-email />
+        </label>
+        <label class="field">
+          <span>Phone</span>
+          <input class="in" type="tel" name="phone" autocomplete="off" placeholder="+376 812 345" data-dup-phone />
+        </label>
+      </div>
+
+      <div class="alrow">
+        <label class="field">
+          <span>Where from</span>
+          <select class="in" name="source">
+            {MANUAL_LEAD_SOURCES.map((src) => <option value={src.value}>{src.label}</option>)}
+          </select>
+        </label>
+        <label class="field">
+          <span>Language <em>(picks the reply template)</em></span>
+          <select class="in" name="locale">
+            <option value="">Not sure yet</option>
+            {LOCALE_OPTIONS.map((l) => <option value={l.value}>{l.label}</option>)}
+          </select>
+        </label>
+      </div>
+
+      <div class="alrow">
+        <label class="field">
+          <span>Stage</span>
+          <select class="in" name="stage">
+            {BUYER_STAGES.map((st) => <option value={st.key} selected={st.key === "new"}>{st.label}</option>)}
+          </select>
+        </label>
+        <label class="field">
+          <span>First contact <em>(the day counter runs from this)</em></span>
+          <input class="in" type="date" name="received" data-today />
+        </label>
+      </div>
+
+      <label class="field">
+        <span>What they are after <em>(optional)</em></span>
+        <textarea class="in" name="message" rows="3"
+          placeholder="Three bedrooms, budget around 1.2M, wants to visit on Saturday."></textarea>
+      </label>
+
+      <p class="aldup" data-dup-note></p>
+      {/* Everyone already on this project, for the duplicate check. Emitted as
+          data rather than fetched: the page has the list in hand already. */}
+      <script type="application/json" id="known-leads" is:inline set:html={JSON.stringify(
+        allRows.map((e) => ({ id: e.id, name: e.name ?? "", email: e.email ?? "", phone: (e as any).phone ?? "" })),
+      ).replace(/</g, "\\u003c")} />
+      <script type="application/json" id="known-slug" is:inline set:html={JSON.stringify(project.slug)} />
+
+      <div class="alfoot">
+        <button class="btn ghost" type="button" data-close>Cancel</button>
+        <button class="btn" type="submit" data-submit>Add lead</button>
+      </div>
+    </form>
+  </dialog>
+)}
 </AdminLayout>
 
 <script>
@@ -1778,6 +2381,97 @@ await fetch("${webhookUrl}", {
       const id = btn.getAttribute("data-open-dialog");
       const dlg = id ? document.getElementById(id) : null;
       if (dlg instanceof HTMLDialogElement) dlg.showModal();
+    });
+  });
+
+  // The add-lead form: today's date, and a duplicate check before it saves.
+  const addLead = document.querySelector<HTMLFormElement>("form[data-addlead]");
+  if (addLead) {
+    const dialog = addLead.closest("dialog");
+
+    // Default the date to today without hard-coding it into the HTML, which
+    // would go stale the moment the page was cached.
+    const dateField = addLead.querySelector<HTMLInputElement>("[data-today]");
+    if (dateField && !dateField.value) {
+      const d = new Date();
+      dateField.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    }
+
+    addLead.querySelector("[data-close]")?.addEventListener("click", () => dialog?.close());
+
+    const known: { id: string; name: string; email: string; phone: string }[] =
+      JSON.parse(document.getElementById("known-leads")?.textContent || "[]");
+
+    // Same rule as the server uses: last nine digits, so +376 812 345 and
+    // 00376812345 and 812345 are all recognised as the same person.
+    const phoneKey = (v: string) => {
+      const digits = (v || "").replace(/\D/g, "");
+      return digits.length >= 6 ? digits.slice(-9) : "";
+    };
+
+    const note = addLead.querySelector<HTMLElement>("[data-dup-note]");
+    const force = addLead.querySelector<HTMLInputElement>("[data-force]");
+    const submit = addLead.querySelector<HTMLButtonElement>("[data-submit]");
+
+    addLead.addEventListener("submit", (ev) => {
+      if (force?.value === "1") return; // already warned, already decided
+
+      const email = (addLead.querySelector<HTMLInputElement>("[data-dup-email]")?.value ?? "").trim().toLowerCase();
+      const phone = phoneKey(addLead.querySelector<HTMLInputElement>("[data-dup-phone]")?.value ?? "");
+
+      const clash = known.find(
+        (k) => (email && k.email.toLowerCase() === email) || (phone && phoneKey(k.phone) === phone),
+      );
+      if (!clash || !note || !submit || !force) return;
+
+      // Stop, show who it is, and let the next press through. Refusing outright
+      // would be wrong — two people really do share a household address.
+      ev.preventDefault();
+      note.innerHTML =
+        `<b>${clash.name || "Someone"}</b> is already a lead on this project. ` +
+        `<a href="/admin/projects/${JSON.parse(document.getElementById("known-slug")?.textContent || '""')}/enquiry/${clash.id}">Open them instead</a>` +
+        ` — or press Add lead again to record a second person.`;
+      note.classList.add("on");
+      force.value = "1";
+      submit.textContent = "Add anyway";
+    });
+  }
+
+  // Dragging a file onto the upload box.
+  //
+  // Partly because it is nicer, and partly as a way round the browser: Chrome
+  // occasionally gets into a state where the file dialog will not open at all
+  // until it is restarted, and when that happens this is the only way to get a
+  // file into the form. It also reports the chosen name back, so picking a file
+  // is visibly acknowledged either way.
+  document.querySelectorAll("[data-drop]").forEach((zone) => {
+    const input = zone.querySelector("[data-file]");
+    const chosen = zone.querySelector("[data-chosen]");
+    if (!(input instanceof HTMLInputElement) || !chosen) return;
+
+    const show = () => {
+      const file = input.files?.[0];
+      chosen.textContent = file ? file.name : "or drag a file here";
+      chosen.classList.toggle("has", !!file);
+    };
+    input.addEventListener("change", show);
+
+    // Both are needed: without preventDefault on dragover the browser refuses to
+    // treat this as a drop target, and without it on drop the browser navigates
+    // away to the file instead.
+    zone.addEventListener("dragover", (ev) => {
+      ev.preventDefault();
+      zone.classList.add("over");
+    });
+    zone.addEventListener("dragleave", () => zone.classList.remove("over"));
+    zone.addEventListener("drop", (ev) => {
+      ev.preventDefault();
+      zone.classList.remove("over");
+      const dropped = (ev as DragEvent).dataTransfer?.files;
+      if (dropped && dropped.length > 0) {
+        input.files = dropped;
+        show();
+      }
     });
   });
 

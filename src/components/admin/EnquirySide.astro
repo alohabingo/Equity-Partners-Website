@@ -10,13 +10,15 @@
  * is what the team did about it.
  */
 interface Props {
+  /** view_count for each document link sent on this enquiry, by link id. */
+  linkViews?: Record<string, number>;
   enquiryId: string;
   notes: { body: string; created_at: string; author: string }[];
   events: { kind: string; detail: any; created_at: string; actor: string }[];
   /** Where the note form sends the browser back to. */
   back: string;
 }
-const { enquiryId, notes, events, back } = Astro.props;
+const { enquiryId, notes, events, back, linkViews = {} } = Astro.props;
 
 const EVENT_LABELS: Record<string, string> = {
   received: "Enquiry received",
@@ -54,6 +56,7 @@ const shortDate = (iso: string) =>
   .hist { margin-top: 1.1rem; }
   .hist h3 { margin: 0; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #5c6f88; }
   .hrow {
+  .opened { font-style: normal; margin-left: 0.3rem; font-size: 0.94em; color: #b08a2e; }
     font-size: 0.76rem; color: #5c6f88; padding: 0.35rem 0; border-bottom: 1px solid #f2f5f9;
     display: flex; justify-content: space-between; gap: 0.7rem;
   }
@@ -87,6 +90,16 @@ const shortDate = (iso: string) =>
         {(ev.kind === "stage_changed" || ev.kind === "locale_changed") && ev.detail?.label
           ? ` → ${ev.detail.label}` : ""}
         {ev.kind === "rejected" && ev.detail?.label ? ` · ${ev.detail.label}` : ""}
+        {ev.kind === "document_sent" && ev.detail?.title ? ` · ${ev.detail.title}` : ""}
+        {ev.kind === "document_sent" && ev.detail?.link_id && (
+          <em class="opened">{(() => {
+            const n = linkViews[ev.detail.link_id];
+            // undefined means the link is gone - the document was removed, so
+            // whatever the buyer was sent no longer opens.
+            if (n === undefined) return "· link withdrawn";
+            return n > 0 ? `· opened ${n}×` : "· not opened yet";
+          })()}</em>
+        )}
       </span>
       <span class="who">{ev.actor} · {shortDate(ev.created_at)}</span>
     </div>

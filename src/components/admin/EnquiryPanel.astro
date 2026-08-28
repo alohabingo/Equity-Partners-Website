@@ -1,6 +1,13 @@
 ---
 import { BUYER_STAGES, stageLabel } from "../../lib/pipeline";
-import { LOCALE_OPTIONS, localeChip, localeTitle, plain, shortAge, REJECT_REASONS, rejectReasonLabel, type EnquiryRow } from "../../lib/enquiries";
+import {
+  TEMPLATE_LOCALES, TEMPLATE_LOCALE_LABEL, renderTemplate, asTemplateLocale,
+  type ReplyTemplate, type TemplateLocale,
+} from "../../lib/replyTemplates";
+import {
+  fileKind, humanSize, categoryLabel, LINK_EXPIRY_DAYS, type ProjectDocument,
+} from "../../lib/projectDocuments";
+import { LOCALE_OPTIONS, localeChip, localeTitle, sourceLabel, plain, shortAge, REJECT_REASONS, rejectReasonLabel, type EnquiryRow } from "../../lib/enquiries";
 
 interface Props {
   enquiry: EnquiryRow;
@@ -21,14 +28,52 @@ interface Props {
   /** Outcome of the reply just posted, read off the URL by the page. */
   sent?: boolean;
   sendError?: string | null;
+  /**
+   * Saved replies, fetched by the PAGE rather than here. A component that
+   * queries Supabase does so after the response has begun streaming, and the
+   * client's cookie write then throws ResponseSentError and signs the user out.
+   */
+  templates?: ReplyTemplate[];
+  /** The project's documents, offered as links to include in the reply. */
+  documents?: ProjectDocument[];
+  /** How many documents the reply just sent carried, read off the URL. */
+  sentDocs?: number;
+  /** view_count for each document link sent on this enquiry, by link id. */
+  linkViews?: Record<string, number>;
 }
 const {
   enquiry, messages, notes, events, project,
   currentUserName, back, sent = false, sendError = null,
-  showSide = true,
+  showSide = true, templates = [], documents = [], sentDocs = 0, linkViews = {},
 } = Astro.props;
 
-const canReply = !!project.mailbox;
+const canReply = !!project.mailbox && !!enquiry.email;
+
+/**
+ * Each saved reply, already filled in, in each of the three languages.
+ *
+ * Resolved here rather than in the browser so that the rules about names,
+ * missing translations and empty placeholders live in exactly one place. It
+ * costs a few kilobytes of JSON on a page that already carries an email thread.
+ */
+const buyerLocale = asTemplateLocale(enquiry.locale);
+const localeKnown = TEMPLATE_LOCALES.includes((enquiry.locale ?? "") as TemplateLocale);
+
+const pickable = templates
+  .map((t) => {
+    const by = {} as Record<TemplateLocale, ReturnType<typeof renderTemplate>>;
+    for (const l of TEMPLATE_LOCALES) {
+      by[l] = renderTemplate(t, l, {
+        name: enquiry.name,
+        project: project.name,
+        sender: currentUserName,
+      });
+    }
+    return { id: t.id, name: t.name, by };
+  })
+  // A template nobody has written anything into yet is not offered at all.
+  .filter((r) => TEMPLATE_LOCALES.some((l) => r.by[l].usable));
+
 
 // Triage gates the rest of the screen. Until someone has said this is a real
 // buyer there is no stage to set, so that control is not shown at all rather
@@ -36,6 +81,9 @@ const canReply = !!project.mailbox;
 const triage = enquiry.triage ?? "converted";
 const isPending = triage === "pending";
 const isRejected = triage === "rejected";
+
+const showPicker = canReply && !isRejected && pickable.length > 0;
+const showDocs = canReply && !isRejected && documents.length > 0;
 
 const EVENT_LABELS: Record<string, string> = {
   received: "Enquiry received",
@@ -125,7 +173,43 @@ const EVENT_LABELS: Record<string, string> = {
     line-height: 1.6; resize: vertical; min-height: 96px; outline: none; background: #fff; color: #16283e;
   }
   .composer textarea:disabled { background: #fbfcfe; color: #93a3b8; }
+  .nomail { color: #b08a2e; font-weight: 600; }
   .composer .cfoot { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.55rem 0.8rem; border-top: 1px solid #eef2f7; }
+  .tpick {
+    display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+    padding: 0.5rem 0.8rem; border-bottom: 1px solid #eef2f7; background: #fbfcfe;
+  }
+  .tpick .tsel { max-width: 16rem; }
+  .tpick .in {
+    font: inherit; font-size: 0.8rem; padding: 0.35rem 0.5rem;
+    border: 1px solid #d5deea; border-radius: 8px; background: #ffffff; color: #16283e;
+  }
+  .tlang { display: flex; gap: 0.2rem; }
+  .tlang .tl {
+    font: inherit; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.05em; cursor: pointer;
+    padding: 0.28rem 0.45rem; border-radius: 999px;
+    border: 1px solid #e2e8f1; background: #ffffff; color: #93a3b8;
+  }
+  .tlang .tl:hover { color: #46586f; }
+  .tlang .tl.on {
+    background: rgba(83, 178, 127, 0.14); color: #2e7d54; border-color: rgba(83, 178, 127, 0.35);
+  }
+  .dpick {
+    display: flex; align-items: flex-start; gap: 0.6rem; flex-wrap: wrap;
+    padding: 0.55rem 0.8rem; border-bottom: 1px solid #eef2f7; background: #fbfcfe;
+  }
+  .dlab {
+    font-size: 0.62rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+    color: #5c6f88; padding-top: 0.2rem;
+  }
+  .dopts { display: flex; flex-wrap: wrap; gap: 0.3rem 0.9rem; flex: 1; min-width: 12rem; }
+  .dopt { display: flex; align-items: baseline; gap: 0.35rem; font-size: 0.78rem; color: #16283e; cursor: pointer; }
+  .dopt input { accent-color: #53b27f; }
+  .dopt em { font-style: normal; margin-left: 0.4rem; font-size: 0.68rem; color: #93a3b8; }
+  .dnote { flex-basis: 100%; font-size: 0.68rem; color: #93a3b8; }
+  .opened { font-style: normal; margin-left: 0.3rem; font-size: 0.94em; color: #b08a2e; }
+  .tnote { font-size: 0.72rem; color: #93a3b8; }
+  .tnote.warn { color: #b08a2e; }
   .send { font: inherit; font-size: 0.78rem; font-weight: 700; color: #fff; background: #53b27f; border: 0; border-radius: 9px; padding: 0.45rem 1rem; }
   .send:disabled { background: #c9d4e3; cursor: not-allowed; }
   .locked { font-size: 0.72rem; color: #93a3b8; }
@@ -158,8 +242,11 @@ const EVENT_LABELS: Record<string, string> = {
       <span class="flag" title={localeTitle(enquiry.locale)}>{localeChip(enquiry.locale)}</span>
     </div>
     <p class="meta">
-      <a href={`mailto:${enquiry.email}`}>{enquiry.email}</a>
+      {enquiry.email
+        ? <a href={`mailto:${enquiry.email}`}>{enquiry.email}</a>
+        : <span class="nomail">no email address</span>}
       {enquiry.phone && <span>{enquiry.phone}</span>}
+      {enquiry.source && <span>{sourceLabel(enquiry.source)}</span>}
       {enquiry.source_page && <span>from {enquiry.source_page}</span>}
       <span>arrived {shortAge(enquiry.created_at)} ago</span>
     </p>
@@ -263,7 +350,7 @@ const EVENT_LABELS: Record<string, string> = {
 ))}
 
 {!isRejected && (
-<form class="composer" method="post" action="/api/admin/enquiry">
+<form class="composer" method="post" action="/api/admin/enquiry" data-composer>
   <input type="hidden" name="id" value={enquiry.id} />
   <input type="hidden" name="action" value="reply" />
   <input type="hidden" name="back" value={back} />
@@ -272,18 +359,72 @@ const EVENT_LABELS: Record<string, string> = {
     <span>to <b>{enquiry.email}</b></span>
   </div>
   {sendError && <p class="sendmsg bad">{sendError}</p>}
-  {sent && !sendError && <p class="sendmsg good">Sent — it will appear in the thread above.</p>}
+  {sent && !sendError && (
+    <p class="sendmsg good">
+      Sent{sentDocs > 0 && ` with ${sentDocs} document${sentDocs === 1 ? "" : "s"}`} — it will appear in the thread above.
+    </p>
+  )}
+
+  {showPicker && (
+    <div class="tpick">
+      <select class="tsel in" aria-label="Insert a saved reply">
+        <option value="">Insert a saved reply…</option>
+        {pickable.map((t) => (
+          <option value={t.id} data-in={TEMPLATE_LOCALES.filter((l) => t.by[l].usable).join(",")}>{t.name}</option>
+        ))}
+      </select>
+      <div class="tlang" role="group" aria-label="Language of the reply">
+        {TEMPLATE_LOCALES.map((l) => (
+          <button type="button" class:list={["tl", { on: l === buyerLocale }]} data-l={l}
+            title={TEMPLATE_LOCALE_LABEL[l]}>{l.toUpperCase()}</button>
+        ))}
+      </div>
+      <span class="tnote">
+        {localeKnown
+          ? `Writes in ${TEMPLATE_LOCALE_LABEL[buyerLocale]}`
+          : "Language unknown — starting in English"}
+      </span>
+      <script type="application/json" data-templates is:inline set:html={JSON.stringify(
+        Object.fromEntries(pickable.map((t) => [t.id, Object.fromEntries(
+          TEMPLATE_LOCALES.map((l) => [l, { body: t.by[l].body, locale: t.by[l].locale, fellBack: t.by[l].fellBack, usable: t.by[l].usable }]),
+        )])),
+      ).replace(/</g, "\\u003c")} />
+    </div>
+  )}
+  {showDocs && (
+    <div class="dpick">
+      <span class="dlab">Include</span>
+      <div class="dopts">
+        {documents.map((d) => {
+          const meta = [categoryLabel(d.category), fileKind(d.mime_type), humanSize(d.file_size)]
+            .filter(Boolean).join(" · ");
+          return (
+            <label class="dopt">
+              <input type="checkbox" name="doc" value={d.id} />
+              <span>{d.title}<em>{meta}</em></span>
+            </label>
+          );
+        })}
+      </div>
+      <span class="dnote">Sent as private links that expire after {LINK_EXPIRY_DAYS} days, not attachments.</span>
+    </div>
+  )}
+
   <textarea
     name="body"
     required
     disabled={!canReply}
     placeholder={canReply
       ? "Write your reply…"
-      : "Connect this project's mailbox in Settings to reply from here."}></textarea>
+      : !enquiry.email
+        ? "This lead has no email address — reach them on the phone number above."
+        : "Connect this project's mailbox in Settings to reply from here."}></textarea>
   <div class="cfoot">
     <span class="locked">
       {!canReply
-        ? "No mailbox set — add one in Settings."
+        ? (!enquiry.email
+            ? "No email address on this lead — nothing to reply to."
+            : "No mailbox set — add one in Settings.")
         : isPending
           ? `Replying accepts this as a lead. It goes out as ${currentUserName}.`
           : `Goes out as ${currentUserName}, from the shared project mailbox.`}
@@ -320,6 +461,16 @@ const EVENT_LABELS: Record<string, string> = {
           {(ev.kind === "stage_changed" || ev.kind === "locale_changed") && ev.detail?.label
             ? ` → ${ev.detail.label}` : ""}
           {ev.kind === "rejected" && ev.detail?.label ? ` · ${ev.detail.label}` : ""}
+        {ev.kind === "document_sent" && ev.detail?.title ? ` · ${ev.detail.title}` : ""}
+          {ev.kind === "document_sent" && ev.detail?.link_id && (
+            <em class="opened">{(() => {
+              const n = linkViews[ev.detail.link_id];
+              // undefined means the link is gone - the document was removed, so
+              // whatever the buyer was sent no longer opens.
+              if (n === undefined) return "· link withdrawn";
+              return n > 0 ? `· opened ${n}×` : "· not opened yet";
+            })()}</em>
+          )}
         </span>
         <span>{ev.actor} · {new Date(ev.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
       </div>
@@ -328,3 +479,92 @@ const EVENT_LABELS: Record<string, string> = {
 )}
 </>
 )}
+
+<script>
+  /**
+   * The saved-reply picker.
+   *
+   * Every template has already been resolved on the server, in all three
+   * languages, so nothing here knows about names, placeholders or fallbacks —
+   * it picks a string out of a blob and puts it in the box. That is deliberate:
+   * the day someone changes how a greeting is built, there is one place to
+   * change it, and it is not this file.
+   */
+  type Resolved = { body: string; locale: string; fellBack: boolean; usable: boolean };
+
+  const form = document.querySelector<HTMLFormElement>("form[data-composer]");
+  const pick = form?.querySelector<HTMLDivElement>(".tpick");
+  const blob = pick?.querySelector<HTMLScriptElement>("script[data-templates]");
+
+  if (form && pick && blob) {
+    const data: Record<string, Record<string, Resolved>> = JSON.parse(blob.textContent || "{}");
+    const select = pick.querySelector<HTMLSelectElement>(".tsel")!;
+    const note = pick.querySelector<HTMLSpanElement>(".tnote")!;
+    const buttons = Array.from(pick.querySelectorAll<HTMLButtonElement>(".tl"));
+    const textarea = form.querySelector<HTMLTextAreaElement>('textarea[name="body"]')!;
+
+    const started = note.textContent ?? "";
+    let locale = buttons.find((b) => b.classList.contains("on"))?.dataset.l ?? "en";
+
+    /** Hide the templates that have nothing to offer in the chosen language. */
+    const refresh = () => {
+      for (const opt of Array.from(select.options)) {
+        if (!opt.value) continue;
+        const ok = (opt.dataset.in ?? "").split(",").includes(locale);
+        opt.hidden = !ok;
+        opt.disabled = !ok;
+      }
+      // A hidden option can still be the selected one, which would show a blank
+      // box. Fall back to the prompt rather than to whatever happens to be next.
+      if (select.selectedOptions[0]?.hidden) select.value = "";
+    };
+
+    const say = (text: string, warn = false) => {
+      note.textContent = text;
+      note.classList.toggle("warn", warn);
+    };
+
+    const insert = (text: string) => {
+      const start = textarea.selectionStart ?? textarea.value.length;
+      const end = textarea.selectionEnd ?? textarea.value.length;
+      const before = textarea.value.slice(0, start);
+      const after = textarea.value.slice(end);
+      // A template is a whole reply, not a phrase, so it gets its own paragraph
+      // when dropped into something already being written.
+      const gap = before.trim() && !before.endsWith("\n\n") ? "\n\n" : "";
+      const head = before + gap + text;
+
+      textarea.value = head + after;
+      textarea.focus();
+      textarea.setSelectionRange(head.length, head.length);
+      textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    };
+
+    select.addEventListener("change", () => {
+      const chosen = data[select.value]?.[locale];
+      // Reset first: picking the same template twice in a row must work, and it
+      // would not if the select were left sitting on that value.
+      select.value = "";
+      if (!chosen?.usable) return;
+
+      insert(chosen.body);
+      say(
+        chosen.fellBack
+          ? `Inserted in English — no ${locale.toUpperCase()} version of that one yet.`
+          : "Inserted. Read it before you send it.",
+        chosen.fellBack,
+      );
+    });
+
+    for (const button of buttons) {
+      button.addEventListener("click", () => {
+        locale = button.dataset.l ?? "en";
+        for (const b of buttons) b.classList.toggle("on", b === button);
+        refresh();
+        say(started);
+      });
+    }
+
+    refresh();
+  }
+</script>
