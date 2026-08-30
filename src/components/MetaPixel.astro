@@ -33,9 +33,30 @@ const PIXEL_ID = META_PIXEL_ID;
   s.parentNode.insertBefore(t,s)}(window,document,'script',
   'https://connect.facebook.net/en_US/fbevents.js');
 
-  // Silent until the visitor says otherwise.
-  fbq('consent', 'revoke');
+  /**
+   * The consent state is set BEFORE init, and it is the real answer, not a
+   * placeholder.
+   *
+   * This used to revoke unconditionally and grant afterwards if a choice was
+   * stored. On a page load that is all queued before Meta's library has
+   * downloaded, and the library honours whatever consent state it sees when it
+   * initialises — so it started up switched off and dropped the queued page
+   * view without a word. It only worked on the page where the visitor actually
+   * clicked Accept, because by then the library was loaded and the commands
+   * were live rather than queued.
+   *
+   * Reading storage first and telling the truth up front fixes it, and a
+   * returning visitor who accepted is never told "revoke" at all.
+   */
+  var epConsent = false;
+  try { epConsent = localStorage.getItem('cookie_consent') === 'accepted'; } catch (e) { epConsent = false; }
+
+  fbq('consent', epConsent ? 'grant' : 'revoke');
   fbq('init', PIXEL_ID);
+  if (epConsent) {
+    window.__epPixelOn = true;
+    fbq('track', 'PageView');
+  }
 
   /**
    * Turning it on.
@@ -51,7 +72,7 @@ const PIXEL_ID = META_PIXEL_ID;
    */
   window.epMarketingConsent = function () {
     try { return localStorage.getItem('cookie_consent') === 'accepted'; }
-    catch { return false; }
+    catch (e) { return false; }
   };
 
   window.epEnableMetaPixel = function () {
@@ -67,8 +88,9 @@ const PIXEL_ID = META_PIXEL_ID;
     fbq('consent', 'revoke');
   };
 
-  // A returning visitor who already accepted: no banner, straight on.
-  if (window.epMarketingConsent()) window.epEnableMetaPixel();
+  // Nothing to do on load any more — the state was set before init, above.
+  // epEnableMetaPixel remains for the live case: the visitor answering the
+  // banner on this page, when the library is already running.
 </script>
 {/* Meta's snippet ends with a <noscript> tracking image here. It is left out
     deliberately.
