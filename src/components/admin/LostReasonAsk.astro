@@ -1,0 +1,223 @@
+---
+import { LOST_REASONS } from "../../lib/lostReasons";
+
+/**
+ * "Why did this fall through?" — asked at the moment someone is marked lost.
+ *
+ * Rendered ONCE per page and shared by every stage control on it: the list's
+ * pill, the profile's dropdown, anything added later. It works by catching the
+ * change event in the CAPTURE phase, before the select's own
+ * `onchange="this.form.submit()"` can run — the inline handler is registered
+ * first, so nothing bubbling could ever get in front of it.
+ *
+ * The reason is asked, never demanded. Skipping it still records the loss: the
+ * stage is the truth and must be recordable in a hurry, and a form that refuses
+ * to save reality until a dropdown is satisfied teaches people to pick the
+ * first option. What is missing gets chased on the profile instead.
+ */
+---
+
+<dialog class="lrdlg" id="lost-why">
+  <div class="lrbody">
+    <div class="lrtop">
+      <div>
+        <h2>Why did this fall through?</h2>
+        <p class="lrsub" data-lr-who>Recorded against this buyer, and counted across the project.</p>
+      </div>
+      <button class="lrx" type="button" data-lr-cancel aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+             stroke-linecap="round" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18"/></svg>
+      </button>
+    </div>
+
+    <div class="lrgrid" role="radiogroup" aria-label="Reason">
+      {LOST_REASONS.map((r) => (
+        <button class="lropt" type="button" data-lr-reason={r.key}>
+          <b>{r.label}</b>
+          <span>{r.hint}</span>
+        </button>
+      ))}
+    </div>
+
+    <label class="lrnote">
+      <span>Anything worth remembering <em>(optional)</em></span>
+      <textarea rows="2" data-lr-note
+                placeholder="Went with Casa Nova — same budget, ready sooner."></textarea>
+    </label>
+
+    <div class="lrfoot">
+      <button class="lrghost" type="button" data-lr-skip>Save without a reason</button>
+      <button class="lrsave" type="button" data-lr-save disabled>Mark not proceeding</button>
+    </div>
+  </div>
+</dialog>
+
+<style>
+  .lrdlg {
+    width: min(34rem, calc(100vw - 2.5rem)); padding: 0; border: 0; border-radius: 16px;
+    background: #ffffff; color: #16283e; box-shadow: 0 28px 70px rgba(15, 26, 42, 0.32);
+    opacity: 0; transform: translateY(8px) scale(0.985);
+    transition: opacity 170ms ease, transform 190ms cubic-bezier(0.22, 0.61, 0.36, 1),
+                overlay 190ms allow-discrete, display 190ms allow-discrete;
+  }
+  .lrdlg[open] { opacity: 1; transform: translateY(0) scale(1); }
+  @starting-style { .lrdlg[open] { opacity: 0; transform: translateY(8px) scale(0.985); } }
+  .lrdlg::backdrop {
+    background: rgba(10, 23, 39, 0.4); opacity: 0;
+    transition: opacity 190ms ease, overlay 190ms allow-discrete, display 190ms allow-discrete;
+  }
+  .lrdlg[open]::backdrop { opacity: 1; }
+  @starting-style { .lrdlg[open]::backdrop { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .lrdlg, .lrdlg::backdrop { transition: none; } }
+
+  .lrbody { padding: 1.25rem 1.4rem 1.35rem; display: grid; gap: 0.9rem; }
+  .lrtop { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+  .lrtop h2 { font-size: 1rem; font-weight: 800; letter-spacing: -0.01em; }
+  .lrsub { margin-top: 0.15rem; font-size: 0.76rem; color: #93a3b8; }
+  .lrx {
+    flex: none; font: inherit; padding: 0; cursor: pointer;
+    width: 2rem; height: 2rem; display: grid; place-items: center;
+    color: #93a3b8; background: #ffffff; border: 1px solid #e2e8f1; border-radius: 50%;
+    transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease;
+  }
+  .lrx svg { width: 13px; height: 13px; }
+  .lrx:hover { color: #16283e; background: #f2f5f9; border-color: #d7deea; }
+
+  /* Buttons, not a dropdown: the whole list has to be visible at the moment of
+     choosing, or people take the first plausible one rather than the true one. */
+  .lrgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+  @media (max-width: 520px) { .lrgrid { grid-template-columns: 1fr; } }
+  .lropt {
+    font: inherit; text-align: left; cursor: pointer; display: grid; gap: 0.1rem;
+    padding: 0.5rem 0.65rem; border-radius: 10px; background: #fbfcfe;
+    border: 1px solid #e2e8f1; color: #16283e;
+    transition: border-color 140ms ease, background-color 140ms ease;
+  }
+  .lropt b { font-size: 0.8rem; font-weight: 700; }
+  .lropt span { font-size: 0.68rem; color: #93a3b8; line-height: 1.35; }
+  .lropt:hover { border-color: #bcc9da; background: #f5f8fb; }
+  .lropt.on { border-color: #16283e; background: #f0f4f8; }
+  .lropt.on span { color: #5c6f88; }
+  .lropt:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.35); }
+
+  .lrnote { display: grid; gap: 0.28rem; }
+  .lrnote > span {
+    font-size: 0.62rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #93a3b8;
+  }
+  .lrnote em { font-style: normal; font-weight: 700; text-transform: none; letter-spacing: 0; }
+  .lrnote textarea {
+    font: inherit; font-size: 0.82rem; width: 100%; padding: 0.55rem 0.7rem; resize: vertical;
+    line-height: 1.5; border: 1px solid #d5deea; border-radius: 10px; background: #fbfcfe; color: #16283e;
+  }
+  .lrnote textarea:focus { outline: none; border-color: #53b27f; background: #ffffff; }
+
+  .lrfoot { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+  .lrghost {
+    font: inherit; font-size: 0.76rem; font-weight: 700; cursor: pointer;
+    color: #5c6f88; background: none; border: 0; border-radius: 999px; padding: 0.5rem 0.7rem;
+  }
+  .lrghost:hover { background: #f2f5f9; color: #16283e; }
+  .lrsave {
+    font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer; color: #ffffff;
+    background: #53b27f; border: 0; border-radius: 999px; padding: 0.5rem 1.1rem;
+  }
+  .lrsave:hover:not(:disabled) { background: #47a071; }
+  .lrsave:disabled { background: #c3cfe0; cursor: not-allowed; }
+</style>
+
+<script>
+  const dlg = document.getElementById("lost-why") as HTMLDialogElement | null;
+  if (dlg) {
+    let pending: HTMLSelectElement | null = null;
+    let chosen = "";
+
+    const optionButtons = () => Array.from(dlg.querySelectorAll<HTMLElement>("[data-lr-reason]"));
+    const noteBox = () => dlg.querySelector<HTMLTextAreaElement>("[data-lr-note]");
+    const saveBtn = () => dlg.querySelector<HTMLButtonElement>("[data-lr-save]");
+
+    const reset = () => {
+      chosen = "";
+      optionButtons().forEach((b) => b.classList.remove("on"));
+      const n = noteBox(); if (n) n.value = "";
+      const s = saveBtn(); if (s) s.disabled = true;
+    };
+
+    /** Put the control back where it was — the change never happened. */
+    const cancel = () => {
+      if (pending) {
+        // The server-rendered `selected` option is the value before the change,
+        // because nothing has saved yet.
+        const was = pending.querySelector<HTMLOptionElement>("option[selected]");
+        if (was) pending.value = was.value;
+      }
+      pending = null;
+      dlg.close();
+    };
+
+    /** Send the original form, with whatever was gathered here attached. */
+    const send = (withReason: boolean) => {
+      const select = pending;
+      pending = null;
+      dlg.close();
+      const form = select?.form;
+      if (!form) return;
+      if (withReason && chosen) {
+        const add = (name: string, value: string) => {
+          const el = document.createElement("input");
+          el.type = "hidden"; el.name = name; el.value = value;
+          form.appendChild(el);
+        };
+        add("lost_reason", chosen);
+        const note = noteBox()?.value.trim();
+        if (note) add("lost_note", note);
+      }
+      // submit(), not requestSubmit(): this must not re-fire the change
+      // handling that brought us here.
+      form.submit();
+    };
+
+    // Capture phase: the select carries its own inline onchange, registered when
+    // the page parsed, so anything listening in the bubble phase is already too
+    // late to stop the form going.
+    document.addEventListener("change", (ev) => {
+      const el = ev.target as HTMLElement | null;
+      if (!(el instanceof HTMLSelectElement) || el.name !== "stage") return;
+      if (el.value !== "not_proceeding") return;
+
+      ev.stopPropagation();
+      ev.preventDefault();
+
+      pending = el;
+      reset();
+      const who = el.closest("tr")?.querySelector(".lwho")?.textContent
+        ?? el.closest("dialog")?.querySelector(".nm")?.firstChild?.textContent?.trim();
+      const sub = dlg.querySelector<HTMLElement>("[data-lr-who]");
+      if (sub) {
+        sub.textContent = who
+          ? `${who.trim()} — recorded against them, and counted across the project.`
+          : "Recorded against this buyer, and counted across the project.";
+      }
+      dlg.showModal();
+    }, true);
+
+    dlg.addEventListener("click", (ev) => {
+      const t = ev.target as HTMLElement | null;
+      if (t === dlg) { cancel(); return; }
+
+      const opt = t?.closest<HTMLElement>("[data-lr-reason]");
+      if (opt) {
+        chosen = opt.dataset.lrReason ?? "";
+        optionButtons().forEach((b) => b.classList.toggle("on", b === opt));
+        const s = saveBtn(); if (s) s.disabled = !chosen;
+        return;
+      }
+      if (t?.closest("[data-lr-cancel]")) { cancel(); return; }
+      if (t?.closest("[data-lr-skip]")) { send(false); return; }
+      if (t?.closest("[data-lr-save]")) { send(true); return; }
+    });
+
+    // Escape closes a native dialog on its own; this makes sure the control it
+    // came from goes back with it rather than sitting on a value never saved.
+    dlg.addEventListener("cancel", (ev) => { ev.preventDefault(); cancel(); });
+  }
+</script>

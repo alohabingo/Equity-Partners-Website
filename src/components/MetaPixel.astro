@@ -1,0 +1,87 @@
+---
+/**
+ * The Meta (Facebook) pixel, consent-gated.
+ *
+ * Included from SEO.astro, which is the one thing every public page's head
+ * already carries — the public site has no shared layout, so that component is
+ * the only place a tag can be added once and be true everywhere. Deliberately
+ * NOT in AdminLayout: a marketing pixel firing inside the portal would send our
+ * own working day to Meta and pollute the audiences it is there to build.
+ *
+ * It loads REVOKED. `fbq('consent', 'revoke')` before init means the library is
+ * on the page but sends nothing — no PageView, no cookies — until a visitor
+ * accepts marketing cookies. That is why there is no `fbq('track', 'PageView')`
+ * in the base snippet: the first PageView fires at the moment consent is given,
+ * not at load.
+ *
+ * The id comes from lib/tracking.ts, which the portal's Tracking card also
+ * reads. One constant, two consumers: the overview in the admin cannot drift
+ * from what the site actually carries.
+ */
+import { META_PIXEL_ID } from "../lib/tracking";
+const PIXEL_ID = META_PIXEL_ID;
+---
+
+<!-- Meta Pixel Code -->
+<script is:inline define:vars={{ PIXEL_ID }}>
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window,document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+
+  // Silent until the visitor says otherwise.
+  fbq('consent', 'revoke');
+  fbq('init', PIXEL_ID);
+
+  /**
+   * Turning it on.
+   *
+   * Exposed on `window` so whatever records the visitor's choice can call it
+   * without having to know anything about the pixel. Both halves matter:
+   * granting consent unblocks the library, and the PageView is the event that
+   * would otherwise never have happened for this visit.
+   *
+   * Storage is wrapped because reading localStorage throws outright in some
+   * privacy modes — and a consent check that throws would take the page's other
+   * scripts down with it.
+   */
+  window.epMarketingConsent = function () {
+    try { return localStorage.getItem('cookie_consent') === 'accepted'; }
+    catch { return false; }
+  };
+
+  window.epEnableMetaPixel = function () {
+    if (!window.fbq || window.__epPixelOn) return;
+    window.__epPixelOn = true;
+    fbq('consent', 'grant');
+    fbq('track', 'PageView');
+  };
+
+  window.epDisableMetaPixel = function () {
+    if (!window.fbq) return;
+    window.__epPixelOn = false;
+    fbq('consent', 'revoke');
+  };
+
+  // A returning visitor who already accepted: no banner, straight on.
+  if (window.epMarketingConsent()) window.epEnableMetaPixel();
+</script>
+{/* Meta's snippet ends with a <noscript> tracking image here. It is left out
+    deliberately.
+
+    An image needs no JavaScript, so it loads for a visitor who has JavaScript
+    switched off — and those are exactly the visitors the banner cannot reach,
+    because the banner is JavaScript too. The result is a page view reported to
+    Meta by someone who was never asked. It is a small group and the data is
+    close to worthless (no cookie is set, so they can never be matched to an ad
+    or an audience), but the banner and the cookie policy both promise that
+    marketing tracking only happens with permission, and that promise is worth
+    more than an anonymous page count.
+
+    Add it back only alongside a way to ask those visitors first, which in
+    practice does not exist. */}
+<!-- End Meta Pixel Code -->

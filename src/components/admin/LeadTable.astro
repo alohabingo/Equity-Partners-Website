@@ -1,0 +1,151 @@
+---
+import { BUYER_STAGES, stageTheme, daysSince } from "../../lib/pipeline";
+import type { LeadRow } from "./LeadRows.astro";
+import { lostReasonLabel } from "../../lib/lostReasons";
+
+/**
+ * The buyer table itself, without the strip or the filters around it.
+ *
+ * Its own component because the list is drawn twice on the same screen — the
+ * live pipeline, and the collapsed "not proceeding" archive above it — and two
+ * copies of this markup would drift apart the first time a column changed.
+ */
+interface Props {
+  rows: LeadRow[];
+  projects: { id: string; name: string; nav_name?: string | null; slug: string }[];
+  showProject?: boolean;
+  /** The closed list swaps the stage column for why it ended — a table of
+   *  lost leads all saying "Not proceeding" tells you nothing you did not
+   *  already know from the heading above it. */
+  showLost?: boolean;
+}
+const { rows, projects, showProject = true, showLost = false } = Astro.props;
+
+const projectById = new Map(projects.map((p) => [p.id, p]));
+const projectName = (id: string | null) => {
+  const p = id ? projectById.get(id) : null;
+  return p ? ((p.nav_name ?? "").trim() || p.name) : "—";
+};
+
+const back = Astro.url.pathname + Astro.url.search;
+const withParam = (key: string, value: string) => {
+  const next = new URLSearchParams(Astro.url.search);
+  if (value) next.set(key, value); else next.delete(key);
+  const s = next.toString();
+  return Astro.url.pathname + (s ? `?${s}` : "");
+};
+---
+
+<table>
+  <thead>
+    <tr>
+      <th>Buyer</th>
+      {showProject && <th>Project</th>}
+      {showLost ? <th>Why</th> : <th>Stage</th>}
+      <th>Property</th>
+      <th class="num">In this stage</th>
+    </tr>
+  </thead>
+  <tbody>
+    {rows.map((l) => {
+      const days = daysSince(l.since);
+      const theme = stageTheme(l.stage);
+      const stale = days >= 30 && l.stage !== "delivery" && l.stage !== "not_proceeding";
+      // The searchable text is an attribute, not the row's rendered content:
+      // reading it back out of the DOM would also match a stage label, a date
+      // or a unit code, and quietly turn a name search into a free-text one.
+      const find = `${l.name ?? ""} ${l.email ?? ""}`.toLowerCase();
+      return (
+        <tr data-find={find}>
+          <td>
+            {/* Opens the profile beside the list rather than navigating away,
+                so the list you were reading is still there behind it. The href
+                stays real, so the profile is linkable and still opens in a new
+                tab on cmd-click; the handler cancels an ordinary click. */}
+            <a class="lwho" href={withParam("lead", l.id)} data-open-lead={l.id}>{l.name || "No name given"}</a>
+          </td>
+          {showProject && <td class="lmuted">{projectName(l.project_id)}</td>}
+          {showLost ? (
+            <td>
+              {l.lost_reason
+                ? <span class="lwhy">{lostReasonLabel(l.lost_reason)}</span>
+                : <span class="lnowhy">Not recorded</span>}
+            </td>
+          ) : (
+            <td>
+              <form method="post" action="/api/admin/enquiry">
+                <input type="hidden" name="id" value={l.id} />
+                <input type="hidden" name="action" value="stage" />
+                <input type="hidden" name="back" value={back} />
+                <span class="lpick" style={`--ink:${theme.ink};--bg:${theme.bg};--bd:${theme.border}`}>
+                  <select name="stage" onchange="this.form.submit()" aria-label={`Stage for ${l.name ?? "this buyer"}`}>
+                    {BUYER_STAGES.map((st) => (
+                      <option value={st.key} selected={l.stage === st.key}>{st.label}</option>
+                    ))}
+                  </select>
+                </span>
+              </form>
+            </td>
+          )}
+          <td>
+            {/* Every unit, not just the first: a buyer comparing three of them
+                is exactly the row you want to spot from the list. */}
+            {(l.properties ?? []).length === 0
+              ? <span class="lnil">—</span>
+              : <span class="lprops">{(l.properties ?? []).join(", ")}</span>}
+          </td>
+          <td class="num">
+            <span class:list={["ldays", { stale }]}>
+              {days === 0 ? "today" : `${days} day${days === 1 ? "" : "s"}`}
+            </span>
+          </td>
+        </tr>
+      );
+    })}
+  </tbody>
+</table>
+
+<style>
+  table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+  th {
+    text-align: left; font-size: 0.64rem; font-weight: 800; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #5c6f88; padding: 0.9rem 1.3rem; border-bottom: 1px solid #e2e8f1;
+  }
+  td { padding: 0.8rem 1.3rem; border-bottom: 1px solid #eef2f7; vertical-align: middle; }
+  tr:last-child td { border-bottom: 0; }
+  th.num, td.num { text-align: right; }
+  .lwho { display: block; font-weight: 700; color: #16283e; text-decoration: none; }
+  .lwho:hover { color: #2e7d54; text-decoration: underline; }
+  .lmuted { color: #5c6f88; }
+  .lprops { color: #16283e; font-weight: 700; font-size: 0.82rem; }
+  .lnil { color: #b3c0d0; }
+  .lwhy { font-weight: 700; color: #16283e; font-size: 0.82rem; }
+  /* Amber, matching the profile's prompt: the same gap, said the same way. */
+  .lnowhy { font-size: 0.78rem; font-weight: 700; color: #a35700; }
+  .ldays { font-variant-numeric: tabular-nums; font-size: 0.82rem; color: #5c6f88; }
+  /* A month with no movement is the row worth finding. Terminal stages are
+     exempt: a delivered property has every right to sit still. */
+  .ldays.stale { color: #b3261e; font-weight: 700; }
+
+  /* Colours only — the chevron belongs to AdminLayout, which draws one on every
+     .main select. Drawing another here is what once left these with two. */
+  .lpick { position: relative; display: inline-flex; }
+  /* Geometry copied from .pick in UnitRows so the two controls are the same
+     shape and size. Neither set vertical padding before, so both fell back to
+     the browser's default for a <select> and each table handed the control a
+     different inherited line-height — which is why two controls meant to look
+     the same came out different heights. padding-right is left alone:
+     AdminLayout reserves 2.4rem there for the chevron it draws. */
+  .lpick select {
+    font: inherit; font-size: 0.76rem; font-weight: 700;
+    color: var(--ink, #5c6f88); background: var(--bg, #f2f5f9);
+    border: 1px solid var(--bd, transparent); border-radius: 999px;
+    cursor: pointer; min-width: 128px;
+    padding-top: 0.45rem; padding-bottom: 0.45rem; padding-left: 0.95rem;
+    line-height: 1.25;
+    transition: filter 180ms ease, box-shadow 180ms ease;
+  }
+  .lpick select:hover { filter: brightness(0.96); }
+  .lpick select:focus { outline: none; }
+  .lpick select:focus-visible { box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.32); }
+</style>

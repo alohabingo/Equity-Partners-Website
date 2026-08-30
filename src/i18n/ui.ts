@@ -38,6 +38,17 @@ type Dictionary = {
     cookies: string;
     login: string;
   };
+  /** The cookie banner. Short enough to be read, which is the only version
+   *  anyone reads at all. */
+  cookieBanner: {
+    title: string;
+    body: string;
+    accept: string;
+    reject: string;
+    policy: string;
+    /** The link on the policy page that brings the banner back. */
+    change: string;
+  };
   pageTitles: Record<PageTitleKey, string>;
 };
 
@@ -68,6 +79,14 @@ export const uiTranslations: Record<Locale, Dictionary> = {
       termsOfUse: "Terms of Use",
       cookies: "Cookies",
       login: "Login",
+    },
+    cookieBanner: {
+      title: "Cookies",
+      body: "Some are needed to run the site. Others let us measure our advertising — only if you say yes.",
+      accept: "Accept",
+      reject: "Reject",
+      policy: "Cookie policy",
+      change: "Change your cookie choices",
     },
     pageTitles: {
       home: "Equity Partners | Andorra Property Group",
@@ -108,6 +127,14 @@ export const uiTranslations: Record<Locale, Dictionary> = {
       cookies: "Cookies",
       login: "Iniciar sesión",
     },
+    cookieBanner: {
+      title: "Cookies",
+      body: "Algunas son necesarias para que el sitio funcione. Otras nos permiten medir nuestra publicidad, solo si usted lo acepta.",
+      accept: "Aceptar",
+      reject: "Rechazar",
+      policy: "Política de cookies",
+      change: "Cambiar sus preferencias de cookies",
+    },
     pageTitles: {
       home: "Equity Partners | Grupo inmobiliario en Andorra",
       about: "Sobre nosotros | Equity Partners",
@@ -146,6 +173,14 @@ export const uiTranslations: Record<Locale, Dictionary> = {
       termsOfUse: "Termes d'ús",
       cookies: "Cookies",
       login: "Inicia sessió",
+    },
+    cookieBanner: {
+      title: "Galetes",
+      body: "Algunes són necessàries perquè el lloc funcioni. D'altres ens permeten mesurar la nostra publicitat, només si hi doneu el vostre consentiment.",
+      accept: "Acceptar",
+      reject: "Rebutjar",
+      policy: "Política de galetes",
+      change: "Canviar les preferències de galetes",
     },
     pageTitles: {
       home: "Equity Partners | Grup immobiliari d'Andorra",

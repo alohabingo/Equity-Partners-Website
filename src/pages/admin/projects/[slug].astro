@@ -5,6 +5,8 @@ import AdminLayout from "../../../layouts/AdminLayout.astro";
 import EnquiryPanel from "../../../components/admin/EnquiryPanel.astro";
 import UnitRows from "../../../components/admin/UnitRows.astro";
 import LeadRows, { type LeadRow } from "../../../components/admin/LeadRows.astro";
+import LostReasonAsk from "../../../components/admin/LostReasonAsk.astro";
+import { PARKING_STATES, parkingPrice, parkingTally, parkingState } from "../../../lib/parking";
 import LeadProfile from "../../../components/admin/LeadProfile.astro";
 import { supabaseServer } from "../../../lib/supabase";
 import { BUYER_STAGES, stageLabel, stageShade, OVERDUE_WORKING_DAYS } from "../../../lib/pipeline";
@@ -17,7 +19,7 @@ import {
   DOCUMENT_CATEGORIES, categoryLabel, fileKind, humanSize, LINK_EXPIRY_DAYS,
   type ProjectDocument,
 } from "../../../lib/projectDocuments";
-import { MANUAL_LEAD_SOURCES, bucketOf, needsAttention, BUCKET_LABELS, isLive, shortAge, plain, REJECT_REASONS, rejectReasonLabel, LOCALE_OPTIONS, localeChip, localeTitle, type EnquiryRow } from "../../../lib/enquiries";
+import { LEAD_SOURCES, bucketOf, needsAttention, BUCKET_LABELS, isLive, shortAge, plain, REJECT_REASONS, rejectReasonLabel, LOCALE_OPTIONS, localeChip, localeTitle, type EnquiryRow } from "../../../lib/enquiries";
 
 const { slug } = Astro.params;
 const supabase = supabaseServer(Astro.cookies, Astro.request);
@@ -55,7 +57,7 @@ const wantsDocuments = tab === "inbox" || tab === "documents";
 //
 // None of them depends on another; they only depend on `project`. So they go
 // together, and the page now waits for the slowest one instead of the sum.
-const [contentRes, unitRes, buildingRes, enquiryRes, profileRes, rejectionRes, templateRes, documentRes] = await Promise.all([
+const [contentRes, unitRes, buildingRes, enquiryRes, profileRes, rejectionRes, templateRes, parkingRes, documentRes] = await Promise.all([
   supabase.from("portfolio_items").select("name, data")
     .eq("slug", slug).eq("kind", "project").eq("locale", "en").maybeSingle(),
   supabase.from("project_units")
@@ -80,6 +82,11 @@ const [contentRes, unitRes, buildingRes, enquiryRes, profileRes, rejectionRes, t
     ? supabase.from("reply_templates").select(TEMPLATE_COLUMNS)
         .or(`project_id.eq.${project.id},project_id.is.null`)
         .order("position").order("created_at")
+    : Promise.resolve({ data: [] }),
+  tab === "settings" || tab === "units" || tab === "leads"
+    ? supabase.from("project_parking")
+        .select("id, code, price, state, notes, position")
+        .eq("project_id", project.id).order("position")
     : Promise.resolve({ data: [] }),
   wantsDocuments
     ? supabase.from("documents")
@@ -229,6 +236,26 @@ const donutSegments = SALES_BAR_ORDER.map((key) => {
 // is more than one, or the single full ring would show a nick in it.
 const DONUT_GAP = donutSegments.length > 1 ? 2 : 0;
 
+// Parking sold apart from the home. Kept out of `units` on purpose: units drive
+// the sales bar and "how much of this project is sold", and counting spaces in
+// there would show a development as half sold before a home changed hands.
+const parking = (parkingRes.data ?? []) as {
+  id: string; code: string; price: number | null; state: string; notes: string | null; position: number;
+}[];
+const parkingCount = parkingTally(parking);
+
+// Units and parking are two inventories on one tab, not two tabs: they are the
+// same question — what is there and what is left — asked about two things, and
+// a project tab each would put parking beside Inbox and Templates as if it were
+// a part of the business rather than a column of stock.
+// The switch only exists where there is something to switch to. A project that
+// sells no parking should not carry a control offering an empty second list —
+// and a URL asking for that list falls back rather than showing one.
+const hasParking = parking.length > 0;
+const unitView = hasParking && Astro.url.searchParams.get("show") === "parking" ? "parking" : "units";
+const unitViewHref = (v: string) =>
+  `/admin/projects/${slug}?tab=units${v === "parking" ? "&show=parking" : ""}`;
+
 const unitsError = Astro.url.searchParams.get("units_error");
 const unitsOk = Astro.url.searchParams.get("units_ok");
 
@@ -275,12 +302,10 @@ const attention = enquiries.filter((e) => needsAttention(e, now));
 // here would make triage look like an optional step. Their count is surfaced
 // above the table instead, so nothing goes quietly missing.
 let leadRows: LeadRow[] = [];
-let drawerLead: any = null;
-let drawerMessages: any[] = [];
-let drawerNotes: any[] = [];
-let drawerEvents: any[] = [];
-let drawerUnit: { code: string; state: string } | null = null;
-let drawerDocs: { title: string; views: number; created_at: string }[] = [];
+let profiles: {
+  lead: any; messages: any[]; notes: any[]; events: any[];
+  activity: any[]; interest: any[]; parkingInterest: any[];
+}[] = [];
 if (tab === "leads") {
   const converted = allRows.filter((e) => (e.triage ?? "converted") === "converted");
   // When each buyer last MOVED. The endpoint that changes a stage already
@@ -298,35 +323,68 @@ if (tab === "leads") {
     for (const m of moves ?? []) if (!movedAt.has(m.inquiry_id)) movedAt.set(m.inquiry_id, m.created_at);
   }
 
-  // ---- the one lead whose drawer is open ----
-  //
-  // Fetched only when the URL names one. Doing this per row would query every
-  // buyer's whole history to draw a list that shows none of it.
-  const wantedId = Astro.url.searchParams.get("lead") ?? "";
-  drawerLead = converted.find((e: any) => e.id === wantedId) ?? null;
+  // The units each buyer is looking at, for the list as well as the profile.
+  // Declared out here because both are built from it and the fetch below only
+  // runs when there is somebody to fetch for.
+  const interestByLead = new Map<string, string[]>();
 
-  if (drawerLead) {
-    const [dm, dn, de, du, dd] = await Promise.all([
-      supabase.from("inquiry_messages").select("direction, subject, sent_at, sent_by")
-        .eq("inquiry_id", drawerLead.id).order("sent_at"),
-      supabase.from("enquiry_notes").select("body, created_at, author_id")
-        .eq("inquiry_id", drawerLead.id).order("created_at", { ascending: false }),
-      supabase.from("enquiry_events").select("kind, detail, created_at, actor_id")
-        .eq("inquiry_id", drawerLead.id).order("created_at", { ascending: false }).limit(40),
-      supabase.from("project_units").select("code, state")
-        .eq("inquiry_id", drawerLead.id).maybeSingle(),
-      supabase.from("document_links").select("view_count, created_at, documents(title)")
-        .eq("inquiry_id", drawerLead.id).order("created_at", { ascending: false }),
+  // ---- every profile, fetched together ----
+  //
+  // Opening one used to be a page NAVIGATION: click a name, re-run every query
+  // for the project, re-render the largest page in the portal, then show the
+  // modal. That was chosen so the markup would not carry a profile per row —
+  // an optimisation for a scale this does not have, paid for on every click.
+  //
+  // Doing all of them costs SIX queries, not six per lead: each fetches for
+  // the whole set and is grouped in memory here. The profiles then sit in the
+  // page closed, and a click just opens one, exactly like Add lead.
+  if (converted.length > 0) {
+    const ids = converted.map((e: any) => e.id);
+    const [pm, pn, pe, pa, pi, pp] = await Promise.all([
+      supabase.from("inquiry_messages").select("inquiry_id, direction, subject, sent_at, sent_by")
+        .in("inquiry_id", ids).order("sent_at"),
+      supabase.from("enquiry_notes").select("inquiry_id, body, created_at, author_id")
+        .in("inquiry_id", ids).order("created_at", { ascending: false }),
+      supabase.from("enquiry_events").select("inquiry_id, kind, detail, created_at, actor_id")
+        .in("inquiry_id", ids).order("created_at", { ascending: false }),
+      supabase.from("enquiry_activity")
+        .select("id, inquiry_id, kind, body, happened_at, created_at, logged_by")
+        .in("inquiry_id", ids).order("happened_at", { ascending: false }),
+      supabase.from("enquiry_interest")
+        .select("inquiry_id, unit_id, created_at")
+        .in("inquiry_id", ids).order("created_at"),
+      supabase.from("enquiry_parking_interest")
+        .select("inquiry_id, parking_id, created_at")
+        .in("inquiry_id", ids).order("created_at"),
     ]);
 
-    drawerMessages = (dm.data ?? []).map((x: any) => ({ ...x, sentByName: nameById.get(x.sent_by) ?? null }));
-    drawerNotes = (dn.data ?? []).map((x: any) => ({ ...x, author: nameById.get(x.author_id) ?? "Someone" }));
-    drawerEvents = (de.data ?? []).map((x: any) => ({ ...x, actor: nameById.get(x.actor_id) ?? "System" }));
-    drawerUnit = du.data ?? null;
-    drawerDocs = (dd.data ?? []).map((x: any) => ({
-      title: Array.isArray(x.documents) ? x.documents[0]?.title ?? "Document" : x.documents?.title ?? "Document",
-      views: x.view_count ?? 0,
-      created_at: x.created_at,
+    const bucket = <T extends { inquiry_id: string }>(rows: T[] | null) => {
+      const m = new Map<string, T[]>();
+      for (const r of rows ?? []) {
+        const list = m.get(r.inquiry_id);
+        if (list) list.push(r); else m.set(r.inquiry_id, [r]);
+      }
+      return m;
+    };
+    const byMsg = bucket(pm.data as any[]);
+    const byNote = bucket(pn.data as any[]);
+    const byEvent = bucket(pe.data as any[]);
+    const byActivity = bucket(pa.data as any[]);
+    const byInterest = bucket(pi.data as any[]);
+    const byParking = bucket(pp.data as any[]);
+    const codeById = new Map(units.map((u: any) => [u.id, u.code]));
+    for (const [leadId, rows] of byInterest) {
+      interestByLead.set(leadId, rows.map((r: any) => codeById.get(r.unit_id)).filter(Boolean));
+    }
+
+    profiles = converted.map((lead: any) => ({
+      lead,
+      messages: (byMsg.get(lead.id) ?? []).map((x: any) => ({ ...x, sentByName: nameById.get(x.sent_by) ?? null })),
+      notes: (byNote.get(lead.id) ?? []).map((x: any) => ({ ...x, author: nameById.get(x.author_id) ?? "Someone" })),
+      events: (byEvent.get(lead.id) ?? []).map((x: any) => ({ ...x, actor: nameById.get(x.actor_id) ?? "System" })),
+      activity: (byActivity.get(lead.id) ?? []).map((x: any) => ({ ...x, who: nameById.get(x.logged_by) ?? "Someone" })),
+      interest: byInterest.get(lead.id) ?? [],
+      parkingInterest: byParking.get(lead.id) ?? [],
     }));
   }
 
@@ -335,10 +393,13 @@ if (tab === "leads") {
     name: e.name,
     email: e.email,
     stage: e.stage ?? "new",
+    locale: e.locale ?? null,
     project_id: e.project_id ?? project.id,
     // No movement recorded means they have not moved: they have been sitting in
     // the stage they arrived in since the day they arrived.
     since: movedAt.get(e.id) ?? e.created_at,
+    properties: interestByLead.get(e.id) ?? [],
+    lost_reason: e.lost_reason ?? null,
   }));
 }
 const groups = (["triage", "waiting", "overdue"] as const)
@@ -432,12 +493,16 @@ backParams.delete("sent");
 backParams.delete("send_error");
 backParams.delete("mailbox");
 backParams.delete("notice");
+backParams.delete("parking_notice");
 const selfHref = Astro.url.pathname + (backParams.size ? `?${backParams}` : "");
 
 // One line under the tab row for "something just happened": the mailbox sync
 // reports through it, and so does anything else that needs to say a word back.
 const mailboxMessage =
   Astro.url.searchParams.get("mailbox") ?? Astro.url.searchParams.get("notice") ?? "";
+/** Parking speaks for itself, inside its own card. */
+const parkingNotice = Astro.url.searchParams.get("parking_notice") ?? "";
+
 const mailboxConnected = !!project.mailbox_connected_at;
 const oauthReady = !!(import.meta.env.ZOHO_OAUTH_CLIENT_ID && import.meta.env.ZOHO_OAUTH_CLIENT_SECRET);
 
@@ -686,6 +751,58 @@ await fetch("${webhookUrl}", {
     }
     .genform .btn { margin-top: 0; }
     .genform .field { max-width: 190px; }
+    /* The Units / Parking switch. The project header's own treatment — white
+       track, navy gradient on the selected pill — so a view switch looks the
+       same wherever it appears. */
+    .uviews {
+      display: inline-flex; padding: 0.25rem; border-radius: 999px;
+      background: #ffffff; border: 1px solid #d5deea; box-shadow: 0 6px 18px rgba(15, 26, 42, 0.06);
+    }
+    .uview {
+      font-size: 0.76rem; font-weight: 700; color: #46586f; text-decoration: none; white-space: nowrap;
+      padding: 0.4rem 0.95rem; border-radius: 999px;
+      transition: color 300ms ease, background-color 200ms ease;
+    }
+    .uview:hover:not(.on) { color: #2e7d54; }
+    .uview.on {
+      color: #ffffff; background: linear-gradient(180deg, #16283e 0%, #0f2036 100%);
+      box-shadow: 0 6px 16px rgba(15, 26, 42, 0.28);
+    }
+
+    /* Parking: the unit state pill's colours, on a plain span rather than a
+       control, because this one only reports. */
+    .pstate {
+      display: inline-block; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.03em;
+      color: var(--ink); background: var(--bg); border: 1px solid var(--bd);
+      border-radius: 999px; padding: 0.2rem 0.6rem; white-space: nowrap;
+    }
+    .pnote { color: #5c6f88; }
+    .prowall { display: flex; justify-content: flex-end; margin-top: 0.7rem; }
+    .pacts {
+      display: flex; align-items: center; justify-content: flex-end;
+      gap: 0.4rem; white-space: nowrap;
+    }
+    .pacts form { display: flex; }
+    .pacts .tiny { margin: 0; }
+    /* Colours only — AdminLayout draws the chevron on every .main select.
+       Geometry copied from the unit and lead pills so all three are one shape. */
+    .lpick { position: relative; display: inline-flex; }
+    .lpick select {
+      font: inherit; font-size: 0.76rem; font-weight: 700;
+      color: var(--ink, #5c6f88); background: var(--bg, #f2f5f9);
+      border: 1px solid var(--bd, transparent); border-radius: 999px;
+      cursor: pointer; min-width: 128px;
+      padding-top: 0.45rem; padding-bottom: 0.45rem; padding-left: 0.95rem;
+      line-height: 1.25;
+      transition: filter 180ms ease, box-shadow 180ms ease;
+    }
+    .lpick select:hover { filter: brightness(0.96); }
+    .lpick select:focus { outline: none; }
+    .lpick select:focus-visible { box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.32); }
+    .prow { display: contents; }
+    .pcode { max-width: 7rem; }
+    .pprice { max-width: 8rem; }
+
     .b-table td { vertical-align: middle; }
     .b-table .inline { display: flex; align-items: center; gap: 0.4rem; }
     .b-table .in.bname { width: 190px; padding: 0.4rem 0.6rem; font-size: 0.8rem; }
@@ -895,11 +1012,20 @@ await fetch("${webhookUrl}", {
     .enqmodal .mhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
     .enqmodal h3 { margin: 0; font-size: 1.05rem; font-weight: 700; }
     .enqmodal .msub { margin: 0.25rem 0 0; font-size: 0.76rem; color: #5c6f88; }
+    /* Matched to the lead profile's close button, and shared by every modal
+       here. A drawn × rather than the character: the multiplication sign sits at
+       a different weight and baseline in every font and rarely looks centred. */
     .mx {
-      font: inherit; font-size: 1.2rem; line-height: 1; color: #93a3b8; background: none;
-      border: 0; cursor: pointer; padding: 0.1rem 0.35rem; border-radius: 8px;
+      flex: none; font: inherit; padding: 0; cursor: pointer;
+      width: 2rem; height: 2rem; display: grid; place-items: center;
+      color: #93a3b8; background: #ffffff;
+      border: 1px solid #e2e8f1; border-radius: 50%;
+      transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease;
     }
-    .mx:hover { background: #f2f5f9; color: #16283e; }
+    .mx svg { width: 13px; height: 13px; }
+    .mx:hover { color: #16283e; background: #f2f5f9; border-color: #d5deea; }
+    .mx:active { transform: translateY(1px); }
+    .mx:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.28); }
 
     /* The decision sits ABOVE the detail, so it is never something you have to
        scroll back up to find - but the detail is on the same screen, so it is
@@ -938,6 +1064,29 @@ await fetch("${webhookUrl}", {
     .chip { font-size: 0.64rem; font-weight: 700; padding: 0.16rem 0.48rem; border-radius: 999px; background: #f2f5f9; color: #5c6f88; }
     .claimbtn { font: inherit; font-size: 0.68rem; font-weight: 700; color: #2e7d54; background: rgba(83,178,127,.1); border: 1px solid rgba(83,178,127,.35); border-radius: 999px; padding: 0.2rem 0.55rem; cursor: pointer; }
     a.claimbtn { text-decoration: none; display: inline-block; }
+    /* ---- new enquiries, one band each ---- */
+    .trows { margin-top: 0.75rem; display: grid; gap: 0.5rem; }
+    .trow {
+      display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
+      background: #eff7f3; border: 1px solid #d9ebe2; border-radius: 0.8rem;
+      padding: 0.7rem 0.8rem 0.7rem 1rem;
+    }
+    .trow .nm { font-size: 0.9rem; }
+    /* White, not transparent: the chip's border alone disappears against the
+       tint, and it has to read as the same chip it is everywhere else. */
+    .trow .flag { background: #ffffff; border-color: #cfe0d6; color: #5c6f88; }
+    .twho { display: flex; align-items: baseline; gap: 0.4rem; min-width: 0; }
+    /* `margin-left:auto` rather than a spacer, so on a narrow screen the line
+       wraps instead of squashing the name. */
+    .twhen { margin-left: auto; font-size: 0.76rem; color: #5c6f88; white-space: nowrap; }
+    .twhen b { color: #16283e; font-weight: 700; }
+    .tbtn2 {
+      font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer; white-space: nowrap;
+      color: #ffffff; background: #53b27f; border: 0; border-radius: 999px; padding: 0.45rem 1rem;
+      transition: background-color 140ms ease;
+    }
+    .tbtn2:hover { background: #47a071; }
+    .tbtn2:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.4); }
     .chip.untriaged { background: rgba(200,106,0,.12); color: #a35700; }
 
     /* ---- pipeline: one hue, darker as it progresses ---- */
@@ -1075,8 +1224,21 @@ await fetch("${webhookUrl}", {
   {/* One group, so the row's space-between puts the tabs at one end and the
       pair of buttons together at the other. As three separate children the
       Add lead button was spaced out into the middle of the row, beside nothing. */}
-  {tab !== "settings" && (
+  {/* Rendered only when it would hold something, so the row's space-between has
+      nothing invisible to push against. */}
+  {(tab === "leads" || (tab === "units" && hasParking) || (tab === "overview" && mailboxConnected)) && (
     <div class="tabacts">
+      {/* Two inventories, one switch — in the tab row rather than above the
+          cards, because it selects what the whole tab is showing, which is the
+          same job the tabs beside it do. */}
+      {tab === "units" && hasParking && (
+        <div class="uviews" role="group" aria-label="Show">
+          <a href={unitViewHref("units")} class:list={["uview", { on: unitView === "units" }]}
+             aria-current={unitView === "units" ? "true" : undefined}>Units</a>
+          <a href={unitViewHref("parking")} class:list={["uview", { on: unitView === "parking" }]}
+             aria-current={unitView === "parking" ? "true" : undefined}>Parking</a>
+        </div>
+      )}
       {/* Only on Leads, where the list it adds to is on screen. Offered even
           without a mailbox, though: a project with no inbox still gets walk-ins,
           and that is exactly when adding one by hand is the only way in. */}
@@ -1084,9 +1246,12 @@ await fetch("${webhookUrl}", {
         <button class="syncbtn addlead" type="button" data-open-dialog="add-lead">+ Add lead</button>
       )}
 
-      {/* Sync now is absent on Settings, which has its own beside Disconnect —
-          two identical buttons on one screen is worse than one. */}
-      {mailboxConnected && (
+      {/* Overview only. Syncing is a whole-project action and its result — new
+          enquiries, a message count, a failure notice — is what the overview is
+          made of; on Units or Templates it was a button whose effect you could
+          not see from where you pressed it. Settings has its own beside
+          Disconnect, and two identical buttons on one screen is worse than one. */}
+      {tab === "overview" && mailboxConnected && (
         <form class="syncform" method="post" action="/api/admin/project-mail-sync">
           <input type="hidden" name="slug" value={project.slug} />
           <input type="hidden" name="back" value={selfHref} />
@@ -1284,7 +1449,7 @@ await fetch("${webhookUrl}", {
             </span>
             <p class="m-value">{stageCount("info")}</p>
           </div>
-          <p class="m-label">Information sharing</p>
+          <p class="m-label">{stageLabel("info")}</p>
           <div class="m-sep"></div>
           <div class="m-foot">
             <span class="m-delta flat">{stageCount("new")} not started</span>
@@ -1312,24 +1477,26 @@ await fetch("${webhookUrl}", {
         <div class="cardhead">
           <h2 class="sec">New enquiries</h2>
           {triageItems.length > 0 && <span class="n">{triageItems.length}</span>}
-          <span class="hint">a real buyer, or not?</span>
         </div>
         {triageItems.length === 0 ? (
           <p class="empty">Nothing to judge — every enquiry has been decided.</p>
         ) : (
-          <div class="rows">
+          /* A panel each, not table rows. An undecided enquiry is a thing to
+             pick up, and giving it its own tinted band says that in a way a
+             row in a grid does not. Reads left to right as a sentence: who,
+             when, and the one thing to do about it. */
+          <div class="trows">
             {triageItems.map((e) => (
-              <div class="row">
-                <div>
-                  <a class="nm" href={`/admin/projects/${slug}/enquiry/${e.id}`}>
-                    {e.name} <span class="flag" title={localeTitle(e.locale)}>{localeChip(e.locale)}</span>
-                  </a>
-                  <div class="prev">{plain(e.message) || "—"}</div>
-                </div>
-                <div class="rmeta">
-                  <span class="w">{shortAge(e.last_activity_at)}</span>
-                  <button class="claimbtn" type="button" data-open-enq={e.id}>See enquiry</button>
-                </div>
+              <div class="trow">
+                <span class="twho">
+                  <a class="nm" href={`/admin/projects/${slug}/enquiry/${e.id}`}>{e.name}</a>
+                  <span class="flag" title={localeTitle(e.locale)}>{localeChip(e.locale)}</span>
+                </span>
+                <span class="twhen">Received <b>{shortAge(e.created_at)} ago</b></span>
+                {/* Everything that decides the enquiry — convert, reject, the
+                    message itself — is in the window this opens, so the band
+                    stays a band. */}
+                <button class="tbtn2" type="button" data-open-enq={e.id}>See enquiry</button>
               </div>
             ))}
           </div>
@@ -1384,7 +1551,7 @@ await fetch("${webhookUrl}", {
                   </h3>
                   <p class="msub">Arrived {shortAge(e.created_at)} ago · nobody has decided on this yet</p>
                 </div>
-                <form method="dialog"><button class="mx" aria-label="Close">×</button></form>
+                <form method="dialog"><button class="mx" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18"/></svg></button></form>
               </div>
 
               <div class="macts">
@@ -1583,29 +1750,58 @@ await fetch("${webhookUrl}", {
         </p>
       )}
 
-      {units.length === 0 ? (
+      {unitView === "parking" ? (
+        <section class="card">
+          <div class="cardhead">
+            <h2 class="sec">Parking · {parkingCount.total} space{parkingCount.total === 1 ? "" : "s"}</h2>
+            {parkingCount.total > 0 && (
+              <span class="hint">
+                {parkingCount.sold} sold · {parkingCount.reserved} reserved · {parkingCount.available} available
+              </span>
+            )}
+          </div>
+          <table class="q b-table">
+              <tr><th>Space</th><th>Price</th><th>State</th><th>Notes</th></tr>
+              {parking.map((p) => (
+                <tr>
+                  <td><b>{p.code}</b></td>
+                  <td>{parkingPrice(p.price)}</td>
+                  <td>
+                    {/* Editable here, unlike on Settings. Settings says what
+                        exists; this is where a space is sold. */}
+                    <form method="post" action="/api/admin/project-parking">
+                      <input type="hidden" name="slug" value={project.slug} />
+                      <input type="hidden" name="id" value={p.id} />
+                      <input type="hidden" name="action" value="state" />
+                      <span class="lpick" style={`--ink:${parkingState(p.state).ink};--bg:${parkingState(p.state).tint};--bd:${parkingState(p.state).edge}`}>
+                        <select name="state" onchange="this.form.submit()" aria-label={`State for ${p.code}`} data-fill>
+                          {PARKING_STATES.map((st) => (
+                            <option value={st.key} selected={st.key === p.state}>{st.label}</option>
+                          ))}
+                        </select>
+                      </span>
+                    </form>
+                  </td>
+                  <td class="pnote">{p.notes || "—"}</td>
+              </tr>
+            ))}
+          </table>
+        </section>
+      ) : units.length === 0 ? (
+        /* No form here any more. Units are created with the building they belong
+           to, under Settings → Layout, and a second way to make them meant a
+           project could end up with a set of units belonging to nothing — which
+           is exactly the state this card used to produce. */
         <section class="card">
           <h2 class="sec">Set up the units</h2>
           <p class="lede">
-            Nothing sellable is recorded for this project yet. Create the run in one go —
-            they all start as available, and you change each one as it moves.
+            Nothing sellable is recorded for this project yet. Units are created with the
+            block or phase they sit in, under <b>Settings → Layout</b> — say how many a
+            building holds and they are made with it. They all start as available, and you
+            change each one as it moves.
           </p>
-          <form method="post" action="/api/admin/project-units" class="genform">
-            <input type="hidden" name="slug" value={project.slug} />
-            <input type="hidden" name="action" value="generate" />
-            <label class="field">
-              <span>Type</span>
-              <select class="in" name="prefix">
-                <option value="Villa">Villa</option>
-                <option value="Apartment">Apartment</option>
-              </select>
-            </label>
-            <label class="field">
-              <span>How many</span>
-              <input class="in" type="number" name="count" value="25" min="1" max="500" required />
-            </label>
-            <button class="btn" type="submit">Create units</button>
-          </form>
+          <a class="btn" href={`/admin/projects/${slug}?tab=settings`}
+             style="display:inline-block;text-decoration:none;margin-top:0.9rem">Open Layout</a>
         </section>
       ) : (
         <>
@@ -1651,29 +1847,39 @@ await fetch("${webhookUrl}", {
 
   {tab === "leads" && (
     <div class="tabpane" style="margin-top: 1.4rem">
+      {/* One per page, shared by every stage control on it — the list's pill and
+          each profile's dropdown. */}
+      <LostReasonAsk />
+
       <LeadRows
         leads={leadRows}
         projects={[{ id: project.id, name: project.name, nav_name: project.nav_name, slug: project.slug }]}
         showProject={false}
       />
 
-      {drawerLead && (
+      {profiles.map((p) => (
         <LeadProfile
-          lead={drawerLead}
+          lead={p.lead}
           project={{ slug: project.slug, name: project.name }}
-          events={drawerEvents}
-          messages={drawerMessages}
-          notes={drawerNotes}
-          unit={drawerUnit}
-          docs={drawerDocs}
+          events={p.events}
+          messages={p.messages}
+          notes={p.notes}
+          units={units.map((u: any) => ({ id: u.id, code: u.code, state: u.state }))}
+          activity={p.activity}
+          interest={p.interest.map((x: any) => x.unit_id)}
+          parking={parking.map((x) => ({ id: x.id, code: x.code, state: x.state, price: x.price }))}
+          parkingInterest={p.parkingInterest.map((x: any) => x.parking_id)}
+          people={(profileRes.data ?? []).map((x: any) => ({ id: x.id, name: x.full_name ?? "Someone" }))}
+          meId={me?.id ?? null}
           back={(() => {
             const u = new URLSearchParams(Astro.url.search);
             u.delete("lead");
+            u.delete("contact_error");
             const q = u.toString();
             return Astro.url.pathname + (q ? `?${q}` : "");
           })()}
         />
-      )}
+      ))}
     </div>
   )}
 
@@ -1923,7 +2129,7 @@ await fetch("${webhookUrl}", {
           <div class="row2">
             <label class="field">
               <span>Name <em>optional — the file name is used otherwise</em></span>
-              <input class="in" type="text" name="title" placeholder="Nanta Alta brochure" />
+              <input class="in" type="text" name="title" placeholder={`${project.name} brochure`} />
             </label>
             <label class="field">
               <span>Category</span>
@@ -1961,11 +2167,11 @@ await fetch("${webhookUrl}", {
           <span class="field-spacer"></span>
           <label class="field">
             <span>Domain <em>(no https://)</em></span>
-            <input class="in" type="text" name="domain" value={project.domain ?? ""} placeholder="nantaalta.com" />
+            <input class="in" type="text" name="domain" value={project.domain ?? ""} placeholder="yourproject.com" />
           </label>
           <label class="field">
             <span>Mailbox <em>(filled in automatically when you connect)</em></span>
-            <input class="in" type="email" name="mailbox" value={project.mailbox ?? ""} placeholder="sales@nantaalta.com" />
+            <input class="in" type="email" name="mailbox" value={project.mailbox ?? ""} placeholder="sales@yourproject.com" />
           </label>
         </div>
         <button class="btn" type="submit">Save</button>
@@ -2019,7 +2225,7 @@ await fetch("${webhookUrl}", {
               <h3>Edit layout</h3>
               <p class="msub">Blocks or phases, and the units in each.</p>
             </div>
-            <form method="dialog"><button class="mx" aria-label="Close">×</button></form>
+            <form method="dialog"><button class="mx" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18"/></svg></button></form>
           </div>
 
           {buildings.length > 0 && (
@@ -2104,6 +2310,137 @@ await fetch("${webhookUrl}", {
                 <option value="Apartment" selected>Apartment</option>
                 <option value="Villa">Villa</option>
               </select>
+            </label>
+            <button class="btn" type="submit">Add</button>
+          </form>
+        </dialog>
+      </section>
+
+      {/* Parking sold separately from the home. Under Layout because it is the
+          same kind of fact — what this project physically consists of — and not
+          in Units, where it would distort every sold-percentage on the site. */}
+      <section class="card">
+        <div class="cardhead">
+          <h2 class="sec">Additional parking</h2>
+          <button class="btn top" type="button" data-open-dialog="edit-parking">Edit</button>
+        </div>
+
+        {parkingNotice && (
+          <p class="syncmsg" style="margin-top:0.8rem">
+            <span>{parkingNotice}</span>
+            <a class="msgx" href={selfHref} aria-label="Dismiss">×</a>
+          </p>
+        )}
+
+        {parking.length === 0 ? (
+          <p class="empty">
+            No parking recorded. Press Edit if this project sells spaces apart from the homes.
+          </p>
+        ) : (
+          /* The same table the Layout card above uses — headings across the
+             top, one row underneath — so the two settings cards read as one
+             pair. Still a summary and not an inventory: the row is the whole
+             car park, not a space. The spaces themselves are on Units, where
+             one actually gets sold. */
+          <table class="q b-table">
+            <tr>
+              <th>Spaces</th>
+              {PARKING_STATES.map((st) => <th>{st.label}</th>)}
+            </tr>
+            <tr>
+              <td><b>{parkingCount.total}</b></td>
+              {PARKING_STATES.map((st) => <td><b>{parkingCount[st.key]}</b></td>)}
+            </tr>
+          </table>
+        )}
+
+        <dialog class="enqmodal wide" id="edit-parking">
+          <div class="mhead">
+            <div>
+              <h3>Parking</h3>
+              <p class="msub">Spaces sold apart from the homes.</p>
+            </div>
+            <form method="dialog"><button class="mx" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18"/></svg></button></form>
+          </div>
+
+          {parking.length > 0 && (
+            <table class="q b-table">
+              <tr><th>Space</th><th>Price</th><th>State</th><th>Notes</th><th></th></tr>
+              {parking.map((p) => (
+                <tr>
+                  {/* One row, one form: everything about a space saves together,
+                      so a price and a state can never land half-changed. */}
+                  <td>
+                    <form method="post" action="/api/admin/project-parking" class="prow" id={`pk-${p.id}`}>
+                      <input type="hidden" name="slug" value={project.slug} />
+                      <input type="hidden" name="id" value={p.id} />
+                      <input type="hidden" name="action" value="save" />
+                      <input class="in pcode" type="text" name="code" value={p.code} required />
+                    </form>
+                  </td>
+                  <td><input class="in pprice" type="text" name="price" form={`pk-${p.id}`}
+                             value={p.price ?? ""} placeholder="18,000" inputmode="numeric" /></td>
+                  <td>
+                    <select class="in" name="state" form={`pk-${p.id}`} data-fill>
+                      {PARKING_STATES.map((st) => (
+                        <option value={st.key} selected={st.key === p.state}>{st.label}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td><input class="in" type="text" name="notes" form={`pk-${p.id}`}
+                             value={p.notes ?? ""} placeholder="Level -1, by the lift" /></td>
+                  {/* One flex row rather than a button beside a form: the form
+                      is a block, so the two buttons were sitting on different
+                      lines of the same cell and only looked side by side. */}
+                  <td class="pacts">
+                    <button class="tiny" type="submit" form={`pk-${p.id}`}>Save</button>
+                    <form method="post" action="/api/admin/project-parking"
+                          onsubmit={`return confirm('Remove ${p.code}?')`}>
+                      <input type="hidden" name="slug" value={project.slug} />
+                      <input type="hidden" name="id" value={p.id} />
+                      <input type="hidden" name="action" value="remove" />
+                      <button class="tiny danger" type="submit">Remove</button>
+                    </form>
+                  </td>
+                </tr>
+              ))}
+            </table>
+          )}
+
+          {parking.length > 0 && (
+            <p class="prowall">
+              {/* The count and the sold ones are named in the confirmation, not
+                  on the button: a button that reads like a warning label gets
+                  ignored, while a confirmation that names what is about to go
+                  can still stop the mistake. */}
+              <form method="post" action="/api/admin/project-parking"
+                    onsubmit={`return confirm('Remove all ${parking.length} parking space${parking.length === 1 ? "" : "s"}${parkingCount.sold + parkingCount.reserved > 0 ? `, including ${parkingCount.sold + parkingCount.reserved} that are sold or reserved` : ""}? This cannot be undone.')`}>
+                <input type="hidden" name="slug" value={project.slug} />
+                <input type="hidden" name="action" value="remove_all" />
+                <button class="tiny danger" type="submit">Remove all spaces</button>
+              </form>
+            </p>
+          )}
+
+          <div class="msep"></div>
+          <h4 class="msub-h">Add spaces</h4>
+          {/* A batch, because that is how a car park arrives: "eighteen spaces,
+              P1 to P18" is one fact, not eighteen. Numbering carries on from
+              whatever is already there. */}
+          <form method="post" action="/api/admin/project-parking" class="genform modalform">
+            <input type="hidden" name="slug" value={project.slug} />
+            <input type="hidden" name="action" value="add" />
+            <label class="field">
+              <span>How many</span>
+              <input class="in" type="number" name="count" min="1" max="500" placeholder="18" required />
+            </label>
+            <label class="field">
+              <span>Named</span>
+              <input class="in" type="text" name="prefix" value="P" placeholder="P" />
+            </label>
+            <label class="field">
+              <span>Price each <em>(optional)</em></span>
+              <input class="in" type="text" name="price" placeholder="18,000" inputmode="numeric" />
             </label>
             <button class="btn" type="submit">Add</button>
           </form>
@@ -2267,7 +2604,7 @@ await fetch("${webhookUrl}", {
         <h3>Add a lead</h3>
         <p class="msub">Someone who came to you another way — a walk-in, a call, a referral.</p>
       </div>
-      <form method="dialog"><button class="mx" aria-label="Close">×</button></form>
+      <form method="dialog"><button class="mx" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18"/></svg></button></form>
     </div>
 
     <form class="alform" method="post" action="/api/admin/project-lead" data-addlead>
@@ -2277,30 +2614,30 @@ await fetch("${webhookUrl}", {
 
       <label class="field">
         <span>Name</span>
-        <input class="in" type="text" name="name" required autocomplete="off" placeholder="Ingrid Farré" />
+        <input class="in" type="text" name="name" required autocomplete="off" />
       </label>
 
       <div class="alrow">
         <label class="field">
-          <span>Email <em>(or a phone number below)</em></span>
-          <input class="in" type="email" name="email" autocomplete="off" placeholder="ingrid@example.com" data-dup-email />
+          <span>Email</span>
+          <input class="in" type="email" name="email" autocomplete="off" data-dup-email />
         </label>
         <label class="field">
           <span>Phone</span>
-          <input class="in" type="tel" name="phone" autocomplete="off" placeholder="+376 812 345" data-dup-phone />
+          <input class="in" type="tel" name="phone" autocomplete="off" data-dup-phone />
         </label>
       </div>
 
       <div class="alrow">
         <label class="field">
-          <span>Where from</span>
-          <select class="in" name="source">
-            {MANUAL_LEAD_SOURCES.map((src) => <option value={src.value}>{src.label}</option>)}
+          <span>Source</span>
+          <select class="in" name="source" data-fill>
+            {LEAD_SOURCES.map((src) => <option value={src.value}>{src.label}</option>)}
           </select>
         </label>
         <label class="field">
           <span>Language <em>(picks the reply template)</em></span>
-          <select class="in" name="locale">
+          <select class="in" name="locale" data-fill>
             <option value="">Not sure yet</option>
             {LOCALE_OPTIONS.map((l) => <option value={l.value}>{l.label}</option>)}
           </select>
@@ -2371,7 +2708,7 @@ await fetch("${webhookUrl}", {
       ev.preventDefault();
       x.closest(".syncmsg")?.remove();
       const url = new URL(window.location.href);
-      ["mailbox", "notice", "sent", "send_error", "units_ok", "units_error"]
+      ["mailbox", "notice", "parking_notice", "sent", "send_error", "units_ok", "units_error"]
         .forEach((k) => url.searchParams.delete(k));
       window.history.replaceState(null, "", url.pathname + url.search);
     });
@@ -2463,6 +2800,51 @@ await fetch("${webhookUrl}", {
       force.value = "1";
       submit.textContent = "Add anyway";
     });
+  }
+
+  // Lead profiles: open in place, never navigate.
+  //
+  // Every profile is already in the page, closed. Clicking a name used to load a
+  // whole new page before anything appeared; now it is the same instant open the
+  // Add lead button has always had.
+  const profiles = Array.from(document.querySelectorAll("dialog[data-profile]"));
+  if (profiles.length > 0) {
+    const clearLeadFromUrl = () => {
+      const u = new URL(window.location.href);
+      u.searchParams.delete("lead");
+      u.searchParams.delete("contact_error");
+      window.history.replaceState(null, "", u.pathname + (u.search || ""));
+    };
+
+    for (const el of profiles) {
+      const dlg = el as HTMLDialogElement;
+      dlg.querySelector("[data-close]")?.addEventListener("click", () => dlg.close());
+      // Escape and a backdrop click both end in `close`, so the URL is tidied in
+      // one place and every way out agrees.
+      dlg.addEventListener("close", clearLeadFromUrl);
+      dlg.addEventListener("click", (ev) => { if (ev.target === dlg) dlg.close(); });
+    }
+
+    document.querySelectorAll("[data-open-lead]").forEach((link) => {
+      link.addEventListener("click", (ev) => {
+        const e = ev as MouseEvent;
+        // Leave the modifier clicks alone: cmd-click still opens a real tab.
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+        const id = (link as HTMLElement).dataset.openLead;
+        const dlg = id ? document.getElementById("lead-" + id) : null;
+        if (!(dlg instanceof HTMLDialogElement)) return;
+        e.preventDefault();
+        dlg.showModal();
+        // Keep the address bar honest, so the open profile is still copyable.
+        window.history.replaceState(null, "", (link as HTMLAnchorElement).href);
+      });
+    });
+
+    // Arriving with one already named — a shared link, or coming back from
+    // saving a note or a stage.
+    const wanted = new URL(window.location.href).searchParams.get("lead");
+    const onLoad = wanted ? document.getElementById("lead-" + wanted) : null;
+    if (onLoad instanceof HTMLDialogElement && !onLoad.open) onLoad.showModal();
   }
 
   // Dragging a file onto the upload box.

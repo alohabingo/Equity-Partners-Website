@@ -28,7 +28,10 @@ const nav = [
   { key: "team", label: "Team / Partners", href: "/admin/team", superOnly: false },
   { key: "subscribers", label: "Subscribers", href: "/admin/subscribers", superOnly: true },
   { key: "vault", label: "Document Vault", href: "/admin/vault", superOnly: true },
-  { key: "users", label: "Users", href: "/admin/users", superOnly: true },
+  // Users lives under Settings now — it is one of the things you configure, not
+  // a section of its own — and Settings is where connectors and anything else
+  // that is set once will collect.
+  { key: "settings", label: "Settings", href: "/admin/settings", superOnly: true },
 ];
 const visibleNav = nav.filter((n) => isSuper || !n.superOnly);
 
@@ -48,7 +51,7 @@ const NAV_ICONS: Record<string, string> = {
   team: `<svg viewBox="0 0 24 24" ${S}><circle cx="12" cy="8" r="3.2"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="4.5" cy="10.5" r="2"/><circle cx="19.5" cy="10.5" r="2"/></svg>`,
   subscribers: `<svg viewBox="0 0 24 24" ${S}><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>`,
   vault: `<svg viewBox="0 0 24 24" ${S}><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
-  users: `<svg viewBox="0 0 24 24" ${S}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+  settings: `<svg viewBox="0 0 24 24" ${S}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>`,
 };
 ---
 
@@ -260,6 +263,14 @@ const NAV_ICONS: Record<string, string> = {
         background-attachment: fixed;
       }
 
+      /* While a modal is open the page behind it holds still. A native dialog
+         blocks CLICKS on what is underneath but not the wheel, so scrolling
+         over the backdrop quietly moved the list you were about to come back
+         to. `scrollbar-gutter` reserves the bar's width at all times, so
+         taking the scrollbar away here does not shift the layout sideways. */
+      html { scrollbar-gutter: stable; }
+      html:has(dialog[open]) { overflow: hidden; }
+
       /* Page content arrives through <slot/>, so it never picks up this
          layout's *scoped* `* { box-sizing: border-box }`. Without a global
          reset every `width: 100%` input is content-box and overflows its
@@ -401,8 +412,15 @@ const NAV_ICONS: Record<string, string> = {
           if (select.closest(".select-wrap")) return;
 
           const parent = select.parentElement;
-          const fillsParent = !!parent && parent.clientWidth > 0
-            && select.offsetWidth >= parent.clientWidth - 2;
+          // Measuring only works on something that is on screen. A select inside
+          // a CLOSED <dialog> has no layout at all — every width reads 0 — so it
+          // was being called auto-width and given a shrink-to-fit wrapper, and
+          // its own `width: 100%` then resolved against that. That is why the
+          // lead profile's dropdowns opened stunted. `data-fill` says so outright
+          // for anything that starts life hidden.
+          const fillsParent = select.hasAttribute("data-fill")
+            || (!!parent && parent.clientWidth > 0
+              && select.offsetWidth >= parent.clientWidth - 2);
 
           const wrap = document.createElement("span");
           wrap.className = "select-wrap" + (fillsParent ? " is-block" : "");

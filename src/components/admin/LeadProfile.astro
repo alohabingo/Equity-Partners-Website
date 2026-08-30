@@ -1,18 +1,25 @@
 ---
-import { BUYER_STAGES, stageLabel, stageTheme, stageDurations, daysSince } from "../../lib/pipeline";
-import { LEAD_SOURCES, localeTitle, sourceLabel, type EnquiryRow } from "../../lib/enquiries";
+import { BUYER_STAGES, stageLabel, stageDurations, daysSince } from "../../lib/pipeline";
+import { LEAD_SOURCES, localeChip, localeTitle, sourceLabel, sourceNeedsName, sourceNameLabel, DISCOUNT_STEPS, type EnquiryRow } from "../../lib/enquiries";
+import { unitStateLabel } from "../../lib/units";
+import { parkingStateLabel } from "../../lib/parking";
+import { ACTIVITY_KINDS, activityIcon, activityTitle } from "../../lib/activity";
+import { LOST_REASONS, lostReasonLabel, needsLostReason } from "../../lib/lostReasons";
 
 /**
- * One buyer, everything known about them, in a drawer.
+ * One buyer, everything known about them.
  *
- * Rendered for the lead named in the URL rather than one per row. A drawer per
- * row would put the whole thing in the page's markup dozens of times over and
- * query every buyer's history to draw a list that shows none of it.
- * ?lead=<id> also makes a buyer's profile a link somebody can send.
+ * Split down the middle: the navy rail is the PERSON — who they are, how to
+ * reach them, what they are buying — and the white side is the PROCESS: where
+ * they have got to, whether anything is happening, and what was done. Scrolling
+ * the history never costs you sight of whose history it is.
  *
- * READ plus three actions. The enquiry page already owns editing, the
- * conversation and the composer; a drawer that did all of that too would be a
- * second copy of a screen, and the two would disagree within a month.
+ * The navy is the portal's own sidebar gradient, so a lead profile reads as part
+ * of the same product rather than a screen that borrowed a colour.
+ *
+ * Editing is limited on purpose: contact details, stage, and notes. The enquiry
+ * page owns the conversation and the composer, and a profile that did all of
+ * that too would be a second copy of a screen that drifts from the first.
  */
 
 interface Props {
@@ -21,12 +28,26 @@ interface Props {
   events: { kind: string; detail: any; created_at: string; actor: string }[];
   messages: { direction: string; subject: string | null; sent_at: string; sentByName?: string | null }[];
   notes: { body: string; created_at: string; author: string }[];
-  unit: { code: string; state: string } | null;
-  docs: { title: string; views: number; created_at: string }[];
-  /** Where the × and Escape go: this page without the lead on it. */
+  /** This project's units, for "property of interest". */
+  units: { id: string; code: string; state: string }[];
+  /** Unit ids this buyer is looking at, oldest first. */
+  interest: string[];
+  /** The project's parking, if it sells any. Empty means the whole section
+   *  is absent — a project with no car park should not ask about one. */
+  parking: { id: string; code: string; state: string; price: number | null }[];
+  /** Parking space ids this buyer is looking at. */
+  parkingInterest: string[];
+  /** Contact logged by hand — calls, meetings, mail sent from a phone. */
+  activity: { id: string; kind: string; body: string; happened_at: string; created_at: string; logged_by: string | null; who: string }[];
+  /** Everyone who could have made that contact. */
+  people: { id: string; name: string }[];
+  /** Whoever is signed in — the default author of a new log. */
+  meId: string | null;
+  /** The list's URL with no lead on it. Forms return to it with THIS lead
+   *  named, so saving reopens the profile rather than dumping you on the list. */
   back: string;
 }
-const { lead, project, events, messages, notes, unit, docs, back } = Astro.props;
+const { lead, project, events, messages, notes, units, interest, parking, parkingInterest, activity, people, meId, back } = Astro.props;
 
 const EVENT_LABELS: Record<string, string> = {
   received: "Enquiry received",
@@ -37,12 +58,13 @@ const EVENT_LABELS: Record<string, string> = {
   contact_changed: "Contact details changed",
   stage_changed: "Stage changed",
   note_added: "Note added",
+  activity_logged: "Contact logged",
   document_sent: "Document sent",
   reply_sent: "Reply sent",
   anonymised: "Personal data anonymised",
 };
 
-// ---- the person ----
+// The person
 const initials = (lead.name ?? "")
   .split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("") || "?";
 
@@ -50,37 +72,20 @@ const initials = (lead.name ?? "")
 // time. Random would be prettier once and confusing forever.
 const hue = [...(lead.name ?? "?")].reduce((n, c) => (n * 31 + c.charCodeAt(0)) % 360, 7);
 
-// ---- the rail ----
+// Where they are, and how long each stage took
 const stageMoves = events.filter((e) => e.kind === "stage_changed");
-const { totals, current, enteredCurrentAt } = stageDurations(lead.created_at, stageMoves);
-const reached = new Set(Object.keys(totals));
-const currentIndex = BUYER_STAGES.findIndex((s) => s.key === current);
+// `lead.stage` is passed in as the authority: the list, the pill and the
+// dropdown all read it, and a pipeline drawing something else — or, when an old
+// event names a retired stage, drawing nothing at all — is the bug this closes.
+const { totals, current, enteredCurrentAt } =
+  stageDurations(lead.created_at, stageMoves, new Date(), lead.stage);
 
-// ---- engagement ----
-const inbound = messages.filter((m) => m.direction === "inbound");
-const outbound = messages.filter((m) => m.direction !== "inbound");
-const lastHeard = inbound.length > 0
-  ? inbound.map((m) => m.sent_at).sort().slice(-1)[0]
-  : null;
-const docsOpened = docs.filter((d) => d.views > 0).length;
-const totalViews = docs.reduce((n, d) => n + d.views, 0);
+const LIVE_STAGES = BUYER_STAGES.filter((s) => s.key !== "not_proceeding");
+const liveIndex = LIVE_STAGES.findIndex((s) => s.key === current);
+const stopped = current === "not_proceeding";
 
-const tiles = [
-  { value: String(inbound.length), label: inbound.length === 1 ? "message in" : "messages in" },
-  { value: String(outbound.length), label: outbound.length === 1 ? "reply sent" : "replies sent" },
-  {
-    value: lastHeard ? String(daysSince(lastHeard)) : "—",
-    label: lastHeard ? "days since they wrote" : "never written",
-    warn: lastHeard ? daysSince(lastHeard) >= 14 : false,
-  },
-  {
-    value: docs.length === 0 ? "—" : `${docsOpened}/${docs.length}`,
-    label: docs.length === 0 ? "no documents sent" : `documents opened · ${totalViews} view${totalViews === 1 ? "" : "s"}`,
-  },
-];
-
-// ---- the feed ----
-type Entry = { when: string; title: string; detail?: string; who?: string; kind: string };
+// Messages and events as one feed
+type Entry = { when: string; title: string; detail?: string; who?: string; kind: string; icon?: string };
 const feed: Entry[] = [
   ...messages.map((m) => ({
     when: m.sent_at,
@@ -89,325 +94,913 @@ const feed: Entry[] = [
     detail: m.subject ?? undefined,
     who: m.direction === "inbound" ? undefined : m.sentByName ?? undefined,
   })),
-  ...events.map((e) => ({
+  // Two kinds are kept out of this feed.
+  //
+  // `activity_logged` because the log itself is already here with its
+  // description, and showing both would list every call twice.
+  //
+  // `contact_changed` because correcting a typo in a phone number is not
+  // something that happened between us and the buyer. The history is the story
+  // of the relationship, and a row for every field edit buries the calls and
+  // the replies under bookkeeping. The row is still written — it is the only
+  // record of who changed an email address, which matters the day a reply
+  // bounces — it simply is not shown here.
+  ...events.filter((e) => e.kind !== "activity_logged" && e.kind !== "contact_changed").map((e) => ({
     when: e.created_at,
     kind: e.kind,
     title: EVENT_LABELS[e.kind] ?? e.kind,
     detail:
-      e.kind === "stage_changed" ? `→ ${e.detail?.label ?? stageLabel(e.detail?.to)}`
+      // A loss carries its reason into the history, so the story of the record
+      // reads properly without opening anything.
+      e.kind === "stage_changed" ? `→ ${e.detail?.label ?? stageLabel(e.detail?.to)}${
+        e.detail?.reasonLabel ? ` · ${e.detail.reasonLabel}` : ""}${
+        e.detail?.note ? ` — ${e.detail.note}` : ""}`
       : e.kind === "document_sent" ? e.detail?.title
       : e.kind === "received" && e.detail?.via === "manual" ? `added by hand · ${sourceLabel(e.detail?.source)}`
       : e.detail?.label,
     who: e.actor,
   })),
+  ...activity.map((a) => ({
+    when: a.happened_at,
+    kind: "log",
+    title: activityTitle(a.kind),
+    detail: a.body,
+    who: a.who,
+    icon: activityIcon(a.kind),
+  })),
 ].sort((a, b) => new Date(b.when).getTime() - new Date(a.when).getTime());
+
+// The signed-in person is the default author. Falling back to the first name in
+// the list rather than to nobody: a log with no author is a log nobody can be
+// asked about later.
+const defaultLoggedBy = people.some((x) => x.id === meId) ? meId : (people[0]?.id ?? "");
+const todayISO = new Date().toISOString().slice(0, 10);
 
 const dt = (iso: string) =>
   new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
-const LIVE_STAGES = BUYER_STAGES.filter((s) => s.key !== "not_proceeding");
-const liveIndex = LIVE_STAGES.findIndex((s) => s.key === current);
-const stopped = current === "not_proceeding";
+// What they are looking at, in the order it was recorded. Read from the units
+// list so a unit that has since sold still shows its state rather than
+// disappearing — the interest is a fact about the past either way.
+const wanted = interest
+  .map((unitId) => units.find((u) => u.id === unitId))
+  .filter((u): u is { id: string; code: string; state: string } => Boolean(u));
 
-const theme = stageTheme(current);
+// What is left to add: still for sale, and not already on their list.
+const addable = units.filter((u) => u.state === "available" && !interest.includes(u.id));
+
+// The same two lists for parking. `wantsParking` is asked separately because it
+// is answerable on the first call, long before anyone has walked the car park —
+// and a buyer who has not chosen a space yet must not look like one who does
+// not want one.
+const hasParking = parking.length > 0;
+const wantsParking = !!lead.wants_parking;
+const parkingWanted = parkingInterest
+  .map((pid) => parking.find((x) => x.id === pid))
+  .filter((x): x is { id: string; code: string; state: string; price: number | null } => Boolean(x));
+const parkingAddable = parking.filter(
+  (x) => x.state === "available" && !parkingInterest.includes(x.id),
+);
+
 const enquiryHref = `/admin/projects/${project.slug}/enquiry/${lead.id}`;
-const selfHref = Astro.url.pathname + Astro.url.search;
+const selfHref = `${back}${back.includes("?") ? "&" : "?"}lead=${lead.id}`;
 const contactError = Astro.url.searchParams.get("contact_error");
 ---
 
-<dialog class="lp" id="lead-profile" data-profile data-back={back}>
-  <div class="lphead">
-    <span class="avatar" style={`background:hsl(${hue} 42% 92%);color:hsl(${hue} 45% 32%)`}>{initials}</span>
-    <div class="who">
-      <h2>{lead.name || "No name given"}</h2>
-      <p class="sub">{project.name} · {localeTitle(lead.locale)}</p>
-    </div>
-    <div class="acts">
-      <a class="act primary" href={enquiryHref}>Open full enquiry</a>
+<dialog class="lp" id={`lead-${lead.id}`} data-profile>
+  <div class="wrap">
+
+    {/* The close control belongs to the card, not to the person panel, so it
+       sits in the card's own top-right corner above everything else. */}
+    <button class="lpx" type="button" data-close aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+           stroke-linecap="round" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18"/></svg>
+    </button>
+
+    {/* ---------------- the person ---------------- */}
+    <aside class="side">
+      <div class="sidetop">
+        <span class="avatar" style={`background:hsl(${hue} 38% 22%);color:hsl(${hue} 55% 74%);border-color:hsl(${hue} 40% 34%)`}>{initials}</span>
+      </div>
+
+      <h2 class="nm">
+        {lead.name || "No name given"}
+        <span class="lang" title={localeTitle(lead.locale)}>{localeChip(lead.locale)}</span>
+      </h2>
+      <p class="proj">{project.name}</p>
+
       <form method="post" action="/api/admin/enquiry" class="stageform">
         <input type="hidden" name="id" value={lead.id} />
         <input type="hidden" name="action" value="stage" />
-        <input type="hidden" name="back" value={Astro.url.pathname + Astro.url.search} />
-        <span class="pick" style={`--ink:${theme.ink};--bg:${theme.bg};--bd:${theme.border}`}>
-          <select name="stage" onchange="this.form.submit()" aria-label="Stage">
-            {BUYER_STAGES.map((st) => (
-              <option value={st.key} selected={st.key === current}>{st.label}</option>
-            ))}
-          </select>
-        </span>
-      </form>
-      <a class="lpx" href={back} aria-label="Close">×</a>
-    </div>
-  </div>
-
-  {/* ---- the pipeline ---- */}
-  <section class="block rail-block">
-    <ol class="rail" style={`--cols:${LIVE_STAGES.length}`}>
-      {LIVE_STAGES.map((st, i) => {
-        const days = totals[st.key];
-        const isNow = !stopped && st.key === current;
-        // "Passed" is by POSITION, not by whether an event exists for it. A lead
-        // dragged straight from New to Reservation never visited Information
-        // sharing, but the line still has to run through it or the pipeline
-        // reads as broken rather than as skipped.
-        const passed = !stopped && liveIndex > i;
-        return (
-          <li class:list={["step", { now: isNow, done: passed, ahead: !isNow && !passed }]}>
-            <span class="line"></span>
-            <span class="dot"></span>
-            <span class="sname">{st.label}</span>
-            <span class="sdays">
-              {isNow ? `${daysSince(enteredCurrentAt)} days here` : days !== undefined ? `${days}d` : "—"}
-            </span>
-          </li>
-        );
-      })}
-    </ol>
-    {stopped && (
-      <p class="stopped">Not proceeding — {daysSince(enteredCurrentAt)} days ago</p>
-    )}
-  </section>
-
-
-  {/* Editable, because these three are the ones that turn out to be wrong.
-      A guessed source, a typo'd address, a phone number taken down on a call —
-      each is a five-second fix here and a trip to the enquiry screen otherwise. */}
-  <form class="contact" method="post" action="/api/admin/enquiry">
-    <input type="hidden" name="id" value={lead.id} />
-    <input type="hidden" name="action" value="contact" />
-    <input type="hidden" name="back" value={selfHref} />
-
-    <label class="cfield">
-      <span class="clab">Email</span>
-      <input class="cin" type="email" name="email" value={lead.email ?? ""} placeholder="not recorded" />
-    </label>
-    <label class="cfield">
-      <span class="clab">Phone</span>
-      <input class="cin" type="tel" name="phone" value={lead.phone ?? ""} placeholder="not recorded" />
-    </label>
-    <label class="cfield">
-      <span class="clab">Where from</span>
-      <span class="pick quiet">
-        <select class="cin" name="source">
-          {LEAD_SOURCES.map((src) => (
-            <option value={src.value} selected={src.value === lead.source}>{src.label}</option>
+        <input type="hidden" name="back" value={selfHref} />
+        <select name="stage" onchange="this.form.submit()" aria-label="Stage" class="stagesel" data-fill>
+          {BUYER_STAGES.map((st) => (
+            <option value={st.key} selected={st.key === current}>{st.label}</option>
           ))}
         </select>
-      </span>
-    </label>
+      </form>
 
-    <div class="cfoot">
-      {contactError && <p class="cerr">{contactError}</p>}
-      <button class="act" type="submit">Save contact</button>
-    </div>
-  </form>
+      <div class="hr"></div>
 
-  <div class="cols">
-    <div class="col">
-      <section class="block">
-        <h3>Engagement</h3>
-        <div class="tiles">
-          {tiles.map((t) => (
-            <div class="tile">
-              <b class:list={[{ warn: t.warn }]}>{t.value}</b>
-              <span>{t.label}</span>
-            </div>
-          ))}
-        </div>
-      </section>
+      <form method="post" action="/api/admin/enquiry" class="cform">
+        <input type="hidden" name="id" value={lead.id} />
+        <input type="hidden" name="action" value="contact" />
+        <input type="hidden" name="back" value={selfHref} />
 
-      <section class="block">
-        <h3>Details</h3>
-        <dl class="kvs">
-          <dt>First contact</dt><dd>{dt(lead.created_at)} · {daysSince(lead.created_at)} days ago</dd>
-          <dt>Unit</dt><dd>{unit ? `${unit.code} · ${unit.state}` : <span class="muted">none assigned</span>}</dd>
-        </dl>
-        {lead.message && <p class="said">“{lead.message}”</p>}
-      </section>
+        <label class="cf">
+          <span>Email</span>
+          <input type="email" name="email" value={lead.email ?? ""} placeholder="not recorded" />
+        </label>
+        <label class="cf">
+          <span>Phone</span>
+          <input type="tel" name="phone" value={lead.phone ?? ""} placeholder="not recorded" />
+        </label>
+        <label class="cf">
+          <span>Country of residence</span>
+          <input type="text" name="country" value={lead.country ?? ""} placeholder="not recorded"
+                 autocomplete="country-name" />
+        </label>
+        {contactError && <p class="cerr">{contactError}</p>}
+        <button class="save" type="submit">Save contact</button>
+      </form>
 
-      <section class="block">
-        <h3>Notes</h3>
-        {notes.length === 0 && <p class="muted">No notes yet.</p>}
-        {notes.map((n) => (
-          <div class="note">
-            <p>{n.body}</p>
-            <span>{n.author} · {dt(n.created_at)}</span>
-          </div>
-        ))}
-        <form method="post" action="/api/admin/enquiry" class="noteform">
+      <div class="hr"></div>
+
+      <a class="act" href={enquiryHref}>Open full enquiry</a>
+    </aside>
+
+    {/* ---------------- the process ---------------- */}
+    <div class="main">
+      <section class="full sep">
+        <h3 class="big">Pipeline status</h3>
+        {/* The pipeline is also how you MOVE someone. Picking a stage does not
+            move them on the spot — a mis-click would silently rewrite the
+            record's history — it offers the move, and the confirm is the second
+            click. */}
+        <form method="post" action="/api/admin/enquiry" class="railform" data-rail>
           <input type="hidden" name="id" value={lead.id} />
-          <input type="hidden" name="action" value="note" />
-          <input type="hidden" name="back" value={Astro.url.pathname + Astro.url.search} />
-          <textarea name="body" rows="2" required placeholder="Spoke on the phone — wants a viewing in October."></textarea>
-          <button class="act" type="submit">Add note</button>
-        </form>
-      </section>
-    </div>
-
-    <div class="col">
-      <section class="block">
-        <h3>History</h3>
-        {feed.length === 0 ? (
-          <p class="muted">Nothing recorded yet.</p>
-        ) : (
-          <ol class="feed">
-            {feed.map((f) => (
-              <li class:list={["fitem", f.kind]}>
-                <div class="ftop">
-                  <b>{f.title}</b>
-                  <span>{dt(f.when)}</span>
-                </div>
-                {f.detail && <p class="fdetail">{f.detail}</p>}
-                {f.who && <p class="fwho">{f.who}</p>}
-              </li>
-            ))}
+          <input type="hidden" name="action" value="stage" />
+          <input type="hidden" name="back" value={selfHref} />
+          <ol class="rail" style={`--cols:${LIVE_STAGES.length}`}>
+            {LIVE_STAGES.map((st, i) => {
+              const days = totals[st.key];
+              const isNow = !stopped && st.key === current;
+              // Passed is by POSITION, not by whether an event exists: a lead moved
+              // straight from New to Reservation never visited the middle, but a
+              // gap in the track reads as broken rather than skipped.
+              const passed = !stopped && liveIndex > i;
+              return (
+                <li class:list={["step", { now: isNow, done: passed, ahead: !isNow && !passed }]}>
+                  <span class="line"></span>
+                  <button class="mark" type="submit" name="stage" value={st.key}>
+                    Mark current stage
+                  </button>
+                  <button
+                    class="pick" type="button" data-pick={st.key} aria-pressed="false"
+                    aria-label={isNow ? `${st.label} — current stage` : `Move to ${st.label}`}
+                  >
+                    <span class="dot"></span>
+                    <span class="sname">{st.label}</span>
+                    <span class="sdays">
+                      {isNow ? `${daysSince(enteredCurrentAt)} days here` : days !== undefined ? `${days}d` : "—"}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
           </ol>
+          {stopped && <p class="stopped">Not proceeding — {daysSince(enteredCurrentAt)} days ago</p>}
+        </form>
+
+        {/* Why it ended. Shown only for a lost lead, and as an unmissable prompt
+            while the reason is missing: the stage was recordable in a hurry on
+            purpose, so the chase has to happen somewhere, and this is where
+            anyone looking at the record will be. */}
+        {stopped && (
+          <form method="post" action="/api/admin/enquiry"
+                class:list={["lostbox", { asking: needsLostReason(lead) }]}>
+            <input type="hidden" name="id" value={lead.id} />
+            <input type="hidden" name="action" value="lost_reason" />
+            <input type="hidden" name="back" value={selfHref} />
+
+            <div class="losthead">
+              <h4>{needsLostReason(lead) ? "Why did this fall through?" : "Why it ended"}</h4>
+              {!needsLostReason(lead) && (
+                <span class="lostnow">{lostReasonLabel(lead.lost_reason)}</span>
+              )}
+            </div>
+
+            <div class="lostrow">
+              <select name="lost_reason" class="ssel" aria-label="Reason" data-fill>
+                <option value="">Choose a reason…</option>
+                {LOST_REASONS.map((r) => (
+                  <option value={r.key} selected={r.key === lead.lost_reason}>{r.label}</option>
+                ))}
+              </select>
+              <input type="text" name="lost_note" class="ssel lostnote" autocomplete="off"
+                     value={lead.lost_note ?? ""} aria-label="Note"
+                     placeholder="Went with Casa Nova — same budget, ready sooner." />
+              <button class="btn" type="submit">Save</button>
+            </div>
+          </form>
         )}
       </section>
+
+      {/* Two columns, each stacking on its own. Left is what you EDIT,
+          right is what happened — and because they are separate columns the
+          history starts level with the top of the first field instead of
+          waiting for three short blocks to finish. */}
+      <div class="colL">
+        {/* Both of these save the moment you pick, like the stage control on
+            the pipeline above. A dropdown has nothing to "finish typing", so a
+            Save button beside it is a step that only exists to be forgotten.
+            Each posts ONLY its own field — the endpoint leaves anything the
+            form did not carry exactly as it was. */}
+        <section>
+          <div class="hhead">
+            <h3>Property of interest</h3>
+            {addable.length > 0 && (
+              <button class="logbtn" type="button" data-add-prop={lead.id}>Add property</button>
+            )}
+          </div>
+
+          {/* One dropdown per property, so each one can be changed as well as
+              removed. "Add property" reveals an empty one underneath — a buyer
+              comparing three units is the normal case. */}
+          {wanted.map((u) => (
+            <form method="post" action="/api/admin/enquiry" class="prow">
+              <input type="hidden" name="id" value={lead.id} />
+              <input type="hidden" name="action" value="interest_set" />
+              <input type="hidden" name="back" value={selfHref} />
+              <input type="hidden" name="replaces" value={u.id} />
+              <select name="unit_id" class="ssel" aria-label="Property of interest" data-fill
+                      onchange="this.form.submit()">
+                <option value={u.id} selected>
+                  {u.code}{u.state === "available" ? "" : ` · ${unitStateLabel(u.state)}`}
+                </option>
+                {addable.map((a) => <option value={a.id}>{a.code}</option>)}
+              </select>
+              <button class="px" type="submit" name="remove" value="1" aria-label={`Remove ${u.code}`}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                     stroke-linecap="round" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18"/></svg>
+              </button>
+            </form>
+          ))}
+
+          {/* Always present when they have nothing yet, so the field is a field
+              rather than an empty space with a button beside it. */}
+          {addable.length > 0 && (
+            <form method="post" action="/api/admin/enquiry" class="prow addprop"
+                  id={`addprop-${lead.id}`} hidden={wanted.length > 0}>
+              <input type="hidden" name="id" value={lead.id} />
+              <input type="hidden" name="action" value="interest_add" />
+              <input type="hidden" name="back" value={selfHref} />
+              <select name="unit_id" class="ssel" aria-label="Add a property" data-fill
+                      onchange="this.form.submit()">
+                <option value="">{wanted.length === 0 ? "No property yet" : "Choose a property…"}</option>
+                {addable.map((u) => <option value={u.id}>{u.code}</option>)}
+              </select>
+            </form>
+          )}
+          {addable.length === 0 && wanted.length === 0 && (
+            <p class="hint">Nothing is available in this project right now.</p>
+          )}
+        </section>
+
+        {/* Only where the project actually sells parking. A car park nobody
+            has is a question nobody should be asked. */}
+        {hasParking && (
+          <section>
+            <div class="hhead">
+              <h3>Additional parking</h3>
+              {wantsParking && parkingAddable.length > 0 && (
+                <button class="logbtn" type="button" data-add-park={lead.id}>Add parking</button>
+              )}
+            </div>
+
+            <form method="post" action="/api/admin/enquiry" class="onechange">
+              <input type="hidden" name="id" value={lead.id} />
+              <input type="hidden" name="action" value="contact" />
+              <input type="hidden" name="back" value={selfHref} />
+              <select name="wants_parking" class="ssel" aria-label="Additional parking"
+                      data-fill onchange="this.form.submit()">
+                <option value="no" selected={!wantsParking}>No</option>
+                <option value="yes" selected={wantsParking}>Yes</option>
+              </select>
+            </form>
+
+            {/* The spaces only appear once the answer is yes. Saying no clears
+                them at the endpoint — "not interested in parking" and
+                "interested in P3" cannot both be true. */}
+            {wantsParking && (
+              <div class="pklist">
+                {parkingWanted.map((x) => (
+                  <form method="post" action="/api/admin/enquiry" class="prow">
+                    <input type="hidden" name="id" value={lead.id} />
+                    <input type="hidden" name="action" value="parking_set" />
+                    <input type="hidden" name="back" value={selfHref} />
+                    <input type="hidden" name="replaces" value={x.id} />
+                    <select name="parking_id" class="ssel" aria-label="Parking space" data-fill
+                            onchange="this.form.submit()">
+                      <option value={x.id} selected>
+                        {x.code}{x.state === "available" ? "" : ` · ${parkingStateLabel(x.state)}`}
+                      </option>
+                      {parkingAddable.map((a) => <option value={a.id}>{a.code}</option>)}
+                    </select>
+                    <button class="px" type="submit" name="remove" value="1" aria-label={`Remove ${x.code}`}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+                           stroke-linecap="round" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18"/></svg>
+                    </button>
+                  </form>
+                ))}
+
+                {parkingAddable.length > 0 && (
+                  <form method="post" action="/api/admin/enquiry" class="prow"
+                        id={`addpark-${lead.id}`} hidden={parkingWanted.length > 0}>
+                    <input type="hidden" name="id" value={lead.id} />
+                    <input type="hidden" name="action" value="parking_add" />
+                    <input type="hidden" name="back" value={selfHref} />
+                    <select name="parking_id" class="ssel" aria-label="Add a parking space" data-fill
+                            onchange="this.form.submit()">
+                      <option value="">
+                        {parkingWanted.length === 0 ? "No space chosen yet" : "Choose a space…"}
+                      </option>
+                      {parkingAddable.map((x) => <option value={x.id}>{x.code}</option>)}
+                    </select>
+                  </form>
+                )}
+
+                {parkingAddable.length === 0 && parkingWanted.length === 0 && (
+                  <p class="hint">Every space in this project is taken.</p>
+                )}
+              </div>
+            )}
+          </section>
+        )}
+
+        <section>
+          <h3>Source</h3>
+          <form method="post" action="/api/admin/enquiry" class="onechange">
+            <input type="hidden" name="id" value={lead.id} />
+            <input type="hidden" name="action" value="contact" />
+            <input type="hidden" name="back" value={selfHref} />
+            <select name="source" class="ssel" aria-label="Source" data-fill onchange="this.form.submit()">
+              {LEAD_SOURCES.map((src) => (
+                <option value={src.value} selected={src.value === lead.source}>{src.label}</option>
+              ))}
+            </select>
+          </form>
+
+          {/* A referral and a broker arrive through a PERSON, and the record is
+              close to useless without knowing which one. "Other" needs it for a
+              different reason: it is the option picked because the list does
+              not fit, so the field is the only place the real answer can go.
+              The remaining sources are already the whole answer, so the box is
+              not there at all — and the endpoint clears the value if the source
+              moves to one of those, rather than leaving a stale name behind. */}
+          {sourceNeedsName(lead.source) && (
+            <form method="post" action="/api/admin/enquiry" class="srcname">
+              <input type="hidden" name="id" value={lead.id} />
+              <input type="hidden" name="action" value="contact" />
+              <input type="hidden" name="back" value={selfHref} />
+              <input type="text" name="source_detail" class="ssel" autocomplete="off"
+                     value={lead.source_detail ?? ""}
+                     placeholder={lead.source === "broker" ? "Which agency or agent?"
+                                  : lead.source === "other" ? "How did they find us?"
+                                  : "Who referred them?"}
+                     aria-label={sourceNameLabel(lead.source)} />
+              <button class="btn" type="submit">Save</button>
+            </form>
+          )}
+        </section>
+
+        {/* Two short answers, side by side: each is one word wide, and a
+            full-width dropdown holding "No" says nothing the label did not. */}
+        <div class="pair">
+          <section>
+            <h3>Presale</h3>
+            <form method="post" action="/api/admin/enquiry" class="onechange">
+              <input type="hidden" name="id" value={lead.id} />
+              <input type="hidden" name="action" value="contact" />
+              <input type="hidden" name="back" value={selfHref} />
+              <select name="presale" class="ssel" aria-label="Presale" data-fill onchange="this.form.submit()">
+                <option value="no" selected={!lead.presale}>No</option>
+                <option value="yes" selected={!!lead.presale}>Yes</option>
+              </select>
+            </form>
+          </section>
+
+          <section>
+            <h3>Discount</h3>
+            <form method="post" action="/api/admin/enquiry" class="onechange">
+              <input type="hidden" name="id" value={lead.id} />
+              <input type="hidden" name="action" value="contact" />
+              <input type="hidden" name="back" value={selfHref} />
+              {/* Whole points only. A discount is negotiated in round numbers, and
+                  free text would fill with "5", "5%", "five" and "~5" — four
+                  spellings of one number that no report can add up. */}
+              <select name="discount_pct" class="ssel" aria-label="Discount" data-fill onchange="this.form.submit()">
+                <option value="" selected={lead.discount_pct == null}>No discount</option>
+                {DISCOUNT_STEPS.map((n) => (
+                  <option value={String(n)} selected={lead.discount_pct === n}>{n}%</option>
+                ))}
+              </select>
+            </form>
+          </section>
+        </div>
+
+        <section>
+          <h3>Notes</h3>
+          {notes.map((n) => (
+            <div class="note">
+              <p>{n.body}</p>
+              <span>{n.author} · {dt(n.created_at)}</span>
+            </div>
+          ))}
+          <form method="post" action="/api/admin/enquiry" class="noteform">
+            <input type="hidden" name="id" value={lead.id} />
+            <input type="hidden" name="action" value="note" />
+            <input type="hidden" name="back" value={selfHref} />
+            <textarea name="body" rows="2" required placeholder="Spoke on the phone — wants a viewing in October."></textarea>
+            <button class="btn" type="submit">Add note</button>
+          </form>
+        </section>
+      </div>
+
+      <div class="colR">
+        <section class="histsec">
+          <div class="hhead">
+            <h3>History</h3>
+            {/* Logging is occasional; the history is what you come here to read.
+                A button that opens a small window keeps the permanent space for
+                the record and gives the form room when it is actually wanted. */}
+            <button class="logbtn" type="button" data-log-open={lead.id}>Log activity</button>
+          </div>
+          {feed.length === 0 ? (
+            <p class="none">Nothing recorded yet.</p>
+          ) : (
+            /* Its own scroll, so a long history does not push everything else
+               off the card and reading it does not move the rest of the page. */
+            <div class="histcard">
+              <ol class="feed">
+                {feed.map((f) => (
+                  <li class:list={["fitem", f.kind]}>
+                    <div class="ftop">
+                      <b>{f.icon ? `${f.icon} ` : ""}{f.title}</b>
+                      {/* When and who, stacked in the same right-hand column:
+                          both answer "who did this and when", and splitting
+                          them put the name at the far end of the description. */}
+                      <span class="fmeta">
+                        <span>{dt(f.when)}</span>
+                        {f.who && <span class="fwho">{f.who}</span>}
+                      </span>
+                    </div>
+                    {f.detail && <p class="fdetail">{f.detail}</p>}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+        </section>
+      </div>
+
     </div>
   </div>
 </dialog>
 
+{/* A modal of its own. Nested inside the profile it would be clipped by the
+    card; in the top layer it sits above it, and closing it leaves the profile
+    exactly as it was. */}
+<dialog class="logdlg" id={`log-${lead.id}`}>
+  <form method="post" action="/api/admin/enquiry" class="logform">
+    <input type="hidden" name="id" value={lead.id} />
+    <input type="hidden" name="action" value="activity" />
+    <input type="hidden" name="back" value={selfHref} />
+
+    <div class="logtop">
+      <h2>Log activity</h2>
+      <button class="lpx" type="button" data-log-close aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+             stroke-linecap="round" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <p class="logsub">Contact that happened away from the portal — {lead.name || "this lead"}.</p>
+
+    <div class="lgrid">
+      <label class="lf">
+        <span>What happened</span>
+        <select name="kind" data-fill>
+          {ACTIVITY_KINDS.map((k) => (
+            <option value={k.key}>{k.icon} {k.label}</option>
+          ))}
+        </select>
+      </label>
+      <label class="lf">
+        <span>When</span>
+        <input type="date" name="happened_on" value={todayISO} max={todayISO} />
+      </label>
+    </div>
+
+    <label class="lf">
+      <span>Description</span>
+      <textarea name="body" rows="4" required
+                placeholder="Talked through the payment schedule. Wants floor plans for Villa 3 before deciding."></textarea>
+    </label>
+
+    <label class="lf">
+      <span>Logged by</span>
+      <select name="logged_by" data-fill>
+        {people.map((x) => (
+          <option value={x.id} selected={x.id === defaultLoggedBy}>
+            {x.name}{x.id === meId ? " (you)" : ""}
+          </option>
+        ))}
+      </select>
+    </label>
+
+    <div class="logfoot">
+      <button class="ghost" type="button" data-log-close>Cancel</button>
+      <button class="btn" type="submit">Save</button>
+    </div>
+  </form>
+</dialog>
+
 <style>
-  /* A centred modal. transition-behavior lets a dialog animate across its own
-     display change; @starting-style gives the browser a frame to animate FROM,
-     without which it simply appears. */
   .lp {
-    width: min(860px, calc(100vw - 2.5rem));
-    max-height: min(88dvh, 900px);
-    margin: auto;
-    border: 1px solid #d7deea; border-radius: 1.3rem;
-    padding: 1.5rem 1.7rem 2rem; overflow-y: auto;
-    background: #ffffff; color: #16283e;
-    box-shadow: 0 32px 80px rgba(15, 26, 42, 0.24);
+    /* Anchored to the CONTENT area, not the viewport. A dialog is in the top
+       layer, so a centred one sits over the sidebar — and a navy rail landing on
+       the navy sidebar reads as one shape sliding over another. Starting past
+       the nav keeps the app's own furniture visible and the profile clearly
+       inside the page it belongs to.
+       232px is the sidebar; 74px when it is collapsed. */
+    --nav: 232px;
+    width: min(1180px, calc(100vw - var(--nav) - 3rem));
+    max-height: min(88dvh, 920px);
+    margin: auto 1.5rem auto calc(var(--nav) + 1.5rem);
+    padding: 0; overflow: hidden;
+    border: 0; border-radius: 20px; background: #ffffff; color: #16283e;
+    box-shadow: 0 32px 80px rgba(15, 26, 42, 0.28);
     opacity: 0; transform: translateY(10px) scale(0.985);
     transition: opacity 200ms ease, transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1),
                 overlay 220ms allow-discrete, display 220ms allow-discrete;
   }
+  :global(html.is-collapsed) .lp { --nav: 74px; }
+  /* Below the layout's own breakpoint the sidebar stacks above the content, so
+     there is nothing to clear and the modal centres again. */
+  @media (max-width: 860px) {
+    .lp { margin: auto; width: min(1180px, calc(100vw - 2rem)); }
+  }
   .lp[open] { opacity: 1; transform: translateY(0) scale(1); }
   @starting-style { .lp[open] { opacity: 0; transform: translateY(10px) scale(0.985); } }
-
   .lp::backdrop {
-    background: rgba(15, 26, 42, 0.36); opacity: 0;
+    /* Blurred as well as dimmed. The list behind is dense — rows, pills, a
+       board — and dimming alone left it legible enough to keep pulling the eye
+       off the record in front of it. The tint is lighter than it was to
+       compensate: blur already does most of the separating. */
+    background: rgba(10, 23, 39, 0.34); opacity: 0;
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
     transition: opacity 220ms ease, overlay 220ms allow-discrete, display 220ms allow-discrete;
   }
   .lp[open]::backdrop { opacity: 1; }
   @starting-style { .lp[open]::backdrop { opacity: 0; } }
   @media (prefers-reduced-motion: reduce) { .lp, .lp::backdrop { transition: none; } }
 
-  .lphead { display: flex; align-items: flex-start; gap: 0.9rem; flex-wrap: wrap; }
+  /* `minmax(0, 1fr)` on the ROW, and min-height:0 on the columns, is what makes
+     the two sides scroll. A grid item will not shrink below its content by
+     default, so the row grew past the card's max-height, the card clipped it
+     with overflow:hidden, and neither column ever became scrollable — the wheel
+     found nothing to move here and scrolled the page behind instead. */
+  .wrap {
+    position: relative; display: grid;
+    grid-template-columns: 268px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr);
+    max-height: inherit; min-height: 0;
+  }
+  /* Stacked, the card scrolls as one column: two scrolling panes on a phone is
+     two places to lose your position. */
+  @media (max-width: 760px) {
+    .wrap { grid-template-columns: 1fr; grid-template-rows: auto auto; overflow-y: auto; overscroll-behavior: contain; }
+    .wrap > .side, .wrap > .main { overflow: visible; }
+  }
+
+  /* ---- the person ---- */
+  /* The portal's own sidebar gradient, so the profile belongs to the product
+     rather than borrowing a colour from somewhere. */
+  .side {
+    background: linear-gradient(180deg, #0f2036 0%, #0a1727 100%);
+    color: #dbe5f3; padding: 1.4rem 1.2rem 1.6rem;
+    min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+  }
+  .sidetop { display: flex; align-items: flex-start; justify-content: space-between; }
   .avatar {
-    flex: none; width: 48px; height: 48px; border-radius: 50%;
-    display: grid; place-items: center; font-size: 1rem; font-weight: 800;
+    width: 58px; height: 58px; border-radius: 16px; display: grid; place-items: center;
+    font-size: 1.05rem; font-weight: 800; border: 1px solid;
   }
-  .who { flex: 1; min-width: 12rem; }
-  .who h2 { font-size: 1.16rem; font-weight: 800; line-height: 1.25; }
-  .sub { margin-top: 0.15rem; font-size: 0.78rem; color: #93a3b8; }
-  .muted { color: #93a3b8; }
-
-  .contact {
-    margin-top: 1.1rem; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.8rem 0.9rem;
-    background: #fbfcfe; border: 1px solid #e2e8f1; border-radius: 14px; padding: 0.9rem 1rem;
-  }
-  @media (max-width: 620px) { .contact { grid-template-columns: 1fr; } }
-  .cfield { display: grid; gap: 0.25rem; min-width: 0; }
-  .clab {
-    font-size: 0.6rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; color: #93a3b8;
-  }
-  .cin {
-    font: inherit; font-size: 0.84rem; font-weight: 600; color: #16283e; width: 100%;
-    padding: 0.45rem 0.6rem; border: 1px solid #e2e8f1; border-radius: 9px; background: #ffffff;
-  }
-  .cin::placeholder { font-weight: 400; font-style: italic; color: #b3c0d0; }
-  .cin:focus { outline: none; border-color: #53b27f; box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.16); }
-  .pick.quiet { display: block; }
-  .pick.quiet select { min-width: 0; border-radius: 9px; font-weight: 600; }
-
-  .cfoot {
-    grid-column: 1 / -1; display: flex; align-items: center; justify-content: flex-end; gap: 0.8rem;
-  }
-  .cerr { flex: 1; font-size: 0.76rem; font-weight: 600; color: #b3261e; }
-
-  .acts { display: flex; align-items: center; gap: 0.5rem; }
-  .act {
-    font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer; text-decoration: none;
-    padding: 0.45rem 0.9rem; border-radius: 999px; border: 1px solid #d5deea;
-    background: #ffffff; color: #46586f;
-  }
-  .act:hover { border-color: #53b27f; color: #2e7d54; }
-  .act.primary { background: #53b27f; border-color: #53b27f; color: #ffffff; }
-  .act.primary:hover { background: #47a071; color: #ffffff; }
+  /* Pinned to the card, over the white side, so it reads as "close this panel"
+     rather than as part of the person block. Above the scrolling column. */
   .lpx {
-    font-size: 1.3rem; line-height: 1; text-decoration: none; color: #93a3b8;
-    width: 1.9rem; height: 1.9rem; display: grid; place-items: center; border-radius: 8px;
+    position: absolute; top: 1rem; right: 1rem; z-index: 3;
+    flex: none; font: inherit; padding: 0; cursor: pointer;
+    width: 2rem; height: 2rem; display: grid; place-items: center;
+    color: #93a3b8; background: #ffffff;
+    border: 1px solid #e2e8f1; border-radius: 50%;
+    transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease;
   }
-  .lpx:hover { background: #f2f5f9; color: #16283e; }
-  .stageform { display: inline-flex; }
-  .pick { position: relative; display: inline-flex; }
-  .pick select {
-    font: inherit; font-size: 0.76rem; font-weight: 700;
-    color: var(--ink, #5c6f88); background: var(--bg, #f2f5f9);
-    border: 1px solid var(--bd, transparent); border-radius: 999px;
-    cursor: pointer; min-width: 128px;
-    padding-top: 0.45rem; padding-bottom: 0.45rem; padding-left: 0.95rem; line-height: 1.25;
+  .lpx svg { width: 13px; height: 13px; }
+  .lpx:hover { color: #16283e; background: #f2f5f9; border-color: #d7deea; }
+  .lpx:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.4); }
+
+  .nm { margin-top: 0.9rem; font-size: 1.15rem; font-weight: 800; color: #ffffff; line-height: 1.25; letter-spacing: -0.01em; }
+  .lang {
+    margin-left: 0.5rem; font-size: 0.6rem; font-weight: 700; color: #8fa3bd;
+    border: 1px solid rgba(219, 229, 243, 0.3); border-radius: 4px; padding: 0 0.24rem; vertical-align: 2px;
+  }
+  .proj { margin-top: 0.2rem; font-size: 0.76rem; color: #8fa3bd; }
+
+  .stageform { margin-top: 0.9rem; }
+  .stagesel {
+    font: inherit; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.03em; cursor: pointer;
+    width: 100%; color: #8fdcb4; background: rgba(83, 178, 127, 0.15);
+    border: 1px solid rgba(83, 178, 127, 0.4); border-radius: 999px;
+    padding: 0.5rem 0.9rem; line-height: 1.2;
   }
 
-  /* ---- the pipeline ---- */
-  .rail-block { margin-top: 1.6rem; }
-  .rail {
-    list-style: none; display: grid; grid-template-columns: repeat(var(--cols), 1fr);
-    background: #fbfcfe; border: 1px solid #e2e8f1; border-radius: 14px; padding: 1.1rem 0.6rem 0.9rem;
+  .hr { height: 1px; background: rgba(219, 229, 243, 0.13); margin: 1.15rem 0; }
+
+  .cf { display: grid; gap: 0.28rem; margin-bottom: 0.75rem; }
+  .cf > span {
+    font-size: 0.6rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #6c8099;
   }
-  .step { position: relative; display: grid; justify-items: center; gap: 0.3rem; }
-  /* The segment runs from the centre of the previous dot to the centre of this
-     one, so the track is continuous and the dots sit on it rather than beside it. */
-  .step .line {
-    position: absolute; top: 6px; right: 50%; width: 100%; height: 2px;
-    background: #e2e8f1;
+  .cf input, .cf select {
+    font: inherit; font-size: 0.8rem; width: 100%; color: #dbe5f3;
+    background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(219, 229, 243, 0.16);
+    border-radius: 8px; padding: 0.45rem 0.6rem;
   }
+  .cf input::placeholder { color: #56698220; color: rgba(140, 160, 190, 0.55); font-style: italic; }
+  .cf input:focus, .cf select:focus {
+    outline: none; border-color: #53b27f; background: rgba(83, 178, 127, 0.08);
+  }
+  .cf option { color: #16283e; }
+  /* The layout draws one chevron on every select, in a dark ink that vanishes on
+     navy. Same shape, lighter stroke. */
+  .side :global(.select-wrap::after) {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238fa3bd' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  }
+
+  .cerr { font-size: 0.72rem; font-weight: 600; color: #ff9d94; margin-bottom: 0.5rem; }
+  .save {
+    font: inherit; font-size: 0.72rem; font-weight: 700; cursor: pointer; width: 100%;
+    padding: 0.45rem; border-radius: 999px;
+    background: transparent; color: #dbe5f3; border: 1px solid rgba(219, 229, 243, 0.25);
+  }
+  .save:hover { background: rgba(219, 229, 243, 0.1); }
+
+
+  .act {
+    display: block; margin-top: 1.2rem; text-align: center; text-decoration: none;
+    font-size: 0.78rem; font-weight: 700; padding: 0.6rem; border-radius: 999px;
+    background: #53b27f; color: #ffffff;
+  }
+  .act:hover { background: #47a071; }
+
+  /* ---- the process ---- */
+  .main {
+    padding: 1.5rem 2rem 1.9rem;
+    /* `contain` stops the scroll handing off to the page once this column hits
+       its end — reaching the bottom of a history should not start moving the
+       list underneath. */
+    min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.5rem 1.9rem; align-content: start;
+  }
+  /* The pipeline wants the whole width; everything under it splits in two. */
+  .main > .full { grid-column: 1 / -1; }
+  .colL, .colR { min-width: 0; display: grid; gap: 1.5rem; align-content: start; }
+  /* A rule under the pipeline: it is a summary of the whole record, and what
+     follows is the detail behind it. Same hairline the rest of the portal uses. */
+  .main > .sep { border-bottom: 1px solid #eef2f7; padding-bottom: 1.35rem; }
+  /* The close button floats over this corner, so the first block keeps clear of it. */
+  .main > :first-child { padding-right: 2.6rem; }
+  @media (max-width: 1000px) {
+    .main { grid-template-columns: 1fr; }
+  }
+  h3 {
+    font-size: 0.62rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #2e7d54; margin-bottom: 0.75rem;
+  }
+  /* The one heading that names the whole record rather than a field in it, so
+     it carries a little more weight than the labels below. Tracking eases off
+     as the size goes up — 0.1em is a lot of air at this scale. */
+  h3.big { font-size: 0.78rem; letter-spacing: 0.07em; margin-bottom: 0.85rem; }
+
+  /* Room above the dots for the confirm button, which floats rather than
+     pushing the pipeline down — the rail must not jump when you point at it. */
+  /* A tint behind the stages, not a bordered box: the shape comes from the
+     colour alone. The heading stays outside it — it names the section, and a
+     card that swallowed it would read as a card of its own rather than a
+     picture of where this buyer has got to. */
+  .railform { margin: 0; background: #f1f8f4; border-radius: 14px; padding: 0.2rem 1.1rem 1.1rem; }
+  .rail { list-style: none; display: grid; grid-template-columns: repeat(var(--cols), 1fr); padding-top: 2.5rem; }
+  .step { position: relative; display: grid; }
+  /* Darker than the portal's usual hairline: on white #e2e8f1 reads as a faint
+     rule, but on the green tint it all but disappears, and a pipeline whose
+     unreached half is invisible looks like a two-stage pipeline. */
+  .step .line { position: absolute; top: 10px; right: 50%; width: 100%; height: 2px; background: #c6d4e0; }
   .step:first-child .line { display: none; }
-  .step.done .line, .step.now .line { background: #53b27f; }
+  .step.done .line, .step.now .line { background: #0f2036; }
+
+  /* The whole step is the target, not the 14px dot. */
+  .pick {
+    font: inherit; color: inherit; background: none; border: 0; padding: 0.25rem 0.2rem 0.3rem;
+    display: grid; justify-items: center; gap: 0.3rem; cursor: pointer; border-radius: 10px;
+  }
+  .step.now .pick { cursor: default; }
+  .pick:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.35); }
+
   .step .dot {
     position: relative; z-index: 1; width: 14px; height: 14px; border-radius: 50%;
-    background: #ffffff; border: 2px solid #d7deea;
+    background: #ffffff; border: 2px solid #b9c8d8;
+    transition: background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
   }
-  .step.done .dot { background: #53b27f; border-color: #53b27f; }
-  .step.now .dot { background: #ffffff; border-color: #53b27f; box-shadow: 0 0 0 4px rgba(83, 178, 127, 0.2); }
-  .sname { font-size: 0.72rem; font-weight: 700; color: #5c6f88; text-align: center; line-height: 1.3; }
+  .step.done .dot { background: #0f2036; border-color: #0f2036; }
+  /* Filled, not hollow. A ring around white was too quiet to answer "where are
+     they?" at a glance, which is the only question this row exists to answer. */
+  .step.now .dot { background: #53b27f; border-color: #53b27f; box-shadow: 0 0 0 4px rgba(83, 178, 127, 0.22); }
+  .sname {
+    font-size: 0.84rem; font-weight: 700; color: #5c6f88; text-align: center; line-height: 1.3;
+    transition: color 140ms ease;
+  }
   .step.now .sname { color: #16283e; }
-  .step.ahead .sname { color: #b3c0d0; }
-  .sdays { font-size: 0.68rem; color: #93a3b8; font-variant-numeric: tabular-nums; }
+  .step.ahead .sname { color: #8494a8; }
+  .sdays { font-size: 0.72rem; color: #93a3b8; font-variant-numeric: tabular-nums; }
   .step.now .sdays { color: #2e7d54; font-weight: 700; }
-  .stopped {
-    margin-top: 0.6rem; text-align: center; font-size: 0.76rem; font-weight: 700; color: #5c6f88;
+
+  /* Hover darkens the LABEL only, and is written after the state colours above
+     so it beats them at equal specificity — a stage that is still ahead is pale
+     grey, and the point of the hover is that it stops being pale.
+     A filled block behind the step made the row look like it had two current
+     stages at once, the green dot and whatever the cursor was over. */
+  .step .pick:hover .sname { color: #16283e; }
+
+  /* ---- the offer ---- */
+  .mark {
+    position: absolute; bottom: calc(100% + 0.45rem); left: 50%; z-index: 4;
+    transform: translate(-50%, 4px); transform-origin: bottom center;
+    font: inherit; font-size: 0.67rem; font-weight: 700; letter-spacing: 0.01em;
+    white-space: nowrap; cursor: pointer;
+    padding: 0.4rem 0.7rem; border-radius: 8px;
+    color: #ffffff; background: #16283e; border: 0;
+    box-shadow: 0 6px 16px rgba(15, 32, 54, 0.24);
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity 130ms ease, transform 130ms cubic-bezier(0.22, 0.61, 0.36, 1),
+                visibility 130ms;
   }
-
-  .cols { margin-top: 0.4rem; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 1.8rem; }
-  @media (max-width: 720px) { .cols { grid-template-columns: 1fr; } }
-
-  .block { margin-top: 1.4rem; }
-  .block h3 {
-    font-size: 0.64rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase;
-    color: #2e7d54; margin-bottom: 0.65rem;
+  /* The little nib, so the button clearly belongs to the dot beneath it. */
+  .mark::after {
+    content: ""; position: absolute; top: 100%; left: 50%; margin-left: -4px;
+    border: 4px solid transparent; border-top-color: #16283e;
   }
+  .mark:hover { background: #0f2036; }
+  .step.picked .mark { opacity: 1; visibility: visible; pointer-events: auto; transform: translate(-50%, 0); }
+  .step.picked .sname { color: #16283e; }
+  .step.picked .dot { border-color: #16283e; }
+  @media (prefers-reduced-motion: reduce) { .mark, .sname, .step .dot { transition: none; } }
+  .stopped { margin-top: 0.6rem; text-align: center; font-size: 0.76rem; font-weight: 700; color: #5c6f88; }
 
-  .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
-  .tile { background: #fbfcfe; border: 1px solid #e2e8f1; border-radius: 12px; padding: 0.7rem 0.8rem; }
-  .tile b {
-    display: block; font-size: 1.3rem; font-weight: 800; line-height: 1.1; color: #16283e;
-    font-variant-numeric: tabular-nums;
+  /* ---- why it ended ---- */
+  .lostbox {
+    margin-top: 0.9rem; padding: 0.85rem 0.9rem; border-radius: 12px;
+    background: #f7f9fc; border: 1px solid #e2e8f1;
   }
-  .tile b.warn { color: #b3261e; }
-  .tile span { display: block; margin-top: 0.15rem; font-size: 0.68rem; color: #5c6f88; }
-
-  .kvs { display: grid; grid-template-columns: auto 1fr; gap: 0.4rem 0.9rem; font-size: 0.82rem; }
-  .kvs dt { color: #93a3b8; }
-  .said {
-    margin-top: 0.8rem; font-size: 0.82rem; line-height: 1.6; color: #46586f;
-    background: #fbfcfe; border-left: 2px solid #d7deea; border-radius: 0 8px 8px 0; padding: 0.6rem 0.8rem;
+  /* Amber while it is unanswered — the one thing on this card that is asking
+     for something rather than reporting. It goes quiet the moment it is filled
+     in, so a record that is complete never nags. */
+  .lostbox.asking { background: #fdf6e9; border-color: #f0dcb8; }
+  .losthead { display: flex; align-items: baseline; justify-content: space-between; gap: 0.7rem; margin-bottom: 0.55rem; }
+  .losthead h4 {
+    font-size: 0.62rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #5c6f88;
   }
+  .lostbox.asking .losthead h4 { color: #a35700; }
+  .lostnow { font-size: 0.76rem; font-weight: 800; color: #16283e; }
+  .lostrow { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+  .lostrow > :global(.select-wrap) { flex: 0 0 12rem; }
+  .lostnote { flex: 1 1 12rem; min-width: 0; cursor: text; }
 
-  .feed { list-style: none; }
+  .onechange { display: block; }
+  .pklist { margin-top: 0.4rem; }
+  .pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem 1.1rem; }
+  @media (max-width: 620px) { .pair { grid-template-columns: 1fr; } }
+  .srcname { display: flex; gap: 0.4rem; align-items: center; margin-top: 0.4rem; }
+  .srcname input { flex: 1 1 auto; min-width: 0; cursor: text; }
+
+  /* ---- the properties they are looking at ---- */
+  .prow { display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.4rem; }
+  .prow:last-of-type { margin-bottom: 0; }
+  /* The select is the row; the wrapper the layout adds around it has to stretch
+     with it, or the remove button would sit against the chevron. */
+  /* :global because that wrapper is created by the layout's script and never
+     carries this component's scope attribute — a scoped selector would simply
+     never match it. */
+  .prow > :global(.select-wrap) { flex: 1 1 auto; min-width: 0; }
+  .px {
+    flex: none; font: inherit; padding: 0; cursor: pointer;
+    width: 1.55rem; height: 1.55rem; display: grid; place-items: center;
+    color: #93a3b8; background: none; border: 0; border-radius: 50%;
+    transition: color 140ms ease, background-color 140ms ease;
+  }
+  .px svg { width: 11px; height: 11px; }
+  .px:hover { color: #16283e; background: #eef2f7; }
+  .px:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.35); }
+  .addprop[hidden] { display: none; }
+  .hint { margin-top: 0.35rem; font-size: 0.72rem; color: #93a3b8; }
+  /* Full width of the column, so these line up with the note box below them
+     rather than stopping short of it. */
+  .ssel {
+    font: inherit; font-size: 0.82rem; width: 100%;
+    padding: 0.55rem 0.7rem; border: 1px solid #d5deea; border-radius: 10px;
+    background: #fbfcfe; color: #16283e; cursor: pointer;
+  }
+  .ssel:focus { outline: none; border-color: #53b27f; background: #ffffff; }
+  .none { font-size: 0.82rem; color: #93a3b8; }
+
+  /* ---- logging contact ---- */
+  .hhead { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; margin-bottom: 0.75rem; }
+  .hhead h3 { margin-bottom: 0; }
+  .logbtn {
+    font: inherit; font-size: 0.7rem; font-weight: 700; cursor: pointer; white-space: nowrap;
+    color: #16283e; background: #ffffff; border: 1px solid #d7deea; border-radius: 8px;
+    padding: 0.34rem 0.65rem;
+    transition: background-color 140ms ease, border-color 140ms ease;
+  }
+  .logbtn:hover { background: #f2f5f9; border-color: #b9c7d8; }
+  .logbtn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.35); }
+
+  .logdlg {
+    width: min(30rem, calc(100vw - 2.5rem)); padding: 0; border: 0; border-radius: 16px;
+    background: #ffffff; color: #16283e; box-shadow: 0 28px 70px rgba(15, 26, 42, 0.32);
+    opacity: 0; transform: translateY(8px) scale(0.985);
+    transition: opacity 170ms ease, transform 190ms cubic-bezier(0.22, 0.61, 0.36, 1),
+                overlay 190ms allow-discrete, display 190ms allow-discrete;
+  }
+  .logdlg[open] { opacity: 1; transform: translateY(0) scale(1); }
+  @starting-style { .logdlg[open] { opacity: 0; transform: translateY(8px) scale(0.985); } }
+  .logdlg::backdrop {
+    background: rgba(10, 23, 39, 0.4); opacity: 0;
+    transition: opacity 190ms ease, overlay 190ms allow-discrete, display 190ms allow-discrete;
+  }
+  .logdlg[open]::backdrop { opacity: 1; }
+  @starting-style { .logdlg[open]::backdrop { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .logdlg, .logdlg::backdrop { transition: none; } }
+
+  .logform { padding: 1.25rem 1.4rem 1.35rem; display: grid; gap: 0.85rem; }
+  .logtop { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+  .logtop h2 { font-size: 1rem; font-weight: 800; letter-spacing: -0.01em; }
+  /* The profile's close button, on a light ground — see .lpx. */
+  .logdlg .lpx { position: static; transform: none; }
+  .logsub { margin-top: -0.6rem; font-size: 0.76rem; color: #93a3b8; }
+  .lgrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 10rem); gap: 0.85rem; }
+  @media (max-width: 420px) { .lgrid { grid-template-columns: 1fr; } }
+  .lf { display: grid; gap: 0.28rem; }
+  .lf > span {
+    font-size: 0.62rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #93a3b8;
+  }
+  .lf select, .lf input, .lf textarea {
+    font: inherit; font-size: 0.82rem; width: 100%; padding: 0.55rem 0.7rem; color: #16283e;
+    border: 1px solid #d5deea; border-radius: 10px; background: #fbfcfe;
+  }
+  .lf textarea { resize: vertical; line-height: 1.5; }
+  .lf select { cursor: pointer; }
+  .lf select:focus, .lf input:focus, .lf textarea:focus { outline: none; border-color: #53b27f; background: #ffffff; }
+  .logfoot { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.15rem; }
+  .ghost {
+    font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer;
+    color: #5c6f88; background: none; border: 0; border-radius: 999px; padding: 0.5rem 0.9rem;
+  }
+  .ghost:hover { background: #f2f5f9; }
+
+  /* ---- the history, in a box of its own ---- */
+  /* Bounded and scrollable: a buyer with two years of contact would otherwise
+     make the card's own scrollbar the only way to reach the notes beside it. */
+  .histsec { min-height: 0; }
+  .histcard {
+    border: 1px solid #e2e8f1; border-radius: 12px; background: #fbfcfe;
+    /* Tight on the left: the entries already carry their own 1rem indent for
+       the dots and the thread, and stacking the card's padding on top of that
+       left a visible margin before anything started. The right side keeps its
+       padding — that is where the scrollbar sits. */
+    padding: 0.35rem 0.85rem 0.55rem 0.75rem; max-height: 26rem;
+    overflow-y: auto; overscroll-behavior: contain;
+  }
+  /* A small inset on the card so the dots have air around them, and the rest of
+     the indent inside the entry, where the dots and the thread live. */
+  .histcard .fitem { padding-left: 0.7rem; }
+  .histcard .fitem::before { left: 0; }
+  .histcard .fitem::after { left: 3px; }
+  .histcard::-webkit-scrollbar { width: 10px; }
+  .histcard::-webkit-scrollbar-thumb { background: #dbe3ee; border-radius: 6px; border: 3px solid #fbfcfe; }
+
+  /* The browser's own 40px list indent, which `list-style: none` does NOT
+     remove — that was the gap, not the card's padding. */
+  .feed { list-style: none; margin: 0; padding: 0; }
   .fitem { position: relative; padding: 0.5rem 0 0.5rem 1.1rem; font-size: 0.82rem; }
   .fitem::before {
     content: ""; position: absolute; left: 3px; top: 0.95rem;
@@ -420,11 +1013,13 @@ const contactError = Astro.url.searchParams.get("contact_error");
   .fitem.in::before { background: #53b27f; }
   .fitem.out::before { background: #5b8fc9; }
   .fitem.document_sent::before { background: #e8a33d; }
+  .fitem.log::before { background: #16283e; }
   .ftop { display: flex; justify-content: space-between; gap: 0.6rem; align-items: baseline; }
   .ftop b { font-weight: 700; }
   .ftop span { font-size: 0.72rem; color: #93a3b8; white-space: nowrap; }
+  .fmeta { display: grid; justify-items: end; text-align: right; gap: 0.05rem; }
   .fdetail { margin-top: 0.1rem; color: #46586f; overflow-wrap: anywhere; }
-  .fwho { margin-top: 0.05rem; font-size: 0.72rem; color: #93a3b8; }
+  .fwho { font-size: 0.7rem; color: #a7b4c5; }
 
   .note { background: #fffdf5; border: 1px solid #f0e6c8; border-radius: 10px; padding: 0.6rem 0.75rem; margin-bottom: 0.45rem; }
   .note p { font-size: 0.82rem; line-height: 1.55; color: #4a422c; }
@@ -435,23 +1030,110 @@ const contactError = Astro.url.searchParams.get("contact_error");
     border: 1px solid #d5deea; border-radius: 10px; background: #fbfcfe; color: #16283e;
   }
   .noteform textarea:focus { outline: none; border-color: #53b27f; background: #fff; }
+  .btn {
+    font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer; color: #ffffff;
+    background: #53b27f; border: 0; border-radius: 999px; padding: 0.5rem 1.1rem;
+  }
+  .btn:hover { background: #47a071; }
 </style>
 
-<script is:inline>
-  // INLINE, not a module. A module script is deferred, so the page painted
-  // first and the modal arrived a frame or two later — visible as a stutter on
-  // top of everything else. Running here, synchronously, the dialog is already
-  // open before the browser's first paint, and its entrance is the only motion.
-  (function () {
-    var modal = document.getElementById("lead-profile");
-    if (!modal || typeof modal.showModal !== "function") return;
-    if (!modal.open) modal.showModal();
+<script>
+  /**
+   * Picking a stage on the pipeline.
+   *
+   * One listener on the document, not one per profile: the page can hold a
+   * profile for every lead in the list, and forty copies of the same handler is
+   * forty chances for them to disagree with each other.
+   *
+   * A pick only ARMS the move. The confirm button is the second click, because
+   * the pipeline is a record of what happened and a stray click on a diagram
+   * should not be able to rewrite it.
+   */
+  const clear = (except?: Element | null) => {
+    document.querySelectorAll<HTMLElement>(".step.picked").forEach((s) => {
+      if (s === except) return;
+      s.classList.remove("picked");
+      s.querySelector<HTMLButtonElement>(".pick")?.setAttribute("aria-pressed", "false");
+    });
+  };
 
-    var back = modal.dataset.back || ".";
-    // Escape and a backdrop click both fire `close`. Routing every dismissal
-    // through one place means they all agree, and a refresh cannot reopen a
-    // profile the person just shut.
-    modal.addEventListener("close", function () { window.location.href = back; });
-    modal.addEventListener("click", function (ev) { if (ev.target === modal) modal.close(); });
-  })();
+  document.addEventListener("click", (ev) => {
+    const pick = (ev.target as HTMLElement | null)?.closest<HTMLButtonElement>(".pick");
+    if (!pick) {
+      // Anywhere else — including the backdrop and the rest of the profile —
+      // puts the offer away again.
+      clear();
+      return;
+    }
+    const step = pick.closest<HTMLElement>(".step");
+    if (!step) return;
+    // The stage they are already in has nothing to offer.
+    if (step.classList.contains("now")) { clear(); return; }
+
+    const arming = !step.classList.contains("picked");
+    clear(step);
+    step.classList.toggle("picked", arming);
+    pick.setAttribute("aria-pressed", String(arming));
+  });
+
+  // Escape backs out one step at a time: it cancels an armed move first, and
+  // only closes the profile once there is nothing left to cancel.
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key !== "Escape") return;
+    if (document.querySelector(".step.picked")) {
+      ev.preventDefault();
+      clear();
+    }
+  });
+
+  /**
+   * Opening and closing the log window.
+   *
+   * Delegated like the pipeline: one listener, however many profiles the page
+   * is holding. showModal on a second dialog stacks it above the profile in the
+   * top layer, so the profile stays exactly where it was underneath.
+   */
+  document.addEventListener("click", (ev) => {
+    const t = ev.target as HTMLElement | null;
+
+    const open = t?.closest<HTMLElement>("[data-log-open]");
+    if (open) {
+      const dlg = document.getElementById(`log-${open.dataset.logOpen}`);
+      if (dlg instanceof HTMLDialogElement) {
+        dlg.showModal();
+        // Straight into the description: the type and the date are already
+        // right for the common case, and what happened is the bit only a
+        // person can supply.
+        dlg.querySelector<HTMLTextAreaElement>("textarea")?.focus();
+      }
+      return;
+    }
+
+    // "Add property" and "Add parking" just reveal a picker; choosing saves.
+    const reveal = (id: string) => {
+      const form = document.getElementById(id);
+      if (!form) return;
+      form.hidden = false;
+      form.querySelector<HTMLSelectElement>("select")?.focus();
+    };
+
+    const addProp = t?.closest<HTMLElement>("[data-add-prop]");
+    if (addProp) { reveal(`addprop-${addProp.dataset.addProp}`); return; }
+
+    const addPark = t?.closest<HTMLElement>("[data-add-park]");
+    if (addPark) { reveal(`addpark-${addPark.dataset.addPark}`); return; }
+
+    if (t?.closest("[data-log-close]")) {
+      t.closest("dialog")?.close();
+      return;
+    }
+    // Clicking the backdrop — the dialog itself is the event target then.
+    if (t instanceof HTMLDialogElement && t.classList.contains("logdlg")) t.close();
+  });
+
+  // Closing a profile with something armed must not leave it armed for next time.
+  document.addEventListener("close", (ev) => {
+    const dlg = ev.target as HTMLElement | null;
+    if (dlg && (dlg as HTMLElement).matches?.("dialog")) clear();
+  }, true);
 </script>

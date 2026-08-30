@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "./supabase";
 import { sendMessage } from "./zohoAccount";
 import { documentBlockHtml, LINK_EXPIRY_DAYS } from "./projectDocuments";
+import { stageLabel } from "./pipeline";
 
 /**
  * Send a reply to a buyer from the project's own mailbox.
@@ -234,7 +235,9 @@ export async function sendEnquiryReply(opts: {
       inquiry_id: inquiryId,
       actor_id: actorId,
       kind: "stage_changed",
-      detail: { from: "new", to: "info", label: "Information sharing", via: "reply" },
+      // Read from the stage list, never typed out: a label written by hand here
+      // is a second copy of the wording, and the copy is what goes stale.
+      detail: { from: "new", to: "info", label: stageLabel("info"), via: "reply" },
     });
   }
   // One event per document rather than one listing them all: the history is read

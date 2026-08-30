@@ -34,6 +34,25 @@ export type EnquiryRow = {
   source_page: string | null;
   /** How the lead reached us — see LEAD_SOURCES. */
   source?: string | null;
+  /** Where they live, free text. Residence, not nationality: it is the field
+   *  that decides which tax and residency conversation a buyer is in. */
+  country?: string | null;
+  /** Who referred them, or which agency sent them. Only meaningful for the two
+   *  sources that come from a person — see sourceNeedsName. */
+  source_detail?: string | null;
+  /** Buying on presale terms. False until somebody says otherwise. */
+  presale?: boolean | null;
+  /** An agreed discount, 1–10%. Null means none agreed, which is not 0%. */
+  discount_pct?: number | null;
+  /** Wants a parking space. Separate from WHICH spaces: the first is known on
+   *  the first call, the second may never be decided at all. */
+  wants_parking?: boolean | null;
+  /** Why they fell through — see LOST_REASONS. Only meaningful once the stage
+   *  is not_proceeding, and cleared if they ever come back. */
+  lost_reason?: string | null;
+  lost_note?: string | null;
+  lost_at?: string | null;
+
   /** Legacy. Ownership was removed; nothing writes this any more. */
   assigned_to: string | null;
   triage: Triage;
@@ -122,26 +141,67 @@ export const LOCALE_LABEL: Record<string, string> = { en: "English", es: "Españ
  * TEXT in the database with the list here, for the same reason stages are:
  * adding "Instagram" next spring should be an edit, not a migration.
  */
+/**
+ * The sources that need a second answer.
+ *
+ * A referral has someone who made it and a broker is an agency, so both carry a
+ * name. "Other" carries the source itself — it is the option chosen precisely
+ * because the list does not describe what happened, and without somewhere to
+ * say what did, it records nothing at all. The rest — a website form, an
+ * email, an event — are already the whole answer.
+ */
+export const SOURCES_WITH_NAME: string[] = ["referral", "broker", "other"];
+
+export const sourceNeedsName = (source: string | null | undefined): boolean =>
+  typeof source === "string" && SOURCES_WITH_NAME.includes(source);
+
+/** What to call that second answer, which is a different question each time. */
+export const sourceNameLabel = (source: string | null | undefined): string =>
+  source === "broker" ? "Agent or agency"
+  : source === "other" ? "Where did they come from"
+  : "Who referred them";
+
+/**
+ * Discounts offered on a unit, in whole percent.
+ *
+ * Whole numbers 1–10 rather than free text: a discount is negotiated in round
+ * points, and a free-text field would fill with "5", "5%", "five" and "~5" —
+ * four spellings of one number that no report can add up.
+ */
+export const DISCOUNT_STEPS: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+export const isDiscountStep = (n: unknown): boolean =>
+  typeof n === "number" && Number.isInteger(n) && n >= 1 && n <= 10;
+
+export const discountLabel = (n: number | null | undefined): string =>
+  typeof n === "number" && isDiscountStep(n) ? `${n}%` : "No discount";
+
 export const LEAD_SOURCES = [
   { value: "website",  label: "Website form", manual: false },
   { value: "email",    label: "Email",        manual: false },
-  { value: "walk_in",  label: "Walk-in",      manual: true },
   { value: "phone",    label: "Phone call",   manual: true },
   { value: "referral", label: "Referral",     manual: true },
   { value: "broker",   label: "Agent / broker", manual: true },
-  { value: "portal",   label: "Property portal", manual: true },
   { value: "event",    label: "Event",        manual: true },
   { value: "other",    label: "Other",        manual: true },
 ] as const;
 
-/** Only the ones a human should be able to choose. */
-export const MANUAL_LEAD_SOURCES = LEAD_SOURCES.filter((s) => s.manual);
-
 export const sourceLabel = (value: string | null | undefined): string =>
   LEAD_SOURCES.find((s) => s.value === value)?.label ?? "Unknown";
 
-export const isManualSource = (value: unknown): boolean =>
-  typeof value === "string" && MANUAL_LEAD_SOURCES.some((s) => s.value === value);
+/**
+ * Every source is offerable, wherever it is asked for.
+ *
+ * Add lead used to offer only the `manual` ones, on the reasoning that a lead
+ * typed in by hand did not arrive through the website form or the mail sync.
+ * In practice that is not what the field records — it records where the buyer
+ * came FROM, and someone who rings up after finding the site came from the
+ * website however their record was created. Two dropdowns for one field also
+ * meant the profile could show a value Add lead could not set, which is the
+ * kind of difference nobody remembers until it is confusing.
+ */
+export const isLeadSource = (value: unknown): boolean =>
+  typeof value === "string" && LEAD_SOURCES.some((s) => s.value === value);
 
 /**
  * A phone number reduced to something comparable.

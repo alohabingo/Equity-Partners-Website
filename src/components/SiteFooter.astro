@@ -1,6 +1,7 @@
 ---
 import { buildLocalizedPath, withLocalizedHash, type Locale } from "../lib/i18n";
 import { getUiTranslations } from "../i18n/ui";
+import CookieBanner from "./CookieBanner.astro";
 
 interface Props {
   locale: Locale;
@@ -10,6 +11,12 @@ const currentYear = new Date().getFullYear();
 const { locale } = Astro.props;
 const t = getUiTranslations(locale);
 ---
+
+{/* Hangs off the footer because it is the one body-level component every
+    public page carries — the same reason the pixel hangs off SEO.astro. It is
+    fixed-position, so where it sits in the markup does not affect where it
+    appears. */}
+<CookieBanner locale={locale} />
 
 <footer class="footer">
   <div class="footer-top">

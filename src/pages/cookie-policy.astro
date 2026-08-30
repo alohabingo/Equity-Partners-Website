@@ -3,10 +3,12 @@ import InnerSiteHeader from "../components/InnerSiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import SEO from "../components/SEO.astro";
 import { buildLocalizedPath, getLocaleFromUrl } from "../lib/i18n";
+import { getUiTranslations } from "../i18n/ui";
 import { getContentTranslations } from "../i18n/content";
 import { getPageTitle } from "../i18n/ui";
 const locale = getLocaleFromUrl(Astro.url);
 const content = getContentTranslations(locale).cookies;
+const ui = getUiTranslations(locale);
 ---
 
 <html lang={locale}>
@@ -213,11 +215,26 @@ const content = getContentTranslations(locale).cookies;
               </div>
             ))
           }
+
+          {/* The way back. Without it someone who accepted has no route to
+              withdraw, which the section above promises them. It reopens the
+              banner in place rather than being a page of its own. */}
+          <div class="legal-block">
+            <a class="cookie-reopen" href="#" data-cookie-reopen>{ui.cookieBanner.change}</a>
+          </div>
         </div>
       </div>
     </section>
 
     <SiteFooter locale={locale} />
+
+    <style>
+      .cookie-reopen {
+        display: inline-block; font-size: 0.9rem; font-weight: 700;
+        color: #2e7d54; text-decoration: underline; cursor: pointer;
+      }
+      .cookie-reopen:hover { color: #16283e; }
+    </style>
 
     <script type="module">
       const root = document.body;

@@ -33,14 +33,14 @@
 export const BUYER_STAGES = [
   { key: "new",            label: "New enquiry",         shade: "#d3ece0",
     tint: "#eff7f3", edge: "#cfe4d9", ink: "#4a7a66" },
-  { key: "info",           label: "Information sharing", shade: "#86caab",
+  { key: "info",           label: "Info shared"       , shade: "#86caab",
     tint: "#e4f3ec", edge: "#bcdccb", ink: "#2f7a58" },
   { key: "reservation",    label: "Reservation",         shade: "#3da177",
     tint: "#d8efe4", edge: "#a9d5bf", ink: "#1f6f4d" },
   { key: "delivery",       label: "Property delivery",   shade: "#1d5c42",
     tint: "#cde9db", edge: "#93cbb1", ink: "#17553c", terminal: true },
   // Kept off the live list rather than deleted. Every dead lead has to go
-  // SOMEWHERE: without an exit they sit in Information sharing forever, and
+  // SOMEWHERE: without an exit they sit in Info shared forever, and
   // within a year that stage is mostly ghosts - which is how a team stops
   // believing its own pipeline.
   { key: "not_proceeding", label: "Not proceeding",      shade: "#c3cfe0",
@@ -79,14 +79,15 @@ export function daysSince(from: string | Date, now: Date = new Date()): number {
  * about a year later.
  *
  * Time is SUMMED per stage, not taken from the last visit. A buyer who goes
- * back from Reservation to Information sharing has genuinely spent time in
- * Information sharing twice, and hiding the first visit would make a stalling
+ * back from Reservation to Info shared has genuinely spent time in Info shared
+ * twice, and hiding the first visit would make a stalling
  * sale look fresher than it is.
  */
 export function stageDurations(
   createdAt: string,
   events: { detail: any; created_at: string }[],
   now: Date = new Date(),
+  stageNow?: string | null,
 ): { totals: Record<string, number>; current: string; enteredCurrentAt: string } {
   // Oldest first — this reads as a journey, and the events arrive newest first.
   const moves = [...events]
@@ -97,6 +98,23 @@ export function stageDurations(
     { stage: moves[0]?.detail?.from ?? "new", from: new Date(createdAt).getTime() },
   ];
   for (const m of moves) legs.push({ stage: m.detail.to, from: new Date(m.created_at).getTime() });
+
+  // The RECORD wins over the event stream. `inquiries.stage` is what every
+  // other view of this buyer reads, so if the two ever disagree the profile
+  // has to agree with the list rather than quietly show its own version.
+  //
+  // They can disagree for ordinary reasons: a stage set before events were
+  // written, an import, or an old event naming a stage that no longer exists
+  // (the four-stage rename left `contacted` and friends sitting in history).
+  // The last one is the damaging case — an unrecognised stage matches no step,
+  // so the pipeline draws with nothing marked at all.
+  //
+  // Relabelling the final leg rather than appending one is deliberate: the time
+  // since the last recorded move HAS been spent in whatever stage the record
+  // says, and appending would invent a moment of transition that never happened.
+  if (stageNow && isValidStage(stageNow) && legs[legs.length - 1].stage !== stageNow) {
+    legs[legs.length - 1].stage = stageNow;
+  }
 
   const totals: Record<string, number> = {};
   for (let i = 0; i < legs.length; i++) {

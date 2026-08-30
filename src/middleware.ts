@@ -20,6 +20,11 @@ const SUPER_ONLY = [
   "/admin/subscribers",
   "/admin/vault",
   "/admin/users",
+  "/admin/settings",
+  // Added with the parking card. The endpoint was reachable by any admin while
+  // every other project endpoint beside it was super-only — the same guard, one
+  // line late.
+  "/api/admin/project-parking",
   "/api/admin/lead-status",
   "/api/admin/lead-reply",
   "/api/admin/zoho-sync",

@@ -1,5 +1,7 @@
 ---
 import { BUYER_STAGES, stageTheme, daysSince } from "../../lib/pipeline";
+import { localeChip, localeTitle } from "../../lib/enquiries";
+import LeadTable from "./LeadTable.astro";
 
 /**
  * The buyer list: a stage strip that doubles as a filter, and the table.
@@ -18,9 +20,14 @@ export type LeadRow = {
   name: string | null;
   email: string | null;
   stage: string;
+  locale?: string | null;
   project_id: string | null;
   /** When they last moved — or arrived, if they never have. */
   since: string;
+  /** Unit codes they are interested in, oldest first. */
+  properties?: string[];
+  /** Why they fell through, for the closed list. */
+  lost_reason?: string | null;
 };
 
 interface Props {
@@ -31,29 +38,63 @@ interface Props {
 }
 const { leads, projects, showProject = true } = Astro.props;
 
-const projectById = new Map(projects.map((p) => [p.id, p]));
-const projectName = (id: string | null) => {
-  const p = id ? projectById.get(id) : null;
-  return p ? ((p.nav_name ?? "").trim() || p.name) : "—";
-};
-
 const q = Astro.url.searchParams;
 const stageFilter = q.get("stage") ?? "";
-// "Not proceeding" stays out of the way unless asked for. It is the one stage
-// that only grows, so leaving it in would slowly make the list look busier than
-// the business is.
-const showClosed = q.get("closed") === "1" || stageFilter === "not_proceeding";
+// Two ways of looking at the same buyers. The list is the default and always
+// will be: it answers "who has been waiting longest", which is the question
+// this page exists for. The board answers "where is everyone", which is a
+// different and less urgent one.
+const view = q.get("view") === "pipeline" ? "pipeline" : "list";
 
 const counts = new Map<string, number>();
 for (const l of leads) counts.set(l.stage, (counts.get(l.stage) ?? 0) + 1);
 
-const rows = leads
-  .filter((l) => (stageFilter ? l.stage === stageFilter : showClosed || l.stage !== "not_proceeding"))
-  // Longest-waiting first. Newest-first is the wrong default for a list whose
-  // whole purpose is finding whoever has been left alone too long.
-  .sort((a, b) => new Date(a.since).getTime() - new Date(b.since).getTime());
+/**
+ * Four tiles, not one per stage.
+ *
+ * A tile for every stage made the strip a second copy of the pipeline, which
+ * the board now draws far better. These four are the numbers someone actually
+ * asks for: how many are new, how many there are in total, how many have got as
+ * far as reserving, and how many fell away.
+ *
+ * Each is still a filter — the middle one clears it, which is what "all" means
+ * on a filter strip.
+ */
+const TILES = [
+  { key: "new", label: "New enquiries", count: counts.get("new") ?? 0, colour: stageTheme("new").colour },
+  { key: "", label: "All enquiries", count: leads.length, colour: "#16283e" },
+  { key: "reservation", label: "Reservations", count: counts.get("reservation") ?? 0, colour: stageTheme("reservation").colour },
+  { key: "not_proceeding", label: "Not proceeding", count: counts.get("not_proceeding") ?? 0, colour: stageTheme("not_proceeding").colour },
+];
 
-const back = Astro.url.pathname + Astro.url.search;
+// Longest-waiting first. Newest-first is the wrong default for a list whose
+// whole purpose is finding whoever has been left alone too long.
+const byWaiting = (a: LeadRow, b: LeadRow) =>
+  new Date(a.since).getTime() - new Date(b.since).getTime();
+
+const rows = leads
+  .filter((l) => (stageFilter ? l.stage === stageFilter : l.stage !== "not_proceeding"))
+  .sort(byWaiting);
+
+// "Not proceeding" is the one stage that only ever grows, so it is kept out of
+// the live list and folded into its own closed section above it. Hidden
+// entirely when it is empty, and while a stage filter is on — the filter is
+// already the answer to "show me only these".
+const closed = stageFilter ? [] : leads.filter((l) => l.stage === "not_proceeding").sort(byWaiting);
+
+// The board's columns. "Not proceeding" is not one of them: it is not further
+// along than anything, it is off to one side, and a column for it would invite
+// people to drag buyers into it as if it were the fifth step.
+const BOARD_STAGES = BUYER_STAGES.filter((st) => st.key !== "not_proceeding");
+const columns = BOARD_STAGES.map((st) => ({
+  stage: st,
+  items: leads.filter((l) => l.stage === st.key).sort(byWaiting),
+}));
+
+const initials = (name: string | null) =>
+  (name ?? "").split(/\s+/).filter(Boolean).slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "").join("") || "?";
+
 const withParam = (key: string, value: string) => {
   const next = new URLSearchParams(Astro.url.search);
   if (value) next.set(key, value); else next.delete(key);
@@ -63,29 +104,93 @@ const withParam = (key: string, value: string) => {
 const clearHref = withParam("stage", "");
 ---
 
+{/* Read-only. These are figures, not controls: the board and the archive below
+    are how you narrow the list now, and a tile that filters on click is a
+    surprise when everything around it is just telling you a number. */}
 <div class="lstrip">
-  {BUYER_STAGES.map((st) => {
-    const n = counts.get(st.key) ?? 0;
-    const active = stageFilter === st.key;
-    return (
-      <a href={withParam("stage", active ? "" : st.key)}
-         class:list={["ltile", { active, closed: st.key === "not_proceeding" }]}>
-        <span class="lswatch" style={`background:${stageTheme(st.key).colour}`}></span>
-        <b>{n}</b>
-        <span class="ltl">{st.label}</span>
-      </a>
-    );
-  })}
+  {TILES.map((t) => (
+    <div class:list={["ltile", { closed: t.key === "not_proceeding" }]}>
+      <span class="lswatch" style={`background:${t.colour}`}></span>
+      <b>{t.count}</b>
+      <span class="ltl">{t.label}</span>
+    </div>
+  ))}
 </div>
 
-{!stageFilter && (
-  <div class="lbar">
-    <a class="ltoggle" href={withParam("closed", showClosed ? "" : "1")}>
-      {showClosed ? "Hide not proceeding" : `Show not proceeding (${counts.get("not_proceeding") ?? 0})`}
-    </a>
+<div class="lbar">
+  {/* Closed to an icon until it is wanted. A permanent search box on a list of
+      six people is furniture; a pill that opens is the same thing without the
+      cost of always being there. */}
+  <div class="lfind" data-find-box>
+    <button class="lfindbtn" type="button" data-find-open aria-label="Search buyers" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+           stroke-linecap="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>
+      </svg>
+    </button>
+    <input class="lfindin" type="search" data-find-input placeholder="Search by name or email"
+           aria-label="Search buyers" autocomplete="off" />
   </div>
-)}
 
+  <div class="lviews" role="group" aria-label="View">
+    <a href={withParam("view", "")} class:list={["lview", { on: view === "list" }]}
+       aria-current={view === "list" ? "true" : undefined}>List view</a>
+    <a href={withParam("view", "pipeline")} class:list={["lview", { on: view === "pipeline" }]}
+       aria-current={view === "pipeline" ? "true" : undefined}>Pipeline view</a>
+  </div>
+</div>
+
+{view === "pipeline" ? (
+  <Fragment>
+  {/* No heading: the view pill above already says which view this is, and a
+      title repeating it was a label on a labelled thing. The status line stays —
+      empty until a save fails, which needs somewhere to appear that is not a
+      browser alert. */}
+  <div class="bhead-row">
+    <span class="bstatus" data-board-status role="status"></span>
+  </div>
+  <div class="board" data-board>
+    <div class="bcols">
+      {columns.map((c) => (
+        <div class="bcol" data-stage={c.stage.key}
+             style={`--shade:${c.stage.shade};--tint:${c.stage.tint};--dk:${c.stage.ink}`}>
+          <div class="bhead">
+            <span class="bswatch"></span>
+            <span class="btitle">{c.stage.label}</span>
+            <span class="bcount" data-count>{c.items.length}</span>
+          </div>
+          <div class="bcards" data-cards>
+            {c.items.map((l) => {
+              const days = daysSince(l.since);
+              const stale = days >= 30 && l.stage !== "delivery";
+              return (
+                <article class="bcard" draggable="true" tabindex="0" data-lead={l.id}
+                         data-find={`${l.name ?? ""} ${l.email ?? ""}`.toLowerCase()}
+                         aria-label={`${l.name || "No name given"} — ${c.stage.label}. Use the left and right arrow keys to move stage.`}>
+                  <div class="bname">
+                    <a href={withParam("lead", l.id)} data-open-lead={l.id}>{l.name || "No name given"}</a>
+                    {l.locale && <span class="bchip" title={localeTitle(l.locale)}>{localeChip(l.locale)}</span>}
+                  </div>
+                  {(l.properties ?? []).length > 0 && (
+                    <p class="bunit">{(l.properties ?? []).join(", ")}</p>
+                  )}
+                  <div class="bfoot">
+                    <span class="bav">{initials(l.name)}</span>
+                    <span class:list={["bdays", { stale }]}>
+                      {days === 0 ? "today" : `${days} days here`}
+                    </span>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+  </Fragment>
+) : (
+<Fragment>
 <div class="ltable">
   {rows.length === 0 ? (
     <p class="lnone">
@@ -93,66 +198,40 @@ const clearHref = withParam("stage", "");
       {stageFilter && <a href={clearHref}>Show every stage</a>}
     </p>
   ) : (
-    <table>
-      <thead>
-        <tr>
-          <th>Buyer</th>
-          {showProject && <th>Project</th>}
-          <th>Stage</th>
-          <th class="num">In this stage</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((l) => {
-          const days = daysSince(l.since);
-          const theme = stageTheme(l.stage);
-          const stale = days >= 30 && l.stage !== "delivery" && l.stage !== "not_proceeding";
-          return (
-            <tr>
-              <td>
-                {/* Opens the profile drawer beside the list rather than
-                    navigating away, so the list you were reading is still there
-                    behind it. "Open full enquiry" inside the drawer is the way
-                    through to the conversation. */}
-                <a class="lwho" href={withParam("lead", l.id)}>{l.name || "No name given"}</a>
-              </td>
-              {showProject && <td class="lmuted">{projectName(l.project_id)}</td>}
-              <td>
-                <form method="post" action="/api/admin/enquiry">
-                  <input type="hidden" name="id" value={l.id} />
-                  <input type="hidden" name="action" value="stage" />
-                  <input type="hidden" name="back" value={back} />
-                  <span class="lpick" style={`--ink:${theme.ink};--bg:${theme.bg};--bd:${theme.border}`}>
-                    <select name="stage" onchange="this.form.submit()" aria-label={`Stage for ${l.name ?? "this buyer"}`}>
-                      {BUYER_STAGES.map((st) => (
-                        <option value={st.key} selected={l.stage === st.key}>{st.label}</option>
-                      ))}
-                    </select>
-                  </span>
-                </form>
-              </td>
-              <td class="num">
-                <span class:list={["ldays", { stale }]}>
-                  {days === 0 ? "today" : `${days} day${days === 1 ? "" : "s"}`}
-                </span>
-              </td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+    <LeadTable rows={rows} projects={projects} showProject={showProject} />
   )}
 </div>
 
+</Fragment>
+)}
+
+{/* Only ever shown by the search, when it matches nobody. */}
+<p class="lfindnone" data-find-none hidden></p>
+
+{/* Below whichever view is showing — the list or the board. The people you are
+    still selling to come first; the ones who fell through are a reference you
+    go looking for, and they are not a fifth column on a pipeline. */}
+{closed.length > 0 && (
+  <details class="lclosed">
+    <summary>
+      <span class="lcx" aria-hidden="true"></span>
+      Not proceeding
+      <b>{closed.length}</b>
+    </summary>
+    <div class="lctable">
+      <LeadTable rows={closed} projects={projects} showProject={showProject} showLost />
+    </div>
+  </details>
+)}
+
+
 <style>
-  .lstrip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.6rem; }
+  .lstrip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.6rem; }
   @media (max-width: 860px) { .lstrip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .ltile {
-    display: block; text-decoration: none; background: #fff; border: 1px solid #d7deea;
-    border-radius: 1rem; padding: 0.8rem 0.9rem; transition: border-color 0.12s ease, box-shadow 0.12s ease;
+    display: block; background: #fff; border: 1px solid #d7deea;
+    border-radius: 1rem; padding: 0.8rem 0.9rem;
   }
-  .ltile:hover { border-color: #b9c6d8; }
-  .ltile.active { border-color: #53b27f; box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.16); }
   .ltile.closed { background: #fbfcfe; }
   .lswatch { display: block; width: 26px; height: 4px; border-radius: 999px; margin-bottom: 0.5rem; }
   .ltile b {
@@ -161,9 +240,175 @@ const clearHref = withParam("stage", "");
   }
   .ltile .ltl { display: block; margin-top: 0.15rem; font-size: 0.72rem; font-weight: 700; color: #5c6f88; }
 
-  .lbar { margin-top: 0.8rem; display: flex; justify-content: flex-end; }
-  .ltoggle { font-size: 0.78rem; font-weight: 700; color: #5c6f88; text-decoration: none; }
-  .ltoggle:hover { color: #2e7d54; text-decoration: underline; }
+  /* `stretch`, so the two pills are the same height by construction rather than
+     by two paddings that happen to add up — and stay that way if either one's
+     text size ever changes. */
+  /* Search at the left end, the view switch at the right. Anchored left, the
+     pill also grows rightwards into the empty middle of the row when it opens,
+     instead of pushing the switch along in front of it. */
+  .lbar {
+    margin-top: 0.9rem; display: flex; justify-content: space-between;
+    align-items: stretch; gap: 0.5rem;
+  }
+
+  /* ---- finding someone ---- */
+  .lfind {
+    display: flex; align-items: center; justify-content: flex-start; border-radius: 999px;
+    background: #ffffff; border: 1px solid #d5deea; box-shadow: 0 6px 18px rgba(15, 26, 42, 0.06);
+    padding: 0.3rem; transition: box-shadow 200ms ease, border-color 200ms ease;
+  }
+  .lfind.open { border-color: #b9c7d8; }
+  /* An oval, not a circle: it belongs to the pill beside it, and a circle in a
+     row of rounded rectangles reads as a different kind of control. */
+  .lfindbtn {
+    flex: none; font: inherit; cursor: pointer;
+    height: 100%; padding: 0 0.85rem; display: grid; place-items: center;
+    color: #46586f; background: none; border: 0; border-radius: 999px;
+    transition: color 140ms ease, background-color 140ms ease;
+  }
+  .lfindbtn svg { width: 15px; height: 15px; }
+  .lfindbtn:hover { color: #16283e; background: #f2f5f9; }
+  .lfindbtn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.35); }
+  /* Width, not display: a box that appears from nothing jumps, and one that
+     grows from the icon reads as the same control opening. */
+  .lfindin {
+    font: inherit; font-size: 0.8rem; color: #16283e; background: none; border: 0;
+    width: 0; padding: 0; opacity: 0;
+    transition: width 220ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 160ms ease, padding 220ms ease;
+  }
+  .lfind.open .lfindin { width: 13rem; opacity: 1; padding: 0 0.55rem 0 0.35rem; }
+  @media (max-width: 620px) { .lfind.open .lfindin { width: 8.5rem; } }
+  .lfindin:focus { outline: none; }
+  .lfindin::-webkit-search-cancel-button { cursor: pointer; }
+  @media (prefers-reduced-motion: reduce) { .lfindin { transition: none; } }
+
+  /* Said once, wherever the search happens to be looking. */
+  .lfindnone {
+    margin-top: 0.8rem; padding: 2rem 1.4rem; text-align: center;
+    background: #fff; border: 1px solid #d7deea; border-radius: 1.2rem;
+    font-size: 0.86rem; color: #93a3b8;
+  }
+
+  /* The project tab strip's own treatment: white track, navy gradient on the
+     selected pill, white label on top. Drawn with a background on the active
+     link rather than the tabs' sliding thumb — that thumb is positioned by
+     script because only the browser knows how wide each label ends up, and for
+     two fixed labels that machinery buys nothing. */
+  .lviews {
+    display: inline-flex; padding: 0.3rem; border-radius: 999px;
+    background: #ffffff; border: 1px solid #d5deea;
+    box-shadow: 0 6px 18px rgba(15, 26, 42, 0.06);
+  }
+  .lview {
+    font-size: 0.8rem; font-weight: 700; color: #46586f; text-decoration: none; white-space: nowrap;
+    padding: 0.45rem 1.15rem; border-radius: 999px;
+    transition: color 300ms ease, background-color 200ms ease;
+  }
+  .lview:hover:not(.on) { color: #2e7d54; }
+  .lview.on {
+    color: #ffffff;
+    background: linear-gradient(180deg, #16283e 0%, #0f2036 100%);
+    box-shadow: 0 6px 16px rgba(15, 26, 42, 0.28);
+  }
+
+  /* ---- the board ---- */
+  /* One card holding four tinted columns. The tint is the stage's own colour,
+     pale to dark as the sale advances, so a column says the same thing here as
+     a pill does in the list — and it gives the drag a target you can aim at
+     without reading anything. */
+  .board {
+    margin-top: 0.8rem; background: #ffffff; border: 1px solid #d7deea; border-radius: 1.2rem;
+    box-shadow: 0 12px 34px rgba(15, 26, 42, 0.07); overflow: hidden;
+  }
+  /* Collapses to nothing while the status is empty, so the board sits directly
+     under the view switch as if the row were not there. */
+  .bhead-row { display: flex; justify-content: flex-end; }
+  .bstatus:not(:empty) {
+    display: block; margin: 0.8rem 0.35rem 0;
+    font-size: 0.74rem; font-weight: 700; color: #b3261e; text-align: right;
+  }
+  .bcols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.9rem; padding: 1.1rem; }
+  @media (max-width: 1100px) { .bcols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 620px) { .bcols { grid-template-columns: 1fr; } }
+  .bcol { background: var(--tint); border-radius: 14px; padding: 0.7rem; min-width: 0; }
+  .bhead { display: flex; align-items: center; gap: 0.45rem; padding: 0 0.15rem 0.65rem; }
+  .bswatch { width: 22px; height: 4px; border-radius: 999px; background: var(--shade); flex: none; }
+  .btitle {
+    font-size: 0.68rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--dk); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .bcount {
+    margin-left: auto; font-size: 0.64rem; font-weight: 800; color: var(--dk);
+    background: rgba(255, 255, 255, 0.8); border-radius: 999px; padding: 0.1rem 0.45rem;
+  }
+  /* Tall whether or not there is anything in it. A board that shrinks to the
+     height of its fullest column looks broken when the pipeline is quiet, and
+     the empty space is what makes a column an easy thing to drag onto. It still
+     grows past this as cards are added. */
+  .bcards { display: grid; gap: 0.5rem; align-content: start; min-height: 24rem; border-radius: 10px; }
+  /* Stacked on a phone, four full-height columns would be a very long page. */
+  @media (max-width: 620px) { .bcards { min-height: 8rem; } }
+
+  .bcard {
+    background: #ffffff; border: 1px solid #e2e8f1; border-radius: 10px;
+    padding: 0.6rem 0.7rem; cursor: grab;
+    box-shadow: 0 1px 3px rgba(15, 26, 42, 0.06);
+    transition: box-shadow 140ms ease, transform 140ms ease, opacity 140ms ease, border-color 140ms ease;
+  }
+  .bcard:hover { border-color: #bcc9da; box-shadow: 0 6px 18px rgba(15, 26, 42, 0.12); transform: translateY(-1px); }
+  .bcard:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.45); }
+  .bcard:active { cursor: grabbing; }
+  .bcard.dragging { opacity: 0.35; }
+  /* Saving is optimistic — the card moves first. This is the only sign that the
+     write has not landed yet, and it disappears the moment it has. */
+  .bcard.saving { opacity: 0.6; }
+  .bname { display: flex; align-items: center; gap: 0.35rem; }
+  .bname a {
+    font-size: 0.82rem; font-weight: 800; letter-spacing: -0.01em; color: #16283e; text-decoration: none;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .bname a:hover { color: #2e7d54; text-decoration: underline; }
+  .bchip {
+    flex: none; font-size: 0.56rem; font-weight: 800; letter-spacing: 0.04em; color: #5c6f88;
+    background: #f7f9fc; border: 1px solid #d7deea; border-radius: 4px; padding: 0 0.22rem;
+  }
+  .bunit { margin-top: 0.3rem; font-size: 0.7rem; font-weight: 700; color: #46586f; overflow-wrap: anywhere; }
+  .bfoot { margin-top: 0.45rem; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+  .bav {
+    width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center;
+    font-size: 0.56rem; font-weight: 800; color: #ffffff; background: #0f2036;
+  }
+  .bdays { font-size: 0.66rem; color: #93a3b8; font-variant-numeric: tabular-nums; }
+  .bdays.stale { color: #b3261e; font-weight: 700; }
+  /* Where it will land. Dashed rather than filled: a solid highlight under a
+     floating card reads as a second card. */
+  .bcol.over .bcards { outline: 2px dashed var(--shade); outline-offset: 4px; }
+  @media (prefers-reduced-motion: reduce) { .bcard { transition: none; } }
+
+  /* The archive: closed by default, and absent altogether when it is empty.
+     A stage nobody is working on should not cost a row of the screen. */
+  .lclosed {
+    margin-top: 0.8rem; background: #fbfcfe; border: 1px solid #e2e8f1; border-radius: 1.2rem;
+    overflow: hidden;
+  }
+  .lclosed summary {
+    display: flex; align-items: center; gap: 0.5rem; cursor: pointer; list-style: none;
+    padding: 0.85rem 1.3rem; font-size: 0.78rem; font-weight: 700; color: #5c6f88;
+  }
+  .lclosed summary::-webkit-details-marker { display: none; }
+  .lclosed summary:hover { color: #16283e; }
+  .lclosed summary b {
+    font-size: 0.7rem; font-weight: 800; color: #5c6f88;
+    background: #eef1f5; border: 1px solid #d5dde7; border-radius: 999px; padding: 0.05rem 0.45rem;
+  }
+  .lcx {
+    width: 0; height: 0; flex: none;
+    border-left: 5px solid #93a3b8; border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+    transition: transform 160ms ease;
+  }
+  .lclosed[open] .lcx { transform: rotate(90deg); }
+  .lctable { border-top: 1px solid #e2e8f1; overflow-x: auto; }
+  @media (prefers-reduced-motion: reduce) { .lcx, .lview { transition: none; } }
 
   .ltable { margin-top: 0.8rem; background: #fff; border: 1px solid #d7deea; border-radius: 1.2rem; overflow-x: auto; }
   .ltable table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
@@ -177,6 +422,8 @@ const clearHref = withParam("stage", "");
   .lwho { display: block; font-weight: 700; color: #16283e; text-decoration: none; }
   .lwho:hover { color: #2e7d54; text-decoration: underline; }
   .lmuted { color: #5c6f88; }
+  .lprops { color: #16283e; font-weight: 700; font-size: 0.82rem; }
+  .lnil { color: #b3c0d0; }
   .ldays { font-variant-numeric: tabular-nums; font-size: 0.82rem; color: #5c6f88; }
   /* A month with no movement is the row worth finding. Terminal stages are
      exempt: a delivered property has every right to sit still. */
@@ -210,3 +457,198 @@ const clearHref = withParam("stage", "");
   .lpick select:focus { outline: none; }
   .lpick select:focus-visible { box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.32); }
 </style>
+
+<script>
+  /**
+   * Finding someone.
+   *
+   * Filters what is already on the page rather than asking the server: every
+   * lead is rendered here anyway, so a round trip would add a wait to something
+   * that should feel like typing. It works on whatever is showing — the list,
+   * the board, and the closed archive below either — because all three carry
+   * the same `data-find` attribute.
+   */
+  const findBox = document.querySelector<HTMLElement>("[data-find-box]");
+  const findInput = document.querySelector<HTMLInputElement>("[data-find-input]");
+  if (findBox && findInput) {
+    const none = document.querySelector<HTMLElement>("[data-find-none]");
+
+    const apply = () => {
+      const q = findInput.value.trim().toLowerCase();
+      const targets = Array.from(document.querySelectorAll<HTMLElement>("[data-find]"));
+      let shown = 0;
+      for (const el of targets) {
+        const hit = !q || (el.dataset.find ?? "").includes(q);
+        el.hidden = !hit;
+        if (hit) shown += 1;
+      }
+
+      // A column count that keeps saying 4 while three of them are hidden is
+      // worse than no count. During a search it counts what you can see.
+      document.querySelectorAll<HTMLElement>(".bcol").forEach((col) => {
+        const el = col.querySelector<HTMLElement>("[data-count]");
+        if (!el) return;
+        if (el.dataset.all === undefined) el.dataset.all = el.textContent ?? "";
+        el.textContent = q
+          ? String(col.querySelectorAll<HTMLElement>(".bcard:not([hidden])").length)
+          : (el.dataset.all ?? "");
+      });
+
+      if (none) {
+        none.hidden = !q || shown > 0;
+        none.textContent = `Nobody matching “${findInput.value.trim()}”.`;
+      }
+    };
+
+    const open = () => {
+      findBox.classList.add("open");
+      findBox.querySelector("[data-find-open]")?.setAttribute("aria-expanded", "true");
+      findInput.focus();
+    };
+    const close = () => {
+      findInput.value = "";
+      apply();
+      findBox.classList.remove("open");
+      findBox.querySelector("[data-find-open]")?.setAttribute("aria-expanded", "false");
+    };
+
+    findBox.querySelector("[data-find-open]")?.addEventListener("click", () => {
+      if (findBox.classList.contains("open") && !findInput.value) close();
+      else open();
+    });
+
+    findInput.addEventListener("input", apply);
+    findInput.addEventListener("keydown", (ev) => {
+      if (ev.key === "Escape") { ev.stopPropagation(); close(); }
+    });
+    // Clicking away tidies up, but only when there is nothing to lose: a search
+    // that erased itself the moment you reached for the list would be useless.
+    findInput.addEventListener("blur", () => { if (!findInput.value) close(); });
+  }
+
+  /**
+   * The pipeline board.
+   *
+   * Moving a card SAVES. There is no confirm step and no Save button: the drag
+   * itself is the deliberate act, and the way back is to drag it again.
+   *
+   * The save is optimistic — the card lands where you dropped it and the write
+   * follows. A stage change that took a page reload to appear would make the
+   * board feel broken even when it worked, and if the write fails the card goes
+   * back to where it came from and says so.
+   */
+  const board = document.querySelector<HTMLElement>("[data-board]");
+  if (board) {
+    const recount = () => {
+      board.querySelectorAll<HTMLElement>(".bcol").forEach((col) => {
+        const n = col.querySelectorAll(".bcard").length;
+        const el = col.querySelector<HTMLElement>("[data-count]");
+        if (el) el.textContent = String(n);
+      });
+    };
+
+    const save = async (card: HTMLElement, stage: string, undo: () => void) => {
+      card.classList.add("saving");
+      // The counter is measured from the last move, so a card that just moved
+      // has been in its new stage for no time at all. Left alone it would keep
+      // showing the old number — and a red "41 days here" on a card you just
+      // touched is the kind of wrong that makes people stop trusting the board.
+      const daysEl = card.querySelector<HTMLElement>(".bdays");
+      const hadDays = daysEl?.textContent ?? "";
+      const wasStale = daysEl?.classList.contains("stale") ?? false;
+      if (daysEl) { daysEl.textContent = "today"; daysEl.classList.remove("stale"); }
+      const body = new FormData();
+      body.set("id", card.dataset.lead ?? "");
+      body.set("action", "stage");
+      body.set("stage", stage);
+      body.set("back", window.location.pathname + window.location.search);
+      try {
+        const res = await fetch("/api/admin/enquiry", { method: "POST", body });
+        if (!res.ok) throw new Error(String(res.status));
+      } catch {
+        undo();
+        recount();
+        if (daysEl) {
+          daysEl.textContent = hadDays;
+          daysEl.classList.toggle("stale", wasStale);
+        }
+        const status = document.querySelector<HTMLElement>("[data-board-status]");
+        if (status) status.textContent =
+          "That move could not be saved — check your connection and try again.";
+      } finally {
+        card.classList.remove("saving");
+      }
+    };
+
+    /** Put a card in a column and save it, remembering how to put it back. */
+    const move = (card: HTMLElement, col: HTMLElement) => {
+      const from = card.parentElement;
+      const nextSibling = card.nextElementSibling;
+      const stage = col.dataset.stage ?? "";
+      const target = col.querySelector(".bcards");
+      if (!target || !from || target === from) return;
+      target.appendChild(card);
+      recount();
+      save(card, stage, () => from.insertBefore(card, nextSibling));
+    };
+
+    let dragged: HTMLElement | null = null;
+
+    board.addEventListener("dragstart", (ev) => {
+      const card = (ev.target as HTMLElement | null)?.closest<HTMLElement>(".bcard");
+      if (!card) return;
+      dragged = card;
+      card.classList.add("dragging");
+      ev.dataTransfer!.effectAllowed = "move";
+      // Firefox refuses to start a drag at all without data on the transfer.
+      ev.dataTransfer!.setData("text/plain", card.dataset.lead ?? "");
+    });
+
+    board.addEventListener("dragend", () => {
+      dragged?.classList.remove("dragging");
+      board.querySelectorAll(".bcol.over").forEach((c) => c.classList.remove("over"));
+      dragged = null;
+    });
+
+    board.addEventListener("dragover", (ev) => {
+      if (!dragged) return;
+      const col = (ev.target as HTMLElement | null)?.closest<HTMLElement>(".bcol");
+      if (!col) return;
+      // preventDefault is what makes an element a drop target at all.
+      ev.preventDefault();
+      ev.dataTransfer!.dropEffect = "move";
+      board.querySelectorAll(".bcol.over").forEach((c) => { if (c !== col) c.classList.remove("over"); });
+      col.classList.add("over");
+    });
+
+    board.addEventListener("drop", (ev) => {
+      if (!dragged) return;
+      const col = (ev.target as HTMLElement | null)?.closest<HTMLElement>(".bcol");
+      if (!col) return;
+      ev.preventDefault();
+      col.classList.remove("over");
+      move(dragged, col);
+    });
+
+    /**
+     * The same move from the keyboard.
+     *
+     * Drag and drop is unreachable without a mouse, and a board that can only be
+     * used one way is a board half the people cannot use. Left and right walk a
+     * focused card along the columns; focus follows it so the next press
+     * continues from where it landed.
+     */
+    board.addEventListener("keydown", (ev) => {
+      if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return;
+      const card = (ev.target as HTMLElement | null)?.closest<HTMLElement>(".bcard");
+      if (!card) return;
+      const cols = Array.from(board.querySelectorAll<HTMLElement>(".bcol"));
+      const here = cols.findIndex((c) => c.contains(card));
+      const next = cols[here + (ev.key === "ArrowRight" ? 1 : -1)];
+      if (!next) return;
+      ev.preventDefault();
+      move(card, next);
+      card.focus();
+    });
+  }
+</script>

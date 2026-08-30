@@ -5,7 +5,7 @@
  *
  * The rail is the one place the drawer makes a claim about the PAST, so it is
  * the one place a quiet mistake would go unnoticed — nobody remembers how long
- * a buyer sat in Information sharing well enough to catch a wrong number.
+ * a buyer sat in Info shared well enough to catch a wrong number.
  */
 import { stageDurations, daysSince } from "./pipeline";
 
@@ -27,7 +27,7 @@ check("never moved",
 check("never moved — still in the first stage",
   stageDurations(at("01"), [], NOW).current, "new");
 
-// One move: ten days in New, twenty in Information sharing.
+// One move: ten days in New, twenty in Info shared.
 const once = stageDurations(at("01"), [move("11", "new", "info")], NOW);
 check("one move splits the time", once.totals, { new: 10, info: 20 });
 check("one move — current stage", once.current, "info");
@@ -38,7 +38,7 @@ const reversed = stageDurations(at("01"),
   [move("21", "info", "reservation"), move("11", "new", "info")], NOW);
 check("order of the events does not matter", reversed.totals, { new: 10, info: 10, reservation: 10 });
 
-// The subtle one: going backwards. Both visits to Information sharing count,
+// The subtle one: going backwards. Both visits to Info shared count,
 // so a stalling sale cannot look fresher than it is.
 const back = stageDurations(at("01"), [
   move("06", "new", "info"),
@@ -51,6 +51,26 @@ check("revisiting — current is where they are now", back.current, "info");
 // A lead added by hand straight into a later stage has no 'from' to work with.
 const started = stageDurations(at("01"), [move("11", "reservation", "delivery")], NOW);
 check("an unusual starting stage is taken from the first event", started.totals, { reservation: 10, delivery: 20 });
+
+// ---- the record wins ----
+//
+// The events are a history, not the truth. When the two disagree the profile
+// has to show what the list shows, or the same buyer is in two stages at once.
+const legacy = stageDurations(at("01"), [move("11", "new", "viewing_booked")], NOW, "info");
+check("a retired stage in history is replaced by the record", legacy.current, "info");
+check("the time still lands on the stage they are actually in", legacy.totals, { new: 10, info: 20 });
+
+const agrees = stageDurations(at("01"), [move("11", "new", "info")], NOW, "info");
+check("agreeing changes nothing", agrees.totals, { new: 10, info: 20 });
+
+const noEvents = stageDurations(at("01"), [], NOW, "reservation");
+check("a stage set with no event at all is still drawn", noEvents.current, "reservation");
+check("and owns the whole time since the enquiry arrived", noEvents.totals, { reservation: 30 });
+
+check("nonsense in the record is ignored rather than drawn",
+  stageDurations(at("01"), [move("11", "new", "info")], NOW, "banana").current, "info");
+check("no record given falls back to the events",
+  stageDurations(at("01"), [move("11", "new", "info")], NOW, null).current, "info");
 
 check("same day is zero days, not a negative", stageDurations(at("31"), [], NOW).totals, { new: 0 });
 check("daysSince agrees with the rail", daysSince(at("01"), NOW), 30);

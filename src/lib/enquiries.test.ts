@@ -10,7 +10,10 @@
  * the work - and a rejected one that stayed in any queue would put spam back in
  * front of a person, which is the whole thing triage exists to prevent.
  */
-import { bucketOf, needsAttention, isLive, type EnquiryRow, phoneKey, samePhone, sameEmail, sourceLabel } from "./enquiries";
+import { bucketOf, needsAttention, isLive, type EnquiryRow, phoneKey, samePhone, sameEmail, sourceLabel,
+  sourceNeedsName, sourceNameLabel,
+  LEAD_SOURCES, isLeadSource,
+} from "./enquiries";
 
 let pass = 0, fail = 0;
 const check = (label: string, got: unknown, want: unknown) => {
@@ -95,8 +98,31 @@ check("surrounding space is ignored", sameEmail("  a@b.co ", "a@b.co"), true);
 check("an empty email matches nothing", sameEmail("", ""), false);
 check("different emails do not match", sameEmail("a@b.co", "c@b.co"), false);
 
-check("source labels read as words", sourceLabel("walk_in"), "Walk-in");
+check("source labels read as words", sourceLabel("broker"), "Agent / broker");
 check("an unknown source is not invented", sourceLabel("carrier_pigeon"), "Unknown");
+
+// Only a referral and a broker come through a person, so only those two carry
+// a name. Getting this wrong either hides the field where it is needed or
+// leaves a blank one on nine records in ten.
+check("a referral has someone who made it", sourceNeedsName("referral"), true);
+check("a broker is an agency with a name", sourceNeedsName("broker"), true);
+check("a website form has nobody to name", sourceNeedsName("website"), false);
+check("neither does an event", sourceNeedsName("event"), false);
+// "Other" is the option people pick when the list does not fit. Without the
+// second box it is the one source that records nothing.
+check("\"other\" needs somewhere to say what it was", sourceNeedsName("other"), true);
+check("and an absent source certainly does not", sourceNeedsName(null), false);
+check("the question is worded differently for each",
+  [sourceNameLabel("broker"), sourceNameLabel("referral"), sourceNameLabel("other")],
+  ["Agent or agency", "Who referred them", "Where did they come from"]);
+
+// Add lead and the profile edit the SAME field, so they have to accept the
+// same values. A source the profile can show but Add lead cannot set is the
+// kind of gap nobody notices until a record cannot be recreated.
+check("every source the profile offers is a valid one to save",
+  LEAD_SOURCES.every((s) => isLeadSource(s.value)), true);
+check("and nothing else is", isLeadSource("carrier_pigeon"), false);
+check("nor a non-string", isLeadSource(7), false);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -1,0 +1,73 @@
+---
+interface Props {
+  active: "settings" | "users";
+}
+const { active } = Astro.props;
+
+/**
+ * Settings ↔ Users.
+ *
+ * Two real pages rather than one page with a filter, because they are two
+ * different things: Users needs its own data and its own forms, and its actions
+ * already redirect back to their own URL. The switch is the portfolio page's
+ * sliding-thumb control, made of links instead of buttons — the same shape the
+ * project tabs use to move between pages.
+ */
+const TABS = [
+  { key: "users", label: "Users", href: "/admin/users" },
+  { key: "settings", label: "Settings", href: "/admin/settings" },
+];
+---
+
+<div class="seg" data-seg="admin-settings">
+  <span class="seg-thumb no-anim"></span>
+  {TABS.map((t) => (
+    <a href={t.href} class:list={["seg-btn", { active: active === t.key }]}
+       aria-current={active === t.key ? "page" : undefined}>{t.label}</a>
+  ))}
+</div>
+
+<style>
+  .seg {
+    position: relative; display: inline-flex; isolation: isolate;
+    background: #ffffff; border: 1px solid #d5deea; border-radius: 999px;
+    padding: 0.3rem; box-shadow: 0 6px 18px rgba(15, 26, 42, 0.06);
+  }
+  .seg-thumb {
+    position: absolute; top: 0.3rem; bottom: 0.3rem; left: 0; width: 0; z-index: -1;
+    border-radius: 999px; background: linear-gradient(180deg, #16283e 0%, #0f2036 100%);
+    box-shadow: 0 6px 16px rgba(15, 26, 42, 0.28);
+    transition: transform 420ms cubic-bezier(0.32, 1.3, 0.44, 1), width 420ms cubic-bezier(0.32, 1.3, 0.44, 1);
+  }
+  .seg-thumb.no-anim { transition: none; }
+  .seg-btn {
+    font: inherit; font-size: 0.84rem; font-weight: 700; color: #46586f; text-decoration: none;
+    background: none; border: 0; cursor: pointer; white-space: nowrap;
+    padding: 0.5rem 1.4rem; border-radius: 999px; transition: color 300ms ease;
+  }
+  .seg-btn:hover:not(.active) { color: #2e7d54; }
+  .seg-btn.active { color: #ffffff; }
+  .seg-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.35); }
+  @media (prefers-reduced-motion: reduce) { .seg-thumb { transition: none; } }
+</style>
+
+<script>
+  /**
+   * The thumb is placed by script because only the browser knows how wide each
+   * label ends up. `no-anim` on the first placement stops it sliding in from
+   * the left edge on every page load.
+   */
+  const seg = document.querySelector<HTMLElement>('[data-seg="admin-settings"]');
+  if (seg) {
+    const place = () => {
+      const thumb = seg.querySelector<HTMLElement>(".seg-thumb");
+      const active = seg.querySelector<HTMLElement>(".seg-btn.active");
+      if (!thumb || !active) return;
+      thumb.style.width = `${active.offsetWidth}px`;
+      thumb.style.transform = `translateX(${active.offsetLeft}px)`;
+    };
+    place();
+    document.fonts?.ready.then(place);
+    window.addEventListener("resize", place);
+  }
+</script>

@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import AdminLayout from "../../../layouts/AdminLayout.astro";
+import SettingsTabs from "../../../components/admin/SettingsTabs.astro";
 import { supabaseServer, supabaseAdmin } from "../../../lib/supabase";
 
 const me = Astro.locals.user!;
@@ -39,11 +40,15 @@ const errorMessages: Record<string, string> = {
 const error = q.get("error") ? (errorMessages[q.get("error")!] ?? "Something went wrong.") : null;
 ---
 
-<AdminLayout title="Users" active="users">
+<AdminLayout title="Users" active="settings">
+  {/* The heading names the page you are on, not the section it lives in — the
+      sidebar and the switcher already say that twice between them. */}
   <div class="page-head">
-    <h1>Team</h1>
+    <h1>Users</h1>
     <p>Who can access this portal, and what they're allowed to touch.</p>
   </div>
+
+  <div class="tabs"><SettingsTabs active="users" /></div>
 
   {notice && <p class="notice ok">{notice}</p>}
   {error && <p class="notice err">{error}</p>}
@@ -115,6 +120,7 @@ const error = q.get("error") ? (errorMessages[q.get("error")!] ?? "Something wen
   </section>
 
   <style>
+    .tabs { margin-top: 1.3rem; }
     .notice { margin-top: 1.2rem; padding: 0.65rem 0.9rem; border-radius: 8px; font-size: 0.85rem; }
     .notice.ok { background: rgba(83, 178, 127, 0.12); border: 1px solid rgba(83, 178, 127, 0.4); color: #2e7d54; }
     .notice.err { background: rgba(203, 76, 76, 0.1); border: 1px solid rgba(203, 76, 76, 0.35); color: #a33d3d; }

@@ -3,7 +3,7 @@ export const prerender = false;
 import type { APIRoute } from "astro";
 import { supabaseServer } from "../../../lib/supabase";
 import { isValidStage } from "../../../lib/pipeline";
-import { LOCALE_OPTIONS, MANUAL_LEAD_SOURCES, sameEmail, samePhone } from "../../../lib/enquiries";
+import { LOCALE_OPTIONS, isLeadSource, sameEmail, samePhone } from "../../../lib/enquiries";
 
 /**
  * Adding a buyer by hand.
@@ -17,8 +17,6 @@ import { LOCALE_OPTIONS, MANUAL_LEAD_SOURCES, sameEmail, samePhone } from "../..
  * yourself has already been judged, and making them queue for that decision
  * would be theatre.
  */
-
-const MANUAL_VALUES = MANUAL_LEAD_SOURCES.map((s) => s.value) as string[];
 
 export const POST: APIRoute = async ({ request, cookies, redirect, locals }) => {
   const form = await request.formData();
@@ -45,7 +43,9 @@ export const POST: APIRoute = async ({ request, cookies, redirect, locals }) => 
   if (!email && !phone) return say("Add an email address or a phone number — one of the two.");
   if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return say("That email address doesn't look right.");
 
-  const source = MANUAL_VALUES.includes(get("source")) ? get("source") : "other";
+  // Same list the profile edits with, so a lead added by hand can hold any
+  // value the profile could later set.
+  const source = isLeadSource(get("source")) ? get("source") : "other";
   const locale = LOCALE_OPTIONS.some((l) => l.value === get("locale")) ? get("locale") : null;
   const stage = isValidStage(get("stage")) ? get("stage") : "new";
   const message = form.get("message")?.toString().trim() || null;

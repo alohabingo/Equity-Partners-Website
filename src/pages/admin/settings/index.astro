@@ -1,0 +1,130 @@
+---
+export const prerender = false;
+
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import SettingsTabs from "../../../components/admin/SettingsTabs.astro";
+import { CONNECTOR_GROUPS, STATUS_LABEL, connectorsIn, liveConnectors } from "../../../lib/tracking";
+
+/**
+ * What the public site is connected to.
+ *
+ * Read-only, deliberately. The values live in lib/tracking.ts and are baked
+ * into the pages when the site is built, so a field here could not change what
+ * a visitor's browser loads until the next deploy — it would look like a switch
+ * and behave like a note. This card is the overview without that pretence, and
+ * it reads the same constants the tag itself does, so it cannot go stale.
+ */
+
+---
+
+<AdminLayout title="Settings" active="settings">
+  <div class="page-head">
+    <h1>Settings</h1>
+    <p>What this portal and the public site are connected to.</p>
+  </div>
+
+  <div class="tabs"><SettingsTabs active="settings" /></div>
+
+  <p class="intro">
+    Anything the public site reports to, one card per provider. Changing any of these is a code
+    change and a deploy — the pages are built ahead of time, so nothing here is edited from the portal.
+  </p>
+
+  {CONNECTOR_GROUPS.map((g) => {
+    const items = connectorsIn(g.key);
+    const live = liveConnectors(items);
+    return (
+      <section class="card">
+        <div class="cardhead">
+          <h2 class="sec">{g.label}</h2>
+          {live.length > 0 && <span class="n">{live.length} live</span>}
+        </div>
+        <p class="lede">{g.blurb}</p>
+
+        <div class="conns">
+          {items.map((c) => (
+            <article class:list={["conn", c.status]}>
+              <div class="ctop">
+                <h3>{c.name}</h3>
+                <span class:list={["cstat", c.status]}>{STATUS_LABEL[c.status]}</span>
+              </div>
+              <p class="cpurpose">{c.purpose}</p>
+              <dl class="cfacts">
+                {c.id && <><dt>ID</dt><dd><code>{c.id}</code></dd></>}
+                <dt>Where</dt><dd>{c.where}</dd>
+                <dt>Consent</dt>
+                <dd>
+                  {c.consent === "required"
+                    ? "Waits for marketing consent before it sends anything"
+                    : c.consent}
+                </dd>
+              </dl>
+              {c.note && <p class="cnote">{c.note}</p>}
+            </article>
+          ))}
+        </div>
+      </section>
+    );
+  })}
+
+  <section class="card">
+    <h2 class="sec">How consent works here</h2>
+    <p class="lede">
+      Tags that need permission are loaded but switched off. Nothing is sent, and no cookie is set,
+      until a visitor accepts marketing cookies — at which point the first page view is reported and
+      the tag stays on for the rest of their visit. Withdrawing consent switches it off again.
+    </p>
+    <p class="lede warnline">
+      There is no cookie banner on the public site yet, so nothing has been able to accept —
+      the Meta pixel is loaded and silent on every page.
+    </p>
+  </section>
+</AdminLayout>
+
+<style>
+  /* No .page-head rules here. AdminLayout already styles that heading for every
+     page in the portal, and redefining it locally is how one page ends up a
+     size and a weight away from all the others — which is exactly what
+     happened. */
+  .tabs { margin-top: 1.3rem; }
+  .intro { margin-top: 1.2rem; font-size: 0.85rem; line-height: 1.6; color: #5c6f88; max-width: 76ch; }
+
+  .card {
+    margin-top: 1.3rem; background: #fff; border: 1px solid #d7deea; border-radius: 1.2rem;
+    padding: 1.2rem 1.4rem 1.4rem;
+  }
+  .cardhead { display: flex; align-items: center; gap: 0.55rem; }
+  h2.sec { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #2e7d54; }
+  .cardhead .n {
+    background: #f2f5f9; color: #5c6f88; border-radius: 999px;
+    padding: 0.1rem 0.45rem; font-size: 0.66rem; font-weight: 800;
+  }
+  .lede { margin-top: 0.6rem; font-size: 0.85rem; line-height: 1.6; color: #5c6f88; max-width: 72ch; }
+  .warnline { color: #a35700; font-weight: 600; }
+
+  .conns { margin-top: 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 0.8rem; }
+  .conn { border: 1px solid #e2e8f1; border-radius: 1rem; padding: 0.9rem 1rem 1rem; background: #fbfcfe; }
+  /* Only what is actually running gets the brand's own colour. */
+  .conn.live { background: #f1f8f4; border-color: #d9ebe2; }
+  .ctop { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
+  .ctop h3 { font-size: 0.92rem; font-weight: 800; letter-spacing: -0.01em; color: #16283e; }
+  .cstat {
+    font-size: 0.6rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+    border-radius: 999px; padding: 0.14rem 0.5rem; white-space: nowrap;
+    background: #eef1f5; color: #5c6f88; border: 1px solid #d5dde7;
+  }
+  .cstat.live { background: rgba(83, 178, 127, 0.16); color: #2e7d54; border-color: #bcdccb; }
+  .cstat.planned { background: #fdf1de; color: #a35700; border-color: #f0dcb8; }
+  .cpurpose { margin-top: 0.4rem; font-size: 0.8rem; line-height: 1.55; color: #46586f; }
+  .cfacts {
+    margin-top: 0.7rem; display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 0.7rem;
+    font-size: 0.76rem;
+  }
+  .cfacts dt { color: #93a3b8; font-weight: 700; }
+  .cfacts dd { color: #16283e; overflow-wrap: anywhere; }
+  .cfacts code {
+    font-size: 0.74rem; background: #ffffff; border: 1px solid #e2e8f1;
+    border-radius: 5px; padding: 0.02rem 0.3rem;
+  }
+  .cnote { margin-top: 0.6rem; font-size: 0.74rem; line-height: 1.5; color: #93a3b8; }
+</style>

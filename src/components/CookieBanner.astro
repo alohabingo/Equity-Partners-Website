@@ -1,0 +1,128 @@
+---
+import { buildLocalizedPath, type Locale } from "../lib/i18n";
+import { getUiTranslations } from "../i18n/ui";
+
+/**
+ * The cookie banner.
+ *
+ * Rendered from SiteFooter, which is the one body-level component every public
+ * page already carries — the same reason the pixel itself hangs off SEO.astro.
+ *
+ * Accept and Reject are the same size, the same shape and one click apart. That
+ * is not a style choice: a banner where refusing is harder than agreeing is not
+ * consent, it is a dark pattern with a button on it. There is no "manage
+ * preferences" step for the same reason — with one pixel and one question there
+ * is nothing to split, and an extra screen would only make refusing slower.
+ *
+ * It renders server-side hidden and is shown by script only when no choice has
+ * been recorded. Done the other way round — visible by default, hidden on load —
+ * everyone who had already answered would see it flash on every page.
+ */
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const t = getUiTranslations(locale).cookieBanner;
+const policyHref = buildLocalizedPath("/cookie-policy", locale);
+---
+
+<div class="ck" id="cookie-banner" hidden data-cookie-banner>
+  <div class="ck-rule"></div>
+  <h2 class="ck-title">{t.title}</h2>
+  <p class="ck-body">{t.body}</p>
+  <div class="ck-acts">
+    <button class="ck-btn ck-accept" type="button" data-cookie="accepted">{t.accept}</button>
+    <button class="ck-btn ck-reject" type="button" data-cookie="rejected">{t.reject}</button>
+    <a class="ck-link" href={policyHref}>{t.policy}</a>
+  </div>
+</div>
+
+<style>
+  .ck {
+    position: fixed; left: 1.4rem; bottom: 1.4rem; z-index: 9000;
+    width: min(23rem, calc(100vw - 2.8rem));
+    background: #ffffff; border-radius: 16px; padding: 1.15rem 1.2rem 1.2rem;
+    box-shadow: 0 20px 50px rgba(15, 26, 42, 0.35);
+    font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+    color: #16283e;
+    /* Arrives a beat after the page rather than with it, so it reads as a
+       question being asked and not as part of the design. */
+    animation: ck-in 260ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
+  .ck[hidden] { display: none; }
+  @keyframes ck-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .ck { animation: none; } }
+  @media (max-width: 560px) {
+    .ck { left: 0.9rem; right: 0.9rem; bottom: 0.9rem; width: auto; }
+  }
+
+  .ck-rule { height: 3px; width: 30px; border-radius: 999px; background: #53b27f; margin-bottom: 0.7rem; }
+  .ck-title { margin: 0 0 0.45rem; font-size: 0.95rem; font-weight: 800; letter-spacing: -0.01em; color: #16283e; }
+  .ck-body { margin: 0; font-size: 0.78rem; line-height: 1.6; color: #5c6f88; }
+  .ck-acts { margin-top: 0.95rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .ck-btn {
+    font: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; white-space: nowrap;
+    border-radius: 999px; padding: 0.6rem 1.3rem; border: 1px solid transparent;
+    transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
+  }
+  /* Wider than Reject, by request. Worth knowing what this trades: the test a
+     banner has to pass is that refusing is as easy as agreeing, and size is one
+     of the things regulators look at. Both are still one click, in the same
+     place, with the same wording weight — this is a nudge, not a maze — but it
+     is the edge of what stays defensible, so nothing else should tilt further. */
+  .ck-accept { background: #53b27f; color: #ffffff; padding-left: 2.2rem; padding-right: 2.2rem; }
+  .ck-accept:hover { background: #3f9568; }
+  .ck-reject { background: transparent; color: #16283e; border-color: #d5deea; }
+  .ck-reject:hover { border-color: #9fb2cc; }
+  .ck-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.4); }
+  .ck-link {
+    font-size: 0.76rem; color: #5c6f88; text-decoration: underline; padding: 0.6rem 0.4rem;
+  }
+  .ck-link:hover { color: #16283e; }
+</style>
+
+<script>
+  /**
+   * Remembering the answer.
+   *
+   * Every read and write is wrapped: localStorage throws outright in some
+   * privacy modes, and a banner that throws would take the rest of the page's
+   * scripts with it. If storage is unavailable the banner simply asks again,
+   * which is the safe way round — it never assumes consent it cannot prove.
+   */
+  const KEY = "cookie_consent";
+  const read = () => { try { return localStorage.getItem(KEY); } catch { return null; } };
+  const write = (v: string) => { try { localStorage.setItem(KEY, v); } catch { /* asked again next time */ } };
+
+  const banner = document.querySelector<HTMLElement>("[data-cookie-banner]");
+  if (banner) {
+    const answered = read();
+    if (answered !== "accepted" && answered !== "rejected") banner.hidden = false;
+
+    banner.addEventListener("click", (ev) => {
+      const btn = (ev.target as HTMLElement | null)?.closest<HTMLElement>("[data-cookie]");
+      if (!btn) return;
+      const choice = btn.dataset.cookie ?? "rejected";
+      write(choice);
+      banner.hidden = true;
+
+      // The pixel is told either way. Accepting fires the page view that would
+      // otherwise never have happened for this visit; rejecting revokes, which
+      // matters for someone changing a previous yes.
+      const w = window as any;
+      if (choice === "accepted") w.epEnableMetaPixel?.();
+      else w.epDisableMetaPixel?.();
+    });
+
+    // Reopening it from the cookie policy, so a decision can be undone. Without
+    // this an accepted visitor has no route back, which the policy promises
+    // they have.
+    document.addEventListener("click", (ev) => {
+      const again = (ev.target as HTMLElement | null)?.closest("[data-cookie-reopen]");
+      if (!again) return;
+      ev.preventDefault();
+      banner.hidden = false;
+      banner.querySelector<HTMLElement>(".ck-accept")?.focus();
+    });
+  }
+</script>
