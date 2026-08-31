@@ -39,7 +39,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const isAdminApi = pathname.startsWith("/api/admin");
 
   // Guard the admin area and admin APIs; everything else passes through.
-  if ((!pathname.startsWith("/admin") && !isAdminApi) || pathname.startsWith("/admin/login")) {
+  // The login page and the invitation page are the two doors that must open
+  // WITHOUT a session — an invited colleague has an account but has never signed
+  // in, so guarding this page would send them to a login they cannot pass.
+  if (
+    (!pathname.startsWith("/admin") && !isAdminApi) ||
+    pathname.startsWith("/admin/login") ||
+    pathname.startsWith("/admin/set-password")
+  ) {
     return next();
   }
 

@@ -15,7 +15,7 @@ const json = (body: object, status = 200) =>
  *   action=set_role  id, role
  *   action=remove    id
  */
-export const POST: APIRoute = async ({ request, cookies, redirect }) => {
+export const POST: APIRoute = async ({ request, cookies, redirect, url }) => {
   const supabase = supabaseServer(cookies, request);
 
   // Defense in depth: verify the caller is a super admin even though
@@ -33,33 +33,54 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   const get = (k: string) => form.get(k)?.toString() ?? "";
   const admin = supabaseAdmin();
 
+  // ---- invite, rather than issue a password ----
+  //
+  // Nobody types a password for anybody else here. An invited colleague gets an
+  // email, follows it once, and chooses their own — so the password never
+  // exists anywhere it can be forwarded, pasted into a chat, or left in a sent
+  // folder. That was the real weakness, not the number of characters in it.
   if (action === "create") {
     const email = get("email").trim().toLowerCase();
-    const password = get("password");
     const fullName = get("full_name").trim();
     const role = ["super_admin", "content_editor"].includes(get("role")) ? get("role") : "content_editor";
 
     if (!email.match(/^[^@\s]+@[^@\s]+\.[^@\s]+$/) || !fullName) {
       return redirect("/admin/users?error=invalid_fields");
     }
-    if (password.length < 12) {
-      return redirect("/admin/users?error=weak_password");
-    }
 
-    const { data: created, error } = await admin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { full_name: fullName },
+    const { data: invited, error } = await admin.auth.admin.inviteUserByEmail(email, {
+      data: { full_name: fullName },
+      redirectTo: `${url.origin}/admin/set-password`,
     });
-    if (error || !created.user) {
-      const exists = error?.message.toLowerCase().includes("already");
-      return redirect(`/admin/users?error=${exists ? "email_exists" : "create_failed"}`);
+    if (error || !invited.user) {
+      const msg = (error?.message ?? "").toLowerCase();
+      if (msg.includes("already")) return redirect("/admin/users?error=email_exists");
+      // Email is the whole mechanism now, so a delivery failure has to say so
+      // rather than hide behind "could not create the user".
+      if (msg.includes("smtp") || msg.includes("mail") || msg.includes("rate")) {
+        return redirect("/admin/users?error=email_failed");
+      }
+      return redirect("/admin/users?error=create_failed");
     }
 
     // The handle_new_user trigger created the profile; set the chosen role.
-    await admin.from("profiles").update({ role, full_name: fullName }).eq("id", created.user.id);
-    return redirect("/admin/users?created=1");
+    await admin.from("profiles").update({ role, full_name: fullName }).eq("id", invited.user.id);
+    return redirect("/admin/users?invited=1");
+  }
+
+  // ---- send it again ----
+  //
+  // Invitation links expire after about a day, which is exactly long enough for
+  // someone to read the email on a Friday and act on it on Monday.
+  if (action === "resend") {
+    const email = get("email").trim().toLowerCase();
+    if (!email) return redirect("/admin/users?error=invalid_fields");
+
+    const { error } = await admin.auth.admin.inviteUserByEmail(email, {
+      redirectTo: `${url.origin}/admin/set-password`,
+    });
+    if (error) return redirect("/admin/users?error=email_failed");
+    return redirect("/admin/users?invited=1");
   }
 
   if (action === "set_role") {

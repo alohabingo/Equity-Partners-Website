@@ -24,38 +24,73 @@
    * Reading storage first and telling the truth up front fixes it, and a
    * returning visitor who accepted is never told "revoke" at all.
    */
-  var epConsent = false;
-  try { epConsent = localStorage.getItem('cookie_consent') === 'accepted'; } catch (e) { epConsent = false; }
-
-  fbq('consent', epConsent ? 'grant' : 'revoke');
-  fbq('init', PIXEL_ID);
-  if (epConsent) {
-    window.__epPixelOn = true;
-    fbq('track', 'PageView');
-  }
-
   /**
-   * Turning it on.
-   *
-   * Exposed on `window` so whatever records the visitor's choice can call it
-   * without having to know anything about the pixel. Both halves matter:
-   * granting consent unblocks the library, and the PageView is the event that
-   * would otherwise never have happened for this visit.
-   *
-   * Storage is wrapped because reading localStorage throws outright in some
-   * privacy modes — and a consent check that throws would take the page's other
-   * scripts down with it.
+   * Storage is wrapped because localStorage throws outright in some privacy
+   * modes, and a consent check that threw would take the page's other scripts
+   * down with it. Defined FIRST: everything below calls it, including the
+   * page-view tracker on the very next lines.
    */
   window.epMarketingConsent = function () {
     try { return localStorage.getItem('cookie_consent') === 'accepted'; }
     catch (e) { return false; }
   };
 
+  var epConsent = window.epMarketingConsent();
+
+  fbq('consent', epConsent ? 'grant' : 'revoke');
+  fbq('init', PIXEL_ID);
+
+  /**
+   * One page view per page, however the page arrived.
+   *
+   * Today every navigation on this site is a real page load, so this script
+   * runs again each time and the call below is the whole story. That stops
+   * being true the moment anyone adds Astro's <ClientRouter /> for snappier
+   * navigation: the document is swapped in place, head scripts do not re-run,
+   * and page views would quietly stop — the failure nobody notices until an
+   * audience is mysteriously empty six weeks later.
+   *
+   * `astro:page-load` covers that case. It is dispatched by the ClientRouter
+   * runtime, so it fires only once that exists — and when it does, it ALSO
+   * fires on the first load, on top of the call below. Hence the guard: the key
+   * lives on `window`, which survives a client-side swap and is destroyed by a
+   * genuine navigation, so it dedupes correctly in both worlds without needing
+   * to know which one it is in.
+   *
+   * Keyed on path AND query, because the report carries the full URL and
+   * audiences can be built on query strings — `?project=nanta` and
+   * `?project=ordino` are two pages, not one.
+   */
+  window.epTrackPageView = function () {
+    if (!window.fbq || !window.epMarketingConsent()) return;
+    var here = location.pathname + location.search;
+    if (window.__epLastPath === here) return;
+    window.__epLastPath = here;
+    fbq('track', 'PageView');
+  };
+
+  document.addEventListener('astro:page-load', function () { window.epTrackPageView(); });
+
+  if (epConsent) {
+    window.__epPixelOn = true;
+    window.epTrackPageView();
+  }
+
+  /**
+   * Turning it on.
+   *
+   * Exposed on `window` so whatever records the visitor's choice can call it
+   * without having to know anything about the pixel: granting consent unblocks
+   * the library, and the page view is the event that would otherwise never have
+   * happened for this visit.
+   */
   window.epEnableMetaPixel = function () {
     if (!window.fbq || window.__epPixelOn) return;
     window.__epPixelOn = true;
     fbq('consent', 'grant');
-    fbq('track', 'PageView');
+    // Through the same door as every other page view, so accepting sets the
+    // dedupe key and cannot double up with what follows.
+    window.epTrackPageView();
   };
 
   window.epDisableMetaPixel = function () {
