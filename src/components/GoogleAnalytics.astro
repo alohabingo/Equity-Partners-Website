@@ -1,0 +1,161 @@
+---
+/**
+ * Google Analytics 4, consent-gated.
+ *
+ * Sits beside MetaPixel.astro in SEO.astro and is built to the same shape on
+ * purpose: same storage key, same window-keyed page-view dedupe, same
+ * enable/disable pair for the banner to call. Two tags that behave identically
+ * are two tags one person can hold in their head.
+ *
+ * WHAT IS DELIBERATELY DIFFERENT: Google's library is not loaded until someone
+ * accepts.
+ *
+ * Google offers two ways to run this. In "advanced" consent mode the library
+ * loads for everyone and, when consent is denied, still sends cookieless pings
+ * that Google uses to model the traffic it cannot see. It is a real feature and
+ * for a large site it recovers useful volume. It is the wrong choice here for
+ * two reasons. Modelling needs a threshold of traffic this site will not reach
+ * for a long time, so the pings would buy nothing; and the banner promises that
+ * nothing non-essential runs without permission, which a request to Google
+ * carrying the visitor's IP address plainly is. So: basic mode. Refuse, and
+ * googletagmanager.com is never contacted at all.
+ *
+ * The four consent signals are declared even though only `analytics_storage`
+ * does anything today. `ad_storage`, `ad_user_data` and `ad_personalization`
+ * are what Google Ads reads. Declaring them now means that opening a Google Ads
+ * account later is one more `config` line in this file rather than a return
+ * trip through the banner, the policy and three translations.
+ */
+import { GA_MEASUREMENT_ID } from "../lib/tracking";
+import { CONSENT_KEY } from "../lib/consent";
+const GA_ID = GA_MEASUREMENT_ID;
+---
+
+<!-- Google Analytics 4 -->
+<script is:inline define:vars={{ GA_ID, CONSENT_KEY }}>
+  window.dataLayer = window.dataLayer || [];
+  function gtag() { window.dataLayer.push(arguments); }
+  window.gtag = gtag;
+
+  /**
+   * Denied before anything else happens.
+   *
+   * This is the first thing on the page for the same reason the Meta pixel now
+   * reads storage before `init`: a consent state that arrives after the tag has
+   * made up its mind is a consent state that was never applied. Here the
+   * ordering is doubly enforced — the library is not even fetched until the
+   * update below has run — but the default is still declared first so that the
+   * state is correct no matter what a future edit does to the order.
+   *
+   * `wait_for_update` gives an asynchronous consent decision a moment to arrive
+   * before anything is sent. It costs nothing when the answer is already known.
+   */
+  gtag('consent', 'default', {
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'denied',
+    wait_for_update: 500,
+  });
+
+  /** Wrapped: localStorage throws outright in some privacy modes, and a consent
+   *  check that threw would take the rest of the page's scripts with it. */
+  window.epAnalyticsConsent = function () {
+    try { return localStorage.getItem(CONSENT_KEY) === 'accepted'; }
+    catch (e) { return false; }
+  };
+
+  /**
+   * One page view per page, however the page arrived.
+   *
+   * `send_page_view: false` on config, then an explicit event, for the reason
+   * spelled out in MetaPixel.astro: today every navigation is a real page load,
+   * but the day someone adds Astro's <ClientRouter /> the document is swapped
+   * in place and head scripts stop re-running. `astro:page-load` covers that,
+   * fires on the first load too, and the window-keyed guard means the two
+   * cannot double-count each other.
+   *
+   * Keyed on path AND query — `?project=nanta` and `?project=ordino` are two
+   * pages, and reports built on one that collapsed into the other would be
+   * quietly wrong.
+   */
+  window.epGaPageView = function () {
+    if (!window.__epGaOn || !window.gtag) return;
+    var here = location.pathname + location.search;
+    if (window.__epGaLastPath === here) return;
+    window.__epGaLastPath = here;
+    gtag('event', 'page_view', {
+      page_location: location.href,
+      page_path: here,
+      page_title: document.title,
+    });
+  };
+
+  document.addEventListener('astro:page-load', function () { window.epGaPageView(); });
+
+  /** Fetch the library and start reporting. Idempotent — the banner, a stored
+   *  answer and a stray second call all land on the same state. */
+  window.epStartGA = function () {
+    if (window.__epGaOn) return;
+    window.__epGaOn = true;
+
+    gtag('consent', 'update', {
+      ad_storage: 'granted',
+      ad_user_data: 'granted',
+      ad_personalization: 'granted',
+      analytics_storage: 'granted',
+    });
+
+    if (!window.__epGaScript) {
+      window.__epGaScript = true;
+      var s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+      document.head.appendChild(s);
+    }
+
+    gtag('js', new Date());
+    gtag('config', GA_ID, { send_page_view: false });
+    window.epGaPageView();
+  };
+
+  window.epEnableGA = function () { window.epStartGA(); };
+
+  /**
+   * Withdrawing permission.
+   *
+   * The library cannot be unloaded once fetched, so consent is revoked — which
+   * stops collection — and the cookies it already set are cleared. Without that
+   * last part a visitor who accepts and then changes their mind keeps a Google
+   * identifier on their device for two years, which is not what "reject" means
+   * to the person clicking it.
+   */
+  window.epDisableGA = function () {
+    window.__epGaOn = false;
+    if (window.gtag) {
+      gtag('consent', 'update', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+      });
+    }
+    try {
+      var host = location.hostname;
+      // Cleared on the exact host and on the registrable domain, because that
+      // is where GA sets them and a cookie deleted on the wrong scope survives.
+      var scopes = [host, '.' + host, '.' + host.split('.').slice(-2).join('.')];
+      document.cookie.split(';').forEach(function (pair) {
+        var name = pair.split('=')[0].trim();
+        if (name.indexOf('_ga') !== 0 && name.indexOf('_gid') !== 0) return;
+        scopes.forEach(function (d) {
+          document.cookie = name + '=; Max-Age=0; path=/; domain=' + d;
+        });
+        document.cookie = name + '=; Max-Age=0; path=/';
+      });
+    } catch (e) { /* clearing is best effort; consent is already revoked */ }
+  };
+
+  if (window.epAnalyticsConsent()) window.epStartGA();
+</script>
+<!-- End Google Analytics 4 -->

@@ -1,5 +1,7 @@
 ---
 import MetaPixel from "./MetaPixel.astro";
+import GoogleAnalytics from "./GoogleAnalytics.astro";
+import ClickIds from "./ClickIds.astro";
 import {
   buildLocalizedPath,
   supportedLocales,
@@ -133,8 +135,12 @@ if (jsonLd) schemas.push(...(Array.isArray(jsonLd) ? jsonLd : [jsonLd]));
 <meta name="twitter:description" content={description} />
 <meta name="twitter:image" content={ogImage} />
 
-<!-- Analytics. Loads revoked; see MetaPixel.astro. -->
+<!-- Analytics. Both wait for consent; see MetaPixel.astro and GoogleAnalytics.astro. -->
 <MetaPixel />
+<GoogleAnalytics />
+<!-- Catches an advertising click id on the landing page. It is unrecoverable
+     afterwards, so it is captured before anything else can navigate away. -->
+<ClickIds />
 
 <!-- Structured data -->
 {schemas.map((s) => (

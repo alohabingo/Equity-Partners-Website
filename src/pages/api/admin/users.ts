@@ -2,6 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from "astro";
 import { supabaseServer, supabaseAdmin } from "../../../lib/supabase";
+import { setPasswordUrl } from "../../../lib/siteUrl";
 
 const json = (body: object, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -50,7 +51,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect, url }) => {
 
     const { data: invited, error } = await admin.auth.admin.inviteUserByEmail(email, {
       data: { full_name: fullName },
-      redirectTo: `${url.origin}/admin/set-password`,
+      redirectTo: setPasswordUrl(url.origin, import.meta.env.PUBLIC_SITE_URL),
     });
     if (error || !invited.user) {
       const msg = (error?.message ?? "").toLowerCase();
@@ -77,7 +78,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect, url }) => {
     if (!email) return redirect("/admin/users?error=invalid_fields");
 
     const { error } = await admin.auth.admin.inviteUserByEmail(email, {
-      redirectTo: `${url.origin}/admin/set-password`,
+      redirectTo: setPasswordUrl(url.origin, import.meta.env.PUBLIC_SITE_URL),
     });
     if (error) return redirect("/admin/users?error=email_failed");
     return redirect("/admin/users?invited=1");

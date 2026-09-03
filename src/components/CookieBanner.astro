@@ -90,9 +90,10 @@ const policyHref = buildLocalizedPath("/cookie-policy", locale);
    * scripts with it. If storage is unavailable the banner simply asks again,
    * which is the safe way round — it never assumes consent it cannot prove.
    */
-  const KEY = "cookie_consent";
-  const read = () => { try { return localStorage.getItem(KEY); } catch { return null; } };
-  const write = (v: string) => { try { localStorage.setItem(KEY, v); } catch { /* asked again next time */ } };
+  import { CONSENT_KEY } from "../lib/consent";
+
+  const read = () => { try { return localStorage.getItem(CONSENT_KEY); } catch { return null; } };
+  const write = (v: string) => { try { localStorage.setItem(CONSENT_KEY, v); } catch { /* asked again next time */ } };
 
   const banner = document.querySelector<HTMLElement>("[data-cookie-banner]");
   if (banner) {
@@ -106,12 +107,27 @@ const policyHref = buildLocalizedPath("/cookie-policy", locale);
       write(choice);
       banner.hidden = true;
 
-      // The pixel is told either way. Accepting fires the page view that would
-      // otherwise never have happened for this visit; rejecting revokes, which
-      // matters for someone changing a previous yes.
+      // Everything that waits on consent is told, in both directions.
+      //
+      // Accepting fires the page view that would otherwise never have happened
+      // for this visit, starts Google's library — which until this moment had
+      // not been fetched at all — and writes down the advertising click id that
+      // has been sitting in memory since the visitor landed.
+      //
+      // Rejecting matters just as much, and is the half that is easy to forget:
+      // it is the path for someone changing a previous yes, so it has to revoke
+      // consent, clear the analytics cookies already on the device, and forget
+      // the click id rather than merely stop adding to it.
       const w = window as any;
-      if (choice === "accepted") w.epEnableMetaPixel?.();
-      else w.epDisableMetaPixel?.();
+      if (choice === "accepted") {
+        w.epEnableMetaPixel?.();
+        w.epEnableGA?.();
+        w.epPersistClickIds?.();
+      } else {
+        w.epDisableMetaPixel?.();
+        w.epDisableGA?.();
+        w.epForgetClickIds?.();
+      }
     });
 
     // Reopening it from the cookie policy, so a decision can be undone. Without

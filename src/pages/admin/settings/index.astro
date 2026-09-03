@@ -3,7 +3,10 @@ export const prerender = false;
 
 import AdminLayout from "../../../layouts/AdminLayout.astro";
 import SettingsTabs from "../../../components/admin/SettingsTabs.astro";
-import { CONNECTOR_GROUPS, STATUS_LABEL, connectorsIn, liveConnectors } from "../../../lib/tracking";
+import {
+  CONNECTOR_GROUPS, STATUS_LABEL, CONSENT_GATES, CONNECTORS,
+  connectorsIn, liveConnectors,
+} from "../../../lib/tracking";
 
 /**
  * What the public site is connected to.
@@ -15,6 +18,19 @@ import { CONNECTOR_GROUPS, STATUS_LABEL, connectorsIn, liveConnectors } from "..
  * it reads the same constants the tag itself does, so it cannot go stale.
  */
 
+/**
+ * Which tags share each consent behaviour, for the explanation at the bottom.
+ *
+ * Built from CONNECTORS so it can only ever describe what is really installed.
+ * Planned connectors are left out — the card explains what happens to a visitor
+ * today, and listing something that does not run yet reads as though it does.
+ */
+const gatesInUse = Object.entries(
+  CONNECTORS.filter((c) => c.status === "live").reduce<Record<string, string[]>>((acc, c) => {
+    (acc[c.consent] ??= []).push(c.name);
+    return acc;
+  }, {}),
+) as [keyof typeof CONSENT_GATES, string[]][];
 ---
 
 <AdminLayout title="Settings" active="settings">
@@ -53,11 +69,7 @@ import { CONNECTOR_GROUPS, STATUS_LABEL, connectorsIn, liveConnectors } from "..
                 {c.id && <><dt>ID</dt><dd><code>{c.id}</code></dd></>}
                 <dt>Where</dt><dd>{c.where}</dd>
                 <dt>Consent</dt>
-                <dd>
-                  {c.consent === "required"
-                    ? "Waits for marketing consent before it sends anything"
-                    : c.consent}
-                </dd>
+                <dd>{CONSENT_GATES[c.consent].label}</dd>
               </dl>
               {c.note && <p class="cnote">{c.note}</p>}
             </article>
@@ -70,13 +82,37 @@ import { CONNECTOR_GROUPS, STATUS_LABEL, connectorsIn, liveConnectors } from "..
   <section class="card">
     <h2 class="sec">How consent works here</h2>
     <p class="lede">
-      Tags that need permission are loaded but switched off. Nothing is sent, and no cookie is set,
-      until a visitor accepts marketing cookies — at which point the first page view is reported and
-      the tag stays on for the rest of their visit. Withdrawing consent switches it off again.
+      One question, asked once. Accept covers both the analytics and the advertising tags; Reject
+      covers both. There is no half-answer and no second screen — with this few tags there is
+      nothing useful to split, and another step would only make refusing slower than agreeing.
+      Refusing is one click, in the same place, at the same moment.
     </p>
-    <p class="lede warnline">
-      There is no cookie banner on the public site yet, so nothing has been able to accept —
-      the Meta pixel is loaded and silent on every page.
+
+    {/* Derived from the connectors above rather than written out, because the
+        last version of this card was prose asserting a state of the world and
+        it went stale the moment the site changed — it was still telling anyone
+        who read it that there was no cookie banner. */}
+    <dl class="gates">
+      {gatesInUse.map(([gate, names]) => (
+        <>
+          <dt>{CONSENT_GATES[gate].label}</dt>
+          <dd>
+            <span class="who">{names.join(", ")}</span>
+            {" — "}{CONSENT_GATES[gate].detail}
+          </dd>
+        </>
+      ))}
+    </dl>
+
+    <p class="lede">
+      The answer lives in the visitor's own browser, not in this database. Nobody's choice is
+      visible from the portal and there is no list of who accepted — which also means the count of
+      people who refused is not something we can report on.
+    </p>
+    <p class="lede">
+      It can be undone. A link on the cookie policy page reopens the banner, and withdrawing
+      consent switches both tags off, clears the analytics cookies already on the device, and
+      discards the advertising click id kept for attributing enquiries.
     </p>
   </section>
 </AdminLayout>
@@ -100,7 +136,6 @@ import { CONNECTOR_GROUPS, STATUS_LABEL, connectorsIn, liveConnectors } from "..
     padding: 0.1rem 0.45rem; font-size: 0.66rem; font-weight: 800;
   }
   .lede { margin-top: 0.6rem; font-size: 0.85rem; line-height: 1.6; color: #5c6f88; max-width: 72ch; }
-  .warnline { color: #a35700; font-weight: 600; }
 
   .conns { margin-top: 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 0.8rem; }
   .conn { border: 1px solid #e2e8f1; border-radius: 1rem; padding: 0.9rem 1rem 1rem; background: #fbfcfe; }
@@ -127,4 +162,12 @@ import { CONNECTOR_GROUPS, STATUS_LABEL, connectorsIn, liveConnectors } from "..
     border-radius: 5px; padding: 0.02rem 0.3rem;
   }
   .cnote { margin-top: 0.6rem; font-size: 0.74rem; line-height: 1.5; color: #93a3b8; }
+
+  .gates { margin-top: 0.9rem; display: grid; gap: 0.55rem; max-width: 76ch; }
+  .gates dt {
+    font-size: 0.66rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+    color: #2e7d54;
+  }
+  .gates dd { margin-top: 0.15rem; font-size: 0.8rem; line-height: 1.55; color: #46586f; }
+  .gates .who { font-weight: 700; color: #16283e; }
 </style>

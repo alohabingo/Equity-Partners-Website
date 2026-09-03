@@ -82,7 +82,7 @@ export const uiTranslations: Record<Locale, Dictionary> = {
     },
     cookieBanner: {
       title: "Cookies",
-      body: "Some are needed to run the site. Others let us measure our advertising — only if you say yes.",
+      body: "Some are needed to run the site. Others measure how it is used and how our advertising performs — only if you say yes.",
       accept: "Accept",
       reject: "Reject",
       policy: "Cookie policy",
@@ -129,7 +129,7 @@ export const uiTranslations: Record<Locale, Dictionary> = {
     },
     cookieBanner: {
       title: "Cookies",
-      body: "Algunas son necesarias para que el sitio funcione. Otras nos permiten medir nuestra publicidad, solo si usted lo acepta.",
+      body: "Algunas son necesarias para que el sitio funcione. Otras miden cómo se utiliza y qué resultados obtiene nuestra publicidad, solo si usted lo acepta.",
       accept: "Aceptar",
       reject: "Rechazar",
       policy: "Política de cookies",
@@ -176,7 +176,7 @@ export const uiTranslations: Record<Locale, Dictionary> = {
     },
     cookieBanner: {
       title: "Galetes",
-      body: "Algunes són necessàries perquè el lloc funcioni. D'altres ens permeten mesurar la nostra publicitat, només si hi doneu el vostre consentiment.",
+      body: "Algunes són necessàries perquè el lloc funcioni. D'altres mesuren com s'utilitza i quins resultats obté la nostra publicitat, només si hi doneu el vostre consentiment.",
       accept: "Acceptar",
       reject: "Rebutjar",
       policy: "Política de galetes",

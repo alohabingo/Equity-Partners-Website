@@ -19,11 +19,12 @@
  * from what the site actually carries.
  */
 import { META_PIXEL_ID } from "../lib/tracking";
+import { CONSENT_KEY } from "../lib/consent";
 const PIXEL_ID = META_PIXEL_ID;
 ---
 
 <!-- Meta Pixel Code -->
-<script is:inline define:vars={{ PIXEL_ID }}>
+<script is:inline define:vars={{ PIXEL_ID, CONSENT_KEY }}>
   !function(f,b,e,v,n,t,s)
   {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
   n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -55,7 +56,7 @@ const PIXEL_ID = META_PIXEL_ID;
    * page-view tracker on the very next lines.
    */
   window.epMarketingConsent = function () {
-    try { return localStorage.getItem('cookie_consent') === 'accepted'; }
+    try { return localStorage.getItem(CONSENT_KEY) === 'accepted'; }
     catch (e) { return false; }
   };
 

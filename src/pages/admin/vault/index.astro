@@ -3,6 +3,7 @@ export const prerender = false;
 
 import AdminLayout from "../../../layouts/AdminLayout.astro";
 import { supabaseServer } from "../../../lib/supabase";
+import { emailLinkOrigin } from "../../../lib/siteUrl";
 
 const supabase = supabaseServer(Astro.cookies, Astro.request);
 
@@ -34,7 +35,9 @@ const catLabel = (k: string) => CATEGORIES.find(([c]) => c === k)?.[1] ?? k;
 const fmtSize = (b: number | null) =>
   b == null ? "—" : b > 1048576 ? (b / 1048576).toFixed(1) + " MB" : Math.round(b / 1024) + " KB";
 const dateFmt = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-const siteOrigin = Astro.url.origin;
+// A vault link is copied out and sent to an investor, so it must be the
+// public address even when this page is being served by the dev server.
+const siteOrigin = emailLinkOrigin(Astro.url.origin, import.meta.env.PUBLIC_SITE_URL);
 
 const linkState = (l: { revoked: boolean; expires_at: string; max_views: number | null; view_count: number }) =>
   l.revoked ? "revoked"

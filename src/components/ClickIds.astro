@@ -1,0 +1,97 @@
+---
+/**
+ * Capturing the advertising click id.
+ *
+ * A `gclid` (Google) or `fbclid` (Meta) appears exactly once — on the landing
+ * page, in the query string — and is then unrecoverable. But almost nobody
+ * enquires on the page they land on: they read, they leave, they come back, and
+ * they fill the form days later on /contact. So the id has to be caught on
+ * arrival and carried to whichever page the enquiry eventually happens on.
+ *
+ * Held in memory the moment the page loads, regardless of consent — memory is
+ * not storage and vanishes with the tab. It is only WRITTEN to the device once
+ * marketing consent exists, because an advertising identifier parked on
+ * someone's machine is precisely what the banner asks about. Which produces the
+ * one case worth spelling out: a visitor lands from an ad, sees the banner, and
+ * accepts a few seconds later. Their id was captured before they answered, and
+ * `epPersistClickIds` writes it the instant they say yes — the same shape as
+ * the pixel holding its first page view until consent arrives.
+ *
+ * Someone who refuses simply arrives unattributed. That is the honest outcome,
+ * and it is the same trade the pixel already makes.
+ */
+import { CONSENT_KEY } from "../lib/consent";
+import { CLICK_ID_PARAMS, CLICK_ID_TTL_DAYS } from "../lib/clickIds";
+const PARAMS = [...CLICK_ID_PARAMS];
+const STORE_KEY = "ep_click_ids";
+---
+
+<script is:inline define:vars={{ PARAMS, STORE_KEY, CONSENT_KEY, CLICK_ID_TTL_DAYS }}>
+  (function () {
+    var MAX_LEN = 512;
+
+    function fromUrl() {
+      var out = {};
+      try {
+        var q = new URLSearchParams(location.search);
+        PARAMS.forEach(function (k) {
+          var v = (q.get(k) || '').trim();
+          if (!v || v.length > MAX_LEN || /\s/.test(v)) return;
+          out[k] = v;
+        });
+      } catch (e) { /* a malformed query string is not worth a broken page */ }
+      return out;
+    }
+
+    function stored() {
+      try {
+        var raw = localStorage.getItem(STORE_KEY);
+        if (!raw) return {};
+        var parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object' || !parsed.ids || !parsed.at) return {};
+        var age = (Date.now() - Date.parse(parsed.at)) / 86400000;
+        if (!(age >= 0) || age > CLICK_ID_TTL_DAYS) return {};
+        var out = {};
+        PARAMS.forEach(function (k) {
+          var v = parsed.ids[k];
+          if (typeof v === 'string' && v && v.length <= MAX_LEN) out[k] = v;
+        });
+        return out;
+      } catch (e) { return {}; }
+    }
+
+    function consented() {
+      try { return localStorage.getItem(CONSENT_KEY) === 'accepted'; }
+      catch (e) { return false; }
+    }
+
+    // Newest wins per platform; ids from an earlier visit survive, so arriving
+    // via Google and later via Meta keeps both.
+    var ids = stored();
+    var fresh = fromUrl();
+    Object.keys(fresh).forEach(function (k) { ids[k] = fresh[k]; });
+    window.__epClickIds = ids;
+
+    window.epPersistClickIds = function () {
+      if (!consented()) return;
+      var keys = Object.keys(window.__epClickIds || {});
+      if (!keys.length) return;
+      try {
+        localStorage.setItem(STORE_KEY, JSON.stringify({
+          ids: window.__epClickIds,
+          at: new Date().toISOString(),
+        }));
+      } catch (e) { /* the in-memory copy still serves this visit */ }
+    };
+
+    window.epForgetClickIds = function () {
+      window.__epClickIds = {};
+      try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+    };
+
+    /** Everything the enquiry form needs, in one call. */
+    window.epClickIds = function () { return window.__epClickIds || {}; };
+
+    window.epPersistClickIds();
+  })();
+</script>

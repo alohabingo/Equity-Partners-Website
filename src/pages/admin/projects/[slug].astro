@@ -20,6 +20,7 @@ import {
   type ProjectDocument,
 } from "../../../lib/projectDocuments";
 import { LEAD_SOURCES, bucketOf, needsAttention, BUCKET_LABELS, isLive, shortAge, plain, REJECT_REASONS, rejectReasonLabel, LOCALE_OPTIONS, localeChip, localeTitle, type EnquiryRow } from "../../../lib/enquiries";
+import { emailLinkOrigin } from "../../../lib/siteUrl";
 
 const { slug } = Astro.params;
 const supabase = supabaseServer(Astro.cookies, Astro.request);
@@ -473,7 +474,7 @@ const steps = [
   { done: receivedAny, label: "First enquiry arrives",
     hint: "Ticks itself once mail from the inbox has been picked up." },
 ];
-const remaining = steps.filter((s) => !s.done && !s.later).length;
+const remaining = steps.filter((s) => !s.done).length;
 
 // Only rejections nobody has dismissed yet. The rows stay either way — the log
 // is the record that a submission was refused, and that remains true after it
@@ -506,7 +507,8 @@ const parkingNotice = Astro.url.searchParams.get("parking_notice") ?? "";
 const mailboxConnected = !!project.mailbox_connected_at;
 const oauthReady = !!(import.meta.env.ZOHO_OAUTH_CLIENT_ID && import.meta.env.ZOHO_OAUTH_CLIENT_SECRET);
 
-const webhookUrl = `${Astro.url.origin}/api/ingest/inquiry`;
+// Pasted into an external form provider, so never the dev server.
+const webhookUrl = `${emailLinkOrigin(Astro.url.origin, import.meta.env.PUBLIC_SITE_URL)}/api/ingest/inquiry`;
 
 const snippet = `// Example only — any language or form service can do this.
 // The endpoint also accepts urlencoded and multipart bodies.
@@ -890,7 +892,6 @@ await fetch("${webhookUrl}", {
     .tick.done { background: rgba(15, 138, 95, 0.13); color: #0f8a5f; }
     .tick.todo { background: #f2f5f9; color: #93a3b8; }
     .step .l { font-size: 0.86rem; font-weight: 600; }
-    .step.is-later .l { color: #93a3b8; }
     .step .h { margin-top: 0.15rem; font-size: 0.76rem; color: #93a3b8; }
 
     .field { display: grid; gap: 0.35rem; margin-top: 1rem; }
@@ -1326,7 +1327,7 @@ await fetch("${webhookUrl}", {
           </p>
           <div class="steps">
             {steps.map((st) => (
-              <div class:list={["step", { "is-later": st.later }]}>
+              <div class="step">
                 <span class:list={["tick", st.done ? "done" : "todo"]}>{st.done ? "✓" : "•"}</span>
                 <div>
                   <div class="l">{st.label}</div>
@@ -2685,7 +2686,7 @@ await fetch("${webhookUrl}", {
   // by an inline script next to the markup, before paint; these re-runs are for
   // the two things that change the measurement afterwards — the web font
   // finishing loading, and the window being resized.
-  function placeThumb(animate) {
+  function placeThumb(animate: boolean) {
     document.querySelectorAll(".seg").forEach((seg) => {
       const thumb = seg.querySelector(".seg-thumb");
       const active = seg.querySelector(".seg-btn.active");

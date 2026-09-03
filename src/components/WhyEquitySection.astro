@@ -367,7 +367,7 @@ const icons = [
   );
   document.querySelectorAll(".we-section [data-animate]").forEach((el) => reveal.observe(el));
 
-  document.querySelectorAll(".we-section [data-carousel]").forEach((grid) => {
+  document.querySelectorAll<HTMLElement>(".we-section [data-carousel]").forEach((grid) => {
     const key = grid.getAttribute("data-carousel");
     const itemSel = grid.getAttribute("data-carousel-item");
     const dotsWrap = grid.closest(".we-section")?.querySelector(`[data-carousel-dots="${key}"]`);
@@ -375,7 +375,7 @@ const icons = [
     if (!itemSel || dots.length === 0) return;
 
     const syncDots = () => {
-      const items = Array.from(grid.querySelectorAll(itemSel));
+      const items = Array.from(grid.querySelectorAll<HTMLElement>(itemSel));
       if (!items.length) return;
       const viewportCenter = grid.scrollLeft + grid.clientWidth / 2;
       let activeIndex = 0;
@@ -393,7 +393,7 @@ const icons = [
 
     dots.forEach((dot, index) => {
       dot.addEventListener("click", () => {
-        const item = grid.querySelectorAll(itemSel)[index];
+        const item = grid.querySelectorAll<HTMLElement>(itemSel)[index];
         if (!item) return;
         const target = item.offsetLeft - grid.offsetLeft + item.offsetWidth / 2 - grid.clientWidth / 2;
         grid.scrollTo({ left: Math.max(0, target), behavior: "smooth" });

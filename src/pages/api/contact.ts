@@ -2,6 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from "astro";
 import { supabaseAdmin } from "../../lib/supabase";
+import { CLICK_ID_PARAMS, clickIdsForRow, type ClickIds } from "../../lib/clickIds";
 
 const VALID_TYPES = ["investor", "founder_pitch", "general", "video_call"] as const;
 type InquiryType = (typeof VALID_TYPES)[number];
@@ -50,6 +51,29 @@ export const POST: APIRoute = async ({ request, url }) => {
     return json({ ok: false, error: "invalid_fields" }, 422);
   }
 
+  /**
+   * The advertising click id, re-validated here rather than trusted.
+   *
+   * It arrives as a JSON string from the visitor's browser, which means it
+   * arrives from a place anyone can edit. Only the parameters we know about are
+   * read, only strings are kept, and anything oversized is dropped — so the
+   * worst a forged submission can do is attribute itself to a click that never
+   * happened, which is noise in a report rather than a way into the database.
+   */
+  const clickIds: ClickIds = (() => {
+    const raw = get("click_ids");
+    if (!raw || raw.length > 4000) return {};
+    let parsed: unknown;
+    try { parsed = JSON.parse(raw); } catch { return {}; }
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    const out: ClickIds = {};
+    for (const key of CLICK_ID_PARAMS) {
+      const v = (parsed as Record<string, unknown>)[key];
+      if (typeof v === "string" && v && v.length <= 512 && !/\s/.test(v)) out[key] = v;
+    }
+    return out;
+  })();
+
   // Extra structured fields (investor form)
   const details: Record<string, string> = {};
   for (const key of ["investor_type", "investment_timeline", "investment_range"]) {
@@ -77,6 +101,7 @@ export const POST: APIRoute = async ({ request, url }) => {
       message: message || null,
       locale,
       source_page: get("source_page") || null,
+      click_ids: clickIdsForRow(clickIds),
       details,
       // Fund enquiries don't go through buyer triage - that queue belongs to a
       // project. Set explicitly so the column never claims a fund lead is

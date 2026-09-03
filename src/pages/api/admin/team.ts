@@ -2,6 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from "astro";
 import { supabaseServer } from "../../../lib/supabase";
+import { pickListAction } from "../../../lib/formAction";
 
 const json = (body: object, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -18,7 +19,7 @@ const json = (body: object, status = 200) =>
 export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   const form = await request.formData();
   const actions = form.getAll("action").map(String);
-  const action = actions.includes("delete") ? "delete" : actions.includes("move") ? "move" : "save";
+  const action = pickListAction(actions);
   const get = (k: string) => form.get(k)?.toString() ?? "";
   const supabase = supabaseServer(cookies, request);
 
