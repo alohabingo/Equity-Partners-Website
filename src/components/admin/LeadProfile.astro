@@ -27,7 +27,10 @@ interface Props {
   project: { slug: string; name: string };
   events: { kind: string; detail: any; created_at: string; actor: string }[];
   messages: { direction: string; subject: string | null; sent_at: string; sentByName?: string | null }[];
-  notes: { body: string; created_at: string; author: string }[];
+  /** One editable field, not a list — see the notes section below. */
+  notesText: string | null;
+  notesBy: string | null;
+  notesAt: string | null;
   /** This project's units, for "property of interest". */
   units: { id: string; code: string; state: string }[];
   /** Unit ids this buyer is looking at, oldest first. */
@@ -47,7 +50,7 @@ interface Props {
    *  named, so saving reopens the profile rather than dumping you on the list. */
   back: string;
 }
-const { lead, project, events, messages, notes, units, interest, parking, parkingInterest, activity, people, meId, back } = Astro.props;
+const { lead, project, events, messages, notesText, notesBy, notesAt, units, interest, parking, parkingInterest, activity, people, meId, back } = Astro.props;
 
 const EVENT_LABELS: Record<string, string> = {
   received: "Enquiry received",
@@ -200,6 +203,13 @@ const contactError = Astro.url.searchParams.get("contact_error");
         </select>
       </form>
 
+      {/* Directly under the stage pill: both are about this record as a whole
+          rather than a field in it, and the full enquiry is what you open when
+          the summary above is not enough. At the bottom of the panel it sat
+          below however many notes there happened to be, so the one permanent
+          action moved around depending on the lead. */}
+      <a class="act" href={enquiryHref}>Open full enquiry</a>
+
       <div class="hr"></div>
 
       <form method="post" action="/api/admin/enquiry" class="cform">
@@ -226,7 +236,36 @@ const contactError = Astro.url.searchParams.get("contact_error");
 
       <div class="hr"></div>
 
-      <a class="act" href={enquiryHref}>Open full enquiry</a>
+      {/* Notes live here rather than out on the white card because they are of
+          a piece with the contact details above them: the things a person keeps
+          about someone, as opposed to the record of what happened, which is the
+          history on the right. Moving them also gives the left column a single
+          subject instead of two.
+
+          The list has its own scroll for the same reason the history does — a
+          buyer with twenty notes should not push "Open full enquiry" so far
+          down the panel that the main action has to be hunted for. */}
+      <section class="notesec">
+        <div class="notehead">
+          <h3>Notes</h3>
+          {notesBy && notesAt && <span class="notemeta">{notesBy} · {dt(notesAt)}</span>}
+        </div>
+        {/* One field, rewritten in place. Save is disabled until the text
+            actually differs from what was loaded, so the button answers "is
+            there anything to save" without being pressed — and a stray click
+            cannot stamp a new "last edited by" on an unchanged note.
+
+            Not `required`: clearing the box and saving is how a note gets
+            deleted, and there is no other way to remove one. */}
+        <form method="post" action="/api/admin/enquiry" class="noteform" data-noteform>
+          <input type="hidden" name="id" value={lead.id} />
+          <input type="hidden" name="action" value="note" />
+          <input type="hidden" name="back" value={selfHref} />
+          <textarea name="body" rows="5" data-noteinput>{notesText ?? ""}</textarea>
+          <button class="notebtn" type="submit" data-notesave disabled>Save notes</button>
+        </form>
+      </section>
+
     </aside>
 
     {/* ---------------- the process ---------------- */}
@@ -509,22 +548,44 @@ const contactError = Astro.url.searchParams.get("contact_error");
           </section>
         </div>
 
-        <section>
-          <h3>Notes</h3>
-          {notes.map((n) => (
-            <div class="note">
-              <p>{n.body}</p>
-              <span>{n.author} · {dt(n.created_at)}</span>
-            </div>
-          ))}
-          <form method="post" action="/api/admin/enquiry" class="noteform">
-            <input type="hidden" name="id" value={lead.id} />
-            <input type="hidden" name="action" value="note" />
-            <input type="hidden" name="back" value={selfHref} />
-            <textarea name="body" rows="2" required placeholder="Spoke on the phone — wants a viewing in October."></textarea>
-            <button class="btn" type="submit">Add note</button>
-          </form>
-        </section>
+        {/* The foreign investment document and who issued it. Side by side for
+            the same reason as the pair above: the answer to the first is one
+            word, and a full-width dropdown holding "No" says nothing the label
+            has not already said.
+
+            Both save the moment you leave them, like everything else in this
+            column. A text input fires `change` on blur, so tabbing out of
+            Issuer or clicking elsewhere commits it — no Save button to forget.
+            Each form posts ONLY its own field, so answering one never quietly
+            answers the other. */}
+        <div class="pair">
+          <section>
+            <h3>Foreign investment doc</h3>
+            <form method="post" action="/api/admin/enquiry" class="onechange">
+              <input type="hidden" name="id" value={lead.id} />
+              <input type="hidden" name="action" value="contact" />
+              <input type="hidden" name="back" value={selfHref} />
+              <select name="foreign_investment" class="ssel" aria-label="Foreign investment doc"
+                      data-fill onchange="this.form.submit()">
+                <option value="no" selected={!lead.foreign_investment}>No</option>
+                <option value="yes" selected={!!lead.foreign_investment}>Yes</option>
+              </select>
+            </form>
+          </section>
+
+          <section>
+            <h3>Issuer</h3>
+            <form method="post" action="/api/admin/enquiry" class="onechange">
+              <input type="hidden" name="id" value={lead.id} />
+              <input type="hidden" name="action" value="contact" />
+              <input type="hidden" name="back" value={selfHref} />
+              <input class="stxt" type="text" name="issuer" value={lead.issuer ?? ""}
+                     placeholder="not recorded" aria-label="Issuer"
+                     onchange="this.form.submit()" />
+            </form>
+          </section>
+        </div>
+
       </div>
 
       <div class="colR">
@@ -727,8 +788,11 @@ const contactError = Astro.url.searchParams.get("contact_error");
   .hr { height: 1px; background: rgba(219, 229, 243, 0.13); margin: 1.15rem 0; }
 
   .cf { display: grid; gap: 0.28rem; margin-bottom: 0.75rem; }
+  /* Green, matching the Notes heading and the stage pill, so every label in
+     this panel speaks with one voice instead of the field labels being grey
+     and the section headings green. */
   .cf > span {
-    font-size: 0.6rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #6c8099;
+    font-size: 0.6rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #8fdcb4;
   }
   .cf input, .cf select {
     font: inherit; font-size: 0.8rem; width: 100%; color: #dbe5f3;
@@ -756,7 +820,7 @@ const contactError = Astro.url.searchParams.get("contact_error");
 
 
   .act {
-    display: block; margin-top: 1.2rem; text-align: center; text-decoration: none;
+    display: block; margin-top: 0.55rem; text-align: center; text-decoration: none;
     font-size: 0.78rem; font-weight: 700; padding: 0.6rem; border-radius: 999px;
     background: #53b27f; color: #ffffff;
   }
@@ -774,7 +838,14 @@ const contactError = Astro.url.searchParams.get("contact_error");
   }
   /* The pipeline wants the whole width; everything under it splits in two. */
   .main > .full { grid-column: 1 / -1; }
-  .colL, .colR { min-width: 0; display: grid; gap: 1.5rem; align-content: start; }
+  .colL, .colR { min-width: 0; display: grid; align-content: start; }
+  /* Tighter on the left than the right. The left column is a stack of short
+     related answers about one buyer — property, parking, source, presale,
+     authorisation — and 1.5rem between each made them read as five separate
+     topics rather than one form. The right column holds a single tall block,
+     so its spacing has nothing to compress. */
+  .colL { gap: 1.05rem; }
+  .colR { gap: 1.5rem; }
   /* A rule under the pipeline: it is a summary of the whole record, and what
      follows is the detail behind it. Same hairline the rest of the portal uses. */
   .main > .sep { border-bottom: 1px solid #eef2f7; padding-bottom: 1.35rem; }
@@ -785,7 +856,7 @@ const contactError = Astro.url.searchParams.get("contact_error");
   }
   h3 {
     font-size: 0.62rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
-    color: #2e7d54; margin-bottom: 0.75rem;
+    color: #2e7d54; margin-bottom: 0.5rem;
   }
   /* The one heading that names the whole record rather than a field in it, so
      it carries a little more weight than the labels below. Tracking eases off
@@ -887,7 +958,7 @@ const contactError = Astro.url.searchParams.get("contact_error");
 
   .onechange { display: block; }
   .pklist { margin-top: 0.4rem; }
-  .pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem 1.1rem; }
+  .pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.9rem 1.1rem; }
   @media (max-width: 620px) { .pair { grid-template-columns: 1fr; } }
   .srcname { display: flex; gap: 0.4rem; align-items: center; margin-top: 0.4rem; }
   .srcname input { flex: 1 1 auto; min-width: 0; cursor: text; }
@@ -1021,15 +1092,52 @@ const contactError = Astro.url.searchParams.get("contact_error");
   .fdetail { margin-top: 0.1rem; color: #46586f; overflow-wrap: anywhere; }
   .fwho { font-size: 0.7rem; color: #a7b4c5; }
 
-  .note { background: #fffdf5; border: 1px solid #f0e6c8; border-radius: 10px; padding: 0.6rem 0.75rem; margin-bottom: 0.45rem; }
-  .note p { font-size: 0.82rem; line-height: 1.55; color: #4a422c; }
-  .note span { display: block; margin-top: 0.25rem; font-size: 0.7rem; color: #9a8a5f; }
-  .noteform { margin-top: 0.6rem; display: grid; gap: 0.5rem; justify-items: end; }
-  .noteform textarea {
-    font: inherit; font-size: 0.82rem; width: 100%; padding: 0.55rem 0.7rem; resize: vertical;
-    border: 1px solid #d5deea; border-radius: 10px; background: #fbfcfe; color: #16283e;
+  /* Matched to .ssel so the pair lines up: same height, same border, same
+     radius. A text box a few pixels shorter than the dropdown next to it is the
+     kind of thing you cannot unsee once noticed. */
+  .stxt {
+    font: inherit; font-size: 0.82rem; width: 100%;
+    padding: 0.55rem 0.7rem; border: 1px solid #d5deea; border-radius: 10px;
+    background: #fbfcfe; color: #16283e;
   }
-  .noteform textarea:focus { outline: none; border-color: #53b27f; background: #fff; }
+  .stxt::placeholder { color: #93a3b8; font-style: italic; }
+  .stxt:focus { outline: none; border-color: #53b27f; background: #ffffff; }
+
+  /* ---- notes, in the navy panel ----
+     They used to sit on the white card and were coloured like a paper note —
+     cream on cream. On navy that reads as a warning, so they take the panel's
+     own vocabulary instead: the translucent white the contact fields use, at a
+     slightly higher opacity so a note still reads as a written thing rather
+     than an input. */
+  .notehead { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
+  /* The global h3 green is nearly black against this panel. Same weight and
+     tracking, the lighter green the stage pill already uses. */
+  .notehead h3 { color: #8fdcb4; margin-bottom: 0.5rem; }
+  /* Who last touched it and when. With one shared field there is no per-line
+     authorship any more, so this is the whole of the accountability — worth the
+     line it takes. */
+  .notemeta { font-size: 0.62rem; color: #7f93ad; white-space: nowrap; }
+  .noteform { display: grid; gap: 0.5rem; justify-items: stretch; }
+  .noteform textarea {
+    font: inherit; font-size: 0.79rem; line-height: 1.55; width: 100%;
+    padding: 0.55rem 0.65rem; resize: vertical; min-height: 5.5rem;
+    border: 1px solid rgba(219, 229, 243, 0.16); border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06); color: #dbe5f3;
+  }
+  .noteform textarea::placeholder { color: rgba(140, 160, 190, 0.55); font-style: italic; }
+  .noteform textarea:focus {
+    outline: none; border-color: #53b27f; background: rgba(83, 178, 127, 0.08);
+  }
+  /* Outlined, not filled: "Open full enquiry" is the one green action in this
+     panel, and two greens would make neither of them the point. */
+  .notebtn {
+    font: inherit; font-size: 0.72rem; font-weight: 700; cursor: pointer; width: 100%;
+    padding: 0.45rem; border-radius: 999px;
+    background: transparent; color: #dbe5f3; border: 1px solid rgba(219, 229, 243, 0.25);
+    transition: opacity 140ms ease, background-color 140ms ease;
+  }
+  .notebtn:hover:not(:disabled) { background: rgba(219, 229, 243, 0.1); }
+  .notebtn:disabled { opacity: 0.4; cursor: default; }
   .btn {
     font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer; color: #ffffff;
     background: #53b27f; border: 0; border-radius: 999px; padding: 0.5rem 1.1rem;
@@ -1038,6 +1146,8 @@ const contactError = Astro.url.searchParams.get("contact_error");
 </style>
 
 <script>
+  import { armNoteForms } from "../../lib/noteDirty";
+
   /**
    * Picking a stage on the pipeline.
    *
@@ -1136,4 +1246,8 @@ const contactError = Astro.url.searchParams.get("contact_error");
     const dlg = ev.target as HTMLElement | null;
     if (dlg && (dlg as HTMLElement).matches?.("dialog")) clear();
   }, true);
+
+  // Save is offered only when the note has actually changed. Shared with the
+  // inbox panel and the full enquiry page, which show the same field.
+  armNoteForms();
 </script>

@@ -82,10 +82,12 @@ const gatesInUse = Object.entries(
   <section class="card">
     <h2 class="sec">How consent works here</h2>
     <p class="lede">
-      One question, asked once. Accept covers both the analytics and the advertising tags; Reject
-      covers both. There is no half-answer and no second screen — with this few tags there is
-      nothing useful to split, and another step would only make refusing slower than agreeing.
-      Refusing is one click, in the same place, at the same moment.
+      Two decisions, not one. A visitor can allow us to measure how the site is used and still
+      refuse advertising, or the reverse — Andorra's regulator asks that consent for different
+      purposes is not bundled together. The banner offers Accept all and Reject all at equal
+      weight, with a preferences panel behind them for deciding each purpose separately. Both
+      switches in that panel start off, so saving without touching anything is the same as
+      refusing.
     </p>
 
     {/* Derived from the connectors above rather than written out, because the
@@ -110,9 +112,11 @@ const gatesInUse = Object.entries(
       people who refused is not something we can report on.
     </p>
     <p class="lede">
-      It can be undone. A link on the cookie policy page reopens the banner, and withdrawing
-      consent switches both tags off, clears the analytics cookies already on the device, and
-      discards the advertising click id kept for attributing enquiries.
+      It can be undone, one purpose at a time. A link on the cookie policy page reopens the
+      preferences panel rather than the banner, because withdrawing has to be at least as easy as
+      agreeing was. Turning off advertising stops the pixel and discards the click id kept for
+      attributing enquiries; turning off analytics stops Google and clears the cookies already on
+      the device. Neither affects the other.
     </p>
   </section>
 </AdminLayout>

@@ -192,7 +192,7 @@ export const POST: APIRoute = async ({ request, cookies, locals, redirect, url }
   if (action === "contact") {
     const { data: before } = await supabase
       .from("inquiries")
-      .select("email, phone, source, country, source_detail, presale, discount_pct, wants_parking, project_id")
+      .select("email, phone, source, country, source_detail, presale, discount_pct, wants_parking, foreign_investment, issuer, project_id")
       .eq("id", id).maybeSingle();
     if (!before) return json({ ok: false, error: "not_found" }, 404);
 
@@ -213,6 +213,15 @@ export const POST: APIRoute = async ({ request, cookies, locals, redirect, url }
       : sent("source_detail") ? (get("source_detail") || null) : (before.source_detail ?? null);
 
     const presale = sent("presale") ? get("presale") === "yes" : (before.presale ?? false);
+
+    // Each control on the card posts only its own field, so anything absent
+    // from this submission keeps the value it already had. Without the `sent`
+    // check, editing the discount would quietly answer the authorisation
+    // question as "no".
+    const foreign_investment = sent("foreign_investment")
+      ? get("foreign_investment") === "yes"
+      : (before.foreign_investment ?? false);
+    const issuer = sent("issuer") ? (get("issuer").trim() || null) : (before.issuer ?? null);
     const wants_parking = sent("wants_parking")
       ? get("wants_parking") === "yes"
       : (before.wants_parking ?? false);
@@ -240,7 +249,7 @@ export const POST: APIRoute = async ({ request, cookies, locals, redirect, url }
       .from("inquiries")
       .update({
         email: email || null, phone: phone || null, source, country, source_detail,
-        presale, discount_pct, wants_parking,
+        presale, discount_pct, wants_parking, foreign_investment, issuer,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id);
@@ -264,7 +273,9 @@ export const POST: APIRoute = async ({ request, cookies, locals, redirect, url }
       || (before.source_detail ?? null) !== source_detail
       || (before.presale ?? false) !== presale
       || (before.discount_pct ?? null) !== discount_pct
-      || (before.wants_parking ?? false) !== wants_parking;
+      || (before.wants_parking ?? false) !== wants_parking
+      || (before.foreign_investment ?? false) !== foreign_investment
+      || (before.issuer ?? null) !== issuer;
     if (changed) {
       await event("contact_changed", {
         from: {
@@ -272,9 +283,11 @@ export const POST: APIRoute = async ({ request, cookies, locals, redirect, url }
           country: before.country ?? null, source_detail: before.source_detail ?? null,
           presale: before.presale ?? false, discount_pct: before.discount_pct ?? null,
           wants_parking: before.wants_parking ?? false,
+          foreign_investment: before.foreign_investment ?? false,
+          issuer: before.issuer ?? null,
         },
         to: { email: email || null, phone: phone || null, source, country, source_detail,
-              presale, discount_pct, wants_parking },
+              presale, discount_pct, wants_parking, foreign_investment, issuer },
       });
     }
     return redirect(back);
@@ -303,15 +316,33 @@ export const POST: APIRoute = async ({ request, cookies, locals, redirect, url }
     return redirect(back);
   }
 
+  /**
+   * One note per lead, rewritten in place.
+   *
+   * This used to insert a row, so notes could only accumulate: a typo stayed
+   * forever and a changed circumstance meant a second note arguing with the
+   * first. What anyone actually keeps about a buyer is a running summary they
+   * revise. Empty is a legitimate save — clearing the field is how a note is
+   * deleted, and refusing it would make the text impossible to remove.
+   *
+   * No history event. The old shape logged one per note, which was fair when
+   * each was a distinct thing that happened; logging every edit of a living
+   * field would bury the record of real events under "notes changed" a dozen
+   * times. Who last touched it and when is kept on the row itself and shown on
+   * the card, which is the part worth knowing.
+   */
   if (action === "note") {
-    const body = get("body");
-    if (!body) return redirect(back);
+    const body = get("body").trim();
 
     const { error } = await supabase
-      .from("enquiry_notes")
-      .insert({ inquiry_id: id, author_id: actor, body });
+      .from("inquiries")
+      .update({
+        notes: body || null,
+        notes_updated_at: new Date().toISOString(),
+        notes_updated_by: actor,
+      })
+      .eq("id", id);
     if (error) return json({ ok: false, error: error.message }, 403);
-    await event("note_added");
     return redirect(back);
   }
 

@@ -307,6 +307,8 @@ const kindWord = item.kind === "project" ? "project" : "opportunity";
   </style>
 
   <script>
+  import { uploadFile as putFile } from "../../../lib/uploadClient";
+
     // ---------- Keep the dropdowns on the values this record actually has ----------
     // Chrome restores form-control state when you navigate back and forward
     // between records, which can silently leave the wrong Language selected and
@@ -377,11 +379,16 @@ const kindWord = item.kind === "project" ? "project" : "opportunity";
         if (!f) return;
         if (f.size > 8 * 1024 * 1024) return setStatus(ERRORS.too_large, "err");
         setStatus(`Uploading ${f.name}…`);
-        const fd = new FormData();
-        fd.append("file", f);
-        fd.append("folder", "portfolio");
         try {
-          const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+          // Straight to storage, then record where it landed. The bytes no
+          // longer pass through our own server, which is what capped them at
+          // 6 MB on the live site while working fine on a laptop.
+          const path = await putFile("media", f, { folder: "portfolio" });
+          const res = await fetch("/api/admin/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ path }),
+          });
           const data = await res.json();
           if (!res.ok || !data.ok) {
             throw new Error(ERRORS[data.error] || data.error || `upload failed (${res.status})`);

@@ -3,20 +3,29 @@ import { buildLocalizedPath, type Locale } from "../lib/i18n";
 import { getUiTranslations } from "../i18n/ui";
 
 /**
- * The cookie banner.
+ * The cookie banner, in two layers.
  *
- * Rendered from SiteFooter, which is the one body-level component every public
- * page already carries — the same reason the pixel itself hangs off SEO.astro.
+ * Andorra's regulator asks for two things this shape is built around: consent
+ * for different purposes must not be bundled, and accept and reject must have
+ * EQUAL PROMINENCE — with a reject option in the first layer, not buried behind
+ * a settings screen.
  *
- * Accept and Reject are the same size, the same shape and one click apart. That
- * is not a style choice: a banner where refusing is harder than agreeing is not
- * consent, it is a dark pattern with a button on it. There is no "manage
- * preferences" step for the same reason — with one pixel and one question there
- * is nothing to split, and an extra screen would only make refusing slower.
+ * So: Accept all and Reject all are the same size, the same weight and the same
+ * distance from the cursor. They differ in colour because one is the brand
+ * action and one is not, and nothing else. "Manage preferences" is deliberately
+ * quieter than both — it is not a third answer, it is a route to a more
+ * detailed one, and dressing it as an equal peer would make the two real
+ * answers look like two of three options rather than the choice being offered.
  *
- * It renders server-side hidden and is shown by script only when no choice has
- * been recorded. Done the other way round — visible by default, hidden on load —
- * everyone who had already answered would see it flash on every page.
+ * Both toggles in the second layer start OFF. A pre-ticked box is not consent,
+ * and "Save preferences" with nothing touched is therefore the same as
+ * refusing — which is why Reject all sits beside it there too, so nobody has to
+ * work out that equivalence for themselves.
+ *
+ * Rendered from SiteFooter, the one body-level component every public page
+ * carries. It is server-rendered hidden and revealed by script only when no
+ * answer is stored; done the other way round it would flash on every page for
+ * everyone who had already decided.
  */
 interface Props {
   locale: Locale;
@@ -24,20 +33,66 @@ interface Props {
 const { locale } = Astro.props;
 const t = getUiTranslations(locale).cookieBanner;
 const policyHref = buildLocalizedPath("/cookie-policy", locale);
+
+const rows = [
+  { key: "essential", title: t.prefs.essentialTitle, body: t.prefs.essentialBody, locked: true },
+  { key: "analytics", title: t.prefs.analyticsTitle, body: t.prefs.analyticsBody, locked: false },
+  { key: "marketing", title: t.prefs.marketingTitle, body: t.prefs.marketingBody, locked: false },
+];
 ---
 
 <div class="ck" id="cookie-banner" hidden data-cookie-banner>
   <div class="ck-rule"></div>
   <h2 class="ck-title">{t.title}</h2>
-  <p class="ck-body">{t.body}</p>
+  <p class="ck-body">{t.body} <a class="ck-inline" href={policyHref}>{t.policy}</a></p>
   <div class="ck-acts">
-    <button class="ck-btn ck-accept" type="button" data-cookie="accepted">{t.accept}</button>
-    <button class="ck-btn ck-reject" type="button" data-cookie="rejected">{t.reject}</button>
-    <a class="ck-link" href={policyHref}>{t.policy}</a>
+    <button class="ck-btn ck-accept" type="button" data-cookie-all="in">{t.acceptAll}</button>
+    <button class="ck-btn ck-reject" type="button" data-cookie-all="out">{t.rejectAll}</button>
   </div>
+  <button class="ck-manage" type="button" data-cookie-manage>{t.manage}</button>
 </div>
 
+<dialog class="cp" id="cookie-prefs" data-cookie-prefs aria-labelledby="cp-title">
+  <div class="cp-head">
+    <h2 class="cp-title" id="cp-title">{t.prefs.title}</h2>
+    <button class="cp-x" type="button" data-cookie-prefs-close aria-label={t.prefs.close}>
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="cp-rows">
+    {rows.map((r) => (
+      <div class="cp-row">
+        <div class="cp-copy">
+          <div class="cp-rowhead">
+            <h3>{r.title}</h3>
+            {r.locked && <span class="cp-always">{t.prefs.alwaysOn}</span>}
+          </div>
+          <p>{r.body}</p>
+        </div>
+        {r.locked ? (
+          <span class="cp-sw is-on is-locked" aria-hidden="true"></span>
+        ) : (
+          <label class="cp-swwrap">
+            <span class="sr-only">{r.title}</span>
+            <input type="checkbox" data-cookie-toggle={r.key} />
+            <span class="cp-sw"></span>
+          </label>
+        )}
+      </div>
+    ))}
+  </div>
+
+  <div class="cp-acts">
+    <button class="ck-btn cp-reject" type="button" data-cookie-all="out">{t.rejectAll}</button>
+    <button class="ck-btn cp-save" type="button" data-cookie-save>{t.prefs.save}</button>
+  </div>
+</dialog>
+
 <style>
+  /* ---------------- first layer ---------------- */
   .ck {
     position: fixed; left: 1.4rem; bottom: 1.4rem; z-index: 9000;
     width: min(23rem, calc(100vw - 2.8rem));
@@ -45,100 +100,232 @@ const policyHref = buildLocalizedPath("/cookie-policy", locale);
     box-shadow: 0 20px 50px rgba(15, 26, 42, 0.35);
     font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
     color: #16283e;
-    /* Arrives a beat after the page rather than with it, so it reads as a
-       question being asked and not as part of the design. */
     animation: ck-in 260ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
   }
   .ck[hidden] { display: none; }
   @keyframes ck-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) { .ck { animation: none; } }
-  @media (max-width: 560px) {
-    .ck { left: 0.9rem; right: 0.9rem; bottom: 0.9rem; width: auto; }
-  }
+  @media (max-width: 560px) { .ck { left: 0.9rem; right: 0.9rem; bottom: 0.9rem; width: auto; } }
 
   .ck-rule { height: 3px; width: 30px; border-radius: 999px; background: #53b27f; margin-bottom: 0.7rem; }
   .ck-title { margin: 0 0 0.45rem; font-size: 0.95rem; font-weight: 800; letter-spacing: -0.01em; color: #16283e; }
   .ck-body { margin: 0; font-size: 0.78rem; line-height: 1.6; color: #5c6f88; }
-  .ck-acts { margin-top: 0.95rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .ck-inline { color: inherit; text-decoration: underline; }
+  .ck-inline:hover { color: #16283e; }
+
+  /* Equal prominence, and not as a figure of speech: one grid, two equal
+     columns, so the two real answers are the same width whatever the wording
+     does in Spanish or Catalan. The previous banner made Accept wider on
+     request; the APDA guidance asks for equal, so it is equal. */
+  .ck-acts { margin-top: 0.95rem; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
   .ck-btn {
     font: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; white-space: nowrap;
-    border-radius: 999px; padding: 0.6rem 1.3rem; border: 1px solid transparent;
+    border-radius: 999px; padding: 0.62rem 0.9rem; border: 1px solid transparent; width: 100%;
     transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
   }
-  /* Wider than Reject, by request. Worth knowing what this trades: the test a
-     banner has to pass is that refusing is as easy as agreeing, and size is one
-     of the things regulators look at. Both are still one click, in the same
-     place, with the same wording weight — this is a nudge, not a maze — but it
-     is the edge of what stays defensible, so nothing else should tilt further. */
-  .ck-accept { background: #53b27f; color: #ffffff; padding-left: 2.2rem; padding-right: 2.2rem; }
+  .ck-accept { background: #53b27f; color: #ffffff; }
   .ck-accept:hover { background: #3f9568; }
-  .ck-reject { background: transparent; color: #16283e; border-color: #d5deea; }
+  .ck-reject { background: #ffffff; color: #16283e; border-color: #d5deea; }
   .ck-reject:hover { border-color: #9fb2cc; }
-  .ck-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.4); }
-  .ck-link {
-    font-size: 0.76rem; color: #5c6f88; text-decoration: underline; padding: 0.6rem 0.4rem;
+  .ck-btn:focus-visible, .ck-manage:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.4); }
+
+  /* Quieter than both answers on purpose — a door, not a third opinion. */
+  .ck-manage {
+    display: block; width: 100%; margin-top: 0.5rem; padding: 0.45rem 0.4rem;
+    font: inherit; font-size: 0.76rem; font-weight: 600; color: #5c6f88;
+    background: none; border: 0; border-radius: 999px; cursor: pointer; text-decoration: underline;
   }
-  .ck-link:hover { color: #16283e; }
+  .ck-manage:hover { color: #16283e; }
+
+  /* ---------------- second layer ---------------- */
+  .cp {
+    border: 0; padding: 0; border-radius: 18px; width: min(34rem, calc(100vw - 2rem));
+    background: #ffffff; color: #16283e;
+    font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+    box-shadow: 0 30px 70px rgba(9, 16, 26, 0.45);
+  }
+  .cp::backdrop { background: rgba(10, 23, 39, 0.42); backdrop-filter: blur(3px); }
+
+  .cp-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: 1.25rem 1.4rem 0.9rem;
+  }
+  .cp-title { margin: 0; font-size: 1.02rem; font-weight: 800; letter-spacing: -0.015em; }
+  .cp-x {
+    flex: none; display: grid; place-items: center; width: 2rem; height: 2rem;
+    border: 0; border-radius: 50%; background: none; color: #5c6f88; cursor: pointer;
+  }
+  .cp-x:hover { background: #f2f5f9; color: #16283e; }
+  .cp-x:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.4); }
+
+  .cp-rows { padding: 0 1.4rem; display: grid; gap: 0.6rem; }
+  .cp-row {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
+    background: #f7f9fc; border: 1px solid #e6ecf4; border-radius: 12px; padding: 0.85rem 0.95rem;
+  }
+  .cp-rowhead { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
+  .cp-copy h3 { margin: 0; font-size: 0.85rem; font-weight: 800; letter-spacing: -0.01em; color: #16283e; }
+  .cp-copy p { margin: 0.3rem 0 0; font-size: 0.76rem; line-height: 1.55; color: #5c6f88; }
+  .cp-always {
+    font-size: 0.58rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+    background: rgba(83, 178, 127, 0.16); color: #2e7d54; border: 1px solid #bcdccb;
+    border-radius: 999px; padding: 0.12rem 0.42rem;
+  }
+
+  .cp-swwrap { flex: none; display: block; cursor: pointer; }
+  .cp-swwrap input {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+  .cp-sw {
+    display: block; flex: none; width: 42px; height: 24px; border-radius: 999px;
+    background: #cfd9e6; position: relative; transition: background-color 160ms ease;
+  }
+  .cp-sw::after {
+    content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+    border-radius: 50%; background: #ffffff; transition: transform 160ms ease;
+    box-shadow: 0 1px 3px rgba(15, 26, 42, 0.28);
+  }
+  .cp-swwrap input:checked + .cp-sw { background: #53b27f; }
+  .cp-swwrap input:checked + .cp-sw::after { transform: translateX(18px); }
+  .cp-swwrap input:focus-visible + .cp-sw { box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.4); }
+  .cp-sw.is-on { background: #53b27f; }
+  .cp-sw.is-on::after { transform: translateX(18px); }
+  .cp-sw.is-locked { opacity: 0.65; }
+
+  .cp-acts {
+    margin-top: 1.1rem; padding: 1rem 1.4rem 1.3rem; border-top: 1px solid #eef2f7;
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem;
+  }
+  .cp-reject { background: #f2f5f9; color: #16283e; border-color: #e2e8f1; }
+  .cp-reject:hover { border-color: #9fb2cc; }
+  .cp-save { background: #2e7d54; color: #ffffff; }
+  .cp-save:hover { background: #24603f; }
+  @media (max-width: 460px) {
+    .cp-acts, .ck-acts { grid-template-columns: 1fr; }
+  }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
 </style>
 
 <script>
+  import {
+    CONSENT_KEY, parseConsent, serializeConsent, type ConsentState,
+  } from "../lib/consent";
+
   /**
-   * Remembering the answer.
-   *
    * Every read and write is wrapped: localStorage throws outright in some
-   * privacy modes, and a banner that throws would take the rest of the page's
+   * privacy modes, and a banner that threw would take the rest of the page's
    * scripts with it. If storage is unavailable the banner simply asks again,
    * which is the safe way round — it never assumes consent it cannot prove.
    */
-  import { CONSENT_KEY } from "../lib/consent";
-
   const read = () => { try { return localStorage.getItem(CONSENT_KEY); } catch { return null; } };
   const write = (v: string) => { try { localStorage.setItem(CONSENT_KEY, v); } catch { /* asked again next time */ } };
 
   const banner = document.querySelector<HTMLElement>("[data-cookie-banner]");
-  if (banner) {
-    const answered = read();
-    if (answered !== "accepted" && answered !== "rejected") banner.hidden = false;
+  const prefs = document.querySelector<HTMLDialogElement>("[data-cookie-prefs]");
 
-    banner.addEventListener("click", (ev) => {
-      const btn = (ev.target as HTMLElement | null)?.closest<HTMLElement>("[data-cookie]");
-      if (!btn) return;
-      const choice = btn.dataset.cookie ?? "rejected";
-      write(choice);
+  if (banner && prefs) {
+    const toggle = (key: string) =>
+      prefs.querySelector<HTMLInputElement>(`[data-cookie-toggle="${key}"]`);
+
+    const stored = parseConsent(read());
+    if (!stored) banner.hidden = false;
+
+    /**
+     * Reflect a stored answer in the switches when the panel opens.
+     *
+     * Only ever from a REAL stored answer — never a default. Someone opening
+     * the panel for the first time must see both switches off, because that is
+     * what is true, and a switch that starts on has quietly answered for them.
+     */
+    const fillToggles = () => {
+      const s = parseConsent(read());
+      for (const key of ["analytics", "marketing"] as const) {
+        const el = toggle(key);
+        if (el) el.checked = s ? s[key] : false;
+      }
+    };
+
+    /** One place where a decision becomes a fact, whichever button produced it. */
+    const apply = (state: ConsentState) => {
+      write(serializeConsent(state));
       banner.hidden = true;
+      if (prefs.open) prefs.close();
 
-      // Everything that waits on consent is told, in both directions.
-      //
-      // Accepting fires the page view that would otherwise never have happened
-      // for this visit, starts Google's library — which until this moment had
-      // not been fetched at all — and writes down the advertising click id that
-      // has been sitting in memory since the visitor landed.
-      //
-      // Rejecting matters just as much, and is the half that is easy to forget:
-      // it is the path for someone changing a previous yes, so it has to revoke
-      // consent, clear the analytics cookies already on the device, and forget
-      // the click id rather than merely stop adding to it.
       const w = window as any;
-      if (choice === "accepted") {
-        w.epEnableMetaPixel?.();
-        w.epEnableGA?.();
-        w.epPersistClickIds?.();
-      } else {
-        w.epDisableMetaPixel?.();
-        w.epDisableGA?.();
-        w.epForgetClickIds?.();
+      // Each tag is told about its OWN purpose, in both directions — a visitor
+      // keeping analytics while withdrawing advertising must switch off the
+      // pixel and the click id without switching off Analytics.
+      if (state.marketing) w.epEnableMetaPixel?.();
+      else w.epDisableMetaPixel?.();
+
+      if (state.analytics) w.epEnableGA?.();
+      else w.epDisableGA?.();
+
+      // Google is told about both answers regardless of which way they went,
+      // because ad_storage is a separate signal from analytics_storage.
+      w.epApplyGoogleConsent?.();
+
+      if (state.marketing) w.epPersistClickIds?.();
+      else w.epForgetClickIds?.();
+    };
+
+    const decideAll = (yes: boolean) =>
+      apply({ analytics: yes, marketing: yes, at: new Date().toISOString() });
+
+    document.addEventListener("click", (ev) => {
+      const el = ev.target as HTMLElement | null;
+      if (!el) return;
+
+      const all = el.closest<HTMLElement>("[data-cookie-all]");
+      if (all) { decideAll(all.dataset.cookieAll === "in"); return; }
+
+      if (el.closest("[data-cookie-save]")) {
+        apply({
+          analytics: !!toggle("analytics")?.checked,
+          marketing: !!toggle("marketing")?.checked,
+          at: new Date().toISOString(),
+        });
+        return;
+      }
+
+      if (el.closest("[data-cookie-manage]")) {
+        fillToggles();
+        prefs.showModal();
+        return;
+      }
+
+      /**
+       * Closing the panel decides nothing.
+       *
+       * The X returns to the banner rather than dismissing it. A modal that
+       * resolves to a default when you close it has answered on the visitor's
+       * behalf, whichever way the default falls.
+       */
+      if (el.closest("[data-cookie-prefs-close]")) {
+        prefs.close();
+        if (!parseConsent(read())) banner.hidden = false;
+        return;
+      }
+
+      // Reopening from the cookie policy. Goes straight to the detailed panel,
+      // because withdrawing has to be at least as easy as granting was, and
+      // someone coming back usually wants to change one of the two.
+      const again = el.closest("[data-cookie-reopen]");
+      if (again) {
+        ev.preventDefault();
+        fillToggles();
+        prefs.showModal();
       }
     });
 
-    // Reopening it from the cookie policy, so a decision can be undone. Without
-    // this an accepted visitor has no route back, which the policy promises
-    // they have.
-    document.addEventListener("click", (ev) => {
-      const again = (ev.target as HTMLElement | null)?.closest("[data-cookie-reopen]");
-      if (!again) return;
-      ev.preventDefault();
-      banner.hidden = false;
-      banner.querySelector<HTMLElement>(".ck-accept")?.focus();
+    // Escape closes the dialog natively; the same rule applies to it.
+    prefs.addEventListener("close", () => {
+      if (!parseConsent(read())) banner.hidden = false;
     });
   }
 </script>

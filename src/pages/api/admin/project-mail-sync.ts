@@ -49,8 +49,14 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     }
   } else {
     const result = await syncProjectMailbox(project.id);
+    // Replies picked up from Sent are named separately. Folded into "added to
+    // existing" they would read as buyer mail, and the whole point of reading
+    // the Sent folder is to show that WE answered.
+    const sent = result.sentAttached
+      ? `, ${result.sentAttached} of your replies from Zoho`
+      : "";
     msg = result.ok
-      ? `Synced — ${result.created} new, ${result.appended} added to existing, ${result.ignored} ignored`
+      ? `Synced — ${result.created} new, ${result.appended} added to existing${sent}, ${result.ignored} ignored`
       : `Sync failed: ${result.error}`;
   }
 

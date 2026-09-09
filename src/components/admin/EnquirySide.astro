@@ -13,12 +13,15 @@ interface Props {
   /** view_count for each document link sent on this enquiry, by link id. */
   linkViews?: Record<string, number>;
   enquiryId: string;
-  notes: { body: string; created_at: string; author: string }[];
+  /** One editable field, not a list. */
+  notesText: string | null;
+  notesBy: string | null;
+  notesAt: string | null;
   events: { kind: string; detail: any; created_at: string; actor: string }[];
   /** Where the note form sends the browser back to. */
   back: string;
 }
-const { enquiryId, notes, events, back, linkViews = {} } = Astro.props;
+const { enquiryId, notesText, notesBy, notesAt, events, back, linkViews = {} } = Astro.props;
 
 const EVENT_LABELS: Record<string, string> = {
   received: "Enquiry received",
@@ -43,7 +46,12 @@ const shortDate = (iso: string) =>
 
 <style>
   .notes { background: #fffdf5; border: 1px solid #eadfbf; border-radius: 0.9rem; padding: 0.9rem 1rem; }
-  .notes .nh { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: #8a6420; }
+  .notes .nh {
+    font-size: 0.68rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: #8a6420;
+    display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem;
+  }
+  .notes .nh em { font-style: normal; font-weight: 600; letter-spacing: 0; text-transform: none; color: #9a8a5f; }
+  .notes .add:disabled { opacity: 0.45; cursor: default; }
   .nrow { font-size: 0.79rem; line-height: 1.55; margin: 0.55rem 0 0; color: #4a4128; }
   .nrow em { font-style: normal; color: #9a8a5f; font-size: 0.7rem; display: block; margin-top: 0.1rem; }
   .notes textarea {
@@ -68,17 +76,17 @@ const shortDate = (iso: string) =>
 </style>
 
 <div class="notes">
-  <div class="nh">Internal notes · visible to the team, never sent</div>
-  {notes.length === 0 && <p class="nrow" style="color:#9a8a5f">No notes yet.</p>}
-  {notes.map((n) => (
-    <p class="nrow">{n.body}<em>{n.author} · {shortDate(n.created_at)}</em></p>
-  ))}
-  <form method="post" action="/api/admin/enquiry">
+  <div class="nh">
+    Internal notes · visible to the team, never sent
+    {notesBy && notesAt && <em>{notesBy} · {shortDate(notesAt)}</em>}
+  </div>
+  {/* One field, edited in place — the same column the lead profile writes to. */}
+  <form method="post" action="/api/admin/enquiry" data-noteform>
     <input type="hidden" name="id" value={enquiryId} />
     <input type="hidden" name="action" value="note" />
     <input type="hidden" name="back" value={back} />
-    <textarea name="body" placeholder="Add a note for the team…" required></textarea>
-    <button class="add" type="submit">Add note</button>
+    <textarea name="body" rows="4" data-noteinput>{notesText ?? ""}</textarea>
+    <button class="add" type="submit" data-notesave disabled>Save notes</button>
   </form>
 </div>
 
@@ -107,3 +115,10 @@ const shortDate = (iso: string) =>
     </div>
   ))}
 </div>
+
+<script>
+  // The notes field here writes to the same column as the lead profile, so it
+  // gets the same rule: Save appears only once something has changed.
+  import { armNoteForms } from "../../lib/noteDirty";
+  armNoteForms();
+</script>

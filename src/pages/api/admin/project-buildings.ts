@@ -4,6 +4,8 @@ import type { APIRoute } from "astro";
 import { supabaseServer } from "../../../lib/supabase";
 
 /** What a layout entry is. Display only — it never changes the counting. */
+import { parseFloorCounts, planUnits, totalUnits, floorPlanError } from "../../../lib/buildingFloors";
+
 const KINDS = ["building", "project"];
 
 const json = (body: object, status = 200) =>
@@ -39,10 +41,18 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     const name = get("name");
     if (!name) return fail("A building needs a name.");
 
-    const count = get("count") ? Number(get("count")) : 0;
-    if (get("count") && (!Number.isInteger(count) || count < 0 || count > 500)) {
-      return fail("Number of units must be a whole number up to 500.");
-    }
+    /**
+     * How many units, floor by floor.
+     *
+     * `floors` is how many the building has; `floor_counts` is a comma-separated
+     * count for each one, in order from the ground up. One field rather than a
+     * numbered input per floor, so reducing the number of floors cannot leave
+     * inputs for floors that no longer exist sitting in the submission.
+     */
+    const counts = parseFloorCounts(get("floor_counts"), Number(get("floors")));
+    const count = totalUnits(counts);
+    const planError = floorPlanError(counts);
+    if (planError) return fail(planError);
 
     const { data: last } = await supabase
       .from("project_buildings").select("position")
@@ -65,19 +75,20 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     if (count > 0) {
       const prefix = get("prefix") || "Unit";
 
-      // Numbering restarts at 1 in every building — Block A has Apartment 1–12
-      // and so does Block B, which is how developments are actually numbered.
-      // The database allows it: unit names are unique within a building, not
-      // across the project.
+      // Numbering restarts in every building — Block A has Apartment 1.1 and so
+      // does Block B, which is how developments are actually numbered. The
+      // database allows it: unit names are unique within a building, not across
+      // the project.
       const { data: lastUnit } = await supabase
         .from("project_units").select("position")
         .eq("project_id", project.id).order("position", { ascending: false }).limit(1).maybeSingle();
       const base = (lastUnit?.position ?? -1) + 1;
 
-      const rows = Array.from({ length: count }, (_, i) => ({
+      const rows = planUnits(prefix, counts).map((u, i) => ({
         project_id: project.id,
         building_id: building.id,
-        code: `${prefix} ${i + 1}`,
+        code: u.code,
+        floor: u.floor,
         state: "available",
         // Position orders the whole project's list, so it keeps counting up
         // even though the visible numbers start again.
@@ -92,7 +103,11 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
           ? `Added "${name}", but those unit names are already used inside it. Add its units from the Units tab.`
           : `Added "${name}", but its units could not be created: ${unitError.message}`);
       }
-      return done(`Added "${name}" with ${count} unit${count === 1 ? "" : "s"}.`);
+      const floors = counts.filter((n) => n > 0).length;
+      return done(
+        `Added "${name}" with ${count} unit${count === 1 ? "" : "s"} across ` +
+        `${floors} floor${floors === 1 ? "" : "s"}.`,
+      );
     }
 
     return done(`Added "${name}".`);

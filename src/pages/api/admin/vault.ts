@@ -2,14 +2,14 @@ export const prerender = false;
 
 import type { APIRoute } from "astro";
 import { supabaseServer } from "../../../lib/supabase";
+import { UPLOAD_RULES, pathLooksIssued, uploadRefusal } from "../../../lib/uploads";
+import { readStoredObject } from "../../../lib/storedObject";
 
 const json = (body: object, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
     headers: { "Content-Type": "application/json" },
   });
-
-const MAX_BYTES = 50 * 1024 * 1024; // 50 MB
 
 /**
  * Document Vault actions (super admin only, enforced by RLS + storage policies):
@@ -29,29 +29,36 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   } = await supabase.auth.getUser();
   if (!user) return json({ ok: false, error: "unauthenticated" }, 401);
 
+  /**
+   * The file is already in storage — the browser sent it there directly with a
+   * signed ticket, because posting it through this function meant a 6 MB
+   * platform cap that killed the request before any of this code ran. What
+   * arrives here is a claim, so the path shape, the object's existence and its
+   * real size and type are all checked rather than believed.
+   */
   if (action === "upload") {
-    const file = form.get("file");
     const title = get("title").trim();
     const category = get("category") || "general";
-    if (!(file instanceof File) || file.size === 0) return json({ ok: false, error: "no_file" }, 422);
-    if (file.size > MAX_BYTES) return json({ ok: false, error: "too_large_50mb" }, 422);
+    const path = get("storage_path").trim();
 
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const path = `${new Date().getFullYear()}/${crypto.randomUUID().slice(0, 8)}-${safeName}`;
+    if (!path) return json({ ok: false, error: "no_file" }, 422);
+    if (!pathLooksIssued("vault", path)) return json({ ok: false, error: "bad_path" }, 422);
 
-    const { error: upErr } = await supabase.storage
-      .from("vault")
-      .upload(path, await file.arrayBuffer(), {
-        contentType: file.type || "application/octet-stream",
-      });
-    if (upErr) return json({ ok: false, error: upErr.message }, 403);
+    const stored = await readStoredObject(supabase, UPLOAD_RULES.vault.bucket, path);
+    if (!stored) return json({ ok: false, error: "upload_unfinished" }, 422);
+
+    const refusal = uploadRefusal("vault", { type: stored.mimeType, size: stored.size });
+    if (refusal) {
+      await supabase.storage.from(UPLOAD_RULES.vault.bucket).remove([path]);
+      return json({ ok: false, error: refusal }, 422);
+    }
 
     const { error: dbErr } = await supabase.from("documents").insert({
-      title: title || file.name,
+      title: title || get("file_name") || "Document",
       category,
       storage_path: path,
-      file_size: file.size,
-      mime_type: file.type || "application/octet-stream",
+      file_size: stored.size,
+      mime_type: stored.mimeType,
       uploaded_by: user.id,
     });
     if (dbErr) {

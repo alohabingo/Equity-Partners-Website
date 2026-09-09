@@ -31,11 +31,9 @@ const enquiry = enquiryRow as EnquiryRow;
 const { data: profiles } = await supabase.from("profiles").select("id, full_name");
 const nameById = new Map((profiles ?? []).map((p: any) => [p.id, p.full_name]));
 
-const [m, n, ev, tpl, docs, sentLinks] = await Promise.all([
+const [m, ev, tpl, docs, sentLinks] = await Promise.all([
   supabase.from("inquiry_messages").select("direction, subject, body_html, sent_at, sent_by")
     .eq("inquiry_id", id).order("sent_at"),
-  supabase.from("enquiry_notes").select("body, created_at, author_id")
-    .eq("inquiry_id", id).order("created_at", { ascending: false }),
   supabase.from("enquiry_events").select("kind, detail, created_at, actor_id")
     .eq("inquiry_id", id).order("created_at", { ascending: false }).limit(20),
   // Fetched by the page, not by the composer: a component querying Supabase
@@ -52,7 +50,8 @@ const [m, n, ev, tpl, docs, sentLinks] = await Promise.all([
 // The mailbox is shared, so an outbound message says who actually wrote it
 // rather than assuming it was whoever happens to be reading the thread.
 const messages = (m.data ?? []).map((x: any) => ({ ...x, sentByName: nameById.get(x.sent_by) ?? null }));
-const notes = (n.data ?? []).map((x: any) => ({ ...x, author: nameById.get(x.author_id) ?? "Someone" }));
+// The note is a field on the enquiry now; only its author needs looking up.
+const notesBy = enquiry.notes_updated_by ? (nameById.get(enquiry.notes_updated_by) ?? "Someone") : null;
 const events = (ev.data ?? []).map((x: any) => ({ ...x, actor: nameById.get(x.actor_id) ?? "System" }));
 
 let templates = (tpl.data ?? []) as ReplyTemplate[];
@@ -107,7 +106,9 @@ const selfHref = Astro.url.pathname;
       <EnquiryPanel
         enquiry={enquiry}
         messages={messages}
-        notes={notes}
+        notesText={enquiry.notes ?? null}
+        notesBy={notesBy}
+        notesAt={enquiry.notes_updated_at ?? null}
         events={events}
         project={{ slug: project.slug, name: project.name, mailbox: project.mailbox }}
         currentUserName={me?.fullName ?? "You"}
@@ -123,7 +124,7 @@ const selfHref = Astro.url.pathname;
     </div>
 
     <aside class="sidecard">
-      <EnquirySide enquiryId={enquiry.id} notes={notes} events={events} back={selfHref} linkViews={linkViews} />
+      <EnquirySide enquiryId={enquiry.id} notesText={enquiry.notes ?? null} notesBy={notesBy} notesAt={enquiry.notes_updated_at ?? null} events={events} back={selfHref} linkViews={linkViews} />
     </aside>
   </div>
 </AdminLayout>

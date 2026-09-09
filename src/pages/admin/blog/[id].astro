@@ -212,6 +212,8 @@ const publishedAtLocal = post.published_at
   </style>
 
   <script>
+  import { uploadFile as putFile } from "../../../lib/uploadClient";
+
     // Image uploads → /api/admin/upload, fills the matching URL input.
     const statusEl = document.querySelector("[data-upload-status]") as HTMLElement;
     document.querySelectorAll<HTMLInputElement>("input[data-upload]").forEach((input) => {
@@ -220,10 +222,16 @@ const publishedAtLocal = post.published_at
         if (!file) return;
         const key = input.dataset.upload;
         statusEl.textContent = "Uploading image…";
-        const fd = new FormData();
-        fd.append("file", file);
         try {
-          const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+          // Straight to storage, then tell the server where it landed. Posting
+          // the file here meant a 6 MB platform cap that failed only on the
+          // live site.
+          const path = await putFile("media", file, { folder: "blog" });
+          const res = await fetch("/api/admin/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ path }),
+          });
           const data = await res.json();
           if (!res.ok || !data.ok) throw new Error(data.error || "upload failed");
           const target = document.querySelector<HTMLInputElement>(`input[data-upload-target="${key}"]`);

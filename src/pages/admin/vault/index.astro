@@ -52,14 +52,20 @@ const linkState = (l: { revoked: boolean; expires_at: string; max_views: number 
     <p>Confidential files, shared only through expiring trackable links.</p>
   </div>
 
-  <form class="upload-form" method="post" action="/api/admin/vault" enctype="multipart/form-data">
+  <form class="upload-form" method="post" action="/api/admin/vault" enctype="multipart/form-data"
+        data-direct-upload="vault">
     <input type="hidden" name="action" value="upload" />
+    {/* Filled in by script once the file itself has been sent straight to
+        storage; the form then carries only where it landed. */}
+    <input type="hidden" name="storage_path" data-storage-path />
+    <input type="hidden" name="file_name" data-file-name />
     <input class="in" type="file" name="file" required />
     <input class="in grow" type="text" name="title" placeholder="Title (defaults to filename)" />
     <select class="in" name="category">
       {CATEGORIES.map(([k, label]) => <option value={k}>{label}</option>)}
     </select>
     <button class="btn" type="submit">Upload</button>
+    <span class="upstatus" data-upload-status></span>
   </form>
 
   {(!docs || docs.length === 0) ? (
@@ -191,3 +197,12 @@ const linkState = (l: { revoked: boolean; expires_at: string; max_views: number 
     });
   </script>
 </AdminLayout>
+
+<style>
+  .upstatus { font-size: 0.78rem; color: #5c6f88; align-self: center; }
+</style>
+
+<script>
+  import { armDirectUploadForms } from "../../../lib/directUploadForm";
+  armDirectUploadForms();
+</script>

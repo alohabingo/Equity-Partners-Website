@@ -67,7 +67,16 @@ export type EnquiryRow = {
   last_sent_by: string | null;
   waiting_on_us: boolean | null;
   message_count: number;
+  /** 1 when the notes field has anything in it, 0 when it does not. */
   note_count: number;
+  /** One editable note per lead, replacing the old append-only list. */
+  notes: string | null;
+  notes_updated_at: string | null;
+  notes_updated_by: string | null;
+  /** Whether foreign investment authorisation has been requested for this buyer. */
+  foreign_investment: boolean;
+  /** Who issued that authorisation. Free text — there is no list worth having. */
+  issuer: string | null;
 };
 
 /**

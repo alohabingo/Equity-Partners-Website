@@ -19,12 +19,11 @@
  * from what the site actually carries.
  */
 import { META_PIXEL_ID } from "../lib/tracking";
-import { CONSENT_KEY } from "../lib/consent";
 const PIXEL_ID = META_PIXEL_ID;
 ---
 
 <!-- Meta Pixel Code -->
-<script is:inline define:vars={{ PIXEL_ID, CONSENT_KEY }}>
+<script is:inline define:vars={{ PIXEL_ID }}>
   !function(f,b,e,v,n,t,s)
   {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
   n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -50,16 +49,18 @@ const PIXEL_ID = META_PIXEL_ID;
    * returning visitor who accepted is never told "revoke" at all.
    */
   /**
-   * Storage is wrapped because localStorage throws outright in some privacy
-   * modes, and a consent check that threw would take the page's other scripts
-   * down with it. Defined FIRST: everything below calls it, including the
-   * page-view tracker on the very next lines.
+   * `epMarketingConsent` is defined by ConsentGate.astro, which renders
+   * immediately above this in SEO.astro. It used to be defined here, reading
+   * storage directly — but there are now two purposes a visitor can answer
+   * separately, and three tags that need the answer. Three hand-written copies
+   * of that rule would be three chances to disagree about whether somebody said
+   * yes, so there is exactly one, and it is tested against the same fixtures as
+   * the TypeScript in lib/consent.ts.
+   *
+   * The pixel depends on MARKETING specifically. Someone who allows analytics
+   * but refuses advertising gets Google Analytics and no pixel — which is the
+   * whole reason the question was split.
    */
-  window.epMarketingConsent = function () {
-    try { return localStorage.getItem(CONSENT_KEY) === 'accepted'; }
-    catch (e) { return false; }
-  };
-
   var epConsent = window.epMarketingConsent();
 
   fbq('consent', epConsent ? 'grant' : 'revoke');

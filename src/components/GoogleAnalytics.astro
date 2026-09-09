@@ -27,12 +27,11 @@
  * trip through the banner, the policy and three translations.
  */
 import { GA_MEASUREMENT_ID } from "../lib/tracking";
-import { CONSENT_KEY } from "../lib/consent";
 const GA_ID = GA_MEASUREMENT_ID;
 ---
 
 <!-- Google Analytics 4 -->
-<script is:inline define:vars={{ GA_ID, CONSENT_KEY }}>
+<script is:inline define:vars={{ GA_ID }}>
   window.dataLayer = window.dataLayer || [];
   function gtag() { window.dataLayer.push(arguments); }
   window.gtag = gtag;
@@ -58,11 +57,41 @@ const GA_ID = GA_MEASUREMENT_ID;
     wait_for_update: 500,
   });
 
-  /** Wrapped: localStorage throws outright in some privacy modes, and a consent
-   *  check that threw would take the rest of the page's scripts with it. */
-  window.epAnalyticsConsent = function () {
-    try { return localStorage.getItem(CONSENT_KEY) === 'accepted'; }
-    catch (e) { return false; }
+  /**
+   * `epAnalyticsConsent` and `epAllows` come from ConsentGate.astro, rendered
+   * immediately above this. One reader for all three tags — see the note there.
+   *
+   * Whether to fetch Google's library at all.
+   *
+   * Analytics is the only Google tag on this site, so the analytics answer
+   * decides it. If Google Ads is added later this becomes
+   * `analytics || marketing`, because a conversion tag has to load for someone
+   * who allowed advertising even if they refused traffic measurement — one
+   * line, in one place, which is why it is a function rather than an
+   * expression buried three calls down.
+   */
+  window.epGoogleTagWanted = function () { return window.epAnalyticsConsent(); };
+
+  /**
+   * Tell Google the truth about BOTH answers.
+   *
+   * `analytics_storage` follows the analytics toggle; the three ad signals
+   * follow marketing. Until now all four moved together, which was a
+   * simplification that happened to be harmless while there was one bundled
+   * question. With two questions it would be a lie: someone who allowed traffic
+   * measurement and refused advertising would have been reported to Google as
+   * having agreed to ad personalisation.
+   */
+  window.epApplyGoogleConsent = function () {
+    if (!window.gtag) return;
+    var a = window.epAnalyticsConsent() ? 'granted' : 'denied';
+    var m = window.epMarketingConsent() ? 'granted' : 'denied';
+    gtag('consent', 'update', {
+      analytics_storage: a,
+      ad_storage: m,
+      ad_user_data: m,
+      ad_personalization: m,
+    });
   };
 
   /**
@@ -96,15 +125,11 @@ const GA_ID = GA_MEASUREMENT_ID;
   /** Fetch the library and start reporting. Idempotent — the banner, a stored
    *  answer and a stray second call all land on the same state. */
   window.epStartGA = function () {
+    if (!window.epGoogleTagWanted()) return;
     if (window.__epGaOn) return;
     window.__epGaOn = true;
 
-    gtag('consent', 'update', {
-      ad_storage: 'granted',
-      ad_user_data: 'granted',
-      ad_personalization: 'granted',
-      analytics_storage: 'granted',
-    });
+    window.epApplyGoogleConsent();
 
     if (!window.__epGaScript) {
       window.__epGaScript = true;
@@ -119,7 +144,16 @@ const GA_ID = GA_MEASUREMENT_ID;
     window.epGaPageView();
   };
 
-  window.epEnableGA = function () { window.epStartGA(); };
+  /**
+   * Called by the banner whenever the answer changes, in either direction and
+   * for either purpose — so a visitor who keeps analytics but withdraws
+   * advertising is reported accurately rather than switched off entirely.
+   */
+  window.epEnableGA = function () {
+    window.epApplyGoogleConsent();
+    if (window.epGoogleTagWanted()) window.epStartGA();
+    else window.__epGaOn = false;
+  };
 
   /**
    * Withdrawing permission.
@@ -132,14 +166,7 @@ const GA_ID = GA_MEASUREMENT_ID;
    */
   window.epDisableGA = function () {
     window.__epGaOn = false;
-    if (window.gtag) {
-      gtag('consent', 'update', {
-        ad_storage: 'denied',
-        ad_user_data: 'denied',
-        ad_personalization: 'denied',
-        analytics_storage: 'denied',
-      });
-    }
+    window.epApplyGoogleConsent();
     try {
       var host = location.hostname;
       // Cleared on the exact host and on the registrable domain, because that
@@ -156,6 +183,6 @@ const GA_ID = GA_MEASUREMENT_ID;
     } catch (e) { /* clearing is best effort; consent is already revoked */ }
   };
 
-  if (window.epAnalyticsConsent()) window.epStartGA();
+  if (window.epGoogleTagWanted()) window.epStartGA();
 </script>
 <!-- End Google Analytics 4 -->

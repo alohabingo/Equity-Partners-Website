@@ -304,7 +304,7 @@ const attention = enquiries.filter((e) => needsAttention(e, now));
 // above the table instead, so nothing goes quietly missing.
 let leadRows: LeadRow[] = [];
 let profiles: {
-  lead: any; messages: any[]; notes: any[]; events: any[];
+  lead: any; messages: any[]; notesBy: string | null; events: any[];
   activity: any[]; interest: any[]; parkingInterest: any[];
 }[] = [];
 if (tab === "leads") {
@@ -341,11 +341,9 @@ if (tab === "leads") {
   // page closed, and a click just opens one, exactly like Add lead.
   if (converted.length > 0) {
     const ids = converted.map((e: any) => e.id);
-    const [pm, pn, pe, pa, pi, pp] = await Promise.all([
+    const [pm, pe, pa, pi, pp] = await Promise.all([
       supabase.from("inquiry_messages").select("inquiry_id, direction, subject, sent_at, sent_by")
         .in("inquiry_id", ids).order("sent_at"),
-      supabase.from("enquiry_notes").select("inquiry_id, body, created_at, author_id")
-        .in("inquiry_id", ids).order("created_at", { ascending: false }),
       supabase.from("enquiry_events").select("inquiry_id, kind, detail, created_at, actor_id")
         .in("inquiry_id", ids).order("created_at", { ascending: false }),
       supabase.from("enquiry_activity")
@@ -368,7 +366,6 @@ if (tab === "leads") {
       return m;
     };
     const byMsg = bucket(pm.data as any[]);
-    const byNote = bucket(pn.data as any[]);
     const byEvent = bucket(pe.data as any[]);
     const byActivity = bucket(pa.data as any[]);
     const byInterest = bucket(pi.data as any[]);
@@ -381,7 +378,9 @@ if (tab === "leads") {
     profiles = converted.map((lead: any) => ({
       lead,
       messages: (byMsg.get(lead.id) ?? []).map((x: any) => ({ ...x, sentByName: nameById.get(x.sent_by) ?? null })),
-      notes: (byNote.get(lead.id) ?? []).map((x: any) => ({ ...x, author: nameById.get(x.author_id) ?? "Someone" })),
+      // One field on the row now, not a list. Only the author's name has to be
+      // looked up — the text and the date come with the lead.
+      notesBy: lead.notes_updated_by ? (nameById.get(lead.notes_updated_by) ?? "Someone") : null,
       events: (byEvent.get(lead.id) ?? []).map((x: any) => ({ ...x, actor: nameById.get(x.actor_id) ?? "System" })),
       activity: (byActivity.get(lead.id) ?? []).map((x: any) => ({ ...x, who: nameById.get(x.logged_by) ?? "Someone" })),
       interest: byInterest.get(lead.id) ?? [],
@@ -433,7 +432,6 @@ const selectedId = Astro.url.searchParams.get("e") ?? inboxRows[0]?.id ?? "";
 const selected = allRows.find((e) => e.id === selectedId) ?? null;
 
 let messages: any[] = [];
-let notes: any[] = [];
 let events: any[] = [];
 let linkViews: Record<string, number> = {};
 
@@ -441,11 +439,9 @@ let linkViews: Record<string, number> = {};
 // tab, so opening the Overview fetched an email thread, its notes and its
 // history that nothing on that page shows.
 if (selected && tab === "inbox") {
-  const [m, n, ev, sentLinks] = await Promise.all([
+  const [m, ev, sentLinks] = await Promise.all([
     supabase.from("inquiry_messages").select("direction, subject, body_html, sent_at, sent_by")
       .eq("inquiry_id", selected.id).order("sent_at"),
-    supabase.from("enquiry_notes").select("body, created_at, author_id")
-      .eq("inquiry_id", selected.id).order("created_at", { ascending: false }),
     supabase.from("enquiry_events").select("kind, detail, created_at, actor_id")
       .eq("inquiry_id", selected.id).order("created_at", { ascending: false }).limit(12),
     // What this buyer was actually sent, and whether they opened it.
@@ -454,7 +450,6 @@ if (selected && tab === "inbox") {
   // The mailbox is shared, so an outbound message says who actually wrote it
   // rather than assuming it was whoever happens to be reading the thread.
   messages = (m.data ?? []).map((x: any) => ({ ...x, sentByName: nameById.get(x.sent_by) ?? null }));
-  notes = (n.data ?? []).map((x: any) => ({ ...x, author: nameById.get(x.author_id) ?? "Someone" }));
   events = (ev.data ?? []).map((x: any) => ({ ...x, actor: nameById.get(x.actor_id) ?? "System" }));
   linkViews = Object.fromEntries((sentLinks.data ?? []).map((l: any) => [l.id, l.view_count ?? 0]));
 }
@@ -742,15 +737,37 @@ await fetch("${webhookUrl}", {
        fields and an afterthought. */
     .modalform {
       display: grid; gap: 0.9rem;
-      grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       align-items: end;
     }
     .modalform .field { max-width: none; }
-    .modalform .btn { margin-top: 0; }
+    /* Type · Name · Floors · Units per floor on the first row; the per-floor
+       list across the full width beneath them; Unit type and Add on the last.
+       The list has to span everything — it grows a row per floor, and squeezed
+       into one column it would read as a fifth field rather than the detail of
+       the two above it. */
+    .modalform .floorlist { grid-column: 1 / -1; }
+    .modalform .btn { margin-top: 0; justify-self: start; }
     @media (max-width: 780px) {
       .modalform { grid-template-columns: minmax(0, 1fr); }
-      .modalform .btn { justify-self: start; }
     }
+
+    .floorlist {
+      border: 1px solid #e2e8f1; border-radius: 0.8rem; background: #fbfcfe;
+      padding: 0.75rem 0.85rem 0.85rem;
+    }
+    .floorhead {
+      display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem;
+      font-size: 0.62rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+      color: #2e7d54; margin-bottom: 0.6rem;
+    }
+    .floorhead em { font-style: normal; font-weight: 700; letter-spacing: 0; text-transform: none; color: #5c6f88; }
+    .floorrows { display: grid; gap: 0.45rem; }
+    /* Fixed label column so every row's input starts in the same place —
+       "Floor 9" and "Floor 10" must not shunt the boxes sideways. */
+    .floorrow { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); align-items: center; gap: 0.6rem; }
+    .floorrow > span { font-size: 0.78rem; font-weight: 700; color: #16283e; }
+    .floorrow input { max-width: 7rem; }
     .genform .btn { margin-top: 0; }
     .genform .field { max-width: 190px; }
     /* The Units / Parking switch. The project header's own treatment — white
@@ -1864,7 +1881,9 @@ await fetch("${webhookUrl}", {
           project={{ slug: project.slug, name: project.name }}
           events={p.events}
           messages={p.messages}
-          notes={p.notes}
+          notesText={p.lead.notes ?? null}
+          notesBy={p.notesBy}
+          notesAt={p.lead.notes_updated_at ?? null}
           units={units.map((u: any) => ({ id: u.id, code: u.code, state: u.state }))}
           activity={p.activity}
           interest={p.interest.map((x: any) => x.unit_id)}
@@ -1921,7 +1940,9 @@ await fetch("${webhookUrl}", {
           <EnquiryPanel
             enquiry={selected}
             messages={messages}
-            notes={notes}
+            notesText={selected.notes ?? null}
+            notesBy={selected.notes_updated_by ? (nameById.get(selected.notes_updated_by) ?? "Someone") : null}
+            notesAt={selected.notes_updated_at ?? null}
             events={events}
             project={{ slug: project.slug, name: project.name, mailbox: project.mailbox }}
             currentUserName={me?.fullName ?? "You"}
@@ -2106,7 +2127,8 @@ await fetch("${webhookUrl}", {
 
       <section class="card">
         <h3 class="sec">Add a document</h3>
-        <form class="dcadd" method="post" action="/api/admin/project-documents" enctype="multipart/form-data">
+        <form class="dcadd" method="post" action="/api/admin/project-documents" enctype="multipart/form-data"
+              data-direct-upload="project_document" data-project-slug={project.slug}>
           <input type="hidden" name="action" value="upload" />
           <input type="hidden" name="slug" value={project.slug} />
           {/* A DIV, not a LABEL. A file input nested inside its own label gets the
@@ -2124,6 +2146,10 @@ await fetch("${webhookUrl}", {
                 the better place to be strict. */}
             <div class="dcdrop" data-drop>
               <input class="in dcfile" type="file" name="file" required aria-labelledby="dcfile-label" data-file />
+              {/* Filled in by script once the file has gone straight to
+                  storage; the form then carries only where it landed. */}
+              <input type="hidden" name="storage_path" data-storage-path />
+              <input type="hidden" name="file_name" data-file-name />
               <span class="dcchosen" data-chosen>or drag a file here</span>
             </div>
           </div>
@@ -2140,7 +2166,7 @@ await fetch("${webhookUrl}", {
             </label>
           </div>
           <button class="btn" type="submit">Upload</button>
-          <p class="tpfoot-note">Up to 50 MB. PDFs, images, Office files, CSV and ZIP.</p>
+          <p class="tpfoot-note" data-upload-status>Up to 50 MB. PDFs, images, Office files, CSV and ZIP.</p>
         </form>
       </section>
     </div>
@@ -2298,10 +2324,37 @@ await fetch("${webhookUrl}", {
               <span>Name</span>
               <input class="in" type="text" name="name" value={nextBlockName} placeholder="Name" required />
             </label>
+            {/* Floors first, then how many units each holds.
+                A single "units in it" number could not describe a real
+                building: the ground floor gives space to an entrance and a
+                couple of larger homes, the top floor is one penthouse, and only
+                the middle floors repeat. So the two boxes below fill in an even
+                starting point, and the per-floor rows underneath let any of them
+                be changed. */}
             <label class="field">
-              <span>Units in it <em>(optional)</em></span>
-              <input class="in" type="number" name="count" min="0" max="500" placeholder="0" />
+              <span>Floors</span>
+              <input class="in" type="number" name="floors" min="0" max="60" placeholder="0"
+                     value="0" data-floors />
             </label>
+            <label class="field">
+              <span>Units per floor</span>
+              <input class="in" type="number" min="0" max="60" placeholder="0"
+                     value="0" data-perfloor />
+            </label>
+
+            {/* Filled in by script from the rows below, so reducing the number
+                of floors cannot leave a stale input for a floor that no longer
+                exists sitting in the submission. */}
+            <input type="hidden" name="floor_counts" data-floorcounts value="" />
+
+            <div class="floorlist" data-floorlist hidden>
+              <div class="floorhead">
+                <span>Units on each floor</span>
+                <em data-floortotal></em>
+              </div>
+              <div class="floorrows" data-floorrows></div>
+            </div>
+
             <label class="field">
               <span>Unit type</span>
               {/* Follows Type on its own — a building holds apartments, a
@@ -2506,10 +2559,11 @@ await fetch("${webhookUrl}", {
                 <input type="hidden" name="slug" value={project.slug} />
                 <button class="btn ghost" type="submit">Sync now</button>
               </form>
-              {/* The routine sync reads the newest page of the INBOX only. This
-                  one-off walks the whole inbox back to the beginning, then the
-                  Sent folder, so replies made in Zoho before the portal existed
-                  appear on the threads they belong to. */}
+              {/* The routine sync reads the newest page of the inbox AND of the
+                  Sent folder, so a reply written in Zoho lands on the thread
+                  within one sync. This one-off walks both all the way back, for
+                  mail that predates the connection or has fallen off the
+                  newest page. */}
               <form method="post" action="/api/admin/project-mail-sync">
                 <input type="hidden" name="slug" value={project.slug} />
                 <input type="hidden" name="mode" value="history" />
@@ -2682,6 +2736,9 @@ await fetch("${webhookUrl}", {
 </AdminLayout>
 
 <script>
+  import { armDirectUploadForms } from "../../../lib/directUploadForm";
+  armDirectUploadForms();
+
   // Keep the switcher's thumb behind the active tab. The FIRST placement is done
   // by an inline script next to the markup, before paint; these re-runs are for
   // the two things that change the measurement afterwards — the web font
@@ -2739,6 +2796,86 @@ await fetch("${webhookUrl}", {
       if (chosenByHand) return;
       prefix.value = kind.value === "project" ? "Villa" : "Apartment";
     });
+  });
+
+  /**
+   * The per-floor unit counts.
+   *
+   * "Floors" and "Units per floor" fill in an even starting point; the rows
+   * they produce are then editable one at a time, because a real building has a
+   * smaller ground floor and a single penthouse on top. Editing a row is what
+   * the whole feature is for, so typing in one must never be undone by the
+   * even-fill above it — hence `touched`: once a floor has been set by hand,
+   * changing "units per floor" leaves it alone.
+   *
+   * The counts are gathered into one hidden field on every change. A numbered
+   * input per floor would post fields for floors that no longer exist the
+   * moment someone reduces the floor count.
+   */
+  document.querySelectorAll("[data-floorlist]").forEach((listEl) => {
+    const form = listEl.closest("form");
+    if (!form) return;
+    const floorsBox = form.querySelector<HTMLInputElement>("[data-floors]");
+    const perFloorBox = form.querySelector<HTMLInputElement>("[data-perfloor]");
+    const list = form.querySelector<HTMLElement>("[data-floorlist]");
+    const rows = form.querySelector<HTMLElement>("[data-floorrows]");
+    const hidden = form.querySelector<HTMLInputElement>("[data-floorcounts]");
+    const totalOut = form.querySelector<HTMLElement>("[data-floortotal]");
+    if (!floorsBox || !perFloorBox || !list || !rows || !hidden) return;
+
+    const MAX_FLOORS = 60;
+    const clamp = (n: number, hi: number) => Math.max(0, Math.min(hi, Number.isFinite(n) ? Math.floor(n) : 0));
+    const touched = new Set<number>();
+
+    const collect = () =>
+      [...rows.querySelectorAll<HTMLInputElement>("[data-floorunit]")]
+        .map((i) => clamp(Number.parseInt(i.value, 10), 60));
+
+    const publish = () => {
+      const counts = collect();
+      hidden.value = counts.join(",");
+      if (totalOut) {
+        const total = counts.reduce((a, b) => a + b, 0);
+        totalOut.textContent = total === 0 ? "" : `${total} unit${total === 1 ? "" : "s"} in total`;
+      }
+    };
+
+    const draw = () => {
+      const floors = clamp(Number.parseInt(floorsBox.value, 10), MAX_FLOORS);
+      const per = clamp(Number.parseInt(perFloorBox.value, 10), 60);
+      const existing = collect();
+
+      list.hidden = floors === 0;
+      rows.replaceChildren();
+
+      for (let f = 1; f <= floors; f++) {
+        // A floor someone has already set by hand keeps its number; the rest
+        // follow the even fill above.
+        const value = touched.has(f) && existing[f - 1] !== undefined ? existing[f - 1] : per;
+
+        const row = document.createElement("div");
+        row.className = "floorrow";
+        const label = document.createElement("span");
+        label.textContent = `Floor ${f}`;
+        const input = document.createElement("input");
+        input.className = "in";
+        input.type = "number";
+        input.min = "0";
+        input.max = "60";
+        input.value = String(value);
+        input.setAttribute("data-floorunit", String(f));
+        input.setAttribute("aria-label", `Units on floor ${f}`);
+        input.addEventListener("input", () => { touched.add(f); publish(); });
+        row.append(label, input);
+        rows.append(row);
+      }
+      publish();
+    };
+
+    floorsBox.addEventListener("input", draw);
+    // Changing the even fill re-applies to every floor NOT set by hand.
+    perFloorBox.addEventListener("input", draw);
+    draw();
   });
 
   // Any button that names a dialog opens it.

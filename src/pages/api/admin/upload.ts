@@ -9,31 +9,40 @@ const json = (body: object, status = 200) =>
     headers: { "Content-Type": "application/json" },
   });
 
-const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"];
-const MAX_BYTES = 8 * 1024 * 1024; // 8 MB
+import { UPLOAD_RULES, pathLooksIssued, uploadRefusal } from "../../../lib/uploads";
+import { readStoredObject } from "../../../lib/storedObject";
 
-/** Upload an image to the public "media" bucket. Staff only (storage RLS). */
+/**
+ * Record an image that the browser has already put in the public "media"
+ * bucket, and hand back its public URL.
+ *
+ * Nothing is stored in a table for media — the URL goes into the post or
+ * portfolio item being edited — so this route exists to confirm the file
+ * arrived and to turn its path into a link. The bytes no longer pass through
+ * here: on Netlify this is a Lambda with a 6 MB request cap, which is why
+ * uploads that worked on a development machine failed on the live site.
+ */
 export const POST: APIRoute = async ({ request, cookies }) => {
-  const form = await request.formData();
-  const file = form.get("file");
-  if (!(file instanceof File)) return json({ ok: false, error: "no_file" }, 422);
-  if (!ALLOWED.includes(file.type)) return json({ ok: false, error: "bad_type" }, 422);
-  if (file.size > MAX_BYTES) return json({ ok: false, error: "too_large" }, 422);
-
-  const ext = (file.name.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g, "");
-  // Callers may group their uploads (e.g. "portfolio"); anything unexpected
-  // falls back to the original "blog" folder.
-  const requested = form.get("folder")?.toString() ?? "";
-  const folder = /^[a-z0-9-]{1,32}$/.test(requested) ? requested : "blog";
-  const path = `${folder}/${new Date().toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
-
   const supabase = supabaseServer(cookies, request);
-  const { error } = await supabase.storage
-    .from("media")
-    .upload(path, await file.arrayBuffer(), { contentType: file.type });
 
-  if (error) return json({ ok: false, error: error.message }, 403);
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return json({ ok: false, error: "unauthenticated" }, 401);
 
-  const { data } = supabase.storage.from("media").getPublicUrl(path);
+  let body: Record<string, unknown>;
+  try { body = await request.json(); } catch { return json({ ok: false, error: "bad_request" }, 400); }
+
+  const path = String(body.path ?? "");
+  if (!path || !pathLooksIssued("media", path)) return json({ ok: false, error: "bad_path" }, 422);
+
+  const stored = await readStoredObject(supabase, UPLOAD_RULES.media.bucket, path);
+  if (!stored) return json({ ok: false, error: "upload_unfinished" }, 422);
+
+  const refusal = uploadRefusal("media", { type: stored.mimeType, size: stored.size });
+  if (refusal) {
+    await supabase.storage.from(UPLOAD_RULES.media.bucket).remove([path]);
+    return json({ ok: false, error: refusal }, 422);
+  }
+
+  const { data } = supabase.storage.from(UPLOAD_RULES.media.bucket).getPublicUrl(path);
   return json({ ok: true, url: data.publicUrl });
 };

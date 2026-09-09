@@ -20,13 +20,12 @@
  * Someone who refuses simply arrives unattributed. That is the honest outcome,
  * and it is the same trade the pixel already makes.
  */
-import { CONSENT_KEY } from "../lib/consent";
 import { CLICK_ID_PARAMS, CLICK_ID_TTL_DAYS } from "../lib/clickIds";
 const PARAMS = [...CLICK_ID_PARAMS];
 const STORE_KEY = "ep_click_ids";
 ---
 
-<script is:inline define:vars={{ PARAMS, STORE_KEY, CONSENT_KEY, CLICK_ID_TTL_DAYS }}>
+<script is:inline define:vars={{ PARAMS, STORE_KEY, CLICK_ID_TTL_DAYS }}>
   (function () {
     var MAX_LEN = 512;
 
@@ -60,9 +59,14 @@ const STORE_KEY = "ep_click_ids";
       } catch (e) { return {}; }
     }
 
+    /**
+     * A gclid identifies an ad click, so it belongs to the MARKETING answer,
+     * not the analytics one — from ConsentGate.astro above. Someone who allows
+     * traffic measurement and refuses advertising is not carrying an ad
+     * identifier around on our behalf.
+     */
     function consented() {
-      try { return localStorage.getItem(CONSENT_KEY) === 'accepted'; }
-      catch (e) { return false; }
+      return !!(window.epMarketingConsent && window.epMarketingConsent());
     }
 
     // Newest wins per platform; ids from an earlier visit survive, so arriving

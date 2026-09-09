@@ -22,6 +22,8 @@ export type SyncResult = {
   created: number;
   appended: number;
   ignored: number;
+  /** Replies written in Zoho rather than the portal, picked up from Sent. */
+  sentAttached?: number;
   error?: string;
 };
 
@@ -162,6 +164,85 @@ async function ingestPage(ctx: Ctx, messages: any[], floor: number) {
   return { created, appended, ignored };
 }
 
+/**
+ * Attach a page of SENT mail to the buyers it was written to.
+ *
+ * Shared by the routine sync and the whole-history import for the same reason
+ * `ingestPage` is: two copies would drift, and the copy that only runs during a
+ * rare backlog import is exactly the one whose drift nobody would notice.
+ *
+ * Matched by RECIPIENT, not sender — the sender is always us. And attached only
+ * to enquiries that already exist: an outgoing email cannot tell us whether its
+ * recipient was ever a buyer, and inventing a lead from one would produce a
+ * thread with nothing incoming, which is a person who never contacted us.
+ */
+// Exported for tests: this is the rule that decides whose thread a reply
+// lands on, and it is worth being able to check directly.
+export async function ingestSentPage(
+  ctx: { db: any; account: any; project: any },
+  messages: any[],
+  byEmail: Map<string, string>,
+  floor = 0,
+): Promise<{ attached: number; unmatched: number }> {
+  const { db, account, project } = ctx;
+  let attached = 0, unmatched = 0;
+  if (messages.length === 0) return { attached, unmatched };
+
+  const { data: seenRows } = await db
+    .from("inquiry_messages")
+    .select("zoho_message_id")
+    .in("zoho_message_id", messages.map((m) => m.messageId));
+  const seen = new Set((seenRows ?? []).map((r: any) => r.zoho_message_id));
+
+  for (const msg of messages) {
+    if (seen.has(msg.messageId)) continue;
+
+    const sentAt = Number(msg.receivedTime) || Date.now();
+    if (sentAt < floor) continue;
+
+    const recipients = addressesIn(msg.toAddress);
+    const match = recipients.map((a) => byEmail.get(a)).find(Boolean);
+    if (!match) { unmatched += 1; continue; }
+
+    let html = msg.summary ?? "";
+    try {
+      const content = await fetchMessageContent(account as any, msg.folderId, msg.messageId);
+      html = content.html || html;
+    } catch {
+      /* the summary is enough to show that a reply went out */
+    }
+
+    await db.from("inquiry_messages").insert({
+      inquiry_id: match,
+      direction: "outbound",
+      zoho_message_id: msg.messageId,
+      subject: msg.subject ?? null,
+      body_html: html,
+      from_email: project.mailbox ?? account.email,
+      to_email: recipients[0] ?? "",
+      // Left null on purpose: this was sent from Zoho, not from the portal, so
+      // there is no portal user to credit. Guessing one would be a lie in the
+      // one place the team relies on for who said what.
+      sent_by: null,
+      sent_at: new Date(sentAt).toISOString(),
+    });
+    attached += 1;
+  }
+
+  return { attached, unmatched };
+}
+
+/** Every buyer this project knows, so recipients match without a query each. */
+async function buyersByEmail(db: any, projectId: string): Promise<Map<string, string>> {
+  const { data: people } = await db
+    .from("inquiries").select("id, email").eq("project_id", projectId);
+  const byEmail = new Map<string, string>();
+  for (const p of people ?? []) {
+    if (p.email) byEmail.set(String(p.email).toLowerCase(), p.id);
+  }
+  return byEmail;
+}
+
 export async function syncProjectMailbox(projectId: string, limit = 50): Promise<SyncResult> {
   const db = serviceClient();
   const empty: SyncResult = { ok: true, scanned: 0, created: 0, appended: 0, ignored: 0 };
@@ -192,8 +273,45 @@ export async function syncProjectMailbox(projectId: string, limit = 50): Promise
       floor,
     );
 
+    /**
+     * ...and the newest page of the Sent folder.
+     *
+     * The inbox alone was the whole sync, which meant a reply written in Zoho
+     * rather than in the portal never appeared on the thread — the buyer's side
+     * of the conversation showed, ours did not, and the lead sat in Follow ups
+     * looking ignored. "Sync now" reads as "make this current", so it now reads
+     * both directions.
+     *
+     * One extra page, not a walk: this stays a quick button. The deep backfill
+     * is still Import mail history.
+     *
+     * Failing here must not fail the sync. The inbox is the half that creates
+     * enquiries, and losing that because a Sent folder could not be listed
+     * would trade a missing reply for a missing buyer.
+     */
+    let sentCounts = { attached: 0, unmatched: 0 };
+    try {
+      const sent = findSentFolder(await listFolders(account as any));
+      if (sent) {
+        const byEmail = await buyersByEmail(db, projectId);
+        if (byEmail.size > 0) {
+          const sentMessages = await listRecentMessages(account as any, limit, 1, sent.folderId);
+          sentCounts = await ingestSentPage({ db, account, project }, sentMessages, byEmail, floor);
+        }
+      }
+    } catch {
+      /* the inbox half already succeeded; a Sent hiccup is not a failed sync */
+    }
+
     await markSynced(db, account.id, projectId, null);
-    return { ok: true, scanned: messages.length, ...counts };
+    return {
+      ok: true,
+      scanned: messages.length,
+      ...counts,
+      // Counted separately so the notice can say a reply was picked up, rather
+      // than folding it into "appended" where it would look like buyer mail.
+      sentAttached: sentCounts.attached,
+    };
   } catch (e) {
     const error = e instanceof Error ? e.message : "unknown";
     await markSynced(db, account.id, projectId, error);
@@ -335,14 +453,7 @@ export async function importSentHistory(
     const sent = findSentFolder(await listFolders(account as any));
     if (!sent) return { ...base, ok: false, error: "no Sent folder found in this mailbox" };
 
-    // Every buyer this project knows, so a recipient can be matched without a
-    // query per message.
-    const { data: people } = await db
-      .from("inquiries").select("id, email").eq("project_id", projectId);
-    const byEmail = new Map<string, string>();
-    for (const p of people ?? []) {
-      if (p.email) byEmail.set(String(p.email).toLowerCase(), p.id);
-    }
+    const byEmail = await buyersByEmail(db, projectId);
     if (byEmail.size === 0) return { ...base, reachedEnd: true };
 
     let scanned = 0, attached = 0, unmatched = 0, pages = 0, reachedEnd = false;
@@ -353,43 +464,11 @@ export async function importSentHistory(
       if (messages.length === 0) { reachedEnd = true; break; }
       scanned += messages.length;
 
-      const { data: seenRows } = await db
-        .from("inquiry_messages")
-        .select("zoho_message_id")
-        .in("zoho_message_id", messages.map((m) => m.messageId));
-      const seen = new Set((seenRows ?? []).map((r: any) => r.zoho_message_id));
-
-      for (const msg of messages) {
-        if (seen.has(msg.messageId)) continue;
-
-        const recipients = addressesIn(msg.toAddress);
-        const match = recipients.map((a) => byEmail.get(a)).find(Boolean);
-        if (!match) { unmatched += 1; continue; }
-
-        let html = msg.summary ?? "";
-        try {
-          const content = await fetchMessageContent(account as any, msg.folderId, msg.messageId);
-          html = content.html || html;
-        } catch {
-          /* the summary is enough to show that a reply went out */
-        }
-
-        await db.from("inquiry_messages").insert({
-          inquiry_id: match,
-          direction: "outbound",
-          zoho_message_id: msg.messageId,
-          subject: msg.subject ?? null,
-          body_html: html,
-          from_email: project.mailbox ?? account.email,
-          to_email: recipients[0] ?? "",
-          // Left null on purpose: this was sent from Zoho, not from the portal,
-          // so there is no portal user to credit. Guessing one would be a lie
-          // in the one place the team relies on for who said what.
-          sent_by: null,
-          sent_at: new Date(Number(msg.receivedTime) || Date.now()).toISOString(),
-        });
-        attached += 1;
-      }
+      const page_counts = await ingestSentPage(
+        { db, account, project }, messages, byEmail,
+      );
+      attached += page_counts.attached;
+      unmatched += page_counts.unmatched;
 
       if (messages.length < pageSize) { reachedEnd = true; break; }
     }

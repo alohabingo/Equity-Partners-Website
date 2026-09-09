@@ -1,0 +1,72 @@
+---
+/**
+ * The one place the public pages read and write consent.
+ *
+ * MUST render before MetaPixel, GoogleAnalytics and ClickIds in SEO.astro.
+ * Those tags run from inline scripts in the document head — they have to,
+ * because a bundled module would load after the page has already decided what
+ * to fetch — and an inline script cannot import a .ts file. So rather than each
+ * of them carrying its own copy of "what did the visitor agree to", they all
+ * call `window.epConsent()` defined here.
+ *
+ * That is deliberate. Two hand-written copies of one rule is exactly how the
+ * drag-to-reorder bug survived for months, and consent is a far worse place to
+ * discover the same class of mistake. There is still one duplication left —
+ * this reader mirrors lib/consent.ts, which the banner and the tests use — and
+ * it is covered: CONSENT_FIXTURES lists the inputs both must agree on, the unit
+ * test runs the TypeScript against it, and a browser test feeds the identical
+ * strings through the code below on the real built page. Disagreement fails a
+ * test instead of silently mis-reading somebody's answer.
+ */
+import { CONSENT_KEY } from "../lib/consent";
+---
+
+<script is:inline define:vars={{ CONSENT_KEY }}>
+  (function () {
+    /**
+     * `null` means "has not answered", which is NOT the same as "refused". The
+     * first shows the banner; the second must never show it again.
+     *
+     * Every branch that cannot establish a decision returns null, because if we
+     * cannot tell what someone agreed to, the only safe reading is that they
+     * did not.
+     */
+    window.epConsentState = function () {
+      var raw = null;
+      try { raw = localStorage.getItem(CONSENT_KEY); }
+      catch (e) { return null; } // storage blocked: ask again rather than assume
+      if (!raw) return null;
+
+      // Carried over from the earlier bundled banner, whose single Accept
+      // covered both purposes. Migrated rather than re-asked: splitting the
+      // question into two does not change what their answer meant.
+      if (raw === 'accepted') return { analytics: true, marketing: true, at: null };
+      if (raw === 'rejected') return { analytics: false, marketing: false, at: null };
+
+      var o;
+      try { o = JSON.parse(raw); } catch (e) { return null; }
+      if (!o || typeof o !== 'object' || Array.isArray(o)) return null;
+      if (typeof o.analytics !== 'boolean' || typeof o.marketing !== 'boolean') return null;
+      return {
+        analytics: o.analytics,
+        marketing: o.marketing,
+        at: (typeof o.at === 'string' && o.at) ? o.at : null,
+      };
+    };
+
+    /** What a tag asks before doing anything. Unanswered reads as no. */
+    window.epAllows = function (category) {
+      var s = window.epConsentState();
+      return !!(s && s[category]);
+    };
+
+    window.epHasAnswered = function () { return window.epConsentState() !== null; };
+
+    /**
+     * Kept for the tags that still ask the old question, and because
+     * "marketing" is what the Meta pixel and the click ids actually depend on.
+     */
+    window.epMarketingConsent = function () { return window.epAllows('marketing'); };
+    window.epAnalyticsConsent = function () { return window.epAllows('analytics'); };
+  })();
+</script>

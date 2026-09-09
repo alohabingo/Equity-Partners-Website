@@ -3,6 +3,8 @@ export const prerender = false;
 import type { APIRoute } from "astro";
 import { supabaseServer } from "../../../lib/supabase";
 import { DOCUMENT_CATEGORIES } from "../../../lib/projectDocuments";
+import { UPLOAD_RULES, pathLooksIssued, uploadRefusal } from "../../../lib/uploads";
+import { readStoredObject } from "../../../lib/storedObject";
 
 /**
  * A project's documents: upload, retitle, remove.
@@ -12,19 +14,6 @@ import { DOCUMENT_CATEGORIES } from "../../../lib/projectDocuments";
  * set of storage rules and one redemption route that is already proven, rather
  * than a second, younger copy of both.
  */
-
-const MAX_BYTES = 50 * 1024 * 1024;
-
-const ALLOWED = [
-  "application/pdf",
-  "image/jpeg", "image/png", "image/webp", "image/gif",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "text/csv", "text/plain",
-  "application/zip", "application/x-zip-compressed",
-];
 
 const CATEGORY_VALUES = DOCUMENT_CATEGORIES.map((c) => c.value) as string[];
 
@@ -51,33 +40,48 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   // one project cannot retitle or delete another's paperwork.
   const owned = <T,>(q: T): T => (q as any).eq("project_id", project.id);
 
-  // ---- upload ----
+  /**
+   * ---- record an upload ----
+   *
+   * The file is already in storage: the browser sent it straight there with a
+   * signed ticket, because routing it through this function meant squeezing it
+   * through a 6 MB platform limit that killed the request before any of this
+   * code could run.
+   *
+   * So what arrives here is a claim about a file, and every part of it is
+   * checked: the path must match the shape we issue for THIS project, the
+   * object must actually exist, and its size and type are read back from
+   * storage rather than taken from the request.
+   */
   if (action === "upload") {
-    const file = form.get("file");
-    if (!(file instanceof File) || file.size === 0) return say("Choose a file to upload.");
-    if (file.size > MAX_BYTES) return say("That file is over 50 MB — too big to send as a link.");
-    if (!ALLOWED.includes(file.type)) {
-      return say(`${file.type || "That file type"} isn't allowed. PDFs, images, Office files, CSV and ZIP are.`);
+    const path = get("storage_path");
+    if (!path) return say("Choose a file to upload.");
+    if (!pathLooksIssued("project_document", path, project.slug)) {
+      return say("That upload could not be matched to this project. Please try again.");
+    }
+
+    const stored = await readStoredObject(supabase, UPLOAD_RULES.project_document.bucket, path);
+    if (!stored) return say("The upload did not finish. Please try again.");
+
+    // Re-run the rules against what is genuinely on disk. A file that got past
+    // the browser check but is not what it claimed is removed rather than
+    // recorded, so nothing is left behind that no page will ever show.
+    const refusal = uploadRefusal("project_document", { type: stored.mimeType, size: stored.size });
+    if (refusal) {
+      await supabase.storage.from(UPLOAD_RULES.project_document.bucket).remove([path]);
+      return say(refusal);
     }
 
     const category = CATEGORY_VALUES.includes(get("category")) ? get("category") : "general";
-    const title = get("title") || file.name.replace(/\.[^.]+$/, "");
-
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const path = `projects/${project.slug}/${crypto.randomUUID().slice(0, 8)}-${safeName}`;
-
-    const { error: upErr } = await supabase.storage
-      .from("vault")
-      .upload(path, await file.arrayBuffer(), { contentType: file.type || "application/octet-stream" });
-    if (upErr) return say(`Upload failed: ${upErr.message}`);
+    const title = get("title") || get("file_name").replace(/\.[^.]+$/, "") || "Document";
 
     const { error: dbErr } = await supabase.from("documents").insert({
       project_id: project.id,
       title,
       category,
       storage_path: path,
-      file_size: file.size,
-      mime_type: file.type || "application/octet-stream",
+      file_size: stored.size,
+      mime_type: stored.mimeType,
       uploaded_by: user.id,
     });
 
