@@ -180,8 +180,41 @@ export async function sendEnquiryReply(opts: {
 
   const html = bodyToHtml(text) + documentBlockHtml(minted, expiresAt);
 
+  /**
+   * Refuse a second identical send within a minute.
+   *
+   * The record shows two pairs of replies going out about two seconds apart —
+   * the shape of a double click, or a slow response and an impatient second
+   * press. Sending is not idempotent: each press is a real email arriving in
+   * somebody's inbox, and an apology is a poor substitute for not doing it.
+   *
+   * Scoped to the same thread AND the same subject within 60 seconds, so a
+   * genuine second reply a minute later still goes.
+   */
+  {
+    const since = new Date(Date.now() - 60_000).toISOString();
+    const { data: justSent } = await db
+      .from("inquiry_messages")
+      .select("id")
+      .eq("inquiry_id", inquiryId)
+      .eq("direction", "outbound")
+      .eq("subject", subject)
+      .gte("sent_at", since)
+      .limit(1);
+    if (justSent && justSent.length > 0) {
+      if (minted.length > 0) {
+        await db.from("document_links").delete().in("id", minted.map((m) => m.linkId));
+      }
+      return {
+        ok: false,
+        error: "That reply was just sent a moment ago — it has not been sent again.",
+      };
+    }
+  }
+
+  let zohoId: string | null = null;
   try {
-    await sendMessage(account as any, {
+    zohoId = await sendMessage(account as any, {
       to: enquiry.email,
       subject,
       html,
@@ -209,6 +242,9 @@ export async function sendEnquiryReply(opts: {
     to_email: enquiry.email,
     sent_by: actorId,
     sent_at: now,
+    // Without this the Sent-folder sync cannot tell that this row IS the
+    // message it is looking at, and files a second copy of it.
+    zoho_message_id: zohoId,
   });
 
   const stageAdvanced = enquiry.stage === "new";

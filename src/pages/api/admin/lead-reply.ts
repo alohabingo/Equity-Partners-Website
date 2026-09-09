@@ -33,8 +33,13 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
 
   const htmlBody = escapeHtml(message).replace(/\n/g, "<br/>");
 
+  // Kept so the Sent-folder sync recognises this row as the message it is
+  // reading, instead of filing a second copy of the same email.
+  let sentId: string | null = null;
+
   try {
-    await sendMail({ to: lead.email, subject, htmlBody });
+    sentId = await sendMail({ to: lead.email, subject, htmlBody })
+      .then((r: any) => (r?.data?.messageId ? String(r.data.messageId) : null));
   } catch (e) {
     console.error("Zoho send failed:", e);
     return json({ ok: false, error: "zoho_send_failed" }, 502);
@@ -48,6 +53,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     from_email: zohoFromAddress(),
     to_email: lead.email,
     sent_at: new Date().toISOString(),
+    zoho_message_id: sentId,
   });
 
   return redirect(`/admin/investor-leads/${lead.id}?sent=1`);

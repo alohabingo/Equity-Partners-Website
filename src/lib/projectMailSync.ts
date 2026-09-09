@@ -183,10 +183,10 @@ export async function ingestSentPage(
   messages: any[],
   byEmail: Map<string, string>,
   floor = 0,
-): Promise<{ attached: number; unmatched: number }> {
+): Promise<{ attached: number; unmatched: number; adopted: number; duplicates: number }> {
   const { db, account, project } = ctx;
-  let attached = 0, unmatched = 0;
-  if (messages.length === 0) return { attached, unmatched };
+  let attached = 0, unmatched = 0, adopted = 0, duplicates = 0;
+  if (messages.length === 0) return { attached, unmatched, adopted, duplicates };
 
   const { data: seenRows } = await db
     .from("inquiry_messages")
@@ -203,6 +203,61 @@ export async function ingestSentPage(
     const recipients = addressesIn(msg.toAddress);
     const match = recipients.map((a) => byEmail.get(a)).find(Boolean);
     if (!match) { unmatched += 1; continue; }
+
+    /**
+     * Is this message already on the thread, written by us?
+     *
+     * When the portal sends, it records the message immediately. Until now it
+     * did so without Zoho's id, so reading the Sent folder later found nothing
+     * to recognise and filed a SECOND row for an email that had gone out once.
+     * On screen those two are indistinguishable from a genuine double send,
+     * which is exactly how this was reported.
+     *
+     * Sending now keeps the id, so new messages match on it. This is for the
+     * ones already in the database without one, and for any future path that
+     * forgets: an outbound row to the same person, within a few minutes, with
+     * no id, IS this message. It is adopted — given the id — rather than
+     * duplicated, which also repairs the history as the sync runs.
+     */
+    const window = 3 * 60_000;
+    const { data: nearby } = await db
+      .from("inquiry_messages")
+      .select("id, to_email, subject, zoho_message_id")
+      .eq("inquiry_id", match)
+      .eq("direction", "outbound")
+      .gte("sent_at", new Date(sentAt - window).toISOString())
+      .lte("sent_at", new Date(sentAt + window).toISOString());
+
+    const toSamePerson = (nearby ?? []).filter((r: any) =>
+      recipients.includes(String(r.to_email ?? "").toLowerCase()));
+
+    const orphan = toSamePerson.find((r: any) => !r.zoho_message_id);
+    if (orphan) {
+      await db.from("inquiry_messages")
+        .update({ zoho_message_id: msg.messageId })
+        .eq("id", orphan.id);
+      adopted += 1;
+      continue;
+    }
+
+    /**
+     * The same email, filed twice by Zoho.
+     *
+     * When a message is sent from Apple Mail (or any IMAP client) through
+     * Zoho, Zoho's server saves a copy to Sent — and the client saves its own
+     * copy to Sent as well. Two objects, two ids, one email, fifteen to forty
+     * seconds apart. The recipient got it once. Zoho's web app shows it twice;
+     * Apple Mail, which recognises them as one message, shows it once.
+     *
+     * Dedup by id cannot see this, because the ids differ. Same person, same
+     * subject, within three minutes IS the same email — nobody sends an
+     * identical subject to one buyer twice inside that window on purpose — so
+     * the second filing is left where it is and not put on the thread.
+     */
+    const norm = (v: unknown) => String(v ?? "").trim().toLowerCase();
+    const twin = toSamePerson.find((r: any) =>
+      r.zoho_message_id && r.zoho_message_id !== msg.messageId && norm(r.subject) === norm(msg.subject));
+    if (twin) { duplicates += 1; continue; }
 
     let html = msg.summary ?? "";
     try {
@@ -229,7 +284,7 @@ export async function ingestSentPage(
     attached += 1;
   }
 
-  return { attached, unmatched };
+  return { attached, unmatched, adopted, duplicates };
 }
 
 /** Every buyer this project knows, so recipients match without a query each. */

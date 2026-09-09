@@ -219,11 +219,20 @@ export async function fetchMessageContent(
   };
 }
 
+/**
+ * Send, and KEEP the id Zoho gives back.
+ *
+ * This used to return void, and that discarded id is why every message the
+ * portal sent later appeared twice on its thread: the row we wrote had no Zoho
+ * id, so when the Sent folder was later read there was nothing to recognise it
+ * by and a second row was created for the same email. Nothing was sent twice —
+ * it was one email, filed twice — but on screen the two are indistinguishable.
+ */
 export async function sendMessage(
   account: { id?: string; refresh_token: string; api_base: string; zoho_account_id: string; email: string },
   message: { to: string; subject: string; html: string; fromName?: string },
-): Promise<void> {
-  await zohoFetch(account, `/accounts/${account.zoho_account_id}/messages`, {
+): Promise<string | null> {
+  const res = await zohoFetch(account, `/accounts/${account.zoho_account_id}/messages`, {
     method: "POST",
     body: JSON.stringify({
       fromAddress: message.fromName ? `${message.fromName} <${account.email}>` : account.email,
@@ -233,4 +242,10 @@ export async function sendMessage(
       mailFormat: "html",
     }),
   });
+
+  // Zoho returns the stored message under `data`. Null rather than a throw if
+  // the shape ever changes: the mail HAS gone at this point, and failing the
+  // caller over a missing id would be a worse lie than not having the id.
+  const id = (res as any)?.data?.messageId;
+  return id ? String(id) : null;
 }
