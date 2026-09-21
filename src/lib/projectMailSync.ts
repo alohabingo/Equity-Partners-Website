@@ -2,7 +2,7 @@
 // scheduled function, where supabase.ts throws on load. See serviceClient.ts.
 import { serviceClient } from "./serviceClient";
 import { listRecentMessages, fetchMessageContent, listFolders, findSentFolder } from "./zohoAccount";
-import { extractBuyer, shouldIgnore, htmlToText } from "./mailToEnquiry";
+import { extractBuyer, shouldIgnore, rejectionReason, isReplySubject, htmlToText } from "./mailToEnquiry";
 import { detectLocale } from "./detectLocale";
 
 /**
@@ -37,7 +37,48 @@ type Ctx = {
   project: any;
   projectId: string;
   ourAddresses: string[];
+  /**
+   * How to fetch a message's body. Overridable so the ingest can be tested
+   * against a real notification without a mailbox behind it — the same reason
+   * ingestSentPage is exported rather than hidden.
+   */
+  fetchContent?: typeof fetchMessageContent;
 };
+
+/**
+ * A line in the ingest log saying what happened to one message.
+ *
+ * The subject and the sender are both in it on purpose. "No buyer address
+ * found" describes the parser's problem and says nothing about which email it
+ * was, so a form service's own account notice and a real buyer whose address
+ * could not be read read identically — and those are opposite problems.
+ */
+async function logOutcome(ctx: Ctx, outcome: "ignored" | "rejected", reason: string, msg: any) {
+  const subject = String(msg?.subject ?? "").trim();
+  await ctx.db.from("ingest_log").insert({
+    project_id: ctx.projectId,
+    outcome,
+    reason: `${reason} — from ${msg?.fromAddress ?? "unknown"}` +
+      (subject ? `, subject \u201c${subject.slice(0, 120)}\u201d` : ", no subject"),
+  });
+}
+
+/**
+ * The language the form says the person chose.
+ *
+ * Only the three the site speaks, and only when the form's answer is
+ * recognisable — "ES", "es-ES" and "Español" all mean Spanish, anything else
+ * means we should go on guessing from what they wrote rather than file a buyer
+ * under a language nobody picked.
+ */
+function localeFromForm(raw: string): string | null {
+  const v = (raw ?? "").trim().toLowerCase();
+  if (!v) return null;
+  if (/^(es|spa|spanish|espa\u00f1ol|espanol|castellano)\b/.test(v)) return "es";
+  if (/^(ca|cat|catalan|catal\u00e0|catala)\b/.test(v)) return "ca";
+  if (/^(en|eng|english|ingl\u00e9s|ingles)\b/.test(v)) return "en";
+  return null;
+}
 
 /**
  * Turn a page of mail into enquiries and thread messages.
@@ -48,7 +89,7 @@ type Ctx = {
  * exercised on the rare day someone imports a backlog, which is precisely when
  * nobody would notice it behaving differently.
  */
-async function ingestPage(ctx: Ctx, messages: any[], floor: number) {
+export async function ingestPage(ctx: Ctx, messages: any[], floor: number) {
   const db = ctx.db;
   let created = 0, appended = 0, ignored = 0;
 
@@ -66,24 +107,50 @@ async function ingestPage(ctx: Ctx, messages: any[], floor: number) {
     if (receivedAt < floor) continue;
 
     const skip = shouldIgnore({ from: msg.fromAddress, subject: msg.subject }, ctx.ourAddresses);
-    if (skip) { ignored += 1; continue; }
+    if (skip) {
+      ignored += 1;
+      // Logged, not just counted. Everything this sync declines to turn into an
+      // enquiry now leaves a line saying so, because the alternative was what
+      // happened to Nanta Alta: a redesigned website form started sending from
+      // its own no-reply address, every submission was dropped here as an
+      // "automated sender", and the only evidence was a queue that had quietly
+      // stopped filling up.
+      await logOutcome(ctx, "ignored", skip, msg);
+      continue;
+    }
 
     let html = msg.summary ?? "";
     let replyTo: string | null = null;
     try {
-      const content = await fetchMessageContent(ctx.account, msg.folderId, msg.messageId);
+      const content = await (ctx.fetchContent ?? fetchMessageContent)(ctx.account, msg.folderId, msg.messageId);
       html = content.html || html;
       replyTo = content.replyTo;
     } catch {
       /* fall back to the summary; the buyer may still be findable in it */
     }
 
-    const buyer = extractBuyer({
-      from: msg.fromAddress,
-      replyTo,
-      subject: msg.subject,
-      bodyHtml: html,
-    });
+    const mail = { from: msg.fromAddress, replyTo, subject: msg.subject, bodyHtml: html };
+    const buyer = extractBuyer(mail, ctx.ourAddresses);
+
+    /**
+     * Mail from our own address is only ever a form notification.
+     *
+     * Some sites wire the form to send from the very mailbox it is delivered
+     * to, and refusing that outright is one of the ways submissions went
+     * missing. But our own replies also carry the buyer's details — quoted
+     * underneath — and reading one of those as an enquiry would put words we
+     * wrote onto the thread as if the buyer had written them. A fresh subject
+     * and an address labelled in the body is a submission; anything else from
+     * us is us.
+     */
+    const fromUs = ctx.ourAddresses
+      .map((a) => a.toLowerCase())
+      .includes(String(msg.fromAddress ?? "").toLowerCase().trim());
+    if (fromUs && !(buyer.source === "body" && !isReplySubject(msg.subject))) {
+      ignored += 1;
+      await logOutcome(ctx, "ignored", "sent from this mailbox", msg);
+      continue;
+    }
 
     if (!buyer.email) {
       ignored += 1;
@@ -92,13 +159,7 @@ async function ingestPage(ctx: Ctx, messages: any[], floor: number) {
       // problem and says nothing about which email it was — so there is no way
       // to tell a form service's own account notice from a real buyer whose
       // address we failed to read, and those are opposite problems.
-      const subject = (msg.subject ?? "").trim();
-      await db.from("ingest_log").insert({
-        project_id: ctx.projectId,
-        outcome: "rejected",
-        reason: `No buyer address found — from ${msg.fromAddress}` +
-          (subject ? `, subject “${subject.slice(0, 120)}”` : ", no subject"),
-      });
+      await logOutcome(ctx, "rejected", rejectionReason(mail, ctx.ourAddresses), msg);
       continue;
     }
 
@@ -125,14 +186,21 @@ async function ingestPage(ctx: Ctx, messages: any[], floor: number) {
           status: "new",
           name: buyer.name || buyer.email,
           email: buyer.email,
+          phone: buyer.phone || null,
           message: buyer.message?.slice(0, 5000) || null,
-          // Guessed from what they wrote, or left null. Hard-coding "en" here
-          // is what put a Catalan buyer behind an EN flag.
-          locale: detectLocale(buyer.message),
+          // The form's own answer if it asked for one, and otherwise guessed
+          // from what they wrote. Hard-coding "en" here is what put a Catalan
+          // buyer behind an EN flag.
+          locale: localeFromForm(buyer.language) ?? detectLocale(buyer.message),
           source_page: buyer.viaForwarder ? "website form" : "direct email",
           // Flagged when the address came from the body rather than a header,
-          // so it can be given a glance instead of trusted silently.
-          details: buyer.source === "body" ? { needs_review: true, matched_by: "body" } : {},
+          // so it can be given a glance instead of trusted silently. The form's
+          // reference is kept alongside it: it is printed on the email the team
+          // reads, so it is the one thing that ties a row here to that email.
+          details: {
+            ...(buyer.source === "body" ? { needs_review: true, matched_by: "body" } : {}),
+            ...(buyer.reference ? { reference: buyer.reference } : {}),
+          },
           created_at: new Date(receivedAt).toISOString(),
         })
         .select("id")

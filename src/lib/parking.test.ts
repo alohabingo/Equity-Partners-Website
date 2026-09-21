@@ -9,7 +9,7 @@
  */
 import {
   PARKING_STATES, isParkingState, parkingStateLabel,
-  parseParkingPrice, parkingPrice, parkingCodes, parkingTally,
+  parseParkingPrice, parkingPrice, parkingCodes, parkingTally, parkingPrefixOf,
 } from "./parking";
 
 let pass = 0, fail = 0;
@@ -56,6 +56,15 @@ check("the tally counts every state and the total",
   { available: 1, reserved: 0, sold: 2, total: 3 });
 check("an empty car park tallies to zeroes",
   parkingTally([]), { available: 0, reserved: 0, sold: 0, total: 0 });
+
+// ---- the one-more-space button carries on the same series ----
+check("P1…P18 are named P", parkingPrefixOf(["P1", "P2", "P18"]), "P");
+check("a different series keeps its own prefix", parkingPrefixOf(["Space 1", "Space 2"]), "Space");
+check("a mixed car park follows the majority", parkingPrefixOf(["P1", "P2", "P3", "G1"]), "P");
+check("nothing to go on means P", parkingPrefixOf([]), "P");
+check("codes without a number still name a prefix", parkingPrefixOf(["Garage"]), "Garage");
+check("and that prefix continues the numbering",
+  parkingCodes(parkingPrefixOf(["P1", "P2", "P3"]), 1, new Set(["P1", "P2", "P3"])), ["P4"]);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

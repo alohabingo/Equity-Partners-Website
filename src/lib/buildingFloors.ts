@@ -12,6 +12,8 @@
  * behind in the POST for floors that no longer exist.
  */
 
+import { unitName } from "./buildingCode";
+
 export const MAX_FLOORS = 60;
 export const MAX_UNITS_PER_FLOOR = 60;
 /** Matches the cap the old single-count field used, so nothing regresses. */
@@ -46,25 +48,33 @@ export type PlannedUnit = { code: string; floor: number };
 /**
  * The units a building starts life with.
  *
- * Named floor-first — "Apartment 2.3" is the third unit on the second floor —
- * so anyone reading a list, a reservation or a phone message can place it
- * without opening anything. The floor is also stored on the row, because the
- * name is for people and a column is what lets the counts be edited per floor
- * later without parsing text back apart.
+ * Named building-first, then floor, then the unit's number on that floor —
+ * "A2.3" is the third unit on the second floor of building A — so anyone
+ * reading a list, a reservation or a phone message can place it without
+ * opening anything. The floor is also stored on the row, because the name is
+ * for people and a column is what lets the counts be edited per floor later
+ * without parsing text back apart.
  *
- * Floors count from 1. Whether the ground floor is 0 or 1 is a convention that
- * differs by country, and picking one silently would be wrong half the time;
- * the form labels them plainly instead.
+ * The ground floor is floor 0, as it is on the lift buttons here: "A0.2" is on
+ * the ground floor and "A1.1" is one flight up. This is the convention in
+ * Andorra, Spain and France, where these buildings are, and matching it means
+ * the unit's name agrees with what the developer's own plans call the floor.
  */
-export function planUnits(prefix: string, counts: number[]): PlannedUnit[] {
-  const label = (prefix ?? "").trim() || "Unit";
+export function planUnits(buildingCode: string, counts: number[]): PlannedUnit[] {
   const out: PlannedUnit[] = [];
-  counts.forEach((n, index) => {
-    const floor = index + 1;
-    for (let i = 1; i <= n; i++) out.push({ code: `${label} ${floor}.${i}`, floor });
+  counts.forEach((n, floor) => {
+    for (let i = 1; i <= n; i++) out.push({ code: unitName(buildingCode, floor, i), floor });
   });
   return out;
 }
+
+/**
+ * What a floor is called to a person. Used on the form, in the messages the
+ * server sends back and in the tests, so the three can never disagree about
+ * whether "Floor 1" is the one at street level. It is not.
+ */
+export const floorLabel = (floor: number): string =>
+  floor === 0 ? "Ground floor" : `Floor ${floor}`;
 
 /** Why a plan cannot be used, or null when it can. */
 export function floorPlanError(counts: number[]): string | null {

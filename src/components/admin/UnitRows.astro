@@ -1,5 +1,6 @@
 ---
 import { UNIT_STATES, unitStateTheme, type UnitRow } from "../../lib/units";
+import { priceFieldValue } from "../../lib/euros";
 
 /**
  * The unit table for one building.
@@ -11,12 +12,19 @@ import { UNIT_STATES, unitStateTheme, type UnitRow } from "../../lib/units";
 interface Props {
   units: UnitRow[];
   slug: string;
-  /** Only offered when there is somewhere else to move a unit TO. */
   buildings: { id: string; name: string }[];
   buyers: { id: string; name: string }[];
+  /**
+   * Show the Building column. Only the "not placed" table wants it — a card
+   * that is already headed "Aire" gains nothing from a column saying Aire on
+   * every row. Moving a unit between buildings is not something the table
+   * needs to offer; a unit that is in the wrong building is removed from one
+   * layout and added to the other.
+   */
+  placeable?: boolean;
 }
-const { units, slug, buildings, buyers } = Astro.props;
-const canMove = buildings.length > 1;
+const { units, slug, buildings, buyers, placeable = false } = Astro.props;
+const canMove = placeable && buildings.length > 0;
 ---
 
 <style>
@@ -117,7 +125,11 @@ const canMove = buildings.length > 1;
           <input type="hidden" name="slug" value={slug} />
           <input type="hidden" name="id" value={u.id} />
           <input type="hidden" name="action" value="price" />
-          <input class="in price" type="text" name="price" value={u.price ?? ""} placeholder="—" />
+          {/* Shown and typed as "€1,250,000": the box formats itself as digits
+              go in (armEuroInputs, on the page), and the server reads digits
+              only, so the sign and commas are never in the way. */}
+          <input class="in price" type="text" name="price" value={priceFieldValue(u.price)} placeholder="—"
+                 inputmode="numeric" data-euros />
           <button class="tiny" type="submit">Save</button>
         </form>
       </td>

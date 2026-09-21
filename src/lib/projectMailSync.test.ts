@@ -1,4 +1,4 @@
-import { ingestSentPage } from "./projectMailSync";
+import { ingestSentPage, ingestPage } from "./projectMailSync";
 
 let pass = 0, fail = 0;
 const is = (got: unknown, want: unknown, msg: string) => {
@@ -166,6 +166,151 @@ const buyers = new Map([["buyer@example.com", "inq-1"], ["second@example.com", "
   const r = await ingestSentPage(ctx(db), [msg({ messageId: "copy-B", subject: "Viewing on Friday?" })], buyers);
   is(r.duplicates, 0, "a different subject minutes later is a different email");
   is(inserted.length, 1, "and is filed");
+}
+
+
+
+// =====================================================================
+// The inbox half: a website form notification becoming an enquiry.
+//
+// This is the path that quietly stopped working when nantaalta.com redesigned
+// its enquiry form in September 2026. Every submission for the next eleven days
+// arrived in the mailbox, was dropped without a line in the log, and never
+// reached the queue. The notification below is that template.
+// =====================================================================
+
+const notification = `
+<div style="background:#2b2b2b;padding:40px"><table role="presentation"><tr><td>
+  <p style="letter-spacing:.2em">NANTA ALTA &middot; ENCAMP, ANDORRA</p>
+  <h1>New private enquiry</h1>
+  <table role="presentation">
+    <tr><td>NAME</td><td>Alex Mu&ntilde;oz</td></tr>
+    <tr><td>EMAIL</td><td><a href="mailto:alexmunoz91@gmail.com">alexmunoz91@gmail.com</a></td></tr>
+    <tr><td>PHONE</td><td>663088494</td></tr>
+    <tr><td>PREFERRED TIME</td><td>&mdash;</td></tr>
+    <tr><td>LANGUAGE</td><td>ES</td></tr>
+    <tr><td>SOURCE</td><td>direct</td></tr>
+    <tr><td>REFERENCE</td><td>NA-131165</td></tr>
+  </table>
+  <hr>
+  <p>Me gustar&iacute;a recibir el folleto completo y los detalles de precios de Nanta Alta Fase 1.</p>
+</td></tr></table></div>`;
+
+/**
+ * A database stand-in for the inbox path: records every insert, and answers the
+ * "have I seen this message" and "do I already know this buyer" lookups.
+ */
+function inboxDb(knownBuyer: string | null = null) {
+  const rows: Record<string, any[]> = { inquiries: [], inquiry_messages: [], enquiry_events: [], ingest_log: [] };
+  const db = {
+    from(table: string) {
+      const chain: any = {
+        eq: () => chain, ilike: () => chain, order: () => chain, limit: () => chain,
+        in: async () => ({ data: [] }),
+        maybeSingle: async () => ({ data: knownBuyer ? { id: knownBuyer } : null }),
+      };
+      return {
+        select: () => chain,
+        insert: (row: any) => {
+          rows[table] = rows[table] ?? [];
+          rows[table].push(row);
+          return {
+            select: () => ({ single: async () => ({ data: { id: "new-inq" }, error: null }) }),
+            then: (resolve: any) => resolve({ error: null }),
+          };
+        },
+      };
+    },
+  };
+  return { db, rows };
+}
+
+const inbox = (db: any) => ({
+  db,
+  account: { email: "sales@nantaalta.com", zoho_account_id: "acc" },
+  project: { id: "proj", mailbox: "sales@nantaalta.com" },
+  projectId: "proj",
+  ourAddresses: ["sales@nantaalta.com"],
+  // No mailbox behind the test: the body is handed over directly.
+  fetchContent: async () => ({ html: notification, replyTo: null }),
+});
+
+const inbound = (over: any = {}) => ({
+  messageId: "in-1",
+  folderId: "inbox",
+  fromAddress: "noreply@nantaalta.com",
+  toAddress: "sales@nantaalta.com",
+  subject: "New private enquiry",
+  summary: "",
+  receivedTime: String(Date.parse("2026-09-15T09:00:00Z")),
+  ...over,
+});
+
+// ---- the enquiry that was being lost ----
+{
+  const { db, rows } = inboxDb();
+  const r = await ingestPage(inbox(db) as any, [inbound()], 0);
+  is(r.created, 1, "a form notification from the site's own no-reply address becomes an enquiry");
+  const inq = rows.inquiries[0] ?? {};
+  is(inq.email, "alexmunoz91@gmail.com", "filed under the person who filled the form in");
+  is(inq.name, "Alex Muñoz", "under their own name, accents and all");
+  is(inq.phone, "663088494", "with the phone number the form collected");
+  is(inq.locale, "es", "in the language they chose, not one guessed for them");
+  is(inq.source_page, "website form", "marked as having come from the website");
+  is(inq.message, "Me gustaría recibir el folleto completo y los detalles de precios de Nanta Alta Fase 1.",
+     "and the message is what they wrote, not the whole card");
+  is(inq.details, { needs_review: true, matched_by: "body", reference: "NA-131165" },
+     "flagged for a glance, and carrying the reference printed on the email");
+  is(rows.ingest_log.length, 0, "nothing rejected");
+  is(rows.inquiry_messages[0]?.direction, "inbound", "the email itself is kept on the thread");
+}
+
+// ---- the same form, wired to send from the mailbox's own address ----
+{
+  const { db, rows } = inboxDb();
+  const r = await ingestPage(inbox(db) as any, [inbound({ fromAddress: "sales@nantaalta.com" })], 0);
+  is(r.created, 1, "a form that sends from our own address still reaches the queue");
+  is(rows.inquiries[0]?.email, "alexmunoz91@gmail.com", "and still under the buyer, never under us");
+}
+
+// ---- but our own reply, quoting the buyer underneath, is still us ----
+{
+  const { db, rows } = inboxDb();
+  const r = await ingestPage(
+    inbox(db) as any,
+    [inbound({ fromAddress: "sales@nantaalta.com", subject: "Re: New private enquiry" })],
+    0,
+  );
+  is(r.created, 0, "a reply we wrote is not read as an enquiry, even though it quotes the buyer");
+  is(rows.ingest_log[0]?.outcome, "ignored", "and it is logged rather than dropped in silence");
+}
+
+// ---- and when there is genuinely nobody in it, it says so ----
+{
+  const { db, rows } = inboxDb();
+  const ctx = { ...inbox(db), fetchContent: async () => ({ html: "<p>Your weekly digest.</p>", replyTo: null }) };
+  const r = await ingestPage(ctx as any, [inbound({ fromAddress: "noreply@someportal.com", subject: "Weekly digest" })], 0);
+  is(r.created, 0, "a real no-reply newsletter does not become an enquiry");
+  is(rows.ingest_log.length, 1, "but it leaves a line saying what happened to it");
+  is(rows.ingest_log[0]?.outcome, "rejected", "as a rejection");
+  is(/automated sender.*Weekly digest/.test(rows.ingest_log[0]?.reason ?? ""), true,
+     "naming the sender and the subject");
+}
+
+// ---- a bounce is dropped, and that is logged too ----
+{
+  const { db, rows } = inboxDb();
+  const r = await ingestPage(inbox(db) as any, [inbound({ fromAddress: "mailer-daemon@zoho.eu" })], 0);
+  is(r.created, 0, "a bounce creates nothing");
+  is(rows.ingest_log[0]?.outcome, "ignored", "and is logged as ignored rather than silently dropped");
+}
+
+// ---- an existing buyer's second submission joins their thread ----
+{
+  const { db, rows } = inboxDb("inq-existing");
+  const r = await ingestPage(inbox(db) as any, [inbound()], 0);
+  is([r.created, r.appended], [0, 1], "a second enquiry from the same person is appended, not duplicated");
+  is(rows.inquiry_messages[0]?.inquiry_id, "inq-existing", "onto the thread they already have");
 }
 
 console.log(`\n${fail === 0 ? `ALL ${pass} PASS` : `${fail} FAILED, ${pass} passed`}`);

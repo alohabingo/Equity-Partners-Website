@@ -11,6 +11,8 @@
  * still sell this?" should not have a different vocabulary depending on what is
  * being sold.
  */
+
+import { parseEuros, formatEuros } from "./euros";
 export const PARKING_STATES = [
   { key: "available", label: "Available", colour: "#5b8fc9", tint: "#eaf1f9", ink: "#2f6296", edge: "#d3e0ee" },
   { key: "reserved",  label: "Reserved",  colour: "#e8a33d", tint: "#fdf1de", ink: "#a35700", edge: "#f0dcb8" },
@@ -35,18 +37,12 @@ export const parkingStateLabel = (key: string | null | undefined): string => par
  * than obeyed. Everything that is not a digit is dropped, which is safe here
  * only because these prices are whole euros: parking is not sold at 18,000.50.
  */
-export function parseParkingPrice(raw: string | null | undefined): number | null {
-  if (!raw) return null;
-  const digits = raw.replace(/[^\d]/g, "");
-  if (!digits) return null;
-  const n = Number(digits);
-  return Number.isFinite(n) && n > 0 ? n : null;
-}
+export const parseParkingPrice = parseEuros;
 
 /** €18,000 — or a dash, because "no price yet" is a real answer. */
 export function parkingPrice(n: number | null | undefined): string {
   if (typeof n !== "number" || !Number.isFinite(n)) return "—";
-  return `€${Math.round(n).toLocaleString("en-GB")}`;
+  return formatEuros(n);
 }
 
 /**
@@ -70,6 +66,22 @@ export function parkingCodes(prefix: string, count: number, taken: Set<string>):
     n += 1;
   }
   return out;
+}
+
+/**
+ * The prefix the car park is already named with — "P" for P1…P18 — so a space
+ * added on its own carries on the same series. The most common one wins when
+ * they differ; "P" when there is nothing to go on.
+ */
+export function parkingPrefixOf(codes: string[]): string {
+  const seen = new Map<string, number>();
+  for (const code of codes) {
+    const prefix = code.trim().replace(/\d+$/, "").trim();
+    if (prefix) seen.set(prefix, (seen.get(prefix) ?? 0) + 1);
+  }
+  let best = "P", most = 0;
+  for (const [prefix, n] of seen) if (n > most) { best = prefix; most = n; }
+  return best;
 }
 
 /**

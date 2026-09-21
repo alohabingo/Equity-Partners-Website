@@ -3,6 +3,7 @@ export const prerender = false;
 import type { APIRoute } from "astro";
 import { supabaseServer } from "../../../lib/supabase";
 import { isValidUnitState } from "../../../lib/units";
+import { parseEuros } from "../../../lib/euros";
 
 const json = (body: object, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -108,9 +109,9 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   }
 
   if (action === "price") {
-    const raw = get("price").replace(/[^\d.]/g, "");
-    const price = raw === "" ? null : Number(raw);
-    if (price !== null && (!Number.isFinite(price) || price < 0)) return fail("Price must be a number.");
+    // "€1,250,000", "1.250.000" and "1250000" are all the same price; nothing
+    // typed clears it.
+    const price = parseEuros(get("price"));
     const { error } = await supabase
       .from("project_units")
       .update({ price, updated_at: new Date().toISOString() })

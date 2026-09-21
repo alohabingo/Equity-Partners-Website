@@ -1,5 +1,5 @@
 import {
-  parseFloorCounts, totalUnits, planUnits, floorPlanError, evenFloors,
+  parseFloorCounts, totalUnits, planUnits, floorPlanError, evenFloors, floorLabel,
   MAX_UNITS_TOTAL, MAX_FLOORS,
 } from "./buildingFloors";
 
@@ -35,22 +35,28 @@ is(parseFloorCounts(Array(200).fill("1").join(","), 200).length, MAX_FLOORS, "fl
 is(totalUnits([2, 4, 4, 1]), 11, "eleven units in that building");
 is(totalUnits([]), 0, "an empty building");
 
+// The ground floor is floor 0, as it is on the lift buttons in Andorra, Spain
+// and France. "Floor 1" is one flight up, and its units are named A1.x.
 is(
-  planUnits("Apartment", [2, 3]).map((u) => u.code),
-  ["Apartment 1.1", "Apartment 1.2", "Apartment 2.1", "Apartment 2.2", "Apartment 2.3"],
-  "named floor-first, so a unit can be placed from its name alone",
+  planUnits("A", [2, 3]).map((u) => u.code),
+  ["A0.1", "A0.2", "A1.1", "A1.2", "A1.3"],
+  "named building, floor, unit — ground floor as 0 — so a unit can be placed from its name alone",
 );
 is(
-  planUnits("Apartment", [2, 3]).map((u) => u.floor),
-  [1, 1, 2, 2, 2],
+  planUnits("A", [2, 3]).map((u) => u.floor),
+  [0, 0, 1, 1, 1],
   "and the floor is stored, not just spelled",
 );
-is(planUnits("Villa", [1]).map((u) => u.code), ["Villa 1.1"], "a different unit type");
-is(planUnits("", [1]).map((u) => u.code), ["Unit 1.1"], "no type given falls back to Unit");
-is(planUnits("  ", [1]).map((u) => u.code), ["Unit 1.1"], "whitespace is not a type");
-is(planUnits("Apartment", [0, 2]).map((u) => u.code), ["Apartment 2.1", "Apartment 2.2"],
-   "an empty ground floor makes no units but still counts as floor 1");
-is(planUnits("Apartment", []).length, 0, "no floors, no units");
+is(planUnits("B", [1]).map((u) => u.code), ["B0.1"], "a different building");
+is(planUnits("BL2", [1]).map((u) => u.code), ["BL20.1"], "a longer code is used as it is — the form keeps codes short");
+is(planUnits("A", [0, 2]).map((u) => u.code), ["A1.1", "A1.2"],
+   "an empty ground floor makes no units, and the floor above is still floor 1");
+is(planUnits("A", []).length, 0, "no floors, no units");
+
+// ---- what a floor is called ----
+is(floorLabel(0), "Ground floor", "floor 0 is the ground floor");
+is(floorLabel(1), "Floor 1", "one flight up is floor 1");
+is(floorLabel(12), "Floor 12", "and so on");
 
 // ---- the one refusal ----
 is(floorPlanError([2, 4, 4, 1]), null, "an ordinary building is fine");

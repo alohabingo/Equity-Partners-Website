@@ -6,7 +6,8 @@ import EnquiryPanel from "../../../components/admin/EnquiryPanel.astro";
 import UnitRows from "../../../components/admin/UnitRows.astro";
 import LeadRows, { type LeadRow } from "../../../components/admin/LeadRows.astro";
 import LostReasonAsk from "../../../components/admin/LostReasonAsk.astro";
-import { PARKING_STATES, parkingPrice, parkingTally, parkingState } from "../../../lib/parking";
+import { PARKING_STATES, parkingPrice, parkingTally, parkingState, parkingPrefixOf } from "../../../lib/parking";
+import { priceFieldValue } from "../../../lib/euros";
 import LeadProfile from "../../../components/admin/LeadProfile.astro";
 import { supabaseServer } from "../../../lib/supabase";
 import { BUYER_STAGES, stageLabel, stageShade, OVERDUE_WORKING_DAYS } from "../../../lib/pipeline";
@@ -21,6 +22,8 @@ import {
 } from "../../../lib/projectDocuments";
 import { LEAD_SOURCES, bucketOf, needsAttention, BUCKET_LABELS, isLive, shortAge, plain, REJECT_REASONS, rejectReasonLabel, LOCALE_OPTIONS, localeChip, localeTitle, type EnquiryRow } from "../../../lib/enquiries";
 import { emailLinkOrigin } from "../../../lib/siteUrl";
+import { floorCountsOf, lockedCountsOf, floorless, floorlessLocked, type ExistingUnit } from "../../../lib/buildingLayout";
+import { suggestBuildingCode } from "../../../lib/buildingCode";
 
 const { slug } = Astro.params;
 const supabase = supabaseServer(Astro.cookies, Astro.request);
@@ -62,9 +65,9 @@ const [contentRes, unitRes, buildingRes, enquiryRes, profileRes, rejectionRes, t
   supabase.from("portfolio_items").select("name, data")
     .eq("slug", slug).eq("kind", "project").eq("locale", "en").maybeSingle(),
   supabase.from("project_units")
-    .select("id, code, state, price, inquiry_id, position, building_id")
+    .select("id, code, state, price, inquiry_id, position, building_id, floor")
     .eq("project_id", project.id).order("position"),
-  supabase.from("project_buildings").select("id, name, kind, notes, position")
+  supabase.from("project_buildings").select("id, name, kind, code, unit_type, notes, position")
     .eq("project_id", project.id).order("position"),
   supabase.from("enquiry_state").select("*")
     .eq("project_id", project.id).order("last_activity_at", { ascending: false }),
@@ -189,7 +192,9 @@ const sales = summarise(units);
 // stored — "3 blocks of 12" typed into a field is a number that can disagree
 // with the units actually recorded, and disagreeing numbers are how a portal
 // stops being believed.
-const buildings = (buildingRes.data ?? []) as { id: string; name: string; kind: string; notes: string | null; position: number }[];
+const buildings = (buildingRes.data ?? []) as {
+  id: string; name: string; kind: string; code: string | null; unit_type: string; notes: string | null; position: number;
+}[];
 
 const unitsInBuilding = (id: string | null) =>
   units.filter((u) => (u.building_id ?? null) === id);
@@ -199,14 +204,14 @@ const unplacedUnits = unitsInBuilding(null);
 // once there is one entry, and so on. It also steps past any letter already in
 // use, so it can never suggest a name that is about to be rejected as a
 // duplicate.
-// There is no stored "unit type" — it is what the units are actually called.
-// Deriving it means the card can never claim a building holds apartments while
-// its rows all say Villa; the trade is that a mixed building reports "Mixed"
-// rather than picking a winner, which is the honest answer.
+// A building says what its units are. Units that are not in a building yet
+// have no building to say it for them, so the old reading — the word before
+// the number in their names — is kept for that one row.
 const unitTypeOf = (buildingId: string | null): string => {
+  if (buildingId) return buildings.find((b) => b.id === buildingId)?.unit_type ?? "—";
   const kinds = [...new Set(
-    unitsInBuilding(buildingId)
-      .map((u) => u.code.trim().replace(/\s+\d+$/, "").trim())
+    unitsInBuilding(null)
+      .map((u) => u.code.trim().replace(/\s*[\d.]+$/, "").trim())
       .filter(Boolean),
   )];
   if (kinds.length === 0) return "—";
@@ -244,6 +249,7 @@ const parking = (parkingRes.data ?? []) as {
   id: string; code: string; price: number | null; state: string; notes: string | null; position: number;
 }[];
 const parkingCount = parkingTally(parking);
+const parkingPrefix = parkingPrefixOf(parking.map((p) => p.code));
 
 // Units and parking are two inventories on one tab, not two tabs: they are the
 // same question — what is there and what is left — asked about two things, and
@@ -740,34 +746,77 @@ await fetch("${webhookUrl}", {
       grid-template-columns: repeat(4, minmax(0, 1fr));
       align-items: end;
     }
+    .modalform.addform { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .bcode { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.04em; }
+    .bcode-in { text-transform: uppercase; font-weight: 700; letter-spacing: 0.06em; }
     .modalform .field { max-width: none; }
-    /* Type · Name · Floors · Units per floor on the first row; the per-floor
-       list across the full width beneath them; Unit type and Add on the last.
+    /* Type · Name · Code · Floors · Unit type on the first row; the per-floor
+       list across the full width beneath them; Add on the last.
        The list has to span everything — it grows a row per floor, and squeezed
        into one column it would read as a fifth field rather than the detail of
        the two above it. */
     .modalform .floorlist { grid-column: 1 / -1; }
     .modalform .btn { margin-top: 0; justify-self: start; }
     @media (max-width: 780px) {
-      .modalform { grid-template-columns: minmax(0, 1fr); }
+      .modalform, .modalform.addform { grid-template-columns: minmax(0, 1fr); }
     }
 
+    /* The floor list: a small table, top floor first, a stepper per row.
+       The list, its header and its footer are written in this page; the ROWS
+       are made by script (floorRows.ts), so Astro's scoped styles cannot see
+       them — hence :global() on everything inside .floorrows. Without it the
+       rows render as bare browser inputs, which is exactly what happened. */
     .floorlist {
-      border: 1px solid #e2e8f1; border-radius: 0.8rem; background: #fbfcfe;
-      padding: 0.75rem 0.85rem 0.85rem;
+      border: 1px solid #e2e8f1; border-radius: 0.9rem; background: #fff;
+      max-width: 36rem; overflow: hidden;
+    }
+    .floorhead, .floorrows :global(.floorrow) {
+      display: grid; grid-template-columns: minmax(0, 1fr) 8.6rem;
+      align-items: center; gap: 0.6rem; padding: 0.55rem 0.9rem;
     }
     .floorhead {
-      display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem;
-      font-size: 0.62rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
-      color: #2e7d54; margin-bottom: 0.6rem;
+      background: #f6f8fb; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #5c6f88;
     }
-    .floorhead em { font-style: normal; font-weight: 700; letter-spacing: 0; text-transform: none; color: #5c6f88; }
-    .floorrows { display: grid; gap: 0.45rem; }
-    /* Fixed label column so every row's input starts in the same place —
-       "Floor 9" and "Floor 10" must not shunt the boxes sideways. */
-    .floorrow { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); align-items: center; gap: 0.6rem; }
-    .floorrow > span { font-size: 0.78rem; font-weight: 700; color: #16283e; }
-    .floorrow input { max-width: 7rem; }
+    .floorhead span:nth-child(2) { text-align: center; }
+    /* Nothing to list until there is a floor: an empty table saying "No units
+       yet" under a Floors box that says 0 is telling someone what they typed. */
+    .floorlist[data-empty="true"] { display: none; }
+    .floorrows :global(.floorrow) { border-top: 1px solid #eef2f7; }
+    .floorrows :global(.floorrow:first-child) { border-top: 0; }
+    .floorrows :global(.floorrow.floorless) { background: #fbfcfe; }
+    .floorrows :global(.fname b) { display: block; font-size: 0.84rem; font-weight: 700; color: #16283e; }
+    .floorrows :global(.fname small) { display: block; font-size: 0.7rem; line-height: 1.35; color: #8a9ab0; margin-top: 0.1rem; }
+    .floorrows :global(.stepper) {
+      display: inline-grid; grid-template-columns: 2rem 3.4rem 2rem; justify-self: center;
+      border: 1px solid #d5dde8; border-radius: 0.6rem; overflow: hidden; background: #fff;
+    }
+    .floorrows :global(.stepbtn) {
+      border: 0; background: #f3f6fa; color: #16283e; font: inherit; font-size: 1.05rem; line-height: 1;
+      height: 2.1rem; cursor: pointer; padding: 0;
+    }
+    .floorrows :global(.stepbtn:hover) { background: #e6edf6; }
+    .floorrows :global(.stepin) {
+      border: 0; border-radius: 0; box-shadow: none; padding: 0; margin: 0; height: 2.1rem; width: 100%;
+      text-align: center; font: inherit; font-weight: 700; font-size: 0.86rem; color: #16283e; background: #fff;
+      -moz-appearance: textfield; appearance: textfield;
+    }
+    .floorrows :global(.stepin:focus) { outline: none; background: #f0fbf5; }
+    .floorrows :global(.stepin::-webkit-inner-spin-button),
+    .floorrows :global(.stepin::-webkit-outer-spin-button) { -webkit-appearance: none; margin: 0; }
+    .floorfoot {
+      display: flex; justify-content: flex-end; align-items: center; gap: 0.6rem;
+      padding: 0.6rem 0.9rem; border-top: 1px solid #eef2f7; background: #fbfcfe;
+    }
+    .floorfoot em { font-style: normal; font-size: 0.74rem; font-weight: 700; color: #5c6f88; }
+    .rowacts { display: inline-flex; align-items: center; gap: 0.4rem; }
+    .rowacts form { display: inline; }
+    /* The editor has Type, Name, Code and Floors above the list, then Unit type
+       and Save below it: four columns, a little wider than the list. */
+    .modalform.editform { grid-template-columns: repeat(4, minmax(0, 1fr)); max-width: 44rem; }
+    @media (max-width: 780px) {
+      .modalform.editform { grid-template-columns: minmax(0, 1fr); }
+    }
     .genform .btn { margin-top: 0; }
     .genform .field { max-width: 190px; }
     /* The Units / Parking switch. The project header's own treatment — white
@@ -796,7 +845,9 @@ await fetch("${webhookUrl}", {
       border-radius: 999px; padding: 0.2rem 0.6rem; white-space: nowrap;
     }
     .pnote { color: #5c6f88; }
-    .prowall { display: flex; justify-content: flex-end; margin-top: 0.7rem; }
+    .prowall { display: flex; justify-content: flex-end; align-items: center; gap: 0.5rem; margin-top: 0.7rem; }
+    .prowall form { display: flex; margin: 0; }
+    .prowall .tiny { margin: 0; }
     .pacts {
       display: flex; align-items: center; justify-content: flex-end;
       gap: 0.4rem; white-space: nowrap;
@@ -1854,7 +1905,7 @@ await fetch("${webhookUrl}", {
                 </h2>
                 {buildings.length > 0 && <span class="hint">give each one a building below</span>}
               </div>
-              <UnitRows units={unplacedUnits} slug={project.slug} buildings={buildings} buyers={buyerOptions} />
+              <UnitRows units={unplacedUnits} slug={project.slug} buildings={buildings} buyers={buyerOptions} placeable />
             </section>
           )}
 
@@ -2223,11 +2274,12 @@ await fetch("${webhookUrl}", {
             {/* Structure only. The sales split lives on the Overview and the
                 Units tab, and repeating it here made a settings card look like
                 a report. */}
-            <tr><th>Type</th><th>Name</th><th>Unit type</th><th>Units</th></tr>
+            <tr><th>Type</th><th>Name</th><th>Code</th><th>Unit type</th><th>Units</th></tr>
             {buildings.map((b) => (
               <tr>
                 <td><span class="chip">{b.kind === "project" ? "Project" : "Building"}</span></td>
                 <td><b>{b.name}</b></td>
+                <td><b class="bcode">{b.code ?? "—"}</b></td>
                 <td>{unitTypeOf(b.id)}</td>
                 <td><b>{unitsInBuilding(b.id).length}</b></td>
               </tr>
@@ -2236,6 +2288,7 @@ await fetch("${webhookUrl}", {
               <tr>
                 <td></td>
                 <td><span class="chip">Not placed yet</span></td>
+                <td></td>
                 <td>{unitTypeOf(null)}</td>
                 <td><b>{unplacedUnits.length}</b></td>
               </tr>
@@ -2257,51 +2310,42 @@ await fetch("${webhookUrl}", {
 
           {buildings.length > 0 && (
             <table class="q b-table">
-              <tr><th>Type</th><th>Name</th><th>Units</th><th></th></tr>
+              <tr><th>Type</th><th>Name</th><th>Code</th><th>Units</th><th></th></tr>
               {buildings.map((b) => (
                 <tr>
-                  <td>
-                    <form method="post" action="/api/admin/project-buildings">
-                      <input type="hidden" name="slug" value={project.slug} />
-                      <input type="hidden" name="id" value={b.id} />
-                      <input type="hidden" name="action" value="kind" />
-                      <select class="in bkind" name="kind" onchange="this.form.submit()">
-                        <option value="building" selected={b.kind !== "project"}>Building</option>
-                        <option value="project" selected={b.kind === "project"}>Project</option>
-                      </select>
-                    </form>
-                  </td>
-                  <td>
-                    <form method="post" action="/api/admin/project-buildings" class="inline">
-                      <input type="hidden" name="slug" value={project.slug} />
-                      <input type="hidden" name="id" value={b.id} />
-                      <input type="hidden" name="action" value="rename" />
-                      <input class="in bname" type="text" name="name" value={b.name} />
-                      <button class="tiny" type="submit">Save</button>
-                    </form>
-                  </td>
+                  <td><span class="chip">{b.kind === "project" ? "Project" : "Building"}</span></td>
+                  <td><b>{b.name}</b></td>
+                  <td><b class="bcode">{b.code ?? "—"}</b></td>
                   <td><b>{unitsInBuilding(b.id).length}</b></td>
                   <td style="text-align:right">
-                    {unitsInBuilding(b.id).length === 0 ? (
-                      <form method="post" action="/api/admin/project-buildings"
-                            onsubmit={`return confirm('Remove ${b.name}?')`}>
-                        <input type="hidden" name="slug" value={project.slug} />
-                        <input type="hidden" name="id" value={b.id} />
-                        <input type="hidden" name="action" value="remove" />
-                        <button class="tiny danger" type="submit">Remove</button>
-                      </form>
-                    ) : (
-                      <form method="post" action="/api/admin/project-buildings"
-                            onsubmit={`return confirm('Remove ${b.name} and its ${unitsInBuilding(b.id).length} units? This cannot be undone.')`}>
-                        <input type="hidden" name="slug" value={project.slug} />
-                        <input type="hidden" name="id" value={b.id} />
-                        <input type="hidden" name="action" value="remove_all" />
-                        {/* Just "Remove". The count stays in the confirmation,
-                            which is where it can still stop a mistake without
-                            making the button read like a warning label. */}
-                        <button class="tiny danger" type="submit">Remove</button>
-                      </form>
-                    )}
+                    <div class="rowacts">
+                      {/* Everything about one building — its name, its type and
+                          its floors — is changed in one place, opened from here.
+                          The name and type used to be edited inline in this row,
+                          which left the floors as the one thing that could not
+                          be changed once saved. */}
+                      <button class="tiny" type="button" data-open-dialog={`edit-building-${b.id}`}>Edit</button>
+                      {unitsInBuilding(b.id).length === 0 ? (
+                        <form method="post" action="/api/admin/project-buildings"
+                              onsubmit={`return confirm('Remove ${b.name}?')`}>
+                          <input type="hidden" name="slug" value={project.slug} />
+                          <input type="hidden" name="id" value={b.id} />
+                          <input type="hidden" name="action" value="remove" />
+                          <button class="tiny danger" type="submit">Remove</button>
+                        </form>
+                      ) : (
+                        <form method="post" action="/api/admin/project-buildings"
+                              onsubmit={`return confirm('Remove ${b.name} and its ${unitsInBuilding(b.id).length} units? This cannot be undone.')`}>
+                          <input type="hidden" name="slug" value={project.slug} />
+                          <input type="hidden" name="id" value={b.id} />
+                          <input type="hidden" name="action" value="remove_all" />
+                          {/* Just "Remove". The count stays in the confirmation,
+                              which is where it can still stop a mistake without
+                              making the button read like a warning label. */}
+                          <button class="tiny danger" type="submit">Remove</button>
+                        </form>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -2310,7 +2354,7 @@ await fetch("${webhookUrl}", {
 
           <div class="msep"></div>
           <h4 class="msub-h">Add a building</h4>
-          <form method="post" action="/api/admin/project-buildings" class="genform modalform">
+          <form method="post" action="/api/admin/project-buildings" class="genform modalform addform">
             <input type="hidden" name="slug" value={project.slug} />
             <input type="hidden" name="action" value="add" />
             <label class="field">
@@ -2322,24 +2366,36 @@ await fetch("${webhookUrl}", {
             </label>
             <label class="field">
               <span>Name</span>
-              <input class="in" type="text" name="name" value={nextBlockName} placeholder="Name" required />
+              <input class="in" type="text" name="name" value={nextBlockName} placeholder="Name" required data-building-name />
             </label>
-            {/* Floors first, then how many units each holds.
+            <label class="field">
+              <span>Code</span>
+              {/* The letter its units are named with: A0.1 is building A,
+                  ground floor, first unit. Follows the name until typed in —
+                  Aire suggests A, Block D suggests D. */}
+              <input class="in bcode-in" type="text" name="code" value={suggestBuildingCode(nextBlockName)}
+                     placeholder="A" required data-building-code />
+            </label>
+            {/* How many floors, then how many units on each.
                 A single "units in it" number could not describe a real
                 building: the ground floor gives space to an entrance and a
                 couple of larger homes, the top floor is one penthouse, and only
-                the middle floors repeat. So the two boxes below fill in an even
-                starting point, and the per-floor rows underneath let any of them
-                be changed. */}
+                the middle floors repeat. So the count of floors draws a row per
+                floor below, and each row says how many units that floor holds. */}
             <label class="field">
               <span>Floors</span>
               <input class="in" type="number" name="floors" min="0" max="60" placeholder="0"
                      value="0" data-floors />
             </label>
             <label class="field">
-              <span>Units per floor</span>
-              <input class="in" type="number" min="0" max="60" placeholder="0"
-                     value="0" data-perfloor />
+              <span>Unit type</span>
+              {/* Follows Type on its own — a building holds apartments, a
+                  project of this kind holds villas — but stays a real field,
+                  because the rule is a sensible default and not a law. */}
+              <select class="in" name="unit_type" data-follows-kind>
+                <option value="Apartment" selected>Apartment</option>
+                <option value="Villa">Villa</option>
+              </select>
             </label>
 
             {/* Filled in by script from the rows below, so reducing the number
@@ -2347,27 +2403,84 @@ await fetch("${webhookUrl}", {
                 exists sitting in the submission. */}
             <input type="hidden" name="floor_counts" data-floorcounts value="" />
 
-            <div class="floorlist" data-floorlist hidden>
-              <div class="floorhead">
-                <span>Units on each floor</span>
-                <em data-floortotal></em>
-              </div>
+            <div class="floorlist" data-floorlist data-empty="true">
+              <div class="floorhead"><span>Floor</span><span>Units</span></div>
               <div class="floorrows" data-floorrows></div>
+              <div class="floorfoot"><em data-floortotal></em></div>
             </div>
 
-            <label class="field">
-              <span>Unit type</span>
-              {/* Follows Type on its own — a building holds apartments, a
-                  project of this kind holds villas — but stays a real field,
-                  because the rule is a sensible default and not a law. */}
-              <select class="in" name="prefix" data-follows-kind>
-                <option value="Apartment" selected>Apartment</option>
-                <option value="Villa">Villa</option>
-              </select>
-            </label>
             <button class="btn" type="submit">Add</button>
           </form>
         </dialog>
+
+        {/* One editor per building, opened from the row above. The same form as
+            "Add a building", pre-filled with the building as it is: its floors
+            are its units grouped by floor, so the rows show the real counts and
+            a change is the difference between those and what gets typed. */}
+        {buildings.map((b) => {
+          const mine = unitsInBuilding(b.id) as unknown as ExistingUnit[];
+          const counts = floorCountsOf(mine);
+          const locked = lockedCountsOf(mine);
+          const withoutFloor = floorless(mine);
+          return (
+            <dialog class="enqmodal wide" id={`edit-building-${b.id}`}>
+              <div class="mhead">
+                <div>
+                  <h3>Edit {b.name}</h3>
+                  <p class="msub">Its name, its type, its floors, and how many units each holds.</p>
+                </div>
+                <form method="dialog"><button class="mx" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18"/></svg></button></form>
+              </div>
+              <form method="post" action="/api/admin/project-buildings" class="genform modalform editform">
+                <input type="hidden" name="slug" value={project.slug} />
+                <input type="hidden" name="id" value={b.id} />
+                <input type="hidden" name="action" value="layout" />
+                <label class="field">
+                  <span>Type</span>
+                  <select class="in" name="kind">
+                    <option value="building" selected={b.kind !== "project"}>Building</option>
+                    <option value="project" selected={b.kind === "project"}>Project</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>Name</span>
+                  <input class="in" type="text" name="name" value={b.name} required />
+                </label>
+                <label class="field">
+                  <span>Code</span>
+                  {/* Changing it names only the units added from now on; the
+                      ones that exist keep their names. */}
+                  <input class="in bcode-in" type="text" name="code" value={b.code ?? suggestBuildingCode(b.name)}
+                         placeholder="A" required data-building-code />
+                </label>
+                <label class="field">
+                  <span>Floors</span>
+                  {/* Goes up: a new, empty floor appears on top. Goes down: the
+                      top floor comes off — unless something on it is reserved
+                      or sold, in which case it cannot go that low. */}
+                  <input class="in" type="number" name="floors" min="0" max="60"
+                         value={String(counts.length)} data-floors />
+                </label>
+                <input type="hidden" name="floor_counts" data-floorcounts value={counts.join(",")} />
+                {withoutFloor > 0 && <input type="hidden" name="floorless" value={String(withoutFloor)} data-floorless />}
+                <div class="floorlist" data-floorlist data-initial={counts.join(",")} data-minimum={locked.join(",")}
+                     data-floorless={String(withoutFloor)} data-floorless-locked={String(floorlessLocked(mine))}>
+                  <div class="floorhead"><span>Floor</span><span>Units</span></div>
+                  <div class="floorrows" data-floorrows></div>
+                  <div class="floorfoot"><em data-floortotal></em></div>
+                </div>
+                <label class="field">
+                  <span>Unit type</span>
+                  <select class="in" name="unit_type">
+                    <option value="Apartment" selected={b.unit_type !== "Villa"}>Apartment</option>
+                    <option value="Villa" selected={b.unit_type === "Villa"}>Villa</option>
+                  </select>
+                </label>
+                <button class="btn" type="submit">Save</button>
+              </form>
+            </dialog>
+          );
+        })}
       </section>
 
       {/* Parking sold separately from the home. Under Layout because it is the
@@ -2433,7 +2546,7 @@ await fetch("${webhookUrl}", {
                     </form>
                   </td>
                   <td><input class="in pprice" type="text" name="price" form={`pk-${p.id}`}
-                             value={p.price ?? ""} placeholder="18,000" inputmode="numeric" /></td>
+                             value={priceFieldValue(p.price)} placeholder="—" inputmode="numeric" data-euros /></td>
                   <td>
                     <select class="in" name="state" form={`pk-${p.id}`} data-fill>
                       {PARKING_STATES.map((st) => (
@@ -2442,7 +2555,7 @@ await fetch("${webhookUrl}", {
                     </select>
                   </td>
                   <td><input class="in" type="text" name="notes" form={`pk-${p.id}`}
-                             value={p.notes ?? ""} placeholder="Level -1, by the lift" /></td>
+                             value={p.notes ?? ""} /></td>
                   {/* One flex row rather than a button beside a form: the form
                       is a block, so the two buttons were sitting on different
                       lines of the same cell and only looked side by side. */}
@@ -2462,7 +2575,20 @@ await fetch("${webhookUrl}", {
           )}
 
           {parking.length > 0 && (
-            <p class="prowall">
+            <div class="prowall">
+              {/* A div, not a <p>: a paragraph cannot hold forms, so the browser
+                  closed it before the first one and the two buttons ended up
+                  outside the row that was meant to align them. */}
+              {/* One more space, numbered on from the last: the everyday case
+                  once the car park exists is "there turns out to be one more",
+                  and that should not need the batch form below. */}
+              <form method="post" action="/api/admin/project-parking">
+                <input type="hidden" name="slug" value={project.slug} />
+                <input type="hidden" name="action" value="add" />
+                <input type="hidden" name="count" value="1" />
+                <input type="hidden" name="prefix" value={parkingPrefix} />
+                <button class="tiny" type="submit">+ Add a space</button>
+              </form>
               {/* The count and the sold ones are named in the confirmation, not
                   on the button: a button that reads like a warning label gets
                   ignored, while a confirmation that names what is about to go
@@ -2473,7 +2599,7 @@ await fetch("${webhookUrl}", {
                 <input type="hidden" name="action" value="remove_all" />
                 <button class="tiny danger" type="submit">Remove all spaces</button>
               </form>
-            </p>
+            </div>
           )}
 
           <div class="msep"></div>
@@ -2494,7 +2620,7 @@ await fetch("${webhookUrl}", {
             </label>
             <label class="field">
               <span>Price each <em>(optional)</em></span>
-              <input class="in" type="text" name="price" placeholder="18,000" inputmode="numeric" />
+              <input class="in" type="text" name="price" placeholder="€18,000" inputmode="numeric" data-euros />
             </label>
             <button class="btn" type="submit">Add</button>
           </form>
@@ -2737,6 +2863,9 @@ await fetch("${webhookUrl}", {
 
 <script>
   import { armDirectUploadForms } from "../../../lib/directUploadForm";
+  import { armFloorLists } from "../../../lib/floorRows";
+  import { armBuildingCodeFields } from "../../../lib/buildingCode";
+  import { armEuroInputs } from "../../../lib/euros";
   armDirectUploadForms();
 
   // Keep the switcher's thumb behind the active tab. The FIRST placement is done
@@ -2782,6 +2911,11 @@ await fetch("${webhookUrl}", {
     });
   });
 
+  // A building's code follows its name until typed in by hand.
+  armBuildingCodeFields();
+  // Price boxes read "€1,250,000" as they are typed.
+  armEuroInputs();
+
   // Unit type follows Type: a Building holds apartments, a Project holds villas.
   // It stops following the moment someone sets it themselves — an automatic
   // field that overwrites a deliberate choice is worse than no automation.
@@ -2798,85 +2932,8 @@ await fetch("${webhookUrl}", {
     });
   });
 
-  /**
-   * The per-floor unit counts.
-   *
-   * "Floors" and "Units per floor" fill in an even starting point; the rows
-   * they produce are then editable one at a time, because a real building has a
-   * smaller ground floor and a single penthouse on top. Editing a row is what
-   * the whole feature is for, so typing in one must never be undone by the
-   * even-fill above it — hence `touched`: once a floor has been set by hand,
-   * changing "units per floor" leaves it alone.
-   *
-   * The counts are gathered into one hidden field on every change. A numbered
-   * input per floor would post fields for floors that no longer exist the
-   * moment someone reduces the floor count.
-   */
-  document.querySelectorAll("[data-floorlist]").forEach((listEl) => {
-    const form = listEl.closest("form");
-    if (!form) return;
-    const floorsBox = form.querySelector<HTMLInputElement>("[data-floors]");
-    const perFloorBox = form.querySelector<HTMLInputElement>("[data-perfloor]");
-    const list = form.querySelector<HTMLElement>("[data-floorlist]");
-    const rows = form.querySelector<HTMLElement>("[data-floorrows]");
-    const hidden = form.querySelector<HTMLInputElement>("[data-floorcounts]");
-    const totalOut = form.querySelector<HTMLElement>("[data-floortotal]");
-    if (!floorsBox || !perFloorBox || !list || !rows || !hidden) return;
-
-    const MAX_FLOORS = 60;
-    const clamp = (n: number, hi: number) => Math.max(0, Math.min(hi, Number.isFinite(n) ? Math.floor(n) : 0));
-    const touched = new Set<number>();
-
-    const collect = () =>
-      [...rows.querySelectorAll<HTMLInputElement>("[data-floorunit]")]
-        .map((i) => clamp(Number.parseInt(i.value, 10), 60));
-
-    const publish = () => {
-      const counts = collect();
-      hidden.value = counts.join(",");
-      if (totalOut) {
-        const total = counts.reduce((a, b) => a + b, 0);
-        totalOut.textContent = total === 0 ? "" : `${total} unit${total === 1 ? "" : "s"} in total`;
-      }
-    };
-
-    const draw = () => {
-      const floors = clamp(Number.parseInt(floorsBox.value, 10), MAX_FLOORS);
-      const per = clamp(Number.parseInt(perFloorBox.value, 10), 60);
-      const existing = collect();
-
-      list.hidden = floors === 0;
-      rows.replaceChildren();
-
-      for (let f = 1; f <= floors; f++) {
-        // A floor someone has already set by hand keeps its number; the rest
-        // follow the even fill above.
-        const value = touched.has(f) && existing[f - 1] !== undefined ? existing[f - 1] : per;
-
-        const row = document.createElement("div");
-        row.className = "floorrow";
-        const label = document.createElement("span");
-        label.textContent = `Floor ${f}`;
-        const input = document.createElement("input");
-        input.className = "in";
-        input.type = "number";
-        input.min = "0";
-        input.max = "60";
-        input.value = String(value);
-        input.setAttribute("data-floorunit", String(f));
-        input.setAttribute("aria-label", `Units on floor ${f}`);
-        input.addEventListener("input", () => { touched.add(f); publish(); });
-        row.append(label, input);
-        rows.append(row);
-      }
-      publish();
-    };
-
-    floorsBox.addEventListener("input", draw);
-    // Changing the even fill re-applies to every floor NOT set by hand.
-    perFloorBox.addEventListener("input", draw);
-    draw();
-  });
+  // The per-floor unit counts on the add-a-building and edit-a-building forms.
+  armFloorLists();
 
   // Any button that names a dialog opens it.
   document.querySelectorAll("[data-open-dialog]").forEach((btn) => {

@@ -12,6 +12,9 @@
  * red-green colour-blind reader. Every count is written next to its colour as
  * well, so nothing on screen depends on colour alone.
  */
+
+import { formatEuros } from "./euros";
+
 export const UNIT_STATES = [
   { key: "available", label: "Available", colour: "#5b8fc9", ink: "#2f6296" },
   { key: "reserved", label: "Reserved", colour: "#e8a33d", ink: "#a35700" },
@@ -141,7 +144,4 @@ export function summarise(units: UnitRow[]): SalesSummary {
 }
 
 /** "€1,250,000" — whole euros, since unit prices are never to the cent. */
-export const euros = (n: number): string =>
-  new Intl.NumberFormat("en-GB", {
-    style: "currency", currency: "EUR", maximumFractionDigits: 0,
-  }).format(n);
+export const euros = formatEuros;
