@@ -45,6 +45,11 @@ const shortDate = (iso: string) =>
 ---
 
 <style>
+  .ih { display: flex; align-items: center; gap: 0.4rem; }
+  .hico {
+    width: 13px; height: 13px; flex: none;
+    fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  }
   .notes { background: #fffdf5; border: 1px solid #eadfbf; border-radius: 0.9rem; padding: 0.9rem 1rem; }
   .notes .nh {
     font-size: 0.68rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: #8a6420;
@@ -91,7 +96,11 @@ const shortDate = (iso: string) =>
 </div>
 
 <div class="hist">
-  <h3>History</h3>
+  <h3 class="ih">
+      {/* The same clock and the same name as on the contact card, so the
+          record reads as one thing wherever it is shown. */}
+      <svg class="hico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3 4.5V9h4.5"/><path d="M12 7.5V12l3 2"/></svg>Activity timeline
+    </h3>
   {events.length === 0 && <p class="empty">Nothing has happened to this enquiry yet.</p>}
   {events.map((ev) => (
     <div class="hrow">

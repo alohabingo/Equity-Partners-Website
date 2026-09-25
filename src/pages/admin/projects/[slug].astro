@@ -4,6 +4,7 @@ export const prerender = false;
 import AdminLayout from "../../../layouts/AdminLayout.astro";
 import EnquiryPanel from "../../../components/admin/EnquiryPanel.astro";
 import UnitRows from "../../../components/admin/UnitRows.astro";
+import ParkingRows from "../../../components/admin/ParkingRows.astro";
 import LeadRows, { type LeadRow } from "../../../components/admin/LeadRows.astro";
 import LostReasonAsk from "../../../components/admin/LostReasonAsk.astro";
 import { PARKING_STATES, parkingPrice, parkingTally, parkingState, parkingPrefixOf } from "../../../lib/parking";
@@ -87,9 +88,11 @@ const [contentRes, unitRes, buildingRes, enquiryRes, profileRes, rejectionRes, t
         .or(`project_id.eq.${project.id},project_id.is.null`)
         .order("position").order("created_at")
     : Promise.resolve({ data: [] }),
-  tab === "settings" || tab === "units" || tab === "leads"
+  // The Inbox too: its contact card has a parking section, and without the
+  // car park loaded that section silently disappeared from it.
+  tab === "settings" || tab === "units" || tab === "leads" || tab === "inbox"
     ? supabase.from("project_parking")
-        .select("id, code, price, state, notes, position")
+        .select("id, code, price, state, notes, position, inquiry_id")
         .eq("project_id", project.id).order("position")
     : Promise.resolve({ data: [] }),
   wantsDocuments
@@ -247,6 +250,7 @@ const DONUT_GAP = donutSegments.length > 1 ? 2 : 0;
 // there would show a development as half sold before a home changed hands.
 const parking = (parkingRes.data ?? []) as {
   id: string; code: string; price: number | null; state: string; notes: string | null; position: number;
+  inquiry_id: string | null;
 }[];
 const parkingCount = parkingTally(parking);
 const parkingPrefix = parkingPrefixOf(parking.map((p) => p.code));
@@ -281,6 +285,37 @@ const buyerOptions = enquiries
   .filter((e) => e.triage === "converted")
   .map((e) => ({ id: e.id, name: e.name }));
 
+/**
+ * Who is interested in each unit and space, for the Units tab's Interested
+ * column. Read from the same two lists the contact card writes, so the tab and
+ * the card are two views of one record rather than two records.
+ */
+const interestedInUnit: Record<string, { id: string; name: string }[]> = {};
+const interestedInSpace: Record<string, { id: string; name: string }[]> = {};
+if (tab === "units") {
+  const nameOf = new Map(allRows.map((e: any) => [e.id, e.name ?? ""]));
+  const unitIds = units.map((u: any) => u.id);
+  const spaceIds = ((parkingRes.data ?? []) as any[]).map((x) => x.id);
+  const [ui, pi] = await Promise.all([
+    unitIds.length
+      ? supabase.from("enquiry_interest").select("inquiry_id, unit_id, created_at")
+          .in("unit_id", unitIds).order("created_at")
+      : Promise.resolve({ data: [] as any[] }),
+    spaceIds.length
+      ? supabase.from("enquiry_parking_interest").select("inquiry_id, parking_id, created_at")
+          .in("parking_id", spaceIds).order("created_at")
+      : Promise.resolve({ data: [] as any[] }),
+  ]);
+  for (const r of (ui.data ?? []) as any[]) {
+    if (!nameOf.has(r.inquiry_id)) continue;
+    (interestedInUnit[r.unit_id] ??= []).push({ id: r.inquiry_id, name: nameOf.get(r.inquiry_id) ?? "" });
+  }
+  for (const r of (pi.data ?? []) as any[]) {
+    if (!nameOf.has(r.inquiry_id)) continue;
+    (interestedInSpace[r.parking_id] ??= []).push({ id: r.inquiry_id, name: nameOf.get(r.inquiry_id) ?? "" });
+  }
+}
+
 const nameById = new Map((profileRes.data ?? []).map((p: any) => [p.id, p.full_name]));
 
 const now = new Date();
@@ -308,11 +343,105 @@ const attention = enquiries.filter((e) => needsAttention(e, now));
 // Triaged-in buyers only: a pending enquiry is not a lead yet, and listing one
 // here would make triage look like an optional step. Their count is surfaced
 // above the table instead, so nothing goes quietly missing.
-let leadRows: LeadRow[] = [];
-let profiles: {
+type Profile = {
   lead: any; messages: any[]; notesBy: string | null; events: any[];
   activity: any[]; interest: any[]; parkingInterest: any[];
-}[] = [];
+};
+
+/**
+ * Contact cards for a set of buyers, fetched together.
+ *
+ * Opening one used to be a page NAVIGATION: click a name, re-run every query
+ * for the project, re-render the largest page in the portal, then show the
+ * modal. That was chosen so the markup would not carry a profile per row — an
+ * optimisation for a scale this does not have, paid for on every click.
+ *
+ * Doing all of them costs FIVE queries, not five per lead: each fetches for the
+ * whole set and is grouped in memory here. The cards then sit in the page
+ * closed, and a click just opens one, exactly like Add lead.
+ *
+ * Shared by the Leads tab, which builds one per buyer, and the Inbox, which
+ * builds one for the conversation that is open — so the card is the same card
+ * wherever it is opened from, and cannot drift into two versions of itself.
+ */
+async function loadProfiles(leads: any[]): Promise<{ profiles: Profile[]; interestByLead: Map<string, string[]> }> {
+  const interestByLead = new Map<string, string[]>();
+  if (leads.length === 0) return { profiles: [], interestByLead };
+
+  const ids = leads.map((e: any) => e.id);
+  const [pm, pe, pa, pi, pp] = await Promise.all([
+    supabase.from("inquiry_messages").select("inquiry_id, direction, subject, sent_at, sent_by")
+      .in("inquiry_id", ids).order("sent_at"),
+    supabase.from("enquiry_events").select("inquiry_id, kind, detail, created_at, actor_id")
+      .in("inquiry_id", ids).order("created_at", { ascending: false }),
+    supabase.from("enquiry_activity")
+      .select("id, inquiry_id, kind, body, happened_at, created_at, logged_by")
+      .in("inquiry_id", ids).order("happened_at", { ascending: false }),
+    supabase.from("enquiry_interest")
+      .select("inquiry_id, unit_id, created_at")
+      .in("inquiry_id", ids).order("created_at"),
+    supabase.from("enquiry_parking_interest")
+      .select("inquiry_id, parking_id, created_at")
+      .in("inquiry_id", ids).order("created_at"),
+  ]);
+
+  const bucket = <T extends { inquiry_id: string }>(rows: T[] | null) => {
+    const m = new Map<string, T[]>();
+    for (const r of rows ?? []) {
+      const list = m.get(r.inquiry_id);
+      if (list) list.push(r); else m.set(r.inquiry_id, [r]);
+    }
+    return m;
+  };
+  const byMsg = bucket(pm.data as any[]);
+  const byEvent = bucket(pe.data as any[]);
+  const byActivity = bucket(pa.data as any[]);
+  const byInterest = bucket(pi.data as any[]);
+  const byParking = bucket(pp.data as any[]);
+  const codeById = new Map(units.map((u: any) => [u.id, u.code]));
+  // A unit someone is the buyer of is a property they are interested in — the
+  // strongest kind. It is read from the unit itself rather than copied into the
+  // interest list, so the two can never disagree: change the buyer on the
+  // Units tab and every view of that person follows.
+  for (const u of units as any[]) {
+    if (!u.inquiry_id || !ids.includes(u.inquiry_id)) continue;
+    const list = interestByLead.get(u.inquiry_id) ?? [];
+    interestByLead.set(u.inquiry_id, [...list, u.code]);
+  }
+  for (const [leadId, rows] of byInterest) {
+    const owned = interestByLead.get(leadId) ?? [];
+    const looking = rows.map((r: any) => codeById.get(r.unit_id)).filter((c: any) => c && !owned.includes(c));
+    interestByLead.set(leadId, [...owned, ...looking]);
+  }
+
+  const profiles = leads.map((lead: any) => ({
+    lead,
+    messages: (byMsg.get(lead.id) ?? []).map((x: any) => ({ ...x, sentByName: nameById.get(x.sent_by) ?? null })),
+    // One field on the row now, not a list. Only the author's name has to be
+    // looked up — the text and the date come with the lead.
+    notesBy: lead.notes_updated_by ? (nameById.get(lead.notes_updated_by) ?? "Someone") : null,
+    events: (byEvent.get(lead.id) ?? []).map((x: any) => ({ ...x, actor: nameById.get(x.actor_id) ?? "System" })),
+    activity: (byActivity.get(lead.id) ?? []).map((x: any) => ({ ...x, who: nameById.get(x.logged_by) ?? "Someone" })),
+    interest: byInterest.get(lead.id) ?? [],
+    parkingInterest: byParking.get(lead.id) ?? [],
+  }));
+  return { profiles, interestByLead };
+}
+
+/**
+ * The current URL with no card named on it — where a card's forms return to.
+ * Outcome parameters go too, or a banner about a reply sent an hour ago would
+ * ride along on every save made from the card afterwards.
+ */
+const urlWithoutLead = (() => {
+  const u = new URLSearchParams(Astro.url.search);
+  for (const k of ["lead", "contact_error", "sent", "send_error", "mailbox", "notice", "parking_notice"]) u.delete(k);
+  const q = u.toString();
+  return Astro.url.pathname + (q ? `?${q}` : "");
+})();
+
+let leadRows: LeadRow[] = [];
+let profiles: Profile[] = [];
 if (tab === "leads") {
   const converted = allRows.filter((e) => (e.triage ?? "converted") === "converted");
   // When each buyer last MOVED. The endpoint that changes a stage already
@@ -331,68 +460,9 @@ if (tab === "leads") {
   }
 
   // The units each buyer is looking at, for the list as well as the profile.
-  // Declared out here because both are built from it and the fetch below only
-  // runs when there is somebody to fetch for.
-  const interestByLead = new Map<string, string[]>();
-
-  // ---- every profile, fetched together ----
-  //
-  // Opening one used to be a page NAVIGATION: click a name, re-run every query
-  // for the project, re-render the largest page in the portal, then show the
-  // modal. That was chosen so the markup would not carry a profile per row —
-  // an optimisation for a scale this does not have, paid for on every click.
-  //
-  // Doing all of them costs SIX queries, not six per lead: each fetches for
-  // the whole set and is grouped in memory here. The profiles then sit in the
-  // page closed, and a click just opens one, exactly like Add lead.
-  if (converted.length > 0) {
-    const ids = converted.map((e: any) => e.id);
-    const [pm, pe, pa, pi, pp] = await Promise.all([
-      supabase.from("inquiry_messages").select("inquiry_id, direction, subject, sent_at, sent_by")
-        .in("inquiry_id", ids).order("sent_at"),
-      supabase.from("enquiry_events").select("inquiry_id, kind, detail, created_at, actor_id")
-        .in("inquiry_id", ids).order("created_at", { ascending: false }),
-      supabase.from("enquiry_activity")
-        .select("id, inquiry_id, kind, body, happened_at, created_at, logged_by")
-        .in("inquiry_id", ids).order("happened_at", { ascending: false }),
-      supabase.from("enquiry_interest")
-        .select("inquiry_id, unit_id, created_at")
-        .in("inquiry_id", ids).order("created_at"),
-      supabase.from("enquiry_parking_interest")
-        .select("inquiry_id, parking_id, created_at")
-        .in("inquiry_id", ids).order("created_at"),
-    ]);
-
-    const bucket = <T extends { inquiry_id: string }>(rows: T[] | null) => {
-      const m = new Map<string, T[]>();
-      for (const r of rows ?? []) {
-        const list = m.get(r.inquiry_id);
-        if (list) list.push(r); else m.set(r.inquiry_id, [r]);
-      }
-      return m;
-    };
-    const byMsg = bucket(pm.data as any[]);
-    const byEvent = bucket(pe.data as any[]);
-    const byActivity = bucket(pa.data as any[]);
-    const byInterest = bucket(pi.data as any[]);
-    const byParking = bucket(pp.data as any[]);
-    const codeById = new Map(units.map((u: any) => [u.id, u.code]));
-    for (const [leadId, rows] of byInterest) {
-      interestByLead.set(leadId, rows.map((r: any) => codeById.get(r.unit_id)).filter(Boolean));
-    }
-
-    profiles = converted.map((lead: any) => ({
-      lead,
-      messages: (byMsg.get(lead.id) ?? []).map((x: any) => ({ ...x, sentByName: nameById.get(x.sent_by) ?? null })),
-      // One field on the row now, not a list. Only the author's name has to be
-      // looked up — the text and the date come with the lead.
-      notesBy: lead.notes_updated_by ? (nameById.get(lead.notes_updated_by) ?? "Someone") : null,
-      events: (byEvent.get(lead.id) ?? []).map((x: any) => ({ ...x, actor: nameById.get(x.actor_id) ?? "System" })),
-      activity: (byActivity.get(lead.id) ?? []).map((x: any) => ({ ...x, who: nameById.get(x.logged_by) ?? "Someone" })),
-      interest: byInterest.get(lead.id) ?? [],
-      parkingInterest: byParking.get(lead.id) ?? [],
-    }));
-  }
+  const loaded = await loadProfiles(converted);
+  profiles = loaded.profiles;
+  const interestByLead = loaded.interestByLead;
 
   leadRows = converted.map((e: any) => ({
     id: e.id,
@@ -440,6 +510,19 @@ const selected = allRows.find((e) => e.id === selectedId) ?? null;
 let messages: any[] = [];
 let events: any[] = [];
 let linkViews: Record<string, number> = {};
+
+/**
+ * The contact card for the conversation that is open in the Inbox.
+ *
+ * Only for someone who has been triaged in. A pending enquiry is not a lead
+ * yet — the Leads tab leaves them out for the same reason — and a card with a
+ * pipeline rail and a stage picker on it would let someone skip the decision
+ * the triage buttons exist to ask for. Their name stays plain text until then.
+ */
+let inboxProfile: Profile | null = null;
+if (selected && tab === "inbox" && (selected.triage ?? "converted") === "converted") {
+  inboxProfile = (await loadProfiles([selected])).profiles[0] ?? null;
+}
 
 // Only the Inbox draws a conversation. Without the tab check these ran on every
 // tab, so opening the Overview fetched an email thread, its notes and its
@@ -496,6 +579,11 @@ backParams.delete("send_error");
 backParams.delete("mailbox");
 backParams.delete("notice");
 backParams.delete("parking_notice");
+// And the open contact card. Every form that returns here is about something
+// else — a reply, a stage, a sync — and one that carried `lead` along would pop
+// the card back open on arrival, long after it had been closed.
+backParams.delete("lead");
+backParams.delete("contact_error");
 const selfHref = Astro.url.pathname + (backParams.size ? `?${backParams}` : "");
 
 // One line under the tab row for "something just happened": the mailbox sync
@@ -844,7 +932,6 @@ await fetch("${webhookUrl}", {
       color: var(--ink); background: var(--bg); border: 1px solid var(--bd);
       border-radius: 999px; padding: 0.2rem 0.6rem; white-space: nowrap;
     }
-    .pnote { color: #5c6f88; }
     .prowall { display: flex; justify-content: flex-end; align-items: center; gap: 0.5rem; margin-top: 0.7rem; }
     .prowall form { display: flex; margin: 0; }
     .prowall .tiny { margin: 0; }
@@ -854,21 +941,6 @@ await fetch("${webhookUrl}", {
     }
     .pacts form { display: flex; }
     .pacts .tiny { margin: 0; }
-    /* Colours only — AdminLayout draws the chevron on every .main select.
-       Geometry copied from the unit and lead pills so all three are one shape. */
-    .lpick { position: relative; display: inline-flex; }
-    .lpick select {
-      font: inherit; font-size: 0.76rem; font-weight: 700;
-      color: var(--ink, #5c6f88); background: var(--bg, #f2f5f9);
-      border: 1px solid var(--bd, transparent); border-radius: 999px;
-      cursor: pointer; min-width: 128px;
-      padding-top: 0.45rem; padding-bottom: 0.45rem; padding-left: 0.95rem;
-      line-height: 1.25;
-      transition: filter 180ms ease, box-shadow 180ms ease;
-    }
-    .lpick select:hover { filter: brightness(0.96); }
-    .lpick select:focus { outline: none; }
-    .lpick select:focus-visible { box-shadow: 0 0 0 3px rgba(83, 178, 127, 0.32); }
     .prow { display: contents; }
     .pcode { max-width: 7rem; }
     .pprice { max-width: 8rem; }
@@ -1829,32 +1901,7 @@ await fetch("${webhookUrl}", {
               </span>
             )}
           </div>
-          <table class="q b-table">
-              <tr><th>Space</th><th>Price</th><th>State</th><th>Notes</th></tr>
-              {parking.map((p) => (
-                <tr>
-                  <td><b>{p.code}</b></td>
-                  <td>{parkingPrice(p.price)}</td>
-                  <td>
-                    {/* Editable here, unlike on Settings. Settings says what
-                        exists; this is where a space is sold. */}
-                    <form method="post" action="/api/admin/project-parking">
-                      <input type="hidden" name="slug" value={project.slug} />
-                      <input type="hidden" name="id" value={p.id} />
-                      <input type="hidden" name="action" value="state" />
-                      <span class="lpick" style={`--ink:${parkingState(p.state).ink};--bg:${parkingState(p.state).tint};--bd:${parkingState(p.state).edge}`}>
-                        <select name="state" onchange="this.form.submit()" aria-label={`State for ${p.code}`} data-fill>
-                          {PARKING_STATES.map((st) => (
-                            <option value={st.key} selected={st.key === p.state}>{st.label}</option>
-                          ))}
-                        </select>
-                      </span>
-                    </form>
-                  </td>
-                  <td class="pnote">{p.notes || "—"}</td>
-              </tr>
-            ))}
-          </table>
+          <ParkingRows slug={project.slug} parking={parking} buyers={buyerOptions} interested={interestedInSpace} />
         </section>
       ) : units.length === 0 ? (
         /* No form here any more. Units are created with the building they belong
@@ -1891,7 +1938,7 @@ await fetch("${webhookUrl}", {
                 {mine.length === 0 ? (
                   <p class="empty">No units in this building yet.</p>
                 ) : (
-                  <UnitRows units={mine} slug={project.slug} buildings={buildings} buyers={buyerOptions} />
+                  <UnitRows units={mine} slug={project.slug} buildings={buildings} buyers={buyerOptions} interested={interestedInUnit} />
                 )}
               </section>
             );
@@ -1905,7 +1952,7 @@ await fetch("${webhookUrl}", {
                 </h2>
                 {buildings.length > 0 && <span class="hint">give each one a building below</span>}
               </div>
-              <UnitRows units={unplacedUnits} slug={project.slug} buildings={buildings} buyers={buyerOptions} placeable />
+              <UnitRows units={unplacedUnits} slug={project.slug} buildings={buildings} buyers={buyerOptions} placeable interested={interestedInUnit} />
             </section>
           )}
 
@@ -1935,20 +1982,14 @@ await fetch("${webhookUrl}", {
           notesText={p.lead.notes ?? null}
           notesBy={p.notesBy}
           notesAt={p.lead.notes_updated_at ?? null}
-          units={units.map((u: any) => ({ id: u.id, code: u.code, state: u.state }))}
+          units={units.map((u: any) => ({ id: u.id, code: u.code, state: u.state, inquiry_id: u.inquiry_id ?? null }))}
           activity={p.activity}
           interest={p.interest.map((x: any) => x.unit_id)}
-          parking={parking.map((x) => ({ id: x.id, code: x.code, state: x.state, price: x.price }))}
+          parking={parking.map((x) => ({ id: x.id, code: x.code, state: x.state, price: x.price, inquiry_id: x.inquiry_id ?? null }))}
           parkingInterest={p.parkingInterest.map((x: any) => x.parking_id)}
           people={(profileRes.data ?? []).map((x: any) => ({ id: x.id, name: x.full_name ?? "Someone" }))}
           meId={me?.id ?? null}
-          back={(() => {
-            const u = new URLSearchParams(Astro.url.search);
-            u.delete("lead");
-            u.delete("contact_error");
-            const q = u.toString();
-            return Astro.url.pathname + (q ? `?${q}` : "");
-          })()}
+          back={urlWithoutLead}
         />
       ))}
     </div>
@@ -1990,6 +2031,9 @@ await fetch("${webhookUrl}", {
         {selected ? (
           <EnquiryPanel
             enquiry={selected}
+            profileHref={inboxProfile
+              ? `${urlWithoutLead}${urlWithoutLead.includes("?") ? "&" : "?"}lead=${selected.id}`
+              : null}
             messages={messages}
             notesText={selected.notes ?? null}
             notesBy={selected.notes_updated_by ? (nameById.get(selected.notes_updated_by) ?? "Someone") : null}
@@ -2009,6 +2053,33 @@ await fetch("${webhookUrl}", {
           <p class="nothing">Select an enquiry on the left.</p>
         )}
       </div>
+
+      {/* The same card the Leads tab opens, for whoever this conversation is
+          with — sitting closed until their name is clicked. Saving anything on
+          it comes back here, to this conversation, with the card open again. */}
+      {inboxProfile && (
+        <LeadProfile
+          lead={inboxProfile.lead}
+          project={{ slug: project.slug, name: project.name }}
+          events={inboxProfile.events}
+          messages={inboxProfile.messages}
+          notesText={inboxProfile.lead.notes ?? null}
+          notesBy={inboxProfile.notesBy}
+          notesAt={inboxProfile.lead.notes_updated_at ?? null}
+          units={units.map((u: any) => ({ id: u.id, code: u.code, state: u.state, inquiry_id: u.inquiry_id ?? null }))}
+          activity={inboxProfile.activity}
+          interest={inboxProfile.interest.map((x: any) => x.unit_id)}
+          parking={parking.map((x) => ({ id: x.id, code: x.code, state: x.state, price: x.price, inquiry_id: x.inquiry_id ?? null }))}
+          parkingInterest={inboxProfile.parkingInterest.map((x: any) => x.parking_id)}
+          people={(profileRes.data ?? []).map((x: any) => ({ id: x.id, name: x.full_name ?? "Someone" }))}
+          meId={me?.id ?? null}
+          back={urlWithoutLead}
+        />
+      )}
+      {/* Shared by every stage control on the page: the card's, and the one at
+          the top of the conversation — which until now could mark a buyer as
+          not proceeding here without ever being asked why. */}
+      <LostReasonAsk />
     </div>
   )}
 

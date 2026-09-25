@@ -7,7 +7,10 @@
  * the one place a quiet mistake would go unnoticed — nobody remembers how long
  * a buyer sat in Info shared well enough to catch a wrong number.
  */
-import { stageDurations, daysSince } from "./pipeline";
+import {
+  stageDurations, daysSince, BUYER_STAGES, BUYER_STAGE_KEYS, OPEN_STAGE_KEYS,
+  stageLabel, stageTheme, isValidStage,
+} from "./pipeline";
 
 let pass = 0, fail = 0;
 const check = (label: string, got: unknown, want: unknown) => {
@@ -74,6 +77,68 @@ check("no record given falls back to the events",
 
 check("same day is zero days, not a negative", stageDurations(at("31"), [], NOW).totals, { new: 0 });
 check("daysSince agrees with the rail", daysSince(at("01"), NOW), 30);
+
+
+// ---- the shape of the pipeline itself ----
+//
+// The order here is the order a buyer moves through, and it is what the board's
+// columns, the profile rail and every stage picker are drawn from. Asserting it
+// means a reorder is a deliberate act rather than something that happens by
+// editing an array and not noticing what moved.
+check("the stages, in order",
+  BUYER_STAGE_KEYS,
+  ["new", "info", "interested", "reservation", "delivery", "not_proceeding"]);
+check("five of them are live steps; the last two are ends",
+  OPEN_STAGE_KEYS, ["new", "info", "interested", "reservation"]);
+check("Interested sits between Info shared and Reservation",
+  BUYER_STAGE_KEYS.indexOf("interested") - BUYER_STAGE_KEYS.indexOf("info"), 1);
+check("…and immediately before Reservation",
+  BUYER_STAGE_KEYS.indexOf("reservation") - BUYER_STAGE_KEYS.indexOf("interested"), 1);
+check("it is spelled the way it reads on screen", stageLabel("interested"), "Interested");
+check("and it is a stage the server will accept", isValidStage("interested"), true);
+
+// The colour ramp is the sense of progress: every live stage must be darker
+// than the one before it, or a later stage can look earlier than it is.
+const lightness = (hex: string) => {
+  const n = Number.parseInt(hex.slice(1), 16);
+  return 0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255);
+};
+const liveShades = BUYER_STAGES.filter((s) => s.key !== "not_proceeding").map((s) => s.shade);
+check("the shades darken with every step",
+  liveShades.every((c, i) => i === 0 || lightness(c) < lightness(liveShades[i - 1])), true);
+const liveTints = BUYER_STAGES.filter((s) => s.key !== "not_proceeding").map((s) => s.tint);
+check("so do the pill fills",
+  liveTints.every((c, i) => i === 0 || lightness(c) < lightness(liveTints[i - 1])), true);
+
+// Readable text on that fill, at every stage — WCAG AA for normal text.
+const channel = (v: number) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+const luminance = (hex: string) => {
+  const n = Number.parseInt(hex.slice(1), 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => channel(v / 255));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const contrast = (a: string, b: string) => {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+};
+for (const st of BUYER_STAGES) {
+  check(`${st.label}: its ink is readable on its fill`, contrast(st.ink, st.tint) >= 4.5, true);
+}
+
+// A buyer moving through the new stage is measured like any other.
+const through = stageDurations(at("01"), [
+  move("06", "new", "info"),
+  move("11", "info", "interested"),
+  move("21", "interested", "reservation"),
+], NOW);
+check("time is counted in the new stage too", through.totals,
+  { new: 5, info: 5, interested: 10, reservation: 10 });
+check("and it can be where a buyer currently is", through.current, "reservation");
+check("a buyer sitting in Interested is drawn there",
+  stageDurations(at("01"), [], NOW, "interested").current, "interested");
+check("its theme is the one the pill uses",
+  stageTheme("interested"),
+  { bg: "#def1e8", ink: "#277452", border: "#b3d9c5", colour: "#62b691" });
 
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

@@ -135,6 +135,32 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     return redirect(to);
   }
 
+  // ---- who is buying a space ----
+  //
+  // From the Units tab's parking list, beside State, and back to it. The same
+  // rules as a unit's buyer: one of this project's leads, and naming them the
+  // buyer moves them on from "interested" in that space.
+  if (action === "buyer") {
+    const inquiryId = get("inquiry_id");
+    const to = `/admin/projects/${slug}?tab=units&show=parking`;
+    if (inquiryId) {
+      const { data: lead } = await supabase
+        .from("inquiries").select("id").eq("id", inquiryId).eq("project_id", project.id).maybeSingle();
+      if (!lead) return redirect(`${to}&units_error=${encodeURIComponent("That lead is not part of this project.")}`);
+    }
+    const { error } = await supabase
+      .from("project_parking").update({ inquiry_id: inquiryId || null })
+      .eq("id", id).eq("project_id", project.id);
+    if (error) return redirect(`${to}&units_error=${encodeURIComponent(error.message)}`);
+    if (inquiryId) {
+      await supabase.from("enquiry_parking_interest").delete()
+        .eq("inquiry_id", inquiryId).eq("parking_id", id);
+      // A buyer of a space wants parking — the card's question answers itself.
+      await supabase.from("inquiries").update({ wants_parking: true }).eq("id", inquiryId);
+    }
+    return redirect(to);
+  }
+
   if (action === "remove") {
     const { error } = await supabase
       .from("project_parking").delete().eq("id", id).eq("project_id", project.id);

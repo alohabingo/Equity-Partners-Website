@@ -1,5 +1,5 @@
 /**
- * Saved replies, in the three languages the business sells in.
+ * Saved replies, in the five languages the business sells in.
  *
  * A template is never sent as it stands. It is dropped into the composer, where
  * whoever is replying reads it, changes it and then presses send. That single
@@ -8,14 +8,16 @@
  * to look at the result before a buyer ever does.
  */
 
-export type TemplateLocale = "en" | "es" | "ca";
+export type TemplateLocale = "en" | "es" | "ca" | "nl" | "fr";
 
-export const TEMPLATE_LOCALES: readonly TemplateLocale[] = ["en", "es", "ca"] as const;
+export const TEMPLATE_LOCALES: readonly TemplateLocale[] = ["en", "es", "ca", "nl", "fr"] as const;
 
 export const TEMPLATE_LOCALE_LABEL: Record<TemplateLocale, string> = {
   en: "English",
   es: "Español",
   ca: "Català",
+  nl: "Nederlands",
+  fr: "Français",
 };
 
 export type ReplyTemplate = {
@@ -24,6 +26,8 @@ export type ReplyTemplate = {
   body_en: string;
   body_es: string;
   body_ca: string;
+  body_nl: string;
+  body_fr: string;
   position: number;
   /** Which project owns it. NULL means it belongs to the starter kit. */
   project_id?: string | null;
@@ -35,7 +39,7 @@ export type ReplyTemplate = {
  * One list of columns, so the four places that read templates cannot drift into
  * fetching different shapes of the same row.
  */
-export const TEMPLATE_COLUMNS = "id, name, body_en, body_es, body_ca, position, project_id, source_id";
+export const TEMPLATE_COLUMNS = "id, name, body_en, body_es, body_ca, body_nl, body_fr, position, project_id, source_id";
 
 /** What the editing screen tells people they can write. */
 export const TEMPLATE_PLACEHOLDERS = [
@@ -60,13 +64,13 @@ export type Rendered = {
   usable: boolean;
 };
 
-/** Anything that isn't one of our three is treated as English. */
+/** Anything that isn't one of our languages is treated as English. */
 export function asTemplateLocale(value: string | null | undefined): TemplateLocale {
   return TEMPLATE_LOCALES.includes(value as TemplateLocale) ? (value as TemplateLocale) : "en";
 }
 
 export function bodyIn(t: ReplyTemplate, locale: TemplateLocale): string {
-  const raw = locale === "es" ? t.body_es : locale === "ca" ? t.body_ca : t.body_en;
+  const raw = ({ en: t.body_en, es: t.body_es, ca: t.body_ca, nl: t.body_nl, fr: t.body_fr } as const)[locale];
   return (raw ?? "").trim();
 }
 

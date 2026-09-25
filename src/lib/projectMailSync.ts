@@ -66,17 +66,24 @@ async function logOutcome(ctx: Ctx, outcome: "ignored" | "rejected", reason: str
 /**
  * The language the form says the person chose.
  *
- * Only the three the site speaks, and only when the form's answer is
+ * Only the languages the portal records, and only when the form's answer is
  * recognisable — "ES", "es-ES" and "Español" all mean Spanish, anything else
  * means we should go on guessing from what they wrote rather than file a buyer
  * under a language nobody picked.
  */
-function localeFromForm(raw: string): string | null {
+export function localeFromForm(raw: string): string | null {
   const v = (raw ?? "").trim().toLowerCase();
   if (!v) return null;
-  if (/^(es|spa|spanish|espa\u00f1ol|espanol|castellano)\b/.test(v)) return "es";
-  if (/^(ca|cat|catalan|catal\u00e0|catala)\b/.test(v)) return "ca";
-  if (/^(en|eng|english|ingl\u00e9s|ingles)\b/.test(v)) return "en";
+  // "Ends here" means no letter follows, accented ones included. JavaScript's
+  // \b only knows ASCII, so "Català" — the last letter accented — never
+  // matched it, and a form answering in Catalan was filed as unknown.
+  const is = (...names: string[]) =>
+    names.some((n) => new RegExp(`^${n}(?![\\p{L}])`, "u").test(v));
+  if (is("es", "spa", "spanish", "español", "espanol", "castellano")) return "es";
+  if (is("ca", "cat", "catalan", "català", "catala")) return "ca";
+  if (is("en", "eng", "english", "inglés", "ingles")) return "en";
+  if (is("nl", "nld", "dut", "dutch", "nederlands", "néerlandais", "neerlandais", "holandés", "holandes", "neerlandès")) return "nl";
+  if (is("fr", "fra", "fre", "french", "français", "francais", "francés", "frances", "francès")) return "fr";
   return null;
 }
 

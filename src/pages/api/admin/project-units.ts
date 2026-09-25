@@ -139,11 +139,28 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
 
   if (action === "buyer") {
     const inquiryId = get("inquiry_id");
+
+    // The buyer has to be one of this project's leads. The picker only offers
+    // those; this makes it true of whatever actually arrives.
+    if (inquiryId) {
+      const { data: lead } = await supabase
+        .from("inquiries").select("id").eq("id", inquiryId).eq("project_id", project.id).maybeSingle();
+      if (!lead) return fail("That lead is not part of this project.");
+    }
+
     const { error } = await supabase
       .from("project_units")
       .update({ inquiry_id: inquiryId || null, updated_at: new Date().toISOString() })
       .eq("id", id).eq("project_id", project.id);
     if (error) return fail(error.message);
+
+    // Becoming the buyer moves them on from "interested" in this unit, so they
+    // appear in one column rather than two. Their interest in OTHER units is
+    // left alone — buying one home says nothing about the rest of their list.
+    if (inquiryId) {
+      await supabase.from("enquiry_interest").delete()
+        .eq("inquiry_id", inquiryId).eq("unit_id", id);
+    }
     return redirect(back);
   }
 

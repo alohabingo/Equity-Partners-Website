@@ -100,6 +100,10 @@ check("different emails do not match", sameEmail("a@b.co", "c@b.co"), false);
 
 check("source labels read as words", sourceLabel("broker"), "Agent / broker");
 check("an unknown source is not invented", sourceLabel("carrier_pigeon"), "Unknown");
+check("own network is a source", sourceLabel("network"), "Own network");
+check("…that can be chosen and saved", isLeadSource("network"), true);
+check("…sitting right after Referral in the list",
+  LEAD_SOURCES.findIndex((s) => s.value === "network") - LEAD_SOURCES.findIndex((s) => s.value === "referral"), 1);
 
 // Only a referral and a broker come through a person, so only those two carry
 // a name. Getting this wrong either hides the field where it is needed or

@@ -1,6 +1,8 @@
 ---
 import { UNIT_STATES, unitStateTheme, type UnitRow } from "../../lib/units";
 import { priceFieldValue } from "../../lib/euros";
+import InterestCell from "./InterestCell.astro";
+import { ITEM_COLUMNS } from "../../lib/tableColumns";
 
 /**
  * The unit table for one building.
@@ -22,8 +24,19 @@ interface Props {
    * layout and added to the other.
    */
   placeable?: boolean;
+  /** Who is interested in each unit, by unit id — the same list the contact
+   *  card's "Property of interest" reads. */
+  interested?: Record<string, { id: string; name: string }[]>;
 }
-const { units, slug, buildings, buyers, placeable = false } = Astro.props;
+const { units, slug, buildings, buyers, placeable = false, interested = {} } = Astro.props;
+
+// Where the interest forms come back to: this tab, not the lead's card.
+const unitsHref = `/admin/projects/${slug}?tab=units`;
+/** Who can still be added for a unit: not its buyer, not already listed. */
+const candidatesFor = (u: UnitRow) => {
+  const listed = new Set((interested[u.id] ?? []).map((p) => p.id));
+  return buyers.filter((b) => b.id !== u.inquiry_id && !listed.has(b.id));
+};
 const canMove = placeable && buildings.length > 0;
 ---
 
@@ -35,6 +48,7 @@ const canMove = placeable && buildings.length > 0;
   }
   table.q td { padding: 0.7rem 0.5rem; border-bottom: 1px solid #eef2f7; vertical-align: middle; }
   table.q tr:last-child td { border-bottom: 0; }
+  table.q.aligned { table-layout: fixed; }
 
   .inline { display: flex; align-items: center; gap: 0.4rem; }
   .in {
@@ -77,11 +91,15 @@ const canMove = placeable && buildings.length > 0;
   .pick.quiet.empty { --ink: #93a3b8; }
 </style>
 
-<table class="q">
+{/* Fixed widths shared with the Parking card, so the columns line up from
+    card to card. The "not placed" table has an extra Building column and
+    is left to size itself. */}
+<table class:list={["q", { aligned: !canMove }]}>
+  {!canMove && <colgroup>{ITEM_COLUMNS.map((c) => <col style={`width:${c.width}`} />)}</colgroup>}
   <tr>
     <th>Unit</th>
     {canMove && <th>Building</th>}
-    <th>State</th><th>Price</th><th>Buyer</th><th></th>
+    <th>State</th><th>Price</th><th>Interested</th><th>Buyer</th>
   </tr>
   {units.map((u) => (
     <tr>
@@ -135,6 +153,11 @@ const canMove = placeable && buildings.length > 0;
       </td>
 
       <td>
+        <InterestCell kind="unit" itemId={u.id} itemCode={u.code}
+                      people={interested[u.id] ?? []} candidates={candidatesFor(u)} back={unitsHref} />
+      </td>
+
+      <td>
         <form method="post" action="/api/admin/project-units">
           <input type="hidden" name="slug" value={slug} />
           <input type="hidden" name="id" value={u.id} />
@@ -150,15 +173,6 @@ const canMove = placeable && buildings.length > 0;
         </form>
       </td>
 
-      <td style="text-align:right">
-        <form method="post" action="/api/admin/project-units"
-              onsubmit={`return confirm('Remove ${u.code}?')`}>
-          <input type="hidden" name="slug" value={slug} />
-          <input type="hidden" name="id" value={u.id} />
-          <input type="hidden" name="action" value="remove" />
-          <button class="tiny danger" type="submit">Remove</button>
-        </form>
-      </td>
     </tr>
   ))}
 </table>

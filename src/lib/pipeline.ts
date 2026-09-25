@@ -16,7 +16,7 @@
  * The pill trio is written out rather than computed from `shade`, because
  * computing it does not work here. The unit states are three different HUES, so
  * a mechanical tint of each stays distinguishable. These stages are one hue at
- * four lightnesses — tint them all to the same paleness and you get four
+ * several lightnesses — tint them all to the same paleness and you get a row of
  * identical near-white greens, and the colour stops saying anything. Instead the
  * fill DEEPENS as the stage advances, which keeps the sense of progress that the
  * light-to-dark scale was there to give in the first place.
@@ -24,17 +24,29 @@
  * "Not proceeding" is deliberately outside that progression, in grey: it is not
  * further along than anything, it is off to one side.
  *
- * Four live stages, not eight. The longer list had Contacted, Info sent,
+ * Five live stages, not eight. The longer list had Contacted, Info sent,
  * Viewing booked and Offer as separate steps, and for a development of twenty-
  * five units that is more bookkeeping than anyone keeps up with — and a stage
  * nobody moves records into is worse than no stage at all, because the list
  * still looks maintained.
+ *
+ * NOTHING else needs changing to add or move a stage. The board, the profile
+ * rail, the stage pickers and the pipeline bars all read this list, and the
+ * stage is stored as free text with no database constraint behind it, so this
+ * array is the whole definition. Adding one leaves every existing buyer where
+ * they are; the new stage simply starts empty.
  */
 export const BUYER_STAGES = [
   { key: "new",            label: "New enquiry",         shade: "#d3ece0",
     tint: "#eff7f3", edge: "#cfe4d9", ink: "#4a7a66" },
   { key: "info",           label: "Info shared"       , shade: "#86caab",
     tint: "#e4f3ec", edge: "#bcdccb", ink: "#2f7a58" },
+  // Interest declared, nothing committed. Its colours are the midpoint of the
+  // two it sits between, so the ramp still reads light-to-dark in order and
+  // neither neighbour had to change — the shades either side are the ones the
+  // team has been reading for months.
+  { key: "interested",     label: "Interested",          shade: "#62b691",
+    tint: "#def1e8", edge: "#b3d9c5", ink: "#277452" },
   { key: "reservation",    label: "Reservation",         shade: "#3da177",
     tint: "#d8efe4", edge: "#a9d5bf", ink: "#1f6f4d" },
   { key: "delivery",       label: "Property delivery",   shade: "#1d5c42",

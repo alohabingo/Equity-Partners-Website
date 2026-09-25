@@ -137,7 +137,9 @@ export function shortAge(iso: string, now: Date = new Date()): string {
   return `${Math.round(days / 7)}w`;
 }
 
-export const LOCALE_LABEL: Record<string, string> = { en: "English", es: "Español", ca: "Català" };
+export const LOCALE_LABEL: Record<string, string> = {
+  en: "English", es: "Español", ca: "Català", nl: "Nederlands", fr: "Français",
+};
 
 /**
  * Where a lead came from.
@@ -190,6 +192,10 @@ export const LEAD_SOURCES = [
   { value: "email",    label: "Email",        manual: false },
   { value: "phone",    label: "Phone call",   manual: true },
   { value: "referral", label: "Referral",     manual: true },
+  // Someone the team already knows — a friend, a past client, a contact of
+  // ours. Kept apart from Referral, which is a third party sending a buyer our
+  // way: the two cost different things to win and are worth counting apart.
+  { value: "network",  label: "Own network",  manual: true },
   { value: "broker",   label: "Agent / broker", manual: true },
   { value: "event",    label: "Event",        manual: true },
   { value: "other",    label: "Other",        manual: true },
@@ -235,10 +241,17 @@ export function sameEmail(a: string | null | undefined, b: string | null | undef
   return x !== "" && x === (b ?? "").trim().toLowerCase();
 }
 
+/**
+ * The languages a buyer can be recorded as speaking. Every language picker in
+ * the portal — the inbox, Add lead, the contact card — and both endpoints that
+ * accept one read this list, so adding a language here is the whole change.
+ */
 export const LOCALE_OPTIONS = [
   { value: "en", label: "English" },
   { value: "es", label: "Español" },
   { value: "ca", label: "Català" },
+  { value: "nl", label: "Nederlands" },
+  { value: "fr", label: "Français" },
 ] as const;
 
 /**

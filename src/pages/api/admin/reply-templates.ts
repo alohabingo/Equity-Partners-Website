@@ -60,7 +60,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     return done(`Added “${name}”. Write the reply in each language below.`);
   }
 
-  // ---- save one template's name and its three bodies ----
+  // ---- save one template's name and a body per language ----
   //
   // "starter" does everything "save" does and then promotes the result. They
   // share this block rather than the button posting twice, because a promotion
@@ -76,6 +76,8 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
       body_en: form.get("body_en")?.toString() ?? "",
       body_es: form.get("body_es")?.toString() ?? "",
       body_ca: form.get("body_ca")?.toString() ?? "",
+      body_nl: form.get("body_nl")?.toString() ?? "",
+      body_fr: form.get("body_fr")?.toString() ?? "",
     };
     for (const [k, v] of Object.entries(bodies)) {
       if (v.length > MAX_BODY) return fail(`That ${k.slice(-2).toUpperCase()} reply is too long — keep it under ${MAX_BODY} characters.`);

@@ -1,4 +1,4 @@
-import { ingestSentPage, ingestPage } from "./projectMailSync";
+import { ingestSentPage, ingestPage, localeFromForm } from "./projectMailSync";
 
 let pass = 0, fail = 0;
 const is = (got: unknown, want: unknown, msg: string) => {
@@ -313,5 +313,12 @@ const inbound = (over: any = {}) => ({
   is(rows.inquiry_messages[0]?.inquiry_id, "inq-existing", "onto the thread they already have");
 }
 
+
+// ---- the language a form says the person chose ----
+is(["ES", "es-ES", "Español", "Castellano"].map(localeFromForm), ["es", "es", "es", "es"], "Spanish, however it is written");
+is(["CA", "Català", "catalan"].map(localeFromForm), ["ca", "ca", "ca"], "Catalan — including with its accent, which used to be missed");
+is(["NL", "nl-BE", "Nederlands", "Dutch", "Néerlandais"].map(localeFromForm), ["nl", "nl", "nl", "nl", "nl"], "Dutch");
+is(["FR", "fr-FR", "Français", "French", "Francés"].map(localeFromForm), ["fr", "fr", "fr", "fr", "fr"], "French");
+is(["", "Deutsch", "—", "cats"].map(localeFromForm), [null, null, null, null], "anything else is not guessed at");
 console.log(`\n${fail === 0 ? `ALL ${pass} PASS` : `${fail} FAILED, ${pass} passed`}`);
 if (fail) process.exit(1);

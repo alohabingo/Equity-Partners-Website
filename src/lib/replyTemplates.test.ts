@@ -73,6 +73,7 @@ check("tidy does not eat newlines", tidy("one\n\ntwo"), "one\n\ntwo");
 const T = (over: Partial<ReplyTemplate> = {}): ReplyTemplate => ({
   id: "t1", name: "First reply", position: 0,
   body_en: "Hi {{name}}", body_es: "Hola {{name}}", body_ca: "Hola {{name}}, benvingut",
+  body_nl: "", body_fr: "",
   ...over,
 });
 
@@ -95,7 +96,7 @@ check("English asked for and present is not a fallback",
   renderTemplate(T(), "en", { name: "Ana" }).fellBack, false);
 
 check("an unknown language is treated as English",
-  renderTemplate(T(), "fr", { name: "Ana" }),
+  renderTemplate(T(), "de", { name: "Ana" }),
   { body: "Hi Ana", locale: "en", fellBack: false, usable: true });
 
 check("an unknown buyer language is treated as English",
@@ -104,9 +105,23 @@ check("an unknown buyer language is treated as English",
 check("a blank template is unusable rather than empty-but-fine",
   renderTemplate(T({ body_en: "", body_es: "", body_ca: "" }), "en", {}).usable, false);
 
-check("asTemplateLocale normalises", [asTemplateLocale("es"), asTemplateLocale("fr"), asTemplateLocale(null)], ["es", "en", "en"]);
+check("asTemplateLocale normalises", [asTemplateLocale("es"), asTemplateLocale("de"), asTemplateLocale(null)], ["es", "en", "en"]);
 check("writtenIn reports the gaps", writtenIn(T({ body_es: "   " })), ["en", "ca"]);
 check("bodyIn trims", bodyIn(T({ body_en: "  hi  " }), "en"), "hi");
+
+// ---- Dutch and French ----
+check("Dutch is one of the languages", asTemplateLocale("nl"), "nl");
+check("so is French", asTemplateLocale("fr"), "fr");
+const five = T({ body_nl: "Hallo {{name}}", body_fr: "Bonjour {{name}}" });
+check("a Dutch buyer gets the Dutch version",
+  renderTemplate(five, "nl", { name: "Jan de Vries" }).body, "Hallo Jan");
+check("a French buyer gets the French version",
+  renderTemplate(five, "fr", { name: "Claire Martin" }).body, "Bonjour Claire");
+check("not written in Dutch yet: English, and it says so",
+  [renderTemplate(T(), "nl", { name: "Jan" }).locale, renderTemplate(T(), "nl", { name: "Jan" }).fellBack], ["en", true]);
+check("written-in lists all five when all five are there",
+  writtenIn(five), ["en", "es", "ca", "nl", "fr"]);
+check("and leaves out the ones still empty", writtenIn(T()), ["en", "es", "ca"]);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

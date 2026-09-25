@@ -2,6 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from "astro";
 import { supabaseAdmin } from "../../../lib/supabase";
+import { LOCALE_OPTIONS } from "../../../lib/enquiries";
 
 const json = (body: object, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -12,7 +13,9 @@ async function sha256Hex(value: string): Promise<string> {
 }
 
 const MAX_MESSAGE = 5000;
-const VALID_LOCALES = ["en", "es", "ca"];
+// A buyer's language, from the same list every language picker in the portal
+// uses, so a Dutch or French submission is not quietly filed as English.
+const VALID_LOCALES: string[] = LOCALE_OPTIONS.map((l) => l.value);
 
 /** "Full Name" / full_name / fullName all collapse to "fullname". */
 const norm = (k: string) => k.toLowerCase().replace(/[^a-z0-9]/g, "");

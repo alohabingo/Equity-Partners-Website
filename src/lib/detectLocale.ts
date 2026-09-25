@@ -1,7 +1,7 @@
-export type Locale = "en" | "es" | "ca";
+export type Locale = "en" | "es" | "ca" | "nl" | "fr";
 
 /**
- * Guess which of the three languages an enquiry was written in.
+ * Guess which of the portal's languages an enquiry was written in.
  *
  * Mail arriving in the project inbox carries no language field, and the buyer
  * pipeline is EN/ES/CA - so without this every enquiry was stored as English,
@@ -36,22 +36,41 @@ const WORDS: Record<Locale, string[]> = {
     "thanks", "regards", "hello", "please", "the", "and", "for", "with", "you", "this",
     "that", "are", "have", "can", "is", "was", "our", "your", "message", "test", "send",
   ],
+  // Only words that belong to one language. "brochure", "appartement", "villa",
+  // "information" and the like are shared with a neighbour and would only blur
+  // the count, so they are left to the languages that already have them.
+  nl: [
+    "graag", "ik", "wil", "zou", "willen", "ontvangen", "prijzen", "prijs", "informatie",
+    "vriendelijke", "groet", "groeten", "bedankt", "dank", "hallo", "goedendag", "goedemiddag",
+    "uw", "jullie", "het", "een", "van", "voor", "zijn", "niet", "ook", "maar", "wat", "hoe",
+    "woning", "meer", "kunnen", "kunt", "mijn", "wij", "heb", "hebben", "alvast", "bezichtiging",
+  ],
+  fr: [
+    "bonjour", "merci", "voudrais", "aimerais", "recevoir", "prix", "détails", "cordialement",
+    "salutations", "je", "vous", "nous", "avec", "pour", "des", "une", "sur", "votre", "notre",
+    "renseignements", "madame", "monsieur", "plaît", "très", "aussi", "mais", "où", "quel",
+    "quelle", "serait", "possible", "logement", "visite", "être", "avoir", "tarifs",
+  ],
 };
 
 const PHRASES: [Locale, RegExp][] = [
   ["ca", /si us plau/],
   ["es", /por favor/],
   ["en", /thank you/],
+  ["fr", /s['’]il vous pla[iî]t/],
+  ["nl", /met vriendelijke groet/],
 ];
+
+const ALL: Locale[] = ["en", "es", "ca", "nl", "fr"];
 
 export function detectLocale(text: string | null | undefined): Locale | null {
   const t = (text ?? "").toLowerCase();
   if (t.trim().length < 12) return null;
 
   const words = t.split(/[^\p{L}'’]+/u).filter(Boolean);
-  const scores: Record<Locale, number> = { en: 0, es: 0, ca: 0 };
+  const scores: Record<Locale, number> = { en: 0, es: 0, ca: 0, nl: 0, fr: 0 };
 
-  for (const loc of ["en", "es", "ca"] as Locale[]) {
+  for (const loc of ALL) {
     const set = new Set(WORDS[loc]);
     for (const w of words) if (set.has(w)) scores[loc]++;
   }
@@ -59,7 +78,13 @@ export function detectLocale(text: string | null | undefined): Locale | null {
 
   // Elision ("m'agradaria", "d'aquest") is Catalan and not Spanish, so it is
   // the single most useful signal for telling those two apart in a short text.
-  scores.ca += words.filter((w) => /^[lmdsn]['’]/.test(w)).length;
+  // French elides too — "l'appartement", "d'information" — so the shared forms
+  // go to whichever of the two the words already favour, and the ones only
+  // French has ("j'aimerais", "c'est", "qu'il") go to French outright.
+  const frOnly = words.filter((w) => /^(j|c|qu)['’]/.test(w)).length;
+  const shared = words.filter((w) => /^[lmdsn]['’]/.test(w)).length;
+  scores.fr += frOnly;
+  if (scores.fr > scores.ca) scores.fr += shared; else scores.ca += shared;
 
   const ranked = (Object.entries(scores) as [Locale, number][]).sort((a, b) => b[1] - a[1]);
   const [top, second] = ranked;

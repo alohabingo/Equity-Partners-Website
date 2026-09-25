@@ -160,12 +160,13 @@ export function stripServiceFooter(text: string): string {
 
 /** The fields worth keeping, and what a form might call each of them. */
 const LABELS: Record<"name" | "email" | "phone" | "message" | "language" | "reference", string[]> = {
-  name: ["name", "full name", "your name", "nombre", "nom"],
-  email: ["email", "e-mail", "email address", "correo", "correo electrónico", "correu"],
-  phone: ["phone", "phone number", "telephone", "tel", "mobile", "teléfono", "telefono", "telèfon"],
-  message: ["message", "how can we help", "comments", "enquiry", "inquiry", "mensaje", "missatge"],
-  language: ["language", "idioma", "llengua", "lang"],
-  reference: ["reference", "ref", "reference number"],
+  name: ["name", "full name", "your name", "nombre", "nom", "naam", "nom complet", "volledige naam"],
+  email: ["email", "e-mail", "email address", "correo", "correo electrónico", "correu", "e-mailadres", "courriel", "adresse e-mail"],
+  phone: ["phone", "phone number", "telephone", "tel", "mobile", "teléfono", "telefono", "telèfon",
+          "telefoon", "telefoonnummer", "téléphone", "portable"],
+  message: ["message", "how can we help", "comments", "enquiry", "inquiry", "mensaje", "missatge", "bericht", "vraag"],
+  language: ["language", "idioma", "llengua", "lang", "taal", "langue"],
+  reference: ["reference", "ref", "reference number", "referentie", "référence"],
 };
 
 /**

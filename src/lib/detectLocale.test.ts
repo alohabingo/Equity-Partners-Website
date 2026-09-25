@@ -32,6 +32,20 @@ check("Spanish inverted punctuation and accents",
 check("Catalan told from Spanish by its elisions",
   detectLocale("Bon dia, voldria saber el preu d'aquest habitatge amb vistes. Gràcies!"), "ca");
 
+// Dutch and French, and the neighbours they must not be mistaken for.
+check("plain Dutch",
+  detectLocale("Goedendag, ik zou graag meer informatie ontvangen over de prijzen van de villa's."), "nl");
+check("a Dutch sign-off alone is enough",
+  detectLocale("Bedankt alvast. Met vriendelijke groet, Jan"), "nl");
+check("plain French",
+  detectLocale("Bonjour, je voudrais recevoir la brochure et les prix de Nanta Alta. Merci !"), "fr");
+check("French elision is not mistaken for Catalan",
+  detectLocale("Bonjour, j'aimerais avoir des détails sur l'appartement, s'il vous plaît."), "fr");
+check("…and Catalan elision is still Catalan",
+  detectLocale("Bon dia, m'agradaria saber el preu d'aquest habitatge. Gràcies!"), "ca");
+check("English with the word 'brochure' stays English",
+  detectLocale("Hello, could you send me the brochure and the price list please?"), "en");
+
 // Refusing to answer is a feature. A wrong flag sends a buyer a template in a
 // language they don't read; no flag just makes someone look.
 check("too short to judge", detectLocale("Hola"), null);

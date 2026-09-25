@@ -22,6 +22,13 @@ interface Props {
   /** Where the action endpoints send the browser back to. */
   back: string;
   /**
+   * Where this buyer's contact card lives, when they have one. Given, the name
+   * at the top becomes the way to open it — the page puts the card in the DOM
+   * closed and opens it on click, the same as the Leads tab. Absent (a pending
+   * or rejected enquiry, which is not a lead yet), the name stays plain text.
+   */
+  profileHref?: string | null;
+  /**
    * False where the page renders EnquirySide itself, as its own card next to
    * this one. True keeps notes and history stacked underneath - which is right
    * in the Inbox, where the pane is already half a split and has no room for
@@ -48,6 +55,7 @@ const {
   enquiry, messages, notesText, notesBy, notesAt, events, project,
   currentUserName, back, sent = false, sendError = null,
   showSide = true, templates = [], documents = [], sentDocs = 0, linkViews = {},
+  profileHref = null,
 } = Astro.props;
 
 const canReply = !!project.mailbox && !!enquiry.email;
@@ -107,8 +115,20 @@ const EVENT_LABELS: Record<string, string> = {
 ---
 
 <style>
+  .ih { display: flex; align-items: center; gap: 0.4rem; }
+  .hico {
+    width: 13px; height: 13px; flex: none;
+    fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  }
   .head { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: flex-start; }
   .who { font-size: 1.05rem; font-weight: 700; }
+  /* The name is the way into the contact card. It sits in the portal's navy
+     like any other name, and turns the admin's green when the pointer is on
+     it — enough to say it can be pressed, without an icon or an underline. */
+  .wholink { color: #16283e; text-decoration: none; border-radius: 6px; transition: color 140ms ease; }
+  .wholink:hover { color: #2e7d54; }
+  .wholink:focus-visible { color: #2e7d54; outline: 2px solid #53b27f; outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) { .wholink { transition: none; } }
   .flag {
     font-size: 0.6rem; font-weight: 700; color: #93a3b8;
     border: 1px solid #d7deea; border-radius: 4px; padding: 0 0.24rem; vertical-align: 2px;
@@ -248,7 +268,14 @@ const EVENT_LABELS: Record<string, string> = {
 <div class="head">
   <div>
     <div class="who">
-      {enquiry.name}
+      {profileHref ? (
+        <a class="wholink" href={profileHref} data-open-lead={enquiry.id}
+           title={`Open ${enquiry.name || "this buyer"}'s contact card`}>
+          {enquiry.name || "No name given"}
+        </a>
+      ) : (
+        enquiry.name
+      )}
       <span class="flag" title={localeTitle(enquiry.locale)}>{localeChip(enquiry.locale)}</span>
     </div>
     <p class="meta">
@@ -467,7 +494,11 @@ const EVENT_LABELS: Record<string, string> = {
 
 {events.length > 0 && (
   <div class="hist">
-    <h3>History</h3>
+    <h3 class="ih">
+      {/* The same clock and the same name as on the contact card, so the
+          record reads as one thing wherever it is shown. */}
+      <svg class="hico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3 4.5V9h4.5"/><path d="M12 7.5V12l3 2"/></svg>Activity timeline
+    </h3>
     {events.map((ev) => (
       <div class="hrow">
         <span style="color:#5c6f88">
